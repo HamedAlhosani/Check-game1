@@ -1,0 +1,377 @@
+export type ItemRarity = 'free' | 'bronze' | 'silver' | 'gold' | 'legendary';
+export type ItemCategory = 'character' | 'avatarFrame' | 'cardBack' | 'diceSkin' | 'boardTheme';
+
+export interface StoreItem {
+  id: string;
+  category: ItemCategory;
+  nameAr: string;
+  descriptionAr: string;
+  price: number;
+  rarity: ItemRarity;
+  preview: {
+    bg: string;
+    border: string;
+    text: string;
+  };
+}
+
+export const RARITY_LABEL: Record<ItemRarity, string> = {
+  free: 'مجاني',
+  bronze: 'برونزي',
+  silver: 'فضي',
+  gold: 'ذهبي',
+  legendary: 'أسطوري',
+};
+
+export const RARITY_COLOR: Record<ItemRarity, string> = {
+  free: 'text-sand/60',
+  bronze: 'text-amber-600',
+  silver: 'text-slate-300',
+  gold: 'text-yellow-400',
+  legendary: 'text-cyan-400',
+};
+
+export const CATEGORY_LABEL: Record<ItemCategory, string> = {
+  character: 'الشخصيات',
+  avatarFrame: 'إطارات الصورة',
+  cardBack: 'ظهر الأوراق',
+  diceSkin: 'النرد',
+  boardTheme: 'ثيم الطاولة',
+};
+
+export const STORE_ITEMS: StoreItem[] = [
+  // ── Characters ─────────────────────────────────────────────────────────────
+  {
+    id: 'avatar_1',
+    category: 'character',
+    nameAr: 'الصقر',
+    descriptionAr: 'رمز الإمارات الأصيل — شخصية مجانية للجميع',
+    price: 0,
+    rarity: 'free',
+    preview: { bg: 'bg-amber-950', border: 'border-amber-600', text: 'text-amber-200' },
+  },
+  {
+    id: 'avatar_2',
+    category: 'character',
+    nameAr: 'ابن الصحراء',
+    descriptionAr: 'رفيق الرحلات والسفر — شخصية مجانية للجميع',
+    price: 0,
+    rarity: 'free',
+    preview: { bg: 'bg-orange-950', border: 'border-orange-500', text: 'text-orange-200' },
+  },
+  {
+    id: 'avatar_3',
+    category: 'character',
+    nameAr: 'شيخ النخيل',
+    descriptionAr: 'حكيم الواحة وراعي أسرارها',
+    price: 150,
+    rarity: 'bronze',
+    preview: { bg: 'bg-green-950', border: 'border-green-600', text: 'text-green-200' },
+  },
+  {
+    id: 'avatar_4',
+    category: 'character',
+    nameAr: 'محارب الصحراء',
+    descriptionAr: 'فارس الرمال ذو السيف الماضي',
+    price: 200,
+    rarity: 'bronze',
+    preview: { bg: 'bg-red-950', border: 'border-red-600', text: 'text-red-200' },
+  },
+  {
+    id: 'avatar_5',
+    category: 'character',
+    nameAr: 'صياد الليل',
+    descriptionAr: 'يمشي في الظلام ويقرأ النجوم',
+    price: 300,
+    rarity: 'silver',
+    preview: { bg: 'bg-indigo-950', border: 'border-indigo-400', text: 'text-indigo-200' },
+  },
+  {
+    id: 'avatar_6',
+    category: 'character',
+    nameAr: 'نجم الخليج',
+    descriptionAr: 'يتألق بين اللاعبين كنجم الصحراء',
+    price: 350,
+    rarity: 'silver',
+    preview: { bg: 'bg-yellow-950', border: 'border-yellow-400', text: 'text-yellow-200' },
+  },
+  {
+    id: 'avatar_7',
+    category: 'character',
+    nameAr: 'ابن الرمال',
+    descriptionAr: 'وُلد في قلب الصحراء وعاش على نيرانها',
+    price: 500,
+    rarity: 'gold',
+    preview: { bg: 'bg-amber-900', border: 'border-amber-400', text: 'text-amber-100' },
+  },
+  {
+    id: 'avatar_8',
+    category: 'character',
+    nameAr: 'فارس البحر',
+    descriptionAr: 'أبحر في كل البحار وعاد بالكنوز',
+    price: 500,
+    rarity: 'gold',
+    preview: { bg: 'bg-blue-950', border: 'border-blue-400', text: 'text-blue-100' },
+  },
+  {
+    id: 'avatar_9',
+    category: 'character',
+    nameAr: 'أسد الخليج',
+    descriptionAr: 'ملك البرية ورمز القوة والشجاعة',
+    price: 800,
+    rarity: 'gold',
+    preview: { bg: 'bg-amber-800', border: 'border-amber-300', text: 'text-amber-100' },
+  },
+  {
+    id: 'avatar_10',
+    category: 'character',
+    nameAr: 'سلطان النار',
+    descriptionAr: 'لهبه يحرق الحدود ويضيء الليل',
+    price: 800,
+    rarity: 'gold',
+    preview: { bg: 'bg-red-900', border: 'border-red-400', text: 'text-red-100' },
+  },
+  {
+    id: 'avatar_11',
+    category: 'character',
+    nameAr: 'أمير الماس',
+    descriptionAr: 'أندر الشخصيات وأغلاها — للمميزين فقط',
+    price: 1200,
+    rarity: 'legendary',
+    preview: { bg: 'bg-cyan-950', border: 'border-cyan-400', text: 'text-cyan-100' },
+  },
+  {
+    id: 'avatar_12',
+    category: 'character',
+    nameAr: 'سلطان الرياح',
+    descriptionAr: 'لقب الأبطال من يحمله يسكن التاريخ',
+    price: 2000,
+    rarity: 'legendary',
+    preview: { bg: 'bg-purple-950', border: 'border-purple-400', text: 'text-purple-100' },
+  },
+
+  // ── Avatar Frames ──────────────────────────────────────────────────────────
+  {
+    id: 'frame_default',
+    category: 'avatarFrame',
+    nameAr: 'الإطار الكلاسيكي',
+    descriptionAr: 'الإطار الذهبي الأصيل — يُمنح لكل لاعب',
+    price: 0,
+    rarity: 'free',
+    preview: { bg: 'bg-night', border: 'border-gold/60', text: 'text-gold' },
+  },
+  {
+    id: 'frame_falcon',
+    category: 'avatarFrame',
+    nameAr: 'إطار الصقر',
+    descriptionAr: 'محاط بريش الصقر الإماراتي الملكي',
+    price: 50,
+    rarity: 'bronze',
+    preview: { bg: 'bg-amber-950', border: 'border-amber-600', text: 'text-amber-400' },
+  },
+  {
+    id: 'frame_desert',
+    category: 'avatarFrame',
+    nameAr: 'إطار الصحراء',
+    descriptionAr: 'أمواج الكثبان الذهبية تحيط بك',
+    price: 75,
+    rarity: 'bronze',
+    preview: { bg: 'bg-yellow-950', border: 'border-yellow-700', text: 'text-yellow-500' },
+  },
+  {
+    id: 'frame_pearl',
+    category: 'avatarFrame',
+    nameAr: 'إطار اللؤلؤ',
+    descriptionAr: 'بريق اللؤلؤ الخليجي النادر',
+    price: 150,
+    rarity: 'silver',
+    preview: { bg: 'bg-slate-800', border: 'border-slate-300', text: 'text-slate-200' },
+  },
+  {
+    id: 'frame_palm',
+    category: 'avatarFrame',
+    nameAr: 'إطار النخيل',
+    descriptionAr: 'سعف النخيل الإماراتي الشامخ',
+    price: 150,
+    rarity: 'silver',
+    preview: { bg: 'bg-green-950', border: 'border-green-500', text: 'text-green-400' },
+  },
+  {
+    id: 'frame_sultan',
+    category: 'avatarFrame',
+    nameAr: 'إطار السلطان',
+    descriptionAr: 'أرابيسك الملوك — لمن يستحق التاج',
+    price: 300,
+    rarity: 'gold',
+    preview: { bg: 'bg-yellow-950', border: 'border-yellow-400', text: 'text-yellow-300' },
+  },
+  {
+    id: 'frame_diamond',
+    category: 'avatarFrame',
+    nameAr: 'إطار الماس',
+    descriptionAr: 'أندر الإطارات وأثمنها في الكون',
+    price: 500,
+    rarity: 'legendary',
+    preview: { bg: 'bg-cyan-950', border: 'border-cyan-400', text: 'text-cyan-300' },
+  },
+
+  // ── Card Backs ─────────────────────────────────────────────────────────────
+  {
+    id: 'card_classic',
+    category: 'cardBack',
+    nameAr: 'الكلاسيكي الأحمر',
+    descriptionAr: 'ظهر الورق الأحمر التقليدي',
+    price: 0,
+    rarity: 'free',
+    preview: { bg: 'bg-red-800', border: 'border-red-600', text: 'text-red-200' },
+  },
+  {
+    id: 'card_arabian',
+    category: 'cardBack',
+    nameAr: 'ليالي عربية',
+    descriptionAr: 'نقش الليالي العربية الأصيل بالأزرق والذهب',
+    price: 75,
+    rarity: 'bronze',
+    preview: { bg: 'bg-indigo-950', border: 'border-indigo-500', text: 'text-indigo-200' },
+  },
+  {
+    id: 'card_desert',
+    category: 'cardBack',
+    nameAr: 'غروب الصحراء',
+    descriptionAr: 'ألوان غروب الشمس الساحرة في الصحراء',
+    price: 100,
+    rarity: 'silver',
+    preview: { bg: 'bg-orange-900', border: 'border-orange-500', text: 'text-orange-200' },
+  },
+  {
+    id: 'card_pearl',
+    category: 'cardBack',
+    nameAr: 'صدف اللؤلؤ',
+    descriptionAr: 'بياض الصدف وبريق اللؤلؤ الخليجي',
+    price: 200,
+    rarity: 'silver',
+    preview: { bg: 'bg-slate-200', border: 'border-slate-400', text: 'text-slate-800' },
+  },
+  {
+    id: 'card_uae',
+    category: 'cardBack',
+    nameAr: 'روح الإمارات',
+    descriptionAr: 'أخضر وأبيض وأسود وأحمر — روح الوطن',
+    price: 200,
+    rarity: 'gold',
+    preview: { bg: 'bg-green-800', border: 'border-green-400', text: 'text-white' },
+  },
+  {
+    id: 'card_galaxy',
+    category: 'cardBack',
+    nameAr: 'ذهب الكون',
+    descriptionAr: 'نجوم الليل الإماراتي تتلألأ على أوراقك',
+    price: 400,
+    rarity: 'legendary',
+    preview: { bg: 'bg-violet-950', border: 'border-violet-400', text: 'text-violet-200' },
+  },
+
+  // ── Dice Skins ─────────────────────────────────────────────────────────────
+  {
+    id: 'dice_classic',
+    category: 'diceSkin',
+    nameAr: 'النرد الكلاسيك',
+    descriptionAr: 'النرد الأبيض التقليدي',
+    price: 0,
+    rarity: 'free',
+    preview: { bg: 'bg-white', border: 'border-gray-300', text: 'text-gray-800' },
+  },
+  {
+    id: 'dice_gold',
+    category: 'diceSkin',
+    nameAr: 'نرد الذهب',
+    descriptionAr: 'نرد من الذهب الخالص يجلب الحظ',
+    price: 75,
+    rarity: 'bronze',
+    preview: { bg: 'bg-yellow-400', border: 'border-yellow-600', text: 'text-yellow-900' },
+  },
+  {
+    id: 'dice_amber',
+    category: 'diceSkin',
+    nameAr: 'نرد الكهرمان',
+    descriptionAr: 'حجر الكهرمان النفيس من قلب الصحراء',
+    price: 150,
+    rarity: 'silver',
+    preview: { bg: 'bg-amber-500', border: 'border-amber-700', text: 'text-amber-950' },
+  },
+  {
+    id: 'dice_falcon',
+    category: 'diceSkin',
+    nameAr: 'نرد الصقر',
+    descriptionAr: 'منقش بعين الصقر — دقة وقوة',
+    price: 300,
+    rarity: 'gold',
+    preview: { bg: 'bg-amber-900', border: 'border-amber-500', text: 'text-amber-200' },
+  },
+  {
+    id: 'dice_crystal',
+    category: 'diceSkin',
+    nameAr: 'نرد الكريستال',
+    descriptionAr: 'شفاف كالماء — نادر كالندى في الصحراء',
+    price: 450,
+    rarity: 'legendary',
+    preview: { bg: 'bg-cyan-100', border: 'border-cyan-400', text: 'text-cyan-800' },
+  },
+
+  // ── Board Themes ───────────────────────────────────────────────────────────
+  {
+    id: 'board_classic',
+    category: 'boardTheme',
+    nameAr: 'طاولة الليل',
+    descriptionAr: 'الطاولة الداكنة الكلاسيكية',
+    price: 0,
+    rarity: 'free',
+    preview: { bg: 'bg-slate-900', border: 'border-slate-700', text: 'text-slate-300' },
+  },
+  {
+    id: 'board_desert',
+    category: 'boardTheme',
+    nameAr: 'رمال الصحراء',
+    descriptionAr: 'دفء رمال الصحراء الذهبية الساحرة',
+    price: 100,
+    rarity: 'bronze',
+    preview: { bg: 'bg-yellow-900', border: 'border-yellow-700', text: 'text-yellow-200' },
+  },
+  {
+    id: 'board_oasis',
+    category: 'boardTheme',
+    nameAr: 'واحة الخضرة',
+    descriptionAr: 'برودة الواحة وجمالها وسط الصحراء',
+    price: 100,
+    rarity: 'bronze',
+    preview: { bg: 'bg-green-900', border: 'border-green-600', text: 'text-green-200' },
+  },
+  {
+    id: 'board_night',
+    category: 'boardTheme',
+    nameAr: 'سماء الليل',
+    descriptionAr: 'زرقة الليل العميق فوق الخليج',
+    price: 200,
+    rarity: 'silver',
+    preview: { bg: 'bg-blue-950', border: 'border-blue-600', text: 'text-blue-200' },
+  },
+  {
+    id: 'board_royal',
+    category: 'boardTheme',
+    nameAr: 'القصر الملكي',
+    descriptionAr: 'روعة القصور والملوك — للمتذوق الرفيع',
+    price: 400,
+    rarity: 'legendary',
+    preview: { bg: 'bg-purple-950', border: 'border-purple-500', text: 'text-purple-200' },
+  },
+];
+
+export const DEFAULT_EQUIPPED: Record<ItemCategory, string> = {
+  character: 'avatar_1',
+  avatarFrame: 'frame_default',
+  cardBack: 'card_classic',
+  diceSkin: 'dice_classic',
+  boardTheme: 'board_classic',
+};
+
+export const FREE_ITEMS = STORE_ITEMS.filter(i => i.price === 0).map(i => i.id);

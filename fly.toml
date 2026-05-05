@@ -1,30 +1,36 @@
-app = "check-game1"
-primary_region = "sin"
+# fly.toml app configuration file generated for check-web on 2026-05-05T00:40:13Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'check-web'
+primary_region = 'ams'
 
 [build]
-  dockerfile = "Dockerfile"
+  dockerfile = 'Dockerfile'
 
 [env]
-  NODE_ENV = "production"
-  PORT     = "3001"
+  NODE_ENV = 'production'
+  PORT = '3001'
+
+[[mounts]]
+  source = 'check_game_data'
+  destination = '/app/server/data'
 
 [http_service]
-  internal_port = 3001
-  force_https   = true
-  auto_stop_machines = "stop"
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
 
   [http_service.concurrency]
-    type       = "connections"
+    type = 'connections'
     hard_limit = 200
     soft_limit = 150
 
 [[vm]]
-  memory   = "512mb"
-  cpu_kind = "shared"
-  cpus     = 1
-
-[[mounts]]
-  source      = "check_game_data"
-  destination = "/app/server/data"
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 256

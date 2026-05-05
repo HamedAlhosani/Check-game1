@@ -10,6 +10,7 @@ import { GameOverModal } from '../shared/GameOverModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { soundService } from '../../../services/sound.service';
 import { FrameRing } from '../../shared/FrameRing';
+import { RulesModal } from '../../shared/RulesModal';
 
 interface Props { gameId: string; roomId: string; gameState: GameState; }
 
@@ -25,6 +26,37 @@ function TimerBar({ endAt, active, maxMs = 30000, w = 48 }: { endAt: number | nu
   return (
     <div style={{ width: w, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.10)' }}>
       <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: active ? color : 'rgba(255,255,255,0.15)', transition: 'width .12s linear' }} />
+    </div>
+  );
+}
+
+// ─── Turn Timer Badge — big, with seconds + bar ──────────────────────────────
+function TurnTimerBadge({ endAt, maxMs = 30000 }: { endAt: number | null; maxMs?: number }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 200);
+    return () => clearInterval(id);
+  }, []);
+  if (!endAt) return null;
+  const remaining = Math.max(0, endAt - now);
+  const secs = Math.ceil(remaining / 1000);
+  const pct = Math.max(0, Math.min(100, (remaining / maxMs) * 100));
+  const color = pct > 50 ? '#7AE08A' : pct > 25 ? '#E8C97A' : '#E04030';
+  const borderColor = pct > 50 ? 'rgba(80,200,120,0.5)' : pct > 25 ? 'rgba(201,168,76,0.4)' : 'rgba(224,64,48,0.55)';
+  return (
+    <div className="rounded-xl border flex flex-col items-center px-2.5 py-1"
+      style={{
+        background: 'rgba(20,14,8,.92)',
+        backdropFilter: 'blur(8px)',
+        minWidth: 56,
+        borderColor,
+        boxShadow: pct <= 25 ? '0 0 12px rgba(224,64,48,0.4)' : 'none',
+      }}>
+      <span className="font-arabic font-bold" style={{ fontSize: 9, lineHeight: 1, color: 'rgba(245,230,200,0.55)' }}>الوقت</span>
+      <span className="font-bold font-mono" style={{ fontSize: 18, lineHeight: 1.1, color }}>{secs}</span>
+      <div className="w-full mt-0.5" style={{ height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.10)' }}>
+        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: color, transition: 'width 0.2s linear' }}/>
+      </div>
     </div>
   );
 }
@@ -560,6 +592,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [jTargetUid, setJTargetUid] = useState<string | null>(null);
   const [swapHighlight, setSwapHighlight] = useState<{ pos: number; byUid: string } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const [soundOn, setSoundOn] = useState(soundService.isEnabled());
   const [volume, setVolumeState] = useState(soundService.getVolume());
 
@@ -756,7 +789,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   };
   const onBurnDrawn = () => { soundService.playBurn(); socket?.emit(SOCKET_EVENTS.GAME_BURN_DRAWN, { gameId }); setDrawnCard(null); setHasPlayedThisTurn(true); markActed(); };
   const onSwapDrawn = (pos: number) => { soundService.playCardFlip(); socket?.emit(SOCKET_EVENTS.GAME_SWAP_DRAWN, { gameId, cardPosition: pos }); setDrawnCard(null); setHasPlayedThisTurn(true); markActed(); };
-  const onCallCheck = () => { soundService.playCheckVoice(); socket?.emit(SOCKET_EVENTS.GAME_CALL_CHECK, { gameId }); markActed(); };
+  const onCallCheck = () => { socket?.emit(SOCKET_EVENTS.GAME_CALL_CHECK, { gameId }); markActed(); };
   const onSpecialSwap = (targetUid: string, targetPos: number) => {
     if (selectedPos === null) return;
     soundService.playSpecialAction();
@@ -1275,7 +1308,35 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           <span className="font-arabic font-bold" style={{ fontSize: 9, lineHeight: 1, color: lapCount >= 4 ? 'rgba(122,224,138,0.7)' : 'rgba(201,168,76,0.5)' }}>لفة</span>
           <span className="font-bold" style={{ fontSize: 18, lineHeight: 1.1, color: lapCount >= 4 ? '#7AE08A' : '#E8C97A' }}>{lapCount}</span>
         </div>
+        <TurnTimerBadge endAt={gameState.turnEndAt} />
       </div>
+
+      {/* ── Current turn (right side, big and obvious) ── */}
+      {(() => {
+        const turnPlayer = gameState.players.find(p => p.uid === gameState.currentTurnUid);
+        if (!turnPlayer || gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED') return null;
+        const isMine = turnPlayer.uid === user?.uid;
+        return (
+          <div className="fixed z-40 flex items-center gap-2 rounded-xl border px-3 py-1.5"
+            style={{
+              top: isMobile ? 6 : 14,
+              right: isMobile ? 6 : 14,
+              background: 'rgba(20,14,8,.92)',
+              backdropFilter: 'blur(8px)',
+              borderColor: isMine ? 'rgba(80,200,120,0.5)' : 'rgba(201,168,76,0.35)',
+              boxShadow: isMine ? '0 0 14px rgba(80,200,120,0.25)' : '0 0 10px rgba(201,168,76,0.15)',
+              maxWidth: isMobile ? 150 : 220,
+            }}>
+            <Av id={turnPlayer.avatarId} name={turnPlayer.displayName} frameId={(turnPlayer as any).equippedFrame} size={isMobile ? 22 : 28}/>
+            <div className="flex flex-col">
+              <span className="font-arabic" style={{ fontSize: 9, lineHeight: 1, color: isMine ? 'rgba(122,224,138,0.85)' : 'rgba(201,168,76,0.65)' }}>دور</span>
+              <span className="font-arabic font-bold truncate" style={{ fontSize: isMobile ? 12 : 13, lineHeight: 1.2, color: isMine ? '#7AE08A' : '#E8C97A', maxWidth: isMobile ? 100 : 160 }}>
+                {isMine ? 'أنت' : turnPlayer.displayName}
+              </span>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Bottom-left deck info panel (desktop only) ── */}
       {!isMobile && <div className="fixed z-40 flex flex-col items-center gap-1 rounded-xl border border-gold/30 px-4 py-3"
@@ -1664,6 +1725,15 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 </div>
               </div>
 
+              {/* Rules */}
+              <motion.button
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                onClick={() => { setShowSettings(false); setShowRules(true); }}
+                className="w-full py-3.5 rounded-2xl font-arabic font-bold border"
+                style={{ background: 'rgba(201,168,76,0.08)', borderColor: 'rgba(201,168,76,0.35)', color: '#E8C97A', fontSize: 15 }}>
+                القوانين
+              </motion.button>
+
               {/* Exit */}
               <motion.button
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
@@ -1672,6 +1742,78 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 style={{ background: 'rgba(196,92,58,0.10)', borderColor: 'rgba(196,92,58,0.4)', color: '#E07040', fontSize: 15 }}>
                 الخروج من اللعبة
               </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <RulesModal open={showRules} onClose={() => setShowRules(false)} />
+
+      {/* ── REVEAL phase modal — all cards face-up ── */}
+      <AnimatePresence>
+        {gameState.phase === 'REVEAL' && (
+          <motion.div
+            key="reveal-bg"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-3"
+            style={{ background: 'rgba(8,4,0,0.90)', backdropFilter: 'blur(10px)' }}>
+            <motion.div
+              initial={{ scale: 0.85, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.85, y: 20 }}
+              className="relative rounded-3xl border border-gold/35 w-full"
+              style={{
+                background: 'linear-gradient(160deg, #241810 0%, #14100A 100%)',
+                maxWidth: 720, maxHeight: '92vh', overflowY: 'auto',
+                padding: '20px 18px',
+                boxShadow: '0 20px 80px rgba(0,0,0,0.85), 0 0 50px rgba(201,168,76,0.18)',
+              }}>
+              <div className="text-center mb-4">
+                <h2 className="font-arabic font-bold mb-0.5" style={{ fontSize: 22, color: '#E8C97A' }}>كشف الأوراق</h2>
+                <p className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.5)' }}>أوراق جميع اللاعبين</p>
+              </div>
+              {(() => {
+                const active = gameState.players.filter(p => !p.isEliminated);
+                const colsClass = active.length <= 4 ? 'grid-cols-2' : active.length <= 6 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5';
+                return (
+                  <div className={`grid ${colsClass} gap-3`}>
+                    {active.map(p => {
+                      const isMe = p.uid === user?.uid;
+                      const rankValue = (r: string): number => {
+                        if (r === 'A') return 1;
+                        if (r === 'J' || r === 'Q' || r === 'K') return 10;
+                        return parseInt(r, 10) || 0;
+                      };
+                      const total = p.cards.reduce((sum, c) => sum + (c ? rankValue(c.rank) : 0), 0);
+                      return (
+                        <div key={p.uid} className="rounded-2xl border p-2 flex flex-col items-center"
+                          style={{
+                            background: isMe ? 'rgba(122,224,138,0.06)' : 'rgba(255,255,255,0.025)',
+                            borderColor: isMe ? 'rgba(122,224,138,0.4)' : p.uid === gameState.checkCallerId ? 'rgba(232,201,122,0.5)' : 'rgba(255,255,255,0.08)',
+                          }}>
+                          <div className="flex items-center gap-1.5 mb-1.5 w-full justify-center">
+                            <Av id={p.avatarId} name={p.displayName} frameId={(p as any).equippedFrame} size={22}/>
+                            <span className="font-arabic font-bold truncate" style={{ fontSize: 11, color: isMe ? '#7AE08A' : '#E8C97A', maxWidth: 80 }}>
+                              {isMe ? 'أنت' : p.displayName}
+                            </span>
+                            {p.uid === gameState.checkCallerId && (
+                              <span className="font-arabic font-bold rounded px-1 py-0.5" style={{ fontSize: 8, background: 'rgba(232,201,122,0.18)', color: '#E8C97A' }}>CHECK</span>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-1 mb-1">
+                            {p.cards.map((c, i) => c !== null ? (
+                              <div key={i}>
+                                <PlayingCard card={c ? { ...c, isRevealed: true } : null} mini xmini={active.length > 6}/>
+                              </div>
+                            ) : <div key={i} style={{ width: active.length > 6 ? 36 : 52, height: active.length > 6 ? 54 : 78 }}/>)}
+                          </div>
+                          <div className="font-mono font-bold" style={{ fontSize: 13, color: '#E8C97A' }}>
+                            {total} <span className="font-arabic" style={{ fontSize: 9, color: 'rgba(245,230,200,0.5)' }}>نقطة</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </motion.div>
           </motion.div>
         )}

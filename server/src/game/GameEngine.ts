@@ -17,6 +17,7 @@ interface InternalPlayer {
   uid: string;
   displayName: string;
   avatarId: string;
+  equippedFrame: string;
   isBot: boolean;
   cards: (Card | null)[];
   cumulativeScore: number;
@@ -57,7 +58,7 @@ export class GameEngine {
 
   constructor(
     roomId: string,
-    players: { uid: string; displayName: string; avatarId: string; isBot: boolean }[],
+    players: { uid: string; displayName: string; avatarId: string; isBot: boolean; equippedFrame?: string }[],
     emit: GameEventEmitter
   ) {
     this.gameId = uuidv4();
@@ -67,6 +68,7 @@ export class GameEngine {
 
     this.players = players.map((p, i) => ({
       ...p,
+      equippedFrame: p.equippedFrame || 'frame_default',
       cards: [],
       cumulativeScore: 0,
       isEliminated: false,
@@ -189,25 +191,18 @@ export class GameEngine {
     this.deck.discard(kCard);
     this.emit('game:card_discarded', { uid, card: kCard, fromKingPenalty: true });
 
-    // Draw 2 cards; each K among them is also discarded and replaced by 2 more
+    // Always end up with exactly 2 non-K cards. Each extra K drawn is discarded
+    // and replaced by 1 fresh card so the choice count stays at 2.
     this.kingChoiceCards = [];
-    const pending: Card[] = [];
-    for (let i = 0; i < 2; i++) {
+    while (this.kingChoiceCards.length < 2) {
       const c = this.deck.draw();
-      if (c) pending.push(c);
-    }
-    while (pending.length > 0) {
-      const c = pending.shift()!;
+      if (!c) break;
       if (c.rank === 'K') {
         this.deck.discard(c);
         this.emit('game:card_discarded', { uid, card: c, fromKingPenalty: true });
-        const c1 = this.deck.draw();
-        const c2 = this.deck.draw();
-        if (c1) pending.push(c1);
-        if (c2) pending.push(c2);
-      } else {
-        this.kingChoiceCards.push(c);
+        continue;
       }
+      this.kingChoiceCards.push(c);
     }
 
     this.specialActionUid = uid;
@@ -703,6 +698,7 @@ export class GameEngine {
         uid: p.uid,
         displayName: p.displayName,
         avatarId: p.avatarId,
+        equippedFrame: p.equippedFrame,
         cards: p.cards.map(c => c ? { ...c, isRevealed: this.phase === 'REVEAL' ? true : c.isRevealed } : null),
         cardCount: p.cards.filter(Boolean).length,
         isTurn: this.activePlayers()[this.currentTurnIndex % this.activePlayers().length]?.uid === p.uid,

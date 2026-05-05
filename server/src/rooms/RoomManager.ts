@@ -112,6 +112,7 @@ export class RoomManager {
       displayName: p.displayName,
       avatarId: p.avatarId,
       isBot: p.isBot,
+      equippedFrame: p.equippedFrame || 'frame_default',
     }));
 
     let engine: AnyEngine;

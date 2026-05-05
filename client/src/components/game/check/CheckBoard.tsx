@@ -247,18 +247,32 @@ function PlayerBox({ player, gameState }: { player: any; gameState: any }) {
   );
 }
 
+function cardGridCols(count: number) {
+  if (count <= 4) return 'grid grid-cols-2 gap-1';
+  if (count <= 6) return 'grid grid-cols-3 gap-1';
+  return 'grid grid-cols-4 gap-1';
+}
+
 // ─── Shared cards row for any seat ───────────────────────────────────────────
 function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap }: any) {
   const nonNull = player.cards.filter(Boolean).length;
-  const cls = nonNull > 4 ? 'flex gap-1' : 'grid grid-cols-2 gap-1';
   return (
     <div className="relative">
-      <div className={cls}>
-        {player.cards.map((c: any, i: number) => c !== null ? (
-          <PlayingCard key={i} card={c} faceDown={!c?.isRevealed} small
-            highlight={isSpecialJ ? 'burn' : 'none'}
-            onClick={isSpecialJ && selectedPos !== null ? () => onSpecialSwap(player.uid, i) : undefined} />
-        ) : null)}
+      <div className={cardGridCols(nonNull)}>
+        <AnimatePresence>
+          {player.cards.map((c: any, i: number) => c !== null ? (
+            <motion.div key={`${player.uid}-${i}`}
+              initial={{ opacity: 0, y: i % 2 === 0 ? -18 : 18, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+            >
+              <PlayingCard card={c} faceDown={!c?.isRevealed} small
+                highlight={isSpecialJ ? 'burn' : 'none'}
+                onClick={isSpecialJ && selectedPos !== null ? () => onSpecialSwap(player.uid, i) : undefined} />
+            </motion.div>
+          ) : null)}
+        </AnimatePresence>
       </div>
       {player.isEliminated && (
         <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none"
@@ -306,7 +320,7 @@ function RightSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, 
 // ─── CheckBoard ───────────────────────────────────────────────────────────────
 export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const { user } = useAuthStore();
-  const { drawnCard, setDrawnCard, gameOverData, setGameOverData } = useGameStore();
+  const { drawnCard, setDrawnCard, gameOverData, setGameOverData, reset: resetGame } = useGameStore();
   const navigate = useNavigate();
   const socket = socketService.getSocket();
 
@@ -387,6 +401,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       socket.off(SOCKET_EVENTS.GAME_KING_CHOICE);
       socket.off(SOCKET_EVENTS.GAME_CHECK_CALLED);
       socket.off(SOCKET_EVENTS.GAME_BURN_INVALID);
+      // Reset game state so a new game starts fresh
+      resetGame();
     };
   }, [socket]);
 
@@ -578,6 +594,13 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     </div>
   );
 
+  const doLeaveGame = () => {
+    // Tell the server immediately so the bot takes over right away
+    socket?.emit(SOCKET_EVENTS.GAME_PLAYER_LEAVE, { gameId });
+    resetGame();
+    navigate('/home');
+  };
+
   const ExitOverlay = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center"
       style={{ background: 'rgba(4,8,15,0.84)', backdropFilter: 'blur(8px)' }}>
@@ -587,7 +610,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         <div className="flex gap-3">
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
             className="px-5 py-2 rounded-xl border border-red-500/60 text-red-400 font-arabic bg-red-900/20 hover:bg-red-900/40"
-            onClick={() => navigate('/lobby/check')}>نعم، خروج</motion.button>
+            onClick={doLeaveGame}>نعم، خروج</motion.button>
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
             className="px-5 py-2 rounded-xl border border-gold/40 text-gold font-arabic bg-gold/10 hover:bg-gold/20"
             onClick={() => setShowExitConfirm(false)}>إلغاء</motion.button>
@@ -831,17 +854,26 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {/* ══ MY AREA: cards above, big box below ══ */}
         {me && (
           <div className="shrink-0 self-center flex flex-col items-center gap-1.5 pb-1" style={{ width: 220, position: 'relative', zIndex: 5, marginTop: 130 }}>
-            {/* My cards — 2×2 grid, or single row when 5+ cards */}
-            <div className={me.cards.filter(Boolean).length > 4 ? 'flex gap-1' : 'grid grid-cols-2 gap-1'}>
-              {me.cards.map((c, i) => c !== null ? (
-                <PlayingCard key={i}
-                  card={getCardForPos(me.cards, i)}
-                  faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
-                  highlight={myCardHighlight(i)}
-                  onClick={() => onMyCardClick(i)}
-                  small
-                />
-              ) : null)}
+            {/* My cards — always in grid, penalty cards fly in from top/bottom */}
+            <div className={cardGridCols(me.cards.filter(Boolean).length)}>
+              <AnimatePresence>
+                {me.cards.map((c, i) => c !== null ? (
+                  <motion.div key={`me-${i}`}
+                    initial={{ opacity: 0, y: i % 2 === 0 ? -22 : 22, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.6 }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                  >
+                    <PlayingCard
+                      card={getCardForPos(me.cards, i)}
+                      faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
+                      highlight={myCardHighlight(i)}
+                      onClick={() => onMyCardClick(i)}
+                      small
+                    />
+                  </motion.div>
+                ) : null)}
+              </AnimatePresence>
             </div>
 
             {/* Burn hint */}

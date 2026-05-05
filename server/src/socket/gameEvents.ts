@@ -276,6 +276,21 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     engine?.onTakeDiscard(socket.uid, payload.handPosition);
   });
 
+  // Player explicitly leaves mid-game → replace immediately with bot
+  socket.on(SOCKET_EVENTS.GAME_PLAYER_LEAVE, (payload: { gameId: string }) => {
+    if (!socket.uid) return;
+    const engine = roomManager.getGame(payload.gameId) as GameEngine | undefined;
+    if (!engine) return;
+    const state = engine.getPublicState();
+    if (state.phase === 'GAME_OVER') return;
+    engine.replaceWithBot(socket.uid);
+    const bot = new BotPlayer(socket.uid, 'medium');
+    roomManager.addBotPlayer(engine.roomId, bot);
+    const roomId = engine.roomId;
+    roomManager.removeSocket(socket.id);
+    socket.leave(roomId);
+  });
+
   // Reconnect: find room by socket ID (normal) or by UID (after page refresh)
   const roomId = roomManager.getRoomForSocket(socket.id) ??
     (socket.uid ? roomManager.getRoomForUid(socket.uid) : undefined);

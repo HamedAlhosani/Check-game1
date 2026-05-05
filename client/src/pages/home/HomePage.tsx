@@ -388,6 +388,7 @@ export function HomePage() {
         botDifficulty: 'medium',
         gameType: 'check',
         betAmount: cfg.bet,
+        maxPlayers: cfg.playerCount,
       });
     }
   };

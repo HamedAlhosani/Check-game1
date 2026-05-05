@@ -21,6 +21,26 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
     const avatarId = profile?.avatarId || 'avatar_1';
     const equippedFrame = profile?.equippedItems?.avatarFrame || 'frame_default';
 
+    // Online matchmaking: join existing public room if one exists with same settings
+    if ((payload.type || 'public') === 'public' && (payload.botCount || 0) === 0) {
+      const gameType = payload.gameType || 'check';
+      const maxPlayers = payload.maxPlayers || 10;
+      const existing = roomManager.findMatchableRoom(gameType, maxPlayers);
+      if (existing) {
+        const joined = roomManager.joinRoom(existing.roomId, socket.uid, displayName, avatarId, equippedFrame);
+        if (joined) {
+          socket.join(joined.roomId);
+          roomManager.trackSocket(socket.id, joined.roomId);
+          io.to(joined.roomId).emit(SOCKET_EVENTS.LOBBY_ROOM_UPDATED, joined.toState());
+          io.emit(SOCKET_EVENTS.LOBBY_ROOM_LIST, roomManager.getPublicRooms().map(r => r.toState()));
+          if (joined.players.length >= joined.maxPlayers) {
+            startGameSession(io, joined.roomId);
+          }
+          return;
+        }
+      }
+    }
+
     const room = roomManager.createRoom(
       socket.uid,
       displayName,

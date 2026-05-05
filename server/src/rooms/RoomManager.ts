@@ -173,6 +173,21 @@ export class RoomManager {
   getDominoBots(roomId: string): DominoBotPlayer[] { return this.dominoBots.get(roomId) || []; }
   getJacaroBots(roomId: string): JacaroBotPlayer[] { return this.jacaroBots.get(roomId) || []; }
 
+  findMatchableRoom(gameType: GameType, maxPlayers: number): Room | undefined {
+    for (const room of this.rooms.values()) {
+      if (
+        room.type === 'public' &&
+        room.status === 'waiting' &&
+        room.gameType === gameType &&
+        room.maxPlayers === maxPlayers &&
+        room.players.length < room.maxPlayers
+      ) {
+        return room;
+      }
+    }
+    return undefined;
+  }
+
   getRoomGameType(roomId: string): GameType {
     return this.rooms.get(roomId)?.gameType || 'check';
   }

@@ -4,7 +4,7 @@ export interface AuthUser {
   displayName: string | null;
 }
 
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const BASE = import.meta.env.VITE_API_URL ?? '';
 
 async function post(path: string, body: unknown) {
   const res = await fetch(`${BASE}${path}`, {

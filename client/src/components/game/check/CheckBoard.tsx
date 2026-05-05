@@ -30,31 +30,25 @@ function TimerBar({ endAt, active, maxMs = 30000, w = 48 }: { endAt: number | nu
 
 const CARD_BACK = '/card-back.png';
 
-// ─── Room background (atmospheric dark luxury room) ──────────────────────────
+// ─── Room background (midnight blue luxury) ───────────────────────────────────
 function RoomBackground() {
   return (
     <>
-      {/* Base dark warm gradient */}
       <div style={{
         position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none',
         background: `
-          radial-gradient(ellipse 70% 50% at 50% 50%, rgba(90,45,5,0.38) 0%, transparent 65%),
-          radial-gradient(ellipse 100% 40% at 50% 0%, rgba(50,20,0,0.5) 0%, transparent 60%),
-          linear-gradient(180deg, #1C0B01 0%, #0E0500 38%, #070200 100%)
+          radial-gradient(ellipse 70% 50% at 50% 50%, rgba(0,40,100,0.35) 0%, transparent 65%),
+          radial-gradient(ellipse 100% 40% at 50% 0%, rgba(0,20,60,0.5) 0%, transparent 60%),
+          linear-gradient(180deg, #040C1E 0%, #020A18 38%, #010610 100%)
         `,
       }}/>
-      {/* Film grain for photographic texture */}
-      <svg style={{position:'fixed',inset:0,width:'100%',height:'100%',zIndex:1,pointerEvents:'none',opacity:0.055}} aria-hidden="true">
-        <filter id="grain-f">
-          <feTurbulence type="fractalNoise" baseFrequency="0.78" numOctaves="4" stitchTiles="stitch"/>
-          <feColorMatrix type="saturate" values="0"/>
-        </filter>
-        <rect width="100%" height="100%" filter="url(#grain-f)" fill="white"/>
+      <svg style={{position:'fixed',inset:0,width:'100%',height:'100%',zIndex:1,pointerEvents:'none',opacity:0.04}} aria-hidden="true">
+        <filter id="grain-f2"><feTurbulence type="fractalNoise" baseFrequency="0.78" numOctaves="4" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
+        <rect width="100%" height="100%" filter="url(#grain-f2)" fill="white"/>
       </svg>
-      {/* Vignette */}
       <div style={{
         position: 'fixed', inset: 0, zIndex: 2, pointerEvents: 'none',
-        background: 'radial-gradient(ellipse 90% 90% at 50% 50%, transparent 40%, rgba(0,0,0,0.65) 100%)',
+        background: 'radial-gradient(ellipse 90% 90% at 50% 50%, transparent 40%, rgba(0,0,0,0.7) 100%)',
       }}/>
     </>
   );
@@ -154,12 +148,19 @@ function CircleDeck({ count, onClick, disabled }: { count: number; onClick?: () 
 
 // ─── Avatar Circle ────────────────────────────────────────────────────────────
 const AV = ['#C9A84C','#4A90D9','#50C878','#E74C3C','#9B59B6','#E67E22','#1ABC9C','#E91E63'];
+const AV_COLORS = AV;
+const AVATAR_EMOJIS: Record<string, string> = {
+  avatar_1: '👳', avatar_2: '🧕', avatar_3: '👴', avatar_4: '🧔',
+  avatar_5: '👩', avatar_6: '👨', avatar_7: '🧑', avatar_8: '👵',
+  avatar_9: '🕌', avatar_10: '🏙️', avatar_11: '💎', avatar_12: '🌟',
+};
 function Av({ id, name, size = 32 }: { id: string; name: string; size?: number }) {
   const i = parseInt(id?.replace(/\D/g, '') || '1', 10) - 1;
+  const emoji = AVATAR_EMOJIS[id];
   return (
     <div className="rounded-full border-2 border-gold/40 flex items-center justify-center font-bold text-white shrink-0"
-      style={{ width: size, height: size, background: AV[i % AV.length], fontSize: Math.round(size * .37) }}>
-      {name?.slice(0, 2) || '?'}
+      style={{ width: size, height: size, background: AV_COLORS[i % AV_COLORS.length], fontSize: emoji ? Math.round(size * 0.52) : Math.round(size * .37) }}>
+      {emoji || name?.slice(0, 2) || '?'}
     </div>
   );
 }
@@ -336,6 +337,45 @@ function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwa
   );
 }
 
+// ─── Compact seat for mobile strip (shows all opponents in one row) ─────────
+function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSelectForJ }: any) {
+  const isTurn = player.isTurn;
+  const isElim = player.isEliminated;
+  const cardCount = player.cards.filter(Boolean).length;
+  return (
+    <div className="relative flex flex-col items-center"
+      style={{
+        flex: 1, borderRadius: 8, padding: '3px 2px 4px',
+        background: isTurn ? 'rgba(201,168,76,0.16)' : 'rgba(255,255,255,0.04)',
+        border: isTurn ? '1px solid rgba(201,168,76,0.65)' : '1px solid rgba(255,255,255,0.06)',
+        boxShadow: isTurn ? '0 0 8px rgba(201,168,76,0.22)' : 'none',
+        opacity: isElim ? 0.45 : 1, cursor: isSpecialJ && selectedPos !== null && !isElim ? 'pointer' : 'default',
+        gap: 1.5, transition: 'all 0.3s',
+      }}
+      onClick={() => isSpecialJ && selectedPos !== null && !isElim && onSelectForJ(player.uid)}
+    >
+      <AnimatePresence>{emoji && <EmojiFloat em={emoji} />}</AnimatePresence>
+      <AnimatePresence>{chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}</AnimatePresence>
+      <div className="relative">
+        <Av id={player.avatarId} name={player.displayName} size={20} />
+        {isTurn && <div className="absolute animate-pulse" style={{ bottom:-1, right:-1, width:5, height:5, borderRadius:'50%', background:'#C9A84C', border:'1px solid #000' }} />}
+        {isElim && <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(0,0,0,0.65)', display:'flex', alignItems:'center', justifyContent:'center' }}><span style={{color:'#ef4444', fontSize:7, fontWeight:700}}>✕</span></div>}
+      </div>
+      <p className="font-arabic" style={{ fontSize: 5.5, color:'rgba(255,255,255,0.55)', lineHeight:1, maxWidth:'100%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{player.displayName}</p>
+      <p style={{ fontSize: 8.5, fontWeight:700, lineHeight:1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.55)' }}>{player.cumulativeScore}</p>
+      {/* 2×2 card indicators */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1.5, marginTop:1 }}>
+        {Array.from({ length: Math.min(cardCount, 4) }).map((_, j) => (
+          <div key={j} style={{ width:13, height:19, borderRadius:2, background:'#060B1F', border:`1px solid ${isTurn ? 'rgba(201,168,76,0.5)' : 'rgba(201,168,76,0.22)'}` }} />
+        ))}
+      </div>
+      {isSpecialJ && selectedPos !== null && !isElim && (
+        <div className="absolute inset-0 rounded-lg" style={{ border: '1.5px solid rgba(80,200,120,0.7)', boxShadow: '0 0 8px rgba(80,200,120,0.4)', pointerEvents:'none' }} />
+      )}
+    </div>
+  );
+}
+
 // ─── Mini seat for circular orbit (2×2 real cards) ───────────────────────────
 function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob }: any) {
   const isTurn = player.isTurn;
@@ -425,7 +465,17 @@ function CircularOpponents({ opponents, tableRadius, isMobile, gameState, isSpec
 
 // ─── CheckBoard ───────────────────────────────────────────────────────────────
 export function CheckBoard({ gameId, roomId, gameState }: Props) {
-  const { user } = useAuthStore();
+  const { user, profile } = useAuthStore();
+  const boardThemeId = (profile?.equippedItems as any)?.boardTheme || 'board_classic';
+  const cardBackId = (profile?.equippedItems as any)?.cardBack || 'card_classic';
+  const BOARD_THEMES: Record<string, { c1: string; c2: string; c3: string; rim1: string; rim2: string }> = {
+    board_classic: { c1: '#17432E', c2: '#0D2D1F', c3: '#071810', rim1: '#1A2A3A', rim2: '#243548' },
+    board_desert:  { c1: '#6B3A10', c2: '#4A2508', c3: '#2A1003', rim1: '#5A3010', rim2: '#7A4518' },
+    board_oasis:   { c1: '#1A5A30', c2: '#104020', c3: '#082010', rim1: '#1A4028', rim2: '#286038' },
+    board_night:   { c1: '#0A1840', c2: '#061028', c3: '#020810', rim1: '#102040', rim2: '#183058' },
+    board_royal:   { c1: '#2A0A50', c2: '#1A0638', c3: '#0A0220', rim1: '#2A1050', rim2: '#3A1868' },
+  };
+  const theme = BOARD_THEMES[boardThemeId] || BOARD_THEMES.board_classic;
   const { drawnCard, setDrawnCard, gameOverData, setGameOverData, reset: resetGame, chatMessages } = useGameStore();
   const navigate = useNavigate();
   const socket = socketService.getSocket();
@@ -488,6 +538,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [discardSelected, setDiscardSelected] = useState(false);
   const [chatBubbleMap, setChatBubbleMap] = useState<Record<string, { text: string; key: number } | null>>({});
   const [unreadCount, setUnreadCount] = useState(0);
+  const [jTargetUid, setJTargetUid] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [soundOn, setSoundOn] = useState(soundService.isEnabled());
   const [volume, setVolumeState] = useState(soundService.getVolume());
@@ -539,6 +590,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     if (gameState.phase === 'PEEK_PHASE') { setShowIntro(false); setShowPeek(true); }
     if (gameState.phase === 'PLAYING') { setShowPeek(false); setKnownCards(new Map()); }
     if (gameState.phase !== 'KING_CHOICE') { setKingChoiceCards(null); setKingSelectedIdx(null); }
+  }, [gameState.phase]);
+
+  useEffect(() => {
+    if (gameState.phase !== 'SPECIAL_J') { setJTargetUid(null); }
   }, [gameState.phase]);
 
   useEffect(() => {
@@ -798,7 +853,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     const showName = n <= 8;
     return (
       <div className="fixed top-0 left-0 right-0 z-40"
-        style={{ background: 'rgba(8,3,0,.97)', borderBottom: '1px solid rgba(201,168,76,.22)', height: 44 }}>
+        style={{ background: 'rgba(3,7,18,0.98)', borderBottom: '1px solid rgba(201,168,76,.22)', height: 44 }}>
         <div className="h-full flex items-center gap-1.5 px-2 overflow-x-auto"
           style={{ scrollbarWidth: 'none' }}>
           {gameState.players.map(p => {
@@ -845,6 +900,18 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
       <div className="flex-1 flex flex-col pt-11 pb-14 min-h-0 gap-2 px-1" style={{ position: 'relative', zIndex: 1 }}>
 
+        {/* ══ MOBILE: compact opponent strip ══ */}
+        {isMobile && others.length > 0 && (
+          <div className="shrink-0 flex items-stretch gap-1" style={{ padding: '3px 4px 4px', minHeight: 88, maxHeight: 96 }}>
+            {others.map(p => (
+              <CompactSeat key={p.uid} player={p}
+                emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null}
+                isSpecialJ={isSpecialJ} selectedPos={selectedPos}
+                onSelectForJ={(uid: string) => setJTargetUid(uid)} />
+            ))}
+          </div>
+        )}
+
         {/* ══ DESKTOP ONLY: top row of opponents ══ */}
         {!isMobile && top.length > 0 && (
           <div className="shrink-0 flex justify-center gap-2 pt-0.5"
@@ -871,14 +938,14 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
           {/* ══ CIRCULAR TABLE ══ */}
           <div className="flex-1 flex items-center justify-center min-h-0 min-w-0 overflow-visible">
-            <div style={{ position: 'relative', marginTop: isMobile ? 20 : 60 }}>
+            <div style={{ position: 'relative', marginTop: isMobile ? 0 : 60 }}>
               {/* Wooden rim — sits behind the felt circle */}
               <div style={{
                 position: 'absolute',
                 inset: -22,
                 borderRadius: '50%',
-                background: 'conic-gradient(from 10deg, #3D1C06 0deg, #7A3E10 50deg, #9B5218 90deg, #7A3E10 130deg, #4A2208 180deg, #7A3E10 220deg, #9B5218 270deg, #7A3E10 310deg, #3D1C06 360deg)',
-                boxShadow: '0 30px 90px rgba(0,0,0,0.85), 0 0 0 5px #1E0A02, 0 0 0 7px rgba(201,168,76,0.12), inset 0 3px 8px rgba(255,200,80,0.06)',
+                background: `conic-gradient(from 10deg, ${theme.rim1} 0deg, ${theme.rim2} 50deg, ${theme.rim1} 90deg, ${theme.rim2} 130deg, ${theme.rim1} 180deg, ${theme.rim2} 220deg, ${theme.rim1} 270deg, ${theme.rim2} 310deg, ${theme.rim1} 360deg)`,
+                boxShadow: '0 30px 90px rgba(0,0,0,0.9), 0 0 0 5px #0A1520, 0 0 0 7px rgba(201,168,76,0.15), inset 0 3px 8px rgba(201,168,76,0.05)',
                 zIndex: 0,
               }}/>
               {/* Floor glow under table */}
@@ -896,18 +963,22 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               ref={tableRef}
               className="relative"
               style={{
-                width: isMobile ? 'min(248px, max(130px, 62vw))' : 'min(650px, max(200px, 55vw))',
-                height: isMobile ? 'min(248px, max(130px, 62vw))' : 'min(650px, max(200px, 55vw))',
+                width: isMobile ? 'min(300px, max(140px, 74vw))' : 'min(650px, max(200px, 55vw))',
+                height: isMobile ? 'min(300px, max(140px, 74vw))' : 'min(650px, max(200px, 55vw))',
                 borderRadius: '50%',
                 background: `
-                  radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.055) 0%, transparent 38%),
-                  radial-gradient(ellipse at 58% 70%, rgba(0,0,0,0.25) 0%, transparent 35%),
-                  radial-gradient(ellipse at 50% 50%, #1D3C1A 0%, #0E2010 45%, #060E06 100%)
+                  radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.045) 0%, transparent 38%),
+                  radial-gradient(ellipse at 58% 70%, rgba(0,0,0,0.3) 0%, transparent 35%),
+                  radial-gradient(ellipse at 50% 50%, ${theme.c1} 0%, ${theme.c2} 45%, ${theme.c3} 100%)
                 `,
-                boxShadow: 'inset 0 0 70px rgba(0,0,0,0.55), inset 0 0 25px rgba(0,0,0,0.35)',
+                boxShadow: 'inset 0 0 70px rgba(0,0,0,0.6), inset 0 0 25px rgba(0,0,0,0.4)',
                 zIndex: 1,
               }}
             >
+              {/* CHECK watermark */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 0 }}>
+                <p className="font-display tracking-widest select-none" style={{ fontSize: isMobile ? 18 : 30, color: 'rgba(201,168,76,0.09)', letterSpacing: '0.3em' }}>CHECK</p>
+              </div>
               {/* Inner ring */}
               <div className="absolute pointer-events-none" style={{ inset: '5%', borderRadius: '50%', border: '1px dashed rgba(201,168,76,.13)' }} />
 
@@ -999,20 +1070,6 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               </AnimatePresence>
             </div>{/* end table circle */}
 
-            {/* ══ MOBILE: opponents orbiting the table ══ */}
-            {isMobile && (
-              <CircularOpponents
-                opponents={others}
-                tableRadius={tSize / 2}
-                isMobile={isMobile}
-                gameState={gameState}
-                isSpecialJ={isSpecialJ}
-                selectedPos={selectedPos}
-                onSpecialSwap={onSpecialSwap}
-                emojiMap={emojiMap}
-                chatBubbleMap={chatBubbleMap}
-              />
-            )}
             </div>{/* end position:relative wrapper */}
           </div>{/* end flex-1 table container */}
 
@@ -1046,7 +1103,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                       faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
                       highlight={myCardHighlight(i)}
                       onClick={() => onMyCardClick(i)}
-                      small
+                      small backId={cardBackId}
                     />
                   </motion.div>
                 ) : null)}
@@ -1113,7 +1170,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
       {/* ══ ACTION BAR ══ */}
       <div className="fixed bottom-0 left-0 right-0 flex items-center justify-between border-t border-yellow-900/30"
-        style={{ background: 'rgba(8,3,0,.97)', height: isMobile ? 46 : 52, zIndex: 40, padding: isMobile ? '0 8px' : '0 12px' }}>
+        style={{ background: 'rgba(3,7,18,0.98)', height: isMobile ? 46 : 52, zIndex: 40, padding: isMobile ? '0 8px' : '0 12px' }}>
         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
           className={`relative px-4 py-1.5 rounded-xl border font-arabic text-sm transition-all
             ${chatOpen ? 'border-gold/60 text-gold bg-gold/12' : 'border-white/15 text-white/60 bg-white/5'}`}
@@ -1251,7 +1308,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                         <PlayingCard
                           card={getCardForPos(me.cards, i)}
                           faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
-                          highlight="select"
+                          highlight="select" backId={cardBackId}
                         />
                       </motion.div>
                     ) : null)}
@@ -1370,6 +1427,113 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {showPeek && !showIntro && <PeekOverlay />}
         {showAfk && <AfkOverlay />}
         {showExitConfirm && <ExitOverlay />}
+      </AnimatePresence>
+
+      {/* ── J action: Step 1 — select opponent ── */}
+      <AnimatePresence>
+        {isSpecialJ && selectedPos !== null && jTargetUid === null && (
+          <motion.div
+            key="j-step1"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col justify-end"
+            style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+              className="rounded-t-3xl flex flex-col gap-2"
+              style={{ background: 'rgba(4,9,24,0.99)', border: '1px solid rgba(201,168,76,0.25)', padding: '18px 16px 36px', maxHeight: '70vh', overflowY: 'auto' }}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-2xl">♠</span>
+                <div>
+                  <p className="font-arabic font-bold text-gold text-base">J — مبادلة كرت</p>
+                  <p className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>اختر اللاعب اللي تبادل معه</p>
+                </div>
+              </div>
+              {others.filter(p => !p.isEliminated).map(p => (
+                <motion.button
+                  key={p.uid}
+                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                  onClick={() => setJTargetUid(p.uid)}
+                  className="flex items-center gap-3 rounded-2xl px-4 py-3 w-full"
+                  style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                >
+                  <Av id={p.avatarId} name={p.displayName} size={38} />
+                  <div className="text-left">
+                    <p className="font-arabic text-white text-sm font-bold">{p.displayName}</p>
+                    <p style={{ fontSize: 11, color: 'rgba(201,168,76,0.6)' }}>{p.cumulativeScore} نقطة</p>
+                  </div>
+                  <div className="mr-auto text-gold text-lg">←</div>
+                </motion.button>
+              ))}
+              <motion.button
+                onClick={() => setSelectedPos(null)}
+                className="text-sand/35 font-arabic text-xs mt-2 self-center hover:text-sand/60 transition-colors"
+              >✕ إلغاء</motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── J action: Step 2 — select card from opponent ── */}
+      <AnimatePresence>
+        {isSpecialJ && jTargetUid !== null && (() => {
+          const tgt = others.find(p => p.uid === jTargetUid);
+          if (!tgt) return null;
+          return (
+            <motion.div
+              key="j-step2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex flex-col justify-end"
+              style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}
+            >
+              <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+                className="rounded-t-3xl flex flex-col items-center gap-4"
+                style={{ background: 'rgba(4,9,24,0.99)', border: '1px solid rgba(201,168,76,0.25)', padding: '20px 16px 40px' }}
+              >
+                <div className="flex items-center gap-3 self-start">
+                  <Av id={tgt.avatarId} name={tgt.displayName} size={38} />
+                  <div>
+                    <p className="font-arabic font-bold text-gold">{tgt.displayName}</p>
+                    <p className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>اختر الكرت اللي تبادله</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {tgt.cards.map((c: any, i: number) => c !== null ? (
+                    <motion.div
+                      key={i}
+                      whileHover={{ scale: 1.08, y: -4 }}
+                      whileTap={{ scale: 0.93 }}
+                      onClick={() => {
+                        onSpecialSwap(jTargetUid, i);
+                        setJTargetUid(null);
+                      }}
+                      className="cursor-pointer"
+                      style={{ filter: 'drop-shadow(0 4px 12px rgba(80,200,120,0.3))' }}
+                    >
+                      <PlayingCard card={c} faceDown={!c?.isRevealed} small highlight="burn" />
+                    </motion.div>
+                  ) : null)}
+                </div>
+                <motion.button
+                  onClick={() => setJTargetUid(null)}
+                  className="text-sand/40 font-arabic text-xs hover:text-sand/65 transition-colors"
+                >← رجوع لاختيار لاعب آخر</motion.button>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
 
       {/* ── Settings Panel ── */}

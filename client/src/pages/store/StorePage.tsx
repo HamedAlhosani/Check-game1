@@ -15,12 +15,13 @@ import {
 import { UserProfile } from '@check-game/shared';
 
 const AVATAR_EMOJIS: Record<string, string> = {
-  avatar_1: '🦅', avatar_2: '🐪', avatar_3: '🌴', avatar_4: '⚔️',
-  avatar_5: '🌙', avatar_6: '⭐', avatar_7: '🏜️', avatar_8: '🌊',
-  avatar_9: '🦁', avatar_10: '🔥', avatar_11: '💎', avatar_12: '🎭',
+  avatar_1: '👳', avatar_2: '🧕', avatar_3: '👴', avatar_4: '🧔',
+  avatar_5: '👩', avatar_6: '👨', avatar_7: '🧑', avatar_8: '👵',
+  avatar_9: '🕌', avatar_10: '🏙️', avatar_11: '💎', avatar_12: '🌟',
 };
 
 type TabType = ItemCategory | 'recharge';
+// cardBack and boardTheme are already in ItemCategory
 
 const COIN_PACKAGES = [
   { id: 'pkg_100', coins: 100, bonus: 0, price: 5, popular: false },
@@ -44,8 +45,10 @@ export function StorePage() {
   const [preview, setPreview] = useState<StoreItem | null>(null);
 
   const TABS: { id: TabType; label: string; icon: string }[] = [
-    { id: 'character', label: t('store_characters'), icon: '👥' },
+    { id: 'character', label: t('store_characters'), icon: '🧑' },
     { id: 'avatarFrame', label: t('store_frames'), icon: '🖼' },
+    { id: 'cardBack', label: lang === 'ar' ? 'كفر الأوراق' : 'Card Backs', icon: '🃏' },
+    { id: 'boardTheme', label: lang === 'ar' ? 'ثيم الطاولة' : 'Tables', icon: '🟢' },
     { id: 'recharge', label: t('store_recharge'), icon: '💰' },
   ];
 

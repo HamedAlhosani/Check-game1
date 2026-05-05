@@ -16,12 +16,18 @@ type GameMode = 'online' | 'private' | 'bots';
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
 const AV_COLORS = ['#C9A84C','#4A90D9','#50C878','#E74C3C','#9B59B6','#E67E22','#1ABC9C','#E91E63'];
+const HOME_AVATAR_EMOJIS: Record<string, string> = {
+  avatar_1: '👳', avatar_2: '🧕', avatar_3: '👴', avatar_4: '🧔',
+  avatar_5: '👩', avatar_6: '👨', avatar_7: '🧑', avatar_8: '👵',
+  avatar_9: '🕌', avatar_10: '🏙️', avatar_11: '💎', avatar_12: '🌟',
+};
 function AvatarCircle({ id, name, size = 40 }: { id: string; name: string; size?: number }) {
   const i = parseInt(id?.replace(/\D/g, '') || '1', 10) - 1;
+  const emoji = HOME_AVATAR_EMOJIS[id];
   return (
     <div className="rounded-full flex items-center justify-center font-bold text-white shrink-0"
-      style={{ width: size, height: size, background: AV_COLORS[i % AV_COLORS.length], fontSize: size * 0.36, border: '2px solid rgba(201,168,76,0.3)' }}>
-      {name?.slice(0, 2) || '?'}
+      style={{ width: size, height: size, background: AV_COLORS[i % AV_COLORS.length], fontSize: emoji ? size * 0.52 : size * 0.36, border: '2px solid rgba(201,168,76,0.3)' }}>
+      {emoji || name?.slice(0, 2) || '?'}
     </div>
   );
 }
@@ -526,10 +532,6 @@ export function HomePage() {
               </div>
             )}
 
-            {/* ── Sound toggle ── */}
-            <div className="mt-5 flex justify-center">
-              <SoundToggle />
-            </div>
           </>
         )}
       </div>
@@ -561,23 +563,3 @@ export function HomePage() {
   );
 }
 
-// ── Sound toggle button ────────────────────────────────────────────────────────
-function SoundToggle() {
-  const lang = useLang();
-  const [on, setOn] = useState(soundService.isEnabled());
-  return (
-    <button
-      onClick={() => { soundService.setEnabled(!on); setOn(!on); }}
-      className="flex items-center gap-2 rounded-xl px-3 py-1.5 transition-all font-arabic text-xs"
-      style={{
-        background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        color: 'rgba(245,230,200,0.4)',
-      }}>
-      <span>{on ? '🔊' : '🔇'}</span>
-      {on
-        ? (lang === 'ar' ? 'الصوت مفعّل' : 'Sound On')
-        : (lang === 'ar' ? 'الصوت معطّل' : 'Sound Off')}
-    </button>
-  );
-}

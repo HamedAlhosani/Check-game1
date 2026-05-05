@@ -8,9 +8,9 @@ import { LangToggle } from '../../components/shared/LangToggle';
 import { LeaderboardEntry } from '@check-game/shared';
 
 const AVATAR_EMOJIS: Record<string, string> = {
-  avatar_1: '🦅', avatar_2: '🐪', avatar_3: '🌴', avatar_4: '⚔️',
-  avatar_5: '🌙', avatar_6: '⭐', avatar_7: '🏜️', avatar_8: '🌊',
-  avatar_9: '🦁', avatar_10: '🔥', avatar_11: '💎', avatar_12: '🎭',
+  avatar_1: '👳', avatar_2: '🧕', avatar_3: '👴', avatar_4: '🧔',
+  avatar_5: '👩', avatar_6: '👨', avatar_7: '🧑', avatar_8: '👵',
+  avatar_9: '🕌', avatar_10: '🏙️', avatar_11: '💎', avatar_12: '🌟',
 };
 
 const TITLES_AR = ['مبتدئ الصحراء','رامي البطاقات','فارس النخيل','حارس الواحة','صائد النقاط','أسد المائدة','سلطان Check','حكيم الرمال','أمير الطاولة','ملك الورق','سلطان الرياح'];

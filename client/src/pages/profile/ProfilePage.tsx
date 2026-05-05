@@ -13,27 +13,27 @@ import { LangToggle } from '../../components/shared/LangToggle';
 import { UserProfile } from '@check-game/shared';
 
 const AVATAR_EMOJIS: Record<string, string> = {
-  avatar_1: '🦅', avatar_2: '🐪', avatar_3: '🌴', avatar_4: '⚔️',
-  avatar_5: '🌙', avatar_6: '⭐', avatar_7: '🏜️', avatar_8: '🌊',
-  avatar_9: '🦁', avatar_10: '🔥', avatar_11: '💎', avatar_12: '🎭',
+  avatar_1: '👳', avatar_2: '🧕', avatar_3: '👴', avatar_4: '🧔',
+  avatar_5: '👩', avatar_6: '👨', avatar_7: '🧑', avatar_8: '👵',
+  avatar_9: '🕌', avatar_10: '🏙️', avatar_11: '💎', avatar_12: '🌟',
 };
 
 const CHARACTERS = [
-  { id: 'avatar_1', nameAr: 'الصقر', nameEn: 'The Falcon', price: 0 },
-  { id: 'avatar_2', nameAr: 'ابن الصحراء', nameEn: 'Desert Son', price: 0 },
-  { id: 'avatar_3', nameAr: 'شيخ النخيل', nameEn: 'Palm Sheikh', price: 150 },
-  { id: 'avatar_4', nameAr: 'محارب الصحراء', nameEn: 'Desert Warrior', price: 200 },
-  { id: 'avatar_5', nameAr: 'صياد الليل', nameEn: 'Night Hunter', price: 300 },
-  { id: 'avatar_6', nameAr: 'نجم الخليج', nameEn: 'Gulf Star', price: 350 },
-  { id: 'avatar_7', nameAr: 'ابن الرمال', nameEn: 'Son of Sands', price: 500 },
-  { id: 'avatar_8', nameAr: 'فارس البحر', nameEn: 'Sea Knight', price: 500 },
-  { id: 'avatar_9', nameAr: 'أسد الخليج', nameEn: 'Gulf Lion', price: 800 },
-  { id: 'avatar_10', nameAr: 'سلطان النار', nameEn: 'Fire Sultan', price: 800 },
+  { id: 'avatar_1', nameAr: 'رجل خليجي', nameEn: 'Gulf Man', price: 0 },
+  { id: 'avatar_2', nameAr: 'امرأة خليجية', nameEn: 'Gulf Woman', price: 0 },
+  { id: 'avatar_3', nameAr: 'الشيخ', nameEn: 'The Sheikh', price: 150 },
+  { id: 'avatar_4', nameAr: 'شاب ملتحٍ', nameEn: 'Bearded Youth', price: 200 },
+  { id: 'avatar_5', nameAr: 'شابة', nameEn: 'Young Woman', price: 300 },
+  { id: 'avatar_6', nameAr: 'رجل عصري', nameEn: 'Modern Man', price: 350 },
+  { id: 'avatar_7', nameAr: 'شاب', nameEn: 'Young Person', price: 500 },
+  { id: 'avatar_8', nameAr: 'عجوز حكيمة', nameEn: 'Wise Elder', price: 500 },
+  { id: 'avatar_9', nameAr: 'المسجد', nameEn: 'The Mosque', price: 800 },
+  { id: 'avatar_10', nameAr: 'المدينة', nameEn: 'The City', price: 800 },
   { id: 'avatar_11', nameAr: 'أمير الماس', nameEn: 'Diamond Prince', price: 1200 },
-  { id: 'avatar_12', nameAr: 'سلطان الرياح', nameEn: 'Wind Sultan', price: 2000 },
+  { id: 'avatar_12', nameAr: 'نجم أسطوري', nameEn: 'Legendary Star', price: 2000 },
 ];
 
-type Tab = 'info' | 'avatar' | 'password';
+type Tab = 'info' | 'avatar' | 'password' | 'settings';
 
 export function ProfilePage() {
   const t = useT();
@@ -50,6 +50,8 @@ export function ProfilePage() {
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
   const [saving, setSaving] = useState(false);
+  const [soundOn, setSoundOn] = useState(soundService.isEnabled());
+  const [volume, setVolumeState] = useState(soundService.getVolume());
 
   const handleLogout = async () => {
     await logout();
@@ -221,14 +223,15 @@ export function ProfilePage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-5 rounded-xl p-1" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex gap-1 mb-5 rounded-xl p-1 flex-wrap" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
           {([
-            { id: 'info' as Tab, label: t('profile_info'), icon: '👤' },
-            { id: 'avatar' as Tab, label: t('profile_avatar'), icon: '🎭' },
-            { id: 'password' as Tab, label: t('profile_password'), icon: '🔑' },
+            { id: 'info' as Tab, label: lang === 'ar' ? 'المعلومات' : 'Info', icon: '👤' },
+            { id: 'avatar' as Tab, label: lang === 'ar' ? 'الشخصية' : 'Character', icon: '🧑' },
+            { id: 'password' as Tab, label: lang === 'ar' ? 'كلمة السر' : 'Password', icon: '🔑' },
+            { id: 'settings' as Tab, label: lang === 'ar' ? 'الإعدادات' : 'Settings', icon: '⚙️' },
           ]).map(tt => (
             <button key={tt.id} onClick={() => { setTab(tt.id); soundService.playClick(); }}
-              className="flex-1 py-2 rounded-lg font-arabic text-sm transition-all"
+              className="flex-1 py-2 rounded-lg font-arabic text-xs transition-all"
               style={tab === tt.id ? {
                 background: 'linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.10))',
                 color: '#E8C97A', fontWeight: 700,
@@ -309,6 +312,86 @@ export function ProfilePage() {
             <Input label={t('profile_new_password')} type="password" value={newPass} onChange={e => setNewPass(e.target.value)} dir="ltr" />
             <Input label={lang === 'ar' ? 'تأكيد كلمة المرور الجديدة' : 'Confirm New Password'} type="password" value={confirmPass} onChange={e => setConfirmPass(e.target.value)} dir="ltr" />
             <Button onClick={savePassword} loading={saving}>{t('profile_change_password')}</Button>
+          </motion.div>
+        )}
+
+        {/* Tab: Settings */}
+        {tab === 'settings' && (
+          <motion.div key="settings" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl p-5 space-y-4 border"
+            style={{ background: 'rgba(255,255,255,0.025)', borderColor: 'rgba(255,255,255,0.07)' }}>
+            <p className="font-arabic font-bold text-base" style={{ color: '#E8C97A' }}>
+              {lang === 'ar' ? '🔊 الصوت' : '🔊 Sound'}
+            </p>
+
+            {/* Mute toggle */}
+            <div className="flex items-center justify-between rounded-2xl px-4 py-3.5"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <span className="font-arabic text-sm" style={{ color: 'rgba(245,230,200,0.75)' }}>
+                {soundOn ? (lang === 'ar' ? '🔊 الصوت مفعّل' : '🔊 Sound On') : (lang === 'ar' ? '🔇 الصوت معطّل' : '🔇 Sound Off')}
+              </span>
+              <button
+                onClick={() => { const n = !soundOn; soundService.setEnabled(n); setSoundOn(n); }}
+                style={{
+                  width: 50, height: 28, borderRadius: 14, position: 'relative',
+                  background: soundOn ? '#C9A84C' : 'rgba(255,255,255,0.15)',
+                  border: 'none', cursor: 'pointer', transition: 'background 0.25s',
+                }}>
+                <div style={{
+                  position: 'absolute', top: 4, width: 20, height: 20, borderRadius: '50%',
+                  background: 'white', transition: 'left 0.25s',
+                  left: soundOn ? 26 : 4,
+                }} />
+              </button>
+            </div>
+
+            {/* Volume slider */}
+            <div className="flex flex-col gap-3 rounded-2xl px-4 py-3.5"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', opacity: soundOn ? 1 : 0.35 }}>
+              <div className="flex items-center justify-between">
+                <span className="font-arabic text-sm" style={{ color: 'rgba(245,230,200,0.75)' }}>
+                  {lang === 'ar' ? '🎚️ مستوى الصوت' : '🎚️ Volume'}
+                </span>
+                <span className="font-bold font-mono text-sm" style={{ color: '#C9A84C' }}>{Math.round(volume * 100)}%</span>
+              </div>
+              <input type="range" min={0} max={100} value={Math.round(volume * 100)}
+                disabled={!soundOn}
+                onChange={e => { const v = Number(e.target.value) / 100; soundService.setVolume(v); setVolumeState(v); }}
+                className="w-full" style={{ accentColor: '#C9A84C', height: 4 }} />
+              <div className="flex justify-between font-arabic" style={{ fontSize: 10, color: 'rgba(245,230,200,0.25)' }}>
+                <span>{lang === 'ar' ? 'صامت' : 'Mute'}</span>
+                <span>{lang === 'ar' ? 'أقصى' : 'Max'}</span>
+              </div>
+            </div>
+
+            {/* Equipped items display */}
+            <p className="font-arabic font-bold text-base pt-2" style={{ color: '#E8C97A' }}>
+              {lang === 'ar' ? '🎴 العناصر المجهّزة' : '🎴 Equipped Items'}
+            </p>
+            {(['cardBack', 'avatarFrame', 'boardTheme'] as const).map(cat => {
+              const catNames: Record<string, { ar: string; en: string }> = {
+                cardBack: { ar: 'كفر الأوراق', en: 'Card Back' },
+                avatarFrame: { ar: 'إطار الصورة', en: 'Avatar Frame' },
+                boardTheme: { ar: 'ثيم الطاولة', en: 'Table Theme' },
+              };
+              const equipped = (profile.equippedItems as any)?.[cat];
+              return (
+                <div key={cat} className="flex items-center justify-between rounded-xl px-4 py-3"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <span className="font-arabic text-sm" style={{ color: 'rgba(245,230,200,0.65)' }}>
+                    {lang === 'ar' ? catNames[cat].ar : catNames[cat].en}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-arabic text-xs" style={{ color: '#C9A84C' }}>{equipped || '—'}</span>
+                    <button onClick={() => navigate('/store')}
+                      className="font-arabic text-xs px-2 py-1 rounded-lg"
+                      style={{ background: 'rgba(201,168,76,0.12)', color: '#E8C97A', border: '1px solid rgba(201,168,76,0.25)' }}>
+                      {lang === 'ar' ? 'تغيير' : 'Change'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </motion.div>
         )}
 

@@ -424,7 +424,13 @@ export class GameEngine {
     this.checkCallerId = uid;
     this.turnsAfterCheck = this.activePlayers().length;
     this.phase = 'CHECK_CALLED';
-    this.emit('game:check_called', { callerUid: uid, turnsRemaining: this.turnsAfterCheck });
+    const caller = this.getPlayer(uid);
+    this.emit('game:check_called', {
+      callerUid: uid,
+      callerAvatarId: caller?.avatarId,
+      callerDisplayName: caller?.displayName,
+      turnsRemaining: this.turnsAfterCheck,
+    });
     this.broadcastState();
     this.advanceTurn(true); // calling check was the caller's action — skip first decrement
     return true;

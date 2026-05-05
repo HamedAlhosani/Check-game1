@@ -616,8 +616,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     socket.on(SOCKET_EVENTS.GAME_CARD_DRAWN, (data: any) => { if (data.card) { setDrawnCard(data.card); soundService.playCardDraw(); } actedRef.current = true; });
     socket.on(SOCKET_EVENTS.GAME_OVER, (data: any) => { setGameOverData(data); soundService.playWin(); });
     socket.on(SOCKET_EVENTS.GAME_CHECK_CALLED, (data: any) => {
-      const caller = gameState.players.find(p => p.uid === data?.callerUid);
-      soundService.playCheckVoice(caller?.avatarId);
+      // Server includes caller's avatarId in the broadcast so every player in the
+      // room hears the same character voice — independent of any stale local state.
+      soundService.playCheckVoice(data?.callerAvatarId);
     });
     socket.on(SOCKET_EVENTS.GAME_BURN_INVALID, () => { soundService.playError(); });
     socket.on(SOCKET_EVENTS.GAME_SCORES, (data: any) => {

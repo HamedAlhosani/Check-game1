@@ -10,6 +10,8 @@ export function setupSocketHandlers(io: Server): void {
     let authenticated = false;
 
     socket.on(SOCKET_EVENTS.AUTH_TOKEN, async (payload: { token: string }) => {
+      if (authenticated) return;
+
       const ok = await verifySocketToken(socket, payload.token);
       if (!ok) {
         socket.emit('auth:error', { message: 'Token invalid' });

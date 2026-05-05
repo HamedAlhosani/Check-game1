@@ -7,8 +7,10 @@ export function RegisterPage() {
   const lang = useLang();
   return (
     <AppShell showNav={false}>
-      <div className="min-h-screen flex items-center justify-center p-4 relative" style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
-        <div className="absolute top-4 right-4 z-10"><LangToggle /></div>
+      {/* Lang toggle fixed — always visible regardless of scroll or direction */}
+      <div className="fixed top-4 right-4 z-50"><LangToggle /></div>
+
+      <div className="min-h-screen flex items-center justify-center px-4 pt-16 pb-8 relative" style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
 
         {/* Decorative card suits */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden select-none" aria-hidden="true">

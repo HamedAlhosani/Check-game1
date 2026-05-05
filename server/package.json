@@ -8,7 +8,6 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@check-game/shared": "*",
     "@react-oauth/google": "^0.13.5",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

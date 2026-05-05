@@ -100,7 +100,8 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
   socket.on(SOCKET_EVENTS.LOBBY_START_GAME, (payload: { roomId: string }) => {
     if (!socket.uid) return;
     const room = roomManager.getRoom(payload.roomId);
-    if (!room || room.hostUid !== socket.uid) return;
+    if (!room) return;
+    if (!room.players.some(p => p.uid === socket.uid)) return;
 
     startGameSession(io, payload.roomId);
   });
@@ -108,7 +109,8 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
   socket.on(SOCKET_EVENTS.LOBBY_ADD_BOT, (payload: { roomId: string; difficulty?: 'easy' | 'medium' | 'hard' }) => {
     if (!socket.uid) return;
     const room = roomManager.getRoom(payload.roomId);
-    if (!room || room.hostUid !== socket.uid) return;
+    if (!room) return;
+    if (!room.players.some(p => p.uid === socket.uid)) return;
     if (room.status !== 'waiting') return;
 
     const ok = room.addOneBot(payload.difficulty || 'medium');
@@ -123,7 +125,8 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
   socket.on(SOCKET_EVENTS.LOBBY_REMOVE_BOT, (payload: { roomId: string; botUid: string }) => {
     if (!socket.uid) return;
     const room = roomManager.getRoom(payload.roomId);
-    if (!room || room.hostUid !== socket.uid) return;
+    if (!room) return;
+    if (!room.players.some(p => p.uid === socket.uid)) return;
     if (room.status !== 'waiting') return;
 
     room.removeBot(payload.botUid);

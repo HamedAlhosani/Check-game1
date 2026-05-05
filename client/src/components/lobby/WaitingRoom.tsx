@@ -233,7 +233,7 @@ export function WaitingRoom({ room, onLeave }: Props) {
                 onRemoveBot={handleRemoveBot}
               />
             ) : (
-              <EmptySlot key={`empty-${i}`} isHost={isHost} onAddBot={handleAddBot} disabled={addingBot} />
+              <EmptySlot key={`empty-${i}`} isHost={true} onAddBot={handleAddBot} disabled={addingBot} />
             );
           })}
         </AnimatePresence>
@@ -299,8 +299,8 @@ export function WaitingRoom({ room, onLeave }: Props) {
         )}
       </motion.div>
 
-      {/* Bot controls — host only, when there are empty seats */}
-      {isHost && emptySlots > 0 && (
+      {/* Bot controls — visible to all players when there are empty seats */}
+      {emptySlots > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -366,42 +366,24 @@ export function WaitingRoom({ room, onLeave }: Props) {
 
       {/* Action buttons */}
       <div className="flex gap-3 mt-1">
-        {!isHost && (
-          <button
-            onClick={handleReady}
-            className="flex-1 py-3 rounded-xl font-arabic font-bold text-sm transition-all border"
-            style={me?.isReady ? {
-              background: 'rgba(45,110,78,0.12)', borderColor: 'rgba(45,110,78,0.4)', color: '#2D6E4E',
-            } : {
-              background: 'linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.08))',
-              borderColor: 'rgba(201,168,76,0.45)', color: '#E8C97A',
-            }}
-          >
-            {me?.isReady
-              ? (lang === 'ar' ? '✓ جاهز — انقر للإلغاء' : '✓ Ready — click to cancel')
-              : (lang === 'ar' ? 'جاهز ✓' : 'Ready ✓')}
-          </button>
-        )}
-        {isHost && (
-          <button
-            onClick={handleStart}
-            disabled={room.players.length < 2}
-            className="flex-1 py-3 rounded-xl font-arabic font-bold text-sm transition-all"
-            style={room.players.length >= 2 ? {
-              background: 'linear-gradient(135deg, #C9A84C, #8B6914)',
-              color: '#0A0614',
-              boxShadow: '0 0 20px rgba(201,168,76,0.3)',
-              border: '1px solid rgba(201,168,76,0.5)',
-            } : {
-              background: 'rgba(255,255,255,0.05)',
-              color: 'rgba(255,255,255,0.2)',
-              border: '1px solid rgba(255,255,255,0.07)',
-              cursor: 'not-allowed',
-            }}
-          >
-            {lang === 'ar' ? 'ابدأ اللعبة ←' : 'Start Game →'}
-          </button>
-        )}
+        <button
+          onClick={handleStart}
+          disabled={room.players.length < 2}
+          className="flex-1 py-3 rounded-xl font-arabic font-bold text-sm transition-all"
+          style={room.players.length >= 2 ? {
+            background: 'linear-gradient(135deg, #C9A84C, #8B6914)',
+            color: '#0A0614',
+            boxShadow: '0 0 20px rgba(201,168,76,0.3)',
+            border: '1px solid rgba(201,168,76,0.5)',
+          } : {
+            background: 'rgba(255,255,255,0.05)',
+            color: 'rgba(255,255,255,0.2)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            cursor: 'not-allowed',
+          }}
+        >
+          {lang === 'ar' ? 'ابدأ اللعبة ←' : 'Start Game →'}
+        </button>
         <button
           onClick={handleLeave}
           className="px-5 py-3 rounded-xl font-arabic text-sm transition-all border"

@@ -336,6 +336,77 @@ function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwa
   );
 }
 
+// ─── Mini seat for circular orbit ────────────────────────────────────────────
+function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob }: any) {
+  const isTurn = player.isTurn;
+  const isElim = player.isEliminated;
+  const cardCount = player.cards.filter(Boolean).length;
+  const avSz = isMob ? 22 : 30;
+  const w = isMob ? 62 : 88;
+
+  const handleClick = () => {
+    if (isSpecialJ && selectedPos !== null && !isElim) {
+      const pos = player.cards.findIndex((c: any) => c !== null);
+      if (pos !== -1) onSpecialSwap(player.uid, pos);
+    }
+  };
+
+  return (
+    <div className="relative flex flex-col items-center" onClick={handleClick}
+      style={{ width: w, cursor: isSpecialJ && selectedPos !== null && !isElim ? 'pointer' : 'default' }}>
+      <AnimatePresence>{emoji && <EmojiFloat em={emoji} />}</AnimatePresence>
+      <AnimatePresence>{chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}</AnimatePresence>
+      <div style={{
+        width: '100%', borderRadius: 8, backdropFilter: 'blur(10px)',
+        background: isTurn ? 'rgba(201,168,76,0.18)' : 'rgba(8,3,0,0.85)',
+        border: isTurn ? '1.5px solid rgba(201,168,76,0.75)' : '1px solid rgba(255,255,255,0.10)',
+        boxShadow: isTurn ? '0 0 10px rgba(201,168,76,0.35)' : 'none',
+        opacity: isElim ? 0.45 : 1, transition: 'all 0.3s',
+        padding: '4px 3px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+      }}>
+        <div className="relative">
+          <Av id={player.avatarId} name={player.displayName} size={avSz} />
+          {isTurn && <div className="absolute animate-pulse" style={{ bottom: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: '#C9A84C', border: '1.5px solid #000' }} />}
+          {isElim && <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#ef4444', fontSize: 8, fontWeight: 700 }}>✕</span></div>}
+        </div>
+        <p className="font-arabic" style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.65)', maxWidth: w - 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1 }}>{player.displayName}</p>
+        <p style={{ fontSize: 10, fontWeight: 700, lineHeight: 1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.6)' }}>{player.cumulativeScore}</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, justifyContent: 'center', maxWidth: w - 6, minHeight: 10 }}>
+          {Array.from({ length: Math.min(cardCount, 4) }).map((_, j) => (
+            <div key={j} style={{ width: 7, height: 10, borderRadius: 1.5, background: '#080318', border: '1px solid rgba(201,168,76,0.38)' }} />
+          ))}
+          {cardCount > 4 && <span style={{ fontSize: 6.5, color: 'rgba(201,168,76,0.5)', lineHeight: '10px' }}>+{cardCount - 4}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Opponents orbiting the table ─────────────────────────────────────────────
+function CircularOpponents({ opponents, tableRadius, isMobile, gameState, isSpecialJ, selectedPos, onSpecialSwap, emojiMap, chatBubbleMap }: any) {
+  const n = opponents.length;
+  if (n === 0) return null;
+  // Arc from -140° to +140° (avoiding bottom where player sits)
+  const arcStart = -(Math.PI * 14) / 18;
+  const arcEnd = (Math.PI * 14) / 18;
+  const orbitR = tableRadius + (isMobile ? 46 : 72);
+  return (
+    <>
+      {opponents.map((p: any, i: number) => {
+        const angle = n === 1 ? -Math.PI / 2 : arcStart + (i / (n - 1)) * (arcEnd - arcStart);
+        const x = Math.cos(angle) * orbitR;
+        const y = Math.sin(angle) * orbitR;
+        return (
+          <div key={p.uid} style={{ position: 'absolute', left: '50%', top: '50%', transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`, zIndex: 20 }}>
+            <MiniSeat player={p} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap}
+              emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} isMob={isMobile} />
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
 // ─── CheckBoard ───────────────────────────────────────────────────────────────
 export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const { user } = useAuthStore();
@@ -755,28 +826,15 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
       <div className="flex-1 flex flex-col pt-11 pb-14 min-h-0 gap-2 px-1" style={{ position: 'relative', zIndex: 1 }}>
 
-        {isMobile ? (
-          /* ══ MOBILE: all opponents in one horizontal scroll strip ══ */
-          others.length > 0 && (
-            <div className="shrink-0 flex gap-1.5 overflow-x-auto py-0.5 px-0.5"
-              style={{ scrollbarWidth: 'none' }}>
-              {others.map(p => (
-                <OpponentSeat key={p.uid} player={p} {...commonSeatProps}
-                  emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
-              ))}
-            </div>
-          )
-        ) : (
-          /* ══ DESKTOP: top row of opponents ══ */
-          top.length > 0 && (
-            <div className="shrink-0 flex justify-center gap-2 pt-0.5"
-              style={{ marginBottom: n <= 6 ? 52 : n <= 8 ? 36 : 24 }}>
-              {top.map(p => (
-                <OpponentSeat key={p.uid} player={p} {...commonSeatProps}
-                  emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
-              ))}
-            </div>
-          )
+        {/* ══ DESKTOP ONLY: top row of opponents ══ */}
+        {!isMobile && top.length > 0 && (
+          <div className="shrink-0 flex justify-center gap-2 pt-0.5"
+            style={{ marginBottom: n <= 6 ? 52 : n <= 8 ? 36 : 24 }}>
+            {top.map(p => (
+              <OpponentSeat key={p.uid} player={p} {...commonSeatProps}
+                emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
+            ))}
+          </div>
         )}
 
         {/* ══ MIDDLE ROW: [left] table [right] ══ */}
@@ -794,7 +852,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
           {/* ══ CIRCULAR TABLE ══ */}
           <div className="flex-1 flex items-center justify-center min-h-0 min-w-0 overflow-visible">
-            <div style={{ position: 'relative', marginTop: isMobile ? 4 : 60 }}>
+            <div style={{ position: 'relative', marginTop: isMobile ? 20 : 60 }}>
               {/* Wooden rim — sits behind the felt circle */}
               <div style={{
                 position: 'absolute',
@@ -921,6 +979,21 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 )}
               </AnimatePresence>
             </div>{/* end table circle */}
+
+            {/* ══ MOBILE: opponents orbiting the table ══ */}
+            {isMobile && (
+              <CircularOpponents
+                opponents={others}
+                tableRadius={tSize / 2}
+                isMobile={isMobile}
+                gameState={gameState}
+                isSpecialJ={isSpecialJ}
+                selectedPos={selectedPos}
+                onSpecialSwap={onSpecialSwap}
+                emojiMap={emojiMap}
+                chatBubbleMap={chatBubbleMap}
+              />
+            )}
             </div>{/* end position:relative wrapper */}
           </div>{/* end flex-1 table container */}
 

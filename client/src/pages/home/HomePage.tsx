@@ -545,11 +545,11 @@ export function HomePage() {
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex sm:hidden items-center border-t"
         style={{ background: 'rgba(10,6,20,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)', height: 56 }}>
         {[
-          { to: '/home', icon: '🏠', label: 'الرئيسية' },
-          { to: '/store', icon: '🏪', label: 'المتجر' },
-          { to: '/leaderboard', icon: '🏆', label: 'التصنيف' },
-          { to: '/friends', icon: '👥', label: 'أصدقاء' },
-          { to: '/profile', icon: '👤', label: 'حسابي' },
+          { to: '/home', icon: '🏠', label: lang === 'ar' ? 'الرئيسية' : 'Home' },
+          { to: '/store', icon: '🏪', label: lang === 'ar' ? 'المتجر' : 'Store' },
+          { to: '/leaderboard', icon: '🏆', label: lang === 'ar' ? 'التصنيف' : 'Rank' },
+          { to: '/friends', icon: '👥', label: lang === 'ar' ? 'أصدقاء' : 'Friends' },
+          { to: '/profile', icon: '👤', label: lang === 'ar' ? 'حسابي' : 'Profile' },
         ].map(item => (
           <Link key={item.to} to={item.to}
             className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all"

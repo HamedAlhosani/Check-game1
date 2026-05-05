@@ -894,7 +894,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
   // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div className="h-screen flex flex-col overflow-hidden" style={{ background: '#0E0500' }}>
+    <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0E0500' }}>
       <RoomBackground />
       <ScoreBar />
 
@@ -902,7 +902,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
         {/* ══ MOBILE: compact opponent strip ══ */}
         {isMobile && others.length > 0 && (
-          <div className="shrink-0 flex items-stretch gap-1" style={{ padding: '3px 4px 4px', minHeight: 88, maxHeight: 96, position: 'relative', zIndex: 20 }}>
+          <div className="shrink-0 flex items-stretch gap-1" style={{ padding: '3px 4px 4px', minHeight: 76, maxHeight: 84, position: 'relative', zIndex: 20 }}>
             {others.map(p => (
               <CompactSeat key={p.uid} player={p}
                 emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null}
@@ -963,8 +963,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               ref={tableRef}
               className="relative"
               style={{
-                width: isMobile ? 'min(300px, max(140px, 74vw))' : 'min(650px, max(200px, 55vw))',
-                height: isMobile ? 'min(300px, max(140px, 74vw))' : 'min(650px, max(200px, 55vw))',
+                width: isMobile ? 'min(260px, max(120px, 58vw))' : 'min(650px, max(200px, 55vw))',
+                height: isMobile ? 'min(260px, max(120px, 58vw))' : 'min(650px, max(200px, 55vw))',
                 borderRadius: '50%',
                 background: `
                   radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.045) 0%, transparent 38%),
@@ -1103,7 +1103,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                       faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
                       highlight={myCardHighlight(i)}
                       onClick={() => onMyCardClick(i)}
-                      small backId={cardBackId}
+                      small={!isMobile} mini={isMobile} backId={cardBackId}
                     />
                   </motion.div>
                 ) : null)}

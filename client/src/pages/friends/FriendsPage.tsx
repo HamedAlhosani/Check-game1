@@ -7,6 +7,9 @@ import { apiClient } from '../../services/api.service';
 import { soundService } from '../../services/sound.service';
 import { useT, useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
+import { socketService } from '../../services/socket.service';
+import { SOCKET_EVENTS } from '@check-game/shared';
+import { FrameRing } from '../../components/shared/FrameRing';
 
 const AVATAR_EMOJIS: Record<string, string> = {
   avatar_1: '👳', avatar_2: '🧕', avatar_3: '👴', avatar_4: '🧔',
@@ -54,6 +57,23 @@ export function FriendsPage() {
   }, []);
 
   useEffect(() => { fetchFriends(); }, [fetchFriends]);
+
+  // Real-time updates: refetch when a friend request comes in or list changes
+  useEffect(() => {
+    const socket = socketService.getSocket();
+    if (!socket) return;
+    const onChanged = () => { fetchFriends(); };
+    const onReceived = () => {
+      fetchFriends();
+      addToast(lang === 'ar' ? 'وصلك طلب صداقة جديد' : 'New friend request', 'info');
+    };
+    socket.on(SOCKET_EVENTS.FRIEND_LIST_CHANGED, onChanged);
+    socket.on(SOCKET_EVENTS.FRIEND_REQUEST_RECEIVED, onReceived);
+    return () => {
+      socket.off(SOCKET_EVENTS.FRIEND_LIST_CHANGED, onChanged);
+      socket.off(SOCKET_EVENTS.FRIEND_REQUEST_RECEIVED, onReceived);
+    };
+  }, [fetchFriends, addToast, lang]);
 
   async function handleSendRequest() {
     if (!searchQuery.trim()) return;
@@ -290,12 +310,22 @@ function FriendCard({ friend, busy, actionLabel, actionStyle, onAction, lang }: 
   onAction: () => void;
   lang: string;
 }) {
+  const navigate = useNavigate();
+  const goToProfile = () => navigate(`/user/${friend.uid}`);
   return (
-    <div className="rounded-xl p-4 flex items-center gap-3 border"
-      style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.07)' }}>
-      <div className="w-11 h-11 rounded-full flex items-center justify-center text-2xl"
-        style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.2)' }}>
-        {AVATAR_EMOJIS[friend.avatarId] || '👤'}
+    <div className="rounded-xl p-4 flex items-center gap-3 border transition-all hover:border-gold/40 cursor-pointer"
+      style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.07)' }}
+      onClick={goToProfile}
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter') goToProfile(); }}
+    >
+      <div className="relative shrink-0" style={{ width: 44, height: 44 }}>
+        <div className="w-11 h-11 rounded-full flex items-center justify-center text-2xl"
+          style={{ background: 'rgba(201,168,76,0.08)' }}>
+          {AVATAR_EMOJIS[friend.avatarId] || '👤'}
+        </div>
+        <FrameRing size={44} frameId={(friend as any).equippedFrame} />
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-arabic font-bold truncate" style={{ color: '#E8C97A', fontSize: 15 }}>{friend.displayName}</p>
@@ -305,7 +335,7 @@ function FriendCard({ friend, busy, actionLabel, actionStyle, onAction, lang }: 
           {friend.wins !== undefined && <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.3)' }}>🏆 {friend.wins}</span>}
         </div>
       </div>
-      <button disabled={busy} onClick={onAction}
+      <button disabled={busy} onClick={(e) => { e.stopPropagation(); onAction(); }}
         className="px-3 py-1.5 rounded-lg font-arabic text-xs transition-all disabled:opacity-50"
         style={{ background: actionStyle.color, border: `1px solid ${actionStyle.border}`, color: actionStyle.textColor }}>
         {busy ? '...' : actionLabel}

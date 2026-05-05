@@ -571,7 +571,7 @@ export function HomePage() {
                 selected={mode === 'online'} color="80,160,220"
                 onClick={() => { setMode('online'); soundService.playClick(); }}/>
               <ModeCard icon="🔒" title={t('mode_private')} sub={t('mode_private_desc')}
-                selected={mode === 'private'} color="160,120,220"
+                selected={mode === 'private'} color="232,144,58"
                 onClick={() => { setMode('private'); soundService.playClick(); }}/>
               <ModeCard icon="🤖" title={t('mode_bot')} sub={t('mode_bot_desc')}
                 selected={mode === 'bots'} color="80,200,120"

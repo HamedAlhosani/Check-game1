@@ -12,6 +12,7 @@ import { LandingPage } from './pages/landing/LandingPage';
 import { HomePage } from './pages/home/HomePage';
 import { CheckGamePage } from './pages/game/CheckGamePage';
 import { ProfilePage } from './pages/profile/ProfilePage';
+import { UserProfilePage } from './pages/profile/UserProfilePage';
 import { LeaderboardPage } from './pages/leaderboard/LeaderboardPage';
 import { StorePage } from './pages/store/StorePage';
 import { FriendsPage } from './pages/friends/FriendsPage';
@@ -119,6 +120,7 @@ export function App() {
           <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
           <Route path="/game/check/:gameId" element={<ProtectedRoute><CheckGamePage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/user/:uid" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
           <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
           <Route path="/store" element={<ProtectedRoute><StorePage /></ProtectedRoute>} />
           <Route path="/friends" element={<ProtectedRoute><FriendsPage /></ProtectedRoute>} />

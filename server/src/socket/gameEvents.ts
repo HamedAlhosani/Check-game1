@@ -57,7 +57,7 @@ export function startGameSession(io: Server, roomId: string): void {
           gameId: d.gameId ?? 'unknown',
           gameType: 'check',
           playedAt: Date.now(),
-          players: realPlayers.map(p => ({ uid: p.uid, displayName: p.displayName, avatarId: p.avatarId, score: p.cumulativeScore })),
+          players: realPlayers.map(p => ({ uid: p.uid, displayName: p.displayName, avatarId: p.avatarId, equippedFrame: (p as any).equippedFrame, score: p.cumulativeScore })),
           winnerId,
         }).catch(() => null);
       }
@@ -116,6 +116,7 @@ function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): 
             uid: p.uid,
             displayName: p.displayName,
             avatarId: p.avatarId,
+            equippedFrame: (p as any).equippedFrame,
             score: p.cumulativeScore,
           })),
           winnerId,

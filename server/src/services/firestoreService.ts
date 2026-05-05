@@ -245,7 +245,7 @@ export async function getLeaderboard(limit = 50): Promise<LeaderboardEntry[]> {
 
 // ── Friends ────────────────────────────────────────────────────────────────────
 
-export async function sendFriendRequest(fromUid: string, toUsername: string): Promise<{ ok: boolean; error?: string }> {
+export async function sendFriendRequest(fromUid: string, toUsername: string): Promise<{ ok: boolean; error?: string; recipientUid?: string; mutual?: boolean }> {
   const from = users.get(fromUid);
   if (!from) return { ok: false, error: 'User not found' };
 
@@ -267,12 +267,12 @@ export async function sendFriendRequest(fromUid: string, toUsername: string): Pr
     from.friends.push(to.uid);
     to.friends.push(fromUid);
     saveUsers();
-    return { ok: true };
+    return { ok: true, recipientUid: to.uid, mutual: true };
   }
 
   to.friendRequests.push(fromUid);
   saveUsers();
-  return { ok: true };
+  return { ok: true, recipientUid: to.uid };
 }
 
 export async function acceptFriendRequest(uid: string, friendUid: string): Promise<{ ok: boolean; error?: string }> {
@@ -312,7 +312,15 @@ export async function getFriendsList(uid: string): Promise<any[]> {
   return (me.friends as string[]).map((fUid: string) => {
     const f = users.get(fUid);
     if (!f) return null;
-    return { uid: f.uid, displayName: f.displayName, username: f.username || '', avatarId: f.avatarId, level: f.ranking?.level ?? 1, wins: f.stats?.totalWins ?? 0 };
+    return {
+      uid: f.uid,
+      displayName: f.displayName,
+      username: f.username || '',
+      avatarId: f.avatarId,
+      equippedFrame: f.equippedItems?.avatarFrame || 'frame_default',
+      level: f.ranking?.level ?? 1,
+      wins: f.stats?.totalWins ?? 0,
+    };
   }).filter(Boolean);
 }
 
@@ -322,7 +330,14 @@ export async function getFriendRequests(uid: string): Promise<any[]> {
   return (me.friendRequests as string[]).map((fUid: string) => {
     const f = users.get(fUid);
     if (!f) return null;
-    return { uid: f.uid, displayName: f.displayName, username: f.username || '', avatarId: f.avatarId, level: f.ranking?.level ?? 1 };
+    return {
+      uid: f.uid,
+      displayName: f.displayName,
+      username: f.username || '',
+      avatarId: f.avatarId,
+      equippedFrame: f.equippedItems?.avatarFrame || 'frame_default',
+      level: f.ranking?.level ?? 1,
+    };
   }).filter(Boolean);
 }
 

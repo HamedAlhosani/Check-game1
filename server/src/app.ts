@@ -23,7 +23,8 @@ import {
   getFriendRequests,
   getUserHistory,
 } from './services/firestoreService';
-import { STORE_ITEMS } from '@check-game/shared';
+import { STORE_ITEMS, SOCKET_EVENTS } from '@check-game/shared';
+import { notifyUser } from './socket/notifications';
 
 const app = express();
 app.use(cors({
@@ -165,6 +166,22 @@ app.get('/api/profile', requireAuth, wrap(async (req, res) => {
   res.json(profile);
 }));
 
+// Public profile (read-only, sensitive fields stripped) — used to view another user's profile
+app.get('/api/profile/:uid', requireAuth, wrap(async (req, res) => {
+  const profile = await getUserProfile(req.params.uid);
+  if (!profile) return res.status(404).json({ error: 'Not found' });
+  const p = profile as any;
+  res.json({
+    uid: p.uid,
+    username: p.username,
+    displayName: p.displayName,
+    avatarId: p.avatarId,
+    equippedItems: p.equippedItems,
+    ranking: p.ranking,
+    stats: p.stats,
+  });
+}));
+
 app.patch('/api/profile', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const { displayName, avatarId } = req.body;
@@ -258,6 +275,10 @@ app.post('/api/friends/request', requireAuth, wrap(async (req, res) => {
   if (!username) return res.status(400).json({ error: 'Missing username' });
   const result = await sendFriendRequest(uid, username);
   if (!result.ok) return res.status(400).json({ error: result.error });
+  if (result.recipientUid) {
+    notifyUser(result.recipientUid, SOCKET_EVENTS.FRIEND_REQUEST_RECEIVED, { fromUid: uid });
+    notifyUser(result.recipientUid, SOCKET_EVENTS.FRIEND_LIST_CHANGED, {});
+  }
   res.json({ ok: true });
 }));
 
@@ -267,6 +288,7 @@ app.post('/api/friends/accept', requireAuth, wrap(async (req, res) => {
   if (!friendUid) return res.status(400).json({ error: 'Missing uid' });
   const result = await acceptFriendRequest(uid, friendUid);
   if (!result.ok) return res.status(400).json({ error: result.error });
+  notifyUser(friendUid, SOCKET_EVENTS.FRIEND_LIST_CHANGED, {});
   res.json({ ok: true });
 }));
 

@@ -23,6 +23,8 @@ export function setupSocketHandlers(io: Server): void {
       }
 
       authenticated = true;
+      // Per-user room used to deliver targeted notifications (friend requests, etc.)
+      if (socket.uid) socket.join(`user:${socket.uid}`);
       socket.emit('auth:ok', { uid: socket.uid });
 
       registerLobbyEvents(io, socket);

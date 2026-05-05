@@ -130,6 +130,7 @@ export interface MatchPlayer {
   uid: string;
   displayName: string;
   avatarId: string;
+  equippedFrame?: string;
   score: number;
 }
 

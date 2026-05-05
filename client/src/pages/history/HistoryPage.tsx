@@ -5,6 +5,7 @@ import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../services/api.service';
 import { useT, useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
+import { FrameRing } from '../../components/shared/FrameRing';
 import { MatchRecord } from '@check-game/shared';
 
 const AVATAR_EMOJIS: Record<string, string> = {
@@ -133,12 +134,18 @@ export function HistoryPage() {
                         const isThisWinner = p.uid === rec.winnerId;
                         const isMe = p.uid === myUid;
                         return (
-                          <div key={p.uid} className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5"
+                          <div key={p.uid} className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
                             style={{
                               background: isThisWinner ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.03)',
                               border: `1px solid ${isMe ? 'rgba(201,168,76,0.4)' : isThisWinner ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.07)'}`,
                             }}>
-                            <span className="text-base">{AVATAR_EMOJIS[p.avatarId] || '👤'}</span>
+                            <div className="relative shrink-0" style={{ width: 28, height: 28 }}>
+                              <div className="rounded-full flex items-center justify-center"
+                                style={{ width: 28, height: 28, background: 'rgba(201,168,76,0.08)', fontSize: 16 }}>
+                                {AVATAR_EMOJIS[p.avatarId] || '👤'}
+                              </div>
+                              <FrameRing size={28} frameId={(p as any).equippedFrame}/>
+                            </div>
                             <div>
                               <p className="font-arabic text-xs font-bold leading-tight"
                                 style={{ color: isThisWinner ? '#E8C97A' : isMe ? 'rgba(201,168,76,0.8)' : 'rgba(245,230,200,0.6)' }}>

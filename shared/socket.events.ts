@@ -70,6 +70,10 @@ export const SOCKET_EVENTS = {
   LOBBY_KICKED: 'lobby:kicked',
   LOBBY_INVITE_RECEIVED: 'lobby:invite_received',
 
+  // Friends - Server → Client
+  FRIEND_REQUEST_RECEIVED: 'friend:request_received',
+  FRIEND_LIST_CHANGED: 'friend:list_changed',
+
   // Game - Client → Server
   GAME_PEEK_COMPLETE: 'game:peek_complete',
   GAME_DRAW_DECK: 'game:draw_deck',

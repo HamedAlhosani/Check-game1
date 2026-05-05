@@ -135,16 +135,39 @@ class SoundService {
     this.playTone(200, 'sawtooth', 0.3, 0.2, 0.4);
   }
 
-  // Voice "Check!" using SpeechSynthesis
-  playCheckVoice() {
+  // Voice "Check!" using SpeechSynthesis — per-character pitch/rate variation
+  // avatarId determines the voice persona so each character sounds distinct
+  playCheckVoice(avatarId?: string) {
     if (!this.enabled) return;
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
     try {
+      // Map each avatar to a unique voice persona
+      const personas: Record<string, { pitch: number; rate: number; voiceFilter?: (v: SpeechSynthesisVoice) => boolean }> = {
+        avatar_1:  { pitch: 0.85, rate: 0.85 },                                // 🦅 deep, slow
+        avatar_2:  { pitch: 0.95, rate: 1.0 },                                 // 🐪 calm baritone
+        avatar_3:  { pitch: 1.05, rate: 0.95 },                                // 🌴 mid
+        avatar_4:  { pitch: 0.7,  rate: 0.95 },                                // ⚔️ deepest, warrior
+        avatar_5:  { pitch: 1.4,  rate: 1.0,  voiceFilter: v => /female/i.test(v.name) }, // 🌙 higher
+        avatar_6:  { pitch: 1.6,  rate: 1.05, voiceFilter: v => /female/i.test(v.name) }, // ⭐ bright high
+        avatar_7:  { pitch: 0.9,  rate: 1.2 },                                 // 🏜️ fast desert
+        avatar_8:  { pitch: 1.3,  rate: 0.8,  voiceFilter: v => /female/i.test(v.name) }, // 🌊 slow elder
+        avatar_9:  { pitch: 0.6,  rate: 0.75 },                                // 🦁 lion — deepest, slow
+        avatar_10: { pitch: 1.1,  rate: 1.4 },                                 // 🔥 fast, intense
+        avatar_11: { pitch: 1.5,  rate: 0.9,  voiceFilter: v => /female/i.test(v.name) }, // 💎 jewel
+        avatar_12: { pitch: 1.25, rate: 1.1 },                                 // 🎭 theatrical
+      };
+      const persona = personas[avatarId || ''] || { pitch: 1.2, rate: 0.9 };
+
       const utt = new SpeechSynthesisUtterance('Check!');
       utt.lang = 'en-US';
-      utt.pitch = 1.2;
-      utt.rate = 0.9;
+      utt.pitch = persona.pitch;
+      utt.rate = persona.rate;
       utt.volume = 1;
+      if (persona.voiceFilter) {
+        const voices = window.speechSynthesis.getVoices();
+        const match = voices.find(v => v.lang.startsWith('en') && persona.voiceFilter!(v));
+        if (match) utt.voice = match;
+      }
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utt);
     } catch {}

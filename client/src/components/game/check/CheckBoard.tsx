@@ -615,7 +615,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     });
     socket.on(SOCKET_EVENTS.GAME_CARD_DRAWN, (data: any) => { if (data.card) { setDrawnCard(data.card); soundService.playCardDraw(); } actedRef.current = true; });
     socket.on(SOCKET_EVENTS.GAME_OVER, (data: any) => { setGameOverData(data); soundService.playWin(); });
-    socket.on(SOCKET_EVENTS.GAME_CHECK_CALLED, () => { soundService.playCheckVoice(); });
+    socket.on(SOCKET_EVENTS.GAME_CHECK_CALLED, (data: any) => {
+      const caller = gameState.players.find(p => p.uid === data?.callerUid);
+      soundService.playCheckVoice(caller?.avatarId);
+    });
     socket.on(SOCKET_EVENTS.GAME_BURN_INVALID, () => { soundService.playError(); });
     socket.on(SOCKET_EVENTS.GAME_SCORES, (data: any) => {
       setRoundScoreData(data);

@@ -11,26 +11,26 @@ RUN npm install
 
 COPY . .
 
-# Build client and server from root (so node_modules/.bin is on PATH)
+# Build client
 RUN npm run build:client
-RUN npm run build:server
+
+# Build server — esbuild bundles everything (shared included) into one file
+RUN ./node_modules/.bin/esbuild server/src/server.ts \
+    --bundle \
+    --platform=node \
+    --target=node20 \
+    --format=cjs \
+    --outfile=server/dist/server.js \
+    --tsconfig=server/tsconfig.json
 
 # ── Stage 2: Production ──────────────────────────────────────────────────────────
 FROM node:20-alpine AS production
-WORKDIR /app
-
-COPY package.json ./
-COPY server/package.json ./server/
-COPY shared/package.json ./shared/
-COPY client/package.json ./client/
-
-RUN npm install --omit=dev --ignore-scripts --workspaces=false 2>/dev/null; \
-    npm install --omit=dev --ignore-scripts --workspace=server || true
-
-COPY --from=builder /app/server/dist ./server/dist
-COPY --from=builder /app/client/dist ./server/public
-
 WORKDIR /app/server
+
+# No npm install needed — everything is bundled in dist/server.js
+COPY --from=builder /app/server/dist  ./dist
+COPY --from=builder /app/client/dist  ./public
+
 ENV NODE_ENV=production
 EXPOSE 3001
 CMD ["node", "dist/server.js"]

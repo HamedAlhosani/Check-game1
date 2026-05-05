@@ -154,27 +154,29 @@ function ModeCard({ icon, title, sub, selected, onClick, color }: {
 }
 
 // ── Slider ────────────────────────────────────────────────────────────────────
-function NumSlider({ label, value, min, max, onChange, unit = '' }: {
-  label: string; value: number; min: number; max: number; onChange: (v: number) => void; unit?: string;
+function NumSlider({ label, value, min, max, step = 1, onChange, unit = '', formatValue }: {
+  label: string; value: number; min: number; max: number; step?: number; onChange: (v: number) => void; unit?: string;
+  formatValue?: (v: number) => string;
 }) {
+  const fmt = formatValue || ((v: number) => `${v}${unit}`);
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between">
         <span className="font-arabic text-sm" style={{ color: 'rgba(245,230,200,0.6)' }}>{label}</span>
-        <span className="font-bold" style={{ color: '#E8C97A', fontSize: 15 }}>{value}{unit}</span>
+        <span className="font-bold" style={{ color: '#E8C97A', fontSize: 15 }}>{fmt(value)}</span>
       </div>
-      <input type="range" min={min} max={max} value={value}
+      <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))}
         className="w-full accent-gold" style={{ accentColor: '#C9A84C' }}/>
       <div className="flex justify-between" style={{ fontSize: 10, color: 'rgba(245,230,200,0.25)' }}>
-        <span>{min}</span><span>{max}</span>
+        <span>{fmt(min)}</span><span>{fmt(max)}</span>
       </div>
     </div>
   );
 }
 
 // ── Config panel ──────────────────────────────────────────────────────────────
-function ConfigPanel({ mode, onCreate }: {
+function ConfigPanel({ mode, coins, onCreate }: {
   mode: GameMode;
   coins: number;
   onCreate: (cfg: any) => void;
@@ -182,19 +184,24 @@ function ConfigPanel({ mode, onCreate }: {
   const t = useT();
   const lang = useLang();
   const [playerCount, setPlayerCount] = useState(4);
+  const [coinAmount, setCoinAmount] = useState(50);
   const [botCount, setBotCount] = useState(3);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
+  const canAfford = coinAmount <= coins;
+
   const handleCreate = () => {
+    if (mode !== 'bots' && !canAfford) return;
     soundService.playClick();
     if (mode === 'bots') {
       onCreate({ type: 'bots', botCount, difficulty, bet: 0 });
     } else {
-      onCreate({ type: mode, playerCount, bet: 0 });
+      onCreate({ type: mode, playerCount, bet: coinAmount });
     }
   };
 
   const playersLabel = lang === 'ar' ? 'عدد اللاعبين' : 'Players';
+  const coinsLabel = lang === 'ar' ? 'كوينز' : 'Coins';
   const botsLabel = lang === 'ar' ? 'عدد البوتات' : 'Number of Bots';
   const diffLabel = lang === 'ar' ? 'مستوى البوتات' : 'Bot Difficulty';
 
@@ -208,7 +215,25 @@ function ConfigPanel({ mode, onCreate }: {
       style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,168,76,0.15)' }}
     >
       {mode !== 'bots' ? (
-        <NumSlider label={playersLabel} value={playerCount} min={2} max={10} onChange={setPlayerCount}/>
+        <>
+          <NumSlider label={playersLabel} value={playerCount} min={2} max={10} onChange={setPlayerCount}/>
+          <div className="flex flex-col gap-1.5">
+            <NumSlider
+              label={coinsLabel}
+              value={coinAmount}
+              min={50}
+              max={50000}
+              step={50}
+              onChange={setCoinAmount}
+              formatValue={v => `${v.toLocaleString()} 🪙`}
+            />
+            {!canAfford && (
+              <p className="text-red-400 font-arabic text-xs">
+                {lang === 'ar' ? 'كوينزك غير كافية!' : 'Not enough coins!'}
+              </p>
+            )}
+          </div>
+        </>
       ) : (
         <>
           <NumSlider label={botsLabel} value={botCount} min={1} max={10} onChange={setBotCount}/>
@@ -234,11 +259,13 @@ function ConfigPanel({ mode, onCreate }: {
       <motion.button
         whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
         onClick={handleCreate}
+        disabled={mode !== 'bots' && !canAfford}
         className="w-full py-3 rounded-xl font-arabic font-bold text-base transition-all"
         style={{
-          background: 'linear-gradient(135deg, #C9A84C, #8B6914)',
-          color: '#0A0614',
-          boxShadow: '0 0 20px rgba(201,168,76,0.3)',
+          background: (mode === 'bots' || canAfford) ? 'linear-gradient(135deg, #C9A84C, #8B6914)' : 'rgba(255,255,255,0.06)',
+          color: (mode === 'bots' || canAfford) ? '#0A0614' : 'rgba(255,255,255,0.25)',
+          boxShadow: (mode === 'bots' || canAfford) ? '0 0 20px rgba(201,168,76,0.3)' : 'none',
+          cursor: (mode === 'bots' || canAfford) ? 'pointer' : 'not-allowed',
         }}>
         {mode === 'online'
           ? (lang === 'ar' ? 'ابحث عن لعبة' : 'Find a Game')

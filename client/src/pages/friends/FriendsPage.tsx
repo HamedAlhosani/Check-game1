@@ -135,8 +135,9 @@ export function FriendsPage() {
   }
 
   function copyUsername() {
-    const username = profile?.username || '';
-    navigator.clipboard.writeText(username).then(() => {
+    // Copy only the number part — that's all a friend needs to add you
+    const number = (profile?.username || '').split('#')[1] || profile?.username || '';
+    navigator.clipboard.writeText(number).then(() => {
       setCopied(true);
       soundService.playClick();
       setTimeout(() => setCopied(false), 2000);
@@ -163,10 +164,13 @@ export function FriendsPage() {
           style={{ background: 'rgba(201,168,76,0.06)', borderColor: 'rgba(201,168,76,0.2)' }}>
           <div>
             <p className="font-arabic text-xs mb-1" style={{ color: 'rgba(245,230,200,0.4)' }}>
-              {t('friends_my_username')}
+              {lang === 'ar' ? 'رقمك (شاركه مع أصدقائك)' : 'Your number (share with friends)'}
             </p>
-            <p className="font-bold text-base" style={{ color: '#E8C97A', direction: 'ltr', textAlign: dir === 'rtl' ? 'right' : 'left' }}>
-              {profile?.username || '...'}
+            <p className="font-bold font-mono" style={{ color: '#E8C97A', fontSize: 26, lineHeight: 1.1, letterSpacing: 2 }}>
+              {(profile?.username || '').split('#')[1] || '...'}
+            </p>
+            <p className="font-arabic mt-0.5" style={{ color: 'rgba(245,230,200,0.3)', fontSize: 10, direction: 'ltr', textAlign: dir === 'rtl' ? 'right' : 'left' }}>
+              {profile?.username || ''}
             </p>
           </div>
           <button
@@ -273,23 +277,24 @@ export function FriendsPage() {
                 <p className="font-arabic mb-1 font-bold" style={{ color: '#E8C97A' }}>{t('friends_add')}</p>
                 <p className="font-arabic text-xs mb-4" style={{ color: 'rgba(245,230,200,0.35)' }}>
                   {lang === 'ar'
-                    ? 'اطلب من صديقك يشاركك يوزرنيمه (مثل: أحمد#4523)'
-                    : 'Ask your friend to share their username (e.g. Ahmed#4523)'}
+                    ? 'اكتب رقم صديقك فقط (مثل: 4523)'
+                    : 'Just type your friend\'s number (e.g. 4523)'}
                 </p>
                 <div className="flex gap-2">
                   <input
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSendRequest()}
-                    placeholder={t('friends_add_placeholder')}
-                    className="flex-1 rounded-xl px-4 py-2.5 font-arabic text-sm outline-none"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(245,230,200,0.9)', direction: 'ltr' }}
+                    placeholder={lang === 'ar' ? 'الرقم فقط' : 'Number only'}
+                    inputMode="numeric"
+                    className="flex-1 rounded-xl px-4 py-2.5 font-bold text-base outline-none"
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(245,230,200,0.95)', direction: 'ltr', letterSpacing: 1 }}
                   />
                   <button
                     onClick={handleSendRequest}
                     disabled={loading || !searchQuery.trim()}
                     className="px-4 py-2.5 rounded-xl font-arabic font-bold text-sm transition-all disabled:opacity-40"
-                    style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#04080F' }}>
+                    style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0E0905' }}>
                     {loading ? '...' : t('friends_add_btn')}
                   </button>
                 </div>

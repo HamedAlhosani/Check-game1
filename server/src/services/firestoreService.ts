@@ -31,10 +31,29 @@ function generateUsername(displayName: string): string {
   return `${base}#${suffix}`;
 }
 
-function findUserByUsername(username: string): any | null {
+function findUserByUsername(query: string): any | null {
+  const q = query.trim().toLowerCase();
+  if (!q) return null;
+  // Strip a leading '#' if the user typed e.g. "#4523"
+  const stripped = q.startsWith('#') ? q.slice(1) : q;
+
+  // 1) Exact full-username match (e.g. "ahmed#4523")
   for (const [, u] of users) {
-    if (u.username && u.username.toLowerCase() === username.toLowerCase()) return u;
+    if (u.username && u.username.toLowerCase() === q) return u;
   }
+
+  // 2) Match by digits-only suffix (e.g. user typed just "4523" or "#4523")
+  if (/^\d{3,8}$/.test(stripped)) {
+    const matches: any[] = [];
+    for (const [, u] of users) {
+      if (!u.username) continue;
+      const suffix = (u.username.split('#')[1] || '').toLowerCase();
+      if (suffix === stripped) matches.push(u);
+    }
+    // Only succeed if a single user owns this number suffix
+    if (matches.length === 1) return matches[0];
+  }
+
   return null;
 }
 

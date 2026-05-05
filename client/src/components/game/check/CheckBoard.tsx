@@ -105,7 +105,7 @@ function ChairsRing({ radius }: { radius: number }) {
 
 // ─── Circular Deck Ring ────────────────────────────────────────────────────────
 function CircleDeck({ count, onClick, disabled }: { count: number; onClick?: () => void; disabled?: boolean }) {
-  const MAX = 24;
+  const MAX = 52;
   const CW = 18, CH = 27, R = 85;
   return (
     <div className="relative" style={{ width: R * 2 + CW, height: R * 2 + CH }}>
@@ -561,6 +561,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const afkCountRef = useRef(0);
   const prevMsgCountRef = useRef(-1);
   const chatOpenRef = useRef(false);
+  const drawingRef = useRef(false);
 
   useEffect(() => {
     if (!socket) return;
@@ -616,7 +617,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         afkCountRef.current++;
         if (afkCountRef.current >= 2) setShowAfk(true);
       }
-      if (cur === user?.uid) { actedRef.current = false; soundService.playTurnStart(); }
+      if (cur === user?.uid) { actedRef.current = false; drawingRef.current = false; soundService.playTurnStart(); }
       prevTurnRef.current = cur;
       setPendingBurnPos(null);
       setDiscardSelected(false);
@@ -722,7 +723,15 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') &&
     !gameState.lastDiscardFromKing &&
     !!gameState.discardTop;
-  const onDraw = () => { setPendingBurnPos(null); setDiscardSelected(false); socket?.emit(SOCKET_EVENTS.GAME_DRAW_DECK, { gameId }); markActed(); };
+  const onDraw = () => {
+    if (drawingRef.current) return;
+    drawingRef.current = true;
+    setTimeout(() => { drawingRef.current = false; }, 1500);
+    setPendingBurnPos(null);
+    setDiscardSelected(false);
+    socket?.emit(SOCKET_EVENTS.GAME_DRAW_DECK, { gameId });
+    markActed();
+  };
   const onTakeDiscard = (handPos: number) => {
     socket?.emit(SOCKET_EVENTS.GAME_TAKE_DISCARD, { gameId, handPosition: handPos });
     setDiscardSelected(false);
@@ -796,7 +805,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
         className="px-8 py-3 rounded-xl border border-gold/60 text-gold font-arabic text-lg bg-gold/10 hover:bg-gold/20 transition-all"
         onClick={() => { setShowIntro(false); socket?.emit(SOCKET_EVENTS.GAME_PEEK_COMPLETE, { gameId }); }}>
-        تخطي ▶
+        تخطي
       </motion.button>
     </div>
   );
@@ -817,7 +826,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       )}
       <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
         className="mt-6 px-8 py-3 rounded-xl border border-gold/60 text-gold font-arabic text-lg bg-gold/10 transition-all"
-        onClick={onPeekDone}>تخطي ▶</motion.button>
+        onClick={onPeekDone}>تخطي</motion.button>
     </div>
   );
 
@@ -1205,21 +1214,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           </AnimatePresence>
         </motion.button>
 
-        <div className="flex gap-1">
-          {['😄','😮','😂','🔥','👏','😤'].map(em => (
-            <motion.button key={em} whileHover={{ scale: 1.2 }} whileTap={{ scale: .9 }}
-              style={{ fontSize: isMobile ? 17 : 20, padding: isMobile ? '2px' : '2px 2px' }}
-              onClick={() => {
-                if (!me) return;
-                socket?.emit(SOCKET_EVENTS.CHAT_SEND, { roomId, text: '', emoji: em });
-              }}>{em}</motion.button>
-          ))}
-        </div>
-
         <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: .92 }}
-          className="px-3.5 py-1.5 rounded-xl border font-arabic text-sm transition-all"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(245,230,200,0.65)', fontSize: isMobile ? 18 : 20 }}
-          onClick={() => setShowSettings(true)}>⚙️</motion.button>
+          className="px-4 py-1.5 rounded-xl border font-arabic text-sm transition-all"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(245,230,200,0.65)' }}
+          onClick={() => setShowSettings(true)}>إعدادات</motion.button>
       </div>
 
       {/* ── Bottom-left info panel: round + deck remaining (desktop only) ── */}
@@ -1574,7 +1572,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             >
               {/* Header */}
               <div className="flex items-center justify-between mb-1">
-                <h3 className="font-arabic font-bold text-lg" style={{ color: '#E8C97A' }}>⚙️ الإعدادات</h3>
+                <h3 className="font-arabic font-bold text-lg" style={{ color: '#E8C97A' }}>الإعدادات</h3>
                 <button onClick={() => setShowSettings(false)} style={{ color: 'rgba(255,255,255,0.4)', fontSize: 22, lineHeight: 1 }}>✕</button>
               </div>
 
@@ -1582,7 +1580,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               <div className="flex items-center justify-between rounded-2xl px-4 py-3.5"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <span className="font-arabic text-sm" style={{ color: 'rgba(245,230,200,0.75)' }}>
-                  {soundOn ? '🔊 الصوت مفعّل' : '🔇 الصوت معطّل'}
+                  {soundOn ? 'الصوت مفعّل' : 'الصوت معطّل'}
                 </span>
                 <button
                   onClick={() => { const n = !soundOn; soundService.setEnabled(n); setSoundOn(n); }}
@@ -1603,7 +1601,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               <div className="flex flex-col gap-3 rounded-2xl px-4 py-3.5"
                 style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', opacity: soundOn ? 1 : 0.35 }}>
                 <div className="flex items-center justify-between">
-                  <span className="font-arabic text-sm" style={{ color: 'rgba(245,230,200,0.75)' }}>🎚️ مستوى الصوت</span>
+                  <span className="font-arabic text-sm" style={{ color: 'rgba(245,230,200,0.75)' }}>مستوى الصوت</span>
                   <span className="font-bold font-mono text-sm" style={{ color: '#C9A84C' }}>{Math.round(volume * 100)}%</span>
                 </div>
                 <input type="range" min={0} max={100} value={Math.round(volume * 100)}
@@ -1621,7 +1619,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 onClick={() => { setShowSettings(false); setShowExitConfirm(true); }}
                 className="w-full py-3.5 rounded-2xl font-arabic font-bold border"
                 style={{ background: 'rgba(196,92,58,0.10)', borderColor: 'rgba(196,92,58,0.4)', color: '#E07040', fontSize: 15 }}>
-                🚪 الخروج من اللعبة
+                الخروج من اللعبة
               </motion.button>
             </motion.div>
           </motion.div>

@@ -673,8 +673,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         else if (data.card !== undefined) next.set(data.position, data.card);
         return next;
       });
-      // Q peek result (single-card payload) → show the big modal for 5s
-      if (data.card && typeof data.position === 'number' && !data.cards) {
+      // Q peek result → show the big modal for 5s. K swap also emits peek_own
+      // (so the swapper remembers their new card silently), but we only want the
+      // modal for the explicit Red-Q peek action — gated by source === 'q_peek'.
+      if (data.source === 'q_peek' && data.card && typeof data.position === 'number') {
         setQPeekCard({ card: data.card, position: data.position });
         window.setTimeout(() => {
           setQPeekCard(curr => (curr && curr.position === data.position ? null : curr));

@@ -470,7 +470,7 @@ export class GameEngine {
     const card = player.cards[position];
     if (!card) return false;
 
-    this.emit('game:peek_own', { card, position }, undefined, uid);
+    this.emit('game:peek_own', { card, position, source: 'q_peek' }, undefined, uid);
 
     this.specialActionUid = null;
     this.specialActionType = null;

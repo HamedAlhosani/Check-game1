@@ -163,6 +163,12 @@ export class RoomManager {
   }
 
   getCheckBots(roomId: string): BotPlayer[] { return this.checkBots.get(roomId) || []; }
+
+  addBotPlayer(roomId: string, bot: BotPlayer): void {
+    const bots = this.checkBots.get(roomId);
+    if (!bots) return;
+    if (!bots.find(b => b.uid === bot.uid)) bots.push(bot);
+  }
   getLudoBots(roomId: string): LudoBotPlayer[] { return this.ludoBots.get(roomId) || []; }
   getDominoBots(roomId: string): DominoBotPlayer[] { return this.dominoBots.get(roomId) || []; }
   getJacaroBots(roomId: string): JacaroBotPlayer[] { return this.jacaroBots.get(roomId) || []; }

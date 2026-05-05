@@ -321,12 +321,27 @@ export function HomePage() {
       setCurrentRoom(null);
       addToast(data.message, 'error');
     });
+    socket.on(SOCKET_EVENTS.LOBBY_INVITE_RECEIVED, (data: { roomCode: string; inviterName: string; roomName: string }) => {
+      addToast(
+        `${data.inviterName} دعاك: ${data.roomName}`,
+        'success',
+        10000,
+        {
+          label: 'انضم ←',
+          onClick: () => {
+            pendingModeRef.current = 'private';
+            socket.emit(SOCKET_EVENTS.LOBBY_JOIN_PRIVATE, { code: data.roomCode });
+          },
+        }
+      );
+    });
     return () => {
       socket.off(SOCKET_EVENTS.LOBBY_ROOM_LIST);
       socket.off(SOCKET_EVENTS.LOBBY_ROOM_UPDATED);
       socket.off(SOCKET_EVENTS.LOBBY_GAME_STARTING);
       socket.off(SOCKET_EVENTS.LOBBY_ERROR);
       socket.off(SOCKET_EVENTS.LOBBY_KICKED);
+      socket.off(SOCKET_EVENTS.LOBBY_INVITE_RECEIVED);
     };
   }, []);
 

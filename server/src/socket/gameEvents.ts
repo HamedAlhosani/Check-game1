@@ -91,17 +91,19 @@ export function startGameSession(io: Server, roomId: string): void {
 }
 
 function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): void {
-  const bots = roomManager.getCheckBots(roomId);
-  if (!bots.length) return;
+  // Initial bots — but we re-fetch on every tick to pick up bots added after disconnect
+  const initialBots = roomManager.getCheckBots(roomId);
+  if (!initialBots.length) return;
 
   const poll = setInterval(() => {
+    const bots = roomManager.getCheckBots(roomId); // re-fetch to include disconnect-added bots
     const state = engine.getPublicState();
 
     if (state.phase === 'GAME_OVER') {
       clearInterval(poll);
       const result = [...state.players].sort((a, b) => a.cumulativeScore - b.cumulativeScore);
       const winnerId = result[0]?.uid ?? null;
-      const realPlayers = state.players.filter(p => !p.uid.startsWith('bot-'));
+      const realPlayers = state.players.filter(p => !p.uid.startsWith('bot-') && !p.displayName.endsWith('🤖'));
       for (const p of realPlayers) {
         recordGameResult(p.uid, p.uid === winnerId, 'check').catch(() => null);
       }
@@ -110,7 +112,7 @@ function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): 
           gameId: (engine as any).gameId ?? 'unknown',
           gameType: 'check',
           playedAt: Date.now(),
-          players: state.players.filter(p => !p.uid.startsWith('bot-')).map(p => ({
+          players: realPlayers.map(p => ({
             uid: p.uid,
             displayName: p.displayName,
             avatarId: p.avatarId,
@@ -126,7 +128,9 @@ function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): 
       for (const bot of bots) {
         const me = state.players.find(p => p.uid === bot.uid);
         if (me && !me.isEliminated) {
-          setTimeout(() => engine.onPeekComplete(bot.uid), 1000 + Math.random() * 1500);
+          // Give the bot its actual cards before peeking
+          bot.updateCards(engine.getBotCards(bot.uid));
+          setTimeout(() => engine.onPeekComplete(bot.uid), 800 + Math.random() * 800);
         }
       }
       return;
@@ -137,31 +141,38 @@ function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): 
       if (!me || me.isEliminated) continue;
 
       if ((state.phase === 'PLAYING' || state.phase === 'CHECK_CALLED') && me.isTurn) {
+        // Update bot's card knowledge from server-side actual cards
+        bot.updateCards(engine.getBotCards(bot.uid));
         const action = bot.decideTurn(state);
-        const delay = 400 + Math.random() * 400;
+        const delay = 350 + Math.random() * 350;
 
         setTimeout(() => {
           if (action.type === 'CALL_CHECK') {
             engine.onCallCheck(bot.uid);
+          } else if (action.type === 'BURN_DISCARD') {
+            engine.onBurnAttempt(bot.uid, action.position);
+          } else if (action.type === 'TAKE_DISCARD') {
+            engine.onTakeDiscard(bot.uid, action.position);
           } else if (action.type === 'DRAW') {
             engine.onDrawDeck(bot.uid);
             setTimeout(() => {
               const drawnCard = engine.getDrawnCard(bot.uid);
               if (!drawnCard) return;
-              const freshState = engine.getPublicState();
-              const postAction = bot.decideTurn(freshState, drawnCard);
+              bot.updateCards(engine.getBotCards(bot.uid));
+              const postAction = bot.decideTurn(state, drawnCard);
               if (postAction.type === 'SWAP_DRAWN') {
                 engine.onSwapDrawn(bot.uid, postAction.position);
               } else {
                 engine.onBurnDrawn(bot.uid);
               }
-            }, 400 + Math.random() * 400);
+            }, 300 + Math.random() * 300);
           }
         }, delay);
         continue;
       }
 
       if (state.phase === 'SPECIAL_J' && state.specialActionUid === bot.uid) {
+        bot.updateCards(engine.getBotCards(bot.uid));
         const action = bot.decideTurn(state);
         if (action.type === 'SPECIAL_SWAP') {
           setTimeout(() => engine.onSpecialSwap(bot.uid, action.myPosition, action.targetUid, action.targetPosition), 500);
@@ -169,16 +180,21 @@ function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): 
       }
 
       if (state.phase === 'SPECIAL_Q' && state.specialActionUid === bot.uid) {
-        const botMe = state.players.find(p => p.uid === bot.uid);
-        const peekPos = botMe ? botMe.cards.findIndex(c => c !== null) : 0;
-        setTimeout(() => engine.onSpecialPeekOwn(bot.uid, peekPos >= 0 ? peekPos : 0), 500);
+        bot.updateCards(engine.getBotCards(bot.uid));
+        const action = bot.decideTurn(state);
+        if (action.type === 'SPECIAL_PEEK_OWN') {
+          setTimeout(() => engine.onSpecialPeekOwn(bot.uid, action.position), 500);
+        }
       }
 
       if (state.phase === 'KING_CHOICE' && state.specialActionUid === bot.uid) {
-        setTimeout(() => engine.onKingBurn(bot.uid), 500 + Math.random() * 400);
+        // Need king choice cards — they're not in public state, so use onKingSwap with best guess
+        // or fall back to burn. The engine emits king choices to the bot's uid privately,
+        // but we don't capture that. Use onKingBurn as safe fallback.
+        setTimeout(() => engine.onKingBurn(bot.uid), 400 + Math.random() * 300);
       }
     }
-  }, 500);
+  }, 400);
 }
 
 export function registerGameEvents(io: Server, socket: AuthenticatedSocket): void {

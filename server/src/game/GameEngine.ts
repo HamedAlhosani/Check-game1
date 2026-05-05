@@ -8,9 +8,10 @@ import { calculateRoundScores, ScoreResult } from './ScoreCalculator';
 const PEEK_DURATION_MS = 8000;
 const TURN_DURATION_MS = 25000;
 const BURN_WINDOW_MS = 3000;
-const ROUND_OVER_DELAY_MS = 6000;
+const ROUND_OVER_DELAY_MS = 4000;
 const SPECIAL_ACTION_TIMEOUT_MS = 15000;
-const CHECK_WINDOW_MS = 3000; // window after playing to call CHECK
+const CHECK_WINDOW_MS = 1000;     // window after playing to call CHECK (human)
+const BOT_CHECK_WINDOW_MS = 300;  // much shorter for bot turns
 
 interface InternalPlayer {
   uid: string;
@@ -333,8 +334,8 @@ export class GameEngine {
     this.emit('game:card_discarded', { uid, card, fromKingPenalty: false });
     this.broadcastState();
 
-    // 3s check window — player can call CHECK before turn advances
-    const advTimer = setTimeout(() => this.advanceTurn(), CHECK_WINDOW_MS);
+    // check window — player can call CHECK before turn advances
+    const advTimer = setTimeout(() => this.advanceTurn(), this.currentAdvanceDelay());
     this.timers.push(advTimer);
     return true;
   }
@@ -382,7 +383,7 @@ export class GameEngine {
 
     this.broadcastState();
     // 3s check window
-    const advTimer = setTimeout(() => this.advanceTurn(), CHECK_WINDOW_MS);
+    const advTimer = setTimeout(() => this.advanceTurn(), this.currentAdvanceDelay());
     this.timers.push(advTimer);
     return true;
   }
@@ -456,7 +457,7 @@ export class GameEngine {
     this.broadcastState();
 
     // 3s check window after J swap
-    const advTimer = setTimeout(() => this.advanceTurn(), CHECK_WINDOW_MS);
+    const advTimer = setTimeout(() => this.advanceTurn(), this.currentAdvanceDelay());
     this.timers.push(advTimer);
     return true;
   }
@@ -478,7 +479,7 @@ export class GameEngine {
     this.broadcastState();
 
     // 3s check window after Q peek
-    const advTimer = setTimeout(() => this.advanceTurn(), CHECK_WINDOW_MS);
+    const advTimer = setTimeout(() => this.advanceTurn(), this.currentAdvanceDelay());
     this.timers.push(advTimer);
     return true;
   }
@@ -531,7 +532,7 @@ export class GameEngine {
 
     this.broadcastState();
     // 3s check window after taking from discard
-    const advTimer = setTimeout(() => this.advanceTurn(), CHECK_WINDOW_MS);
+    const advTimer = setTimeout(() => this.advanceTurn(), this.currentAdvanceDelay());
     this.timers.push(advTimer);
     return true;
   }
@@ -746,6 +747,31 @@ export class GameEngine {
     for (const t of this.timers) clearTimeout(t);
     this.timers = [];
     this.turnEndAt = null;
+  }
+
+  private currentAdvanceDelay(): number {
+    const active = this.activePlayers();
+    const cur = active[this.currentTurnIndex % active.length];
+    return cur?.isBot ? BOT_CHECK_WINDOW_MS : CHECK_WINDOW_MS;
+  }
+
+  /** Called when a connected player disconnects mid-game — makes a bot play for them. */
+  replaceWithBot(uid: string): void {
+    const player = this.getPlayer(uid);
+    if (!player || player.isBot || player.isEliminated) return;
+    player.isBot = true;
+    player.displayName = player.displayName + ' 🤖';
+    this.broadcastState();
+    // If it's their turn, advance quickly so the game doesn't freeze
+    if (this.isPlayerTurn(uid) && (this.phase === 'PLAYING' || this.phase === 'CHECK_CALLED')) {
+      this.clearTimers();
+      setTimeout(() => this.performDrawAndBurn(uid), 800);
+    }
+  }
+
+  /** Returns the actual (server-side) cards for a bot to make decisions. */
+  getBotCards(uid: string): (Card | null)[] {
+    return this.getPlayer(uid)?.cards ?? [];
   }
 
   destroy(): void {

@@ -4,6 +4,9 @@ import { registerLobbyEvents } from './lobbyEvents';
 import { registerGameEvents } from './gameEvents';
 import { registerChatEvents } from './chatEvents';
 import { SOCKET_EVENTS } from '@check-game/shared';
+import { roomManager } from '../rooms/RoomManager';
+import { GameEngine } from '../game/GameEngine';
+import { BotPlayer } from '../game/BotPlayer';
 
 export function setupSocketHandlers(io: Server): void {
   io.on('connection', (socket: AuthenticatedSocket) => {
@@ -28,7 +31,24 @@ export function setupSocketHandlers(io: Server): void {
     });
 
     socket.on('disconnect', () => {
-      // Will be handled by reconnect logic
+      if (!socket.uid) return;
+      const roomId = roomManager.getRoomForSocket(socket.id);
+      roomManager.removeSocket(socket.id);
+      if (!roomId) return;
+
+      const engine = roomManager.getGame(roomId) as GameEngine | undefined;
+      if (!engine) return;
+
+      const state = engine.getPublicState();
+      if (state.phase === 'GAME_OVER') return;
+
+      const player = state.players.find(p => p.uid === socket.uid);
+      if (!player || player.isEliminated) return;
+
+      // Replace the disconnected player with a bot so the game continues
+      engine.replaceWithBot(socket.uid);
+      const bot = new BotPlayer(socket.uid, 'medium');
+      roomManager.addBotPlayer(roomId, bot);
     });
   });
 }

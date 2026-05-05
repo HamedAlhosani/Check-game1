@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RoomState, RoomPlayer } from '@check-game/shared';
 import { socketService } from '../../services/socket.service';
@@ -7,6 +7,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useUiStore } from '../../store/uiStore';
 import { useLang } from '../../i18n/useT';
 import { useLobbyStore } from '../../store/lobbyStore';
+import { apiClient } from '../../services/api.service';
 
 const AV_COLORS = ['#C9A84C','#4A90D9','#50C878','#E74C3C','#9B59B6','#E67E22','#1ABC9C','#E91E63'];
 function avatarColor(id: string) {
@@ -124,6 +125,16 @@ export function WaitingRoom({ room, onLeave }: Props) {
   const [botDifficulty, setBotDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [copied, setCopied] = useState(false);
   const [kickTarget, setKickTarget] = useState<RoomPlayer | null>(null);
+  const [friends, setFriends] = useState<{ uid: string; displayName: string; avatarId: string }[]>([]);
+  const [invitedUids, setInvitedUids] = useState<Set<string>>(new Set());
+  const [showInvite, setShowInvite] = useState(false);
+
+  useEffect(() => {
+    if (!room.code) return; // only private rooms
+    apiClient.get<{ uid: string; displayName: string; avatarId: string }[]>('/api/friends')
+      .then(setFriends)
+      .catch(() => setFriends([]));
+  }, [room.roomId]);
 
   const maxPlayers = room.maxPlayers ?? 10;
   const emptySlots = maxPlayers - room.players.length;
@@ -150,6 +161,14 @@ export function WaitingRoom({ room, onLeave }: Props) {
     socket?.emit(SOCKET_EVENTS.LOBBY_KICK_PLAYER, { roomId: room.roomId, targetUid: kickTarget.uid });
     setKickTarget(null);
   };
+
+  const handleInviteFriend = (friendUid: string) => {
+    socket?.emit(SOCKET_EVENTS.LOBBY_INVITE_FRIEND, { roomId: room.roomId, targetUid: friendUid });
+    setInvitedUids(prev => new Set(prev).add(friendUid));
+    addToast(lang === 'ar' ? 'تم إرسال الدعوة!' : 'Invite sent!', 'success');
+  };
+
+  const alreadyInRoom = new Set(room.players.map(p => p.uid));
 
   const copyCode = () => {
     if (!room.code) return;
@@ -196,6 +215,67 @@ export function WaitingRoom({ room, onLeave }: Props) {
             {lang === 'ar' ? 'انقر للنسخ' : 'Click to copy'}
           </p>
         </motion.div>
+      )}
+
+      {/* Invite friends — only for private rooms with friends */}
+      {room.code && friends.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowInvite(v => !v)}
+            className="font-arabic text-xs w-full text-center py-2 rounded-xl border transition-all"
+            style={{
+              background: showInvite ? 'rgba(201,168,76,0.08)' : 'rgba(255,255,255,0.03)',
+              borderColor: showInvite ? 'rgba(201,168,76,0.3)' : 'rgba(255,255,255,0.08)',
+              color: showInvite ? '#E8C97A' : 'rgba(245,230,200,0.45)',
+            }}
+          >
+            👥 {lang === 'ar' ? `دعوة أصدقاء (${friends.length})` : `Invite Friends (${friends.length})`}
+            {showInvite ? ' ▲' : ' ▼'}
+          </button>
+          <AnimatePresence>
+            {showInvite && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="pt-2 flex flex-col gap-1.5">
+                  {friends.filter(f => !alreadyInRoom.has(f.uid)).map(f => {
+                    const invited = invitedUids.has(f.uid);
+                    return (
+                      <div key={f.uid} className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs text-white shrink-0"
+                          style={{ background: '#C9A84C' }}>
+                          {f.displayName?.slice(0, 2) || '?'}
+                        </div>
+                        <span className="font-arabic text-xs flex-1 truncate" style={{ color: 'rgba(245,230,200,0.8)' }}>{f.displayName}</span>
+                        <button
+                          onClick={() => !invited && handleInviteFriend(f.uid)}
+                          disabled={invited}
+                          className="font-arabic text-xs px-3 py-1 rounded-lg shrink-0"
+                          style={{
+                            background: invited ? 'rgba(45,110,78,0.2)' : 'rgba(201,168,76,0.12)',
+                            border: `1px solid ${invited ? 'rgba(45,110,78,0.4)' : 'rgba(201,168,76,0.3)'}`,
+                            color: invited ? 'rgba(80,200,120,0.8)' : '#E8C97A',
+                            cursor: invited ? 'default' : 'pointer',
+                          }}
+                        >
+                          {invited ? (lang === 'ar' ? 'تم الإرسال ✓' : 'Sent ✓') : (lang === 'ar' ? 'دعوة' : 'Invite')}
+                        </button>
+                      </div>
+                    );
+                  })}
+                  {friends.every(f => alreadyInRoom.has(f.uid)) && (
+                    <p className="text-center font-arabic text-xs py-2" style={{ color: 'rgba(245,230,200,0.3)' }}>
+                      {lang === 'ar' ? 'جميع أصدقائك موجودون في الغرفة' : 'All your friends are already here'}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       )}
 
       {/* Header: room name + player count */}

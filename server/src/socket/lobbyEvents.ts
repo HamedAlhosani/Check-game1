@@ -140,6 +140,24 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
     io.emit(SOCKET_EVENTS.LOBBY_ROOM_LIST, roomManager.getPublicRooms().map(r => r.toState()));
   });
 
+  socket.on(SOCKET_EVENTS.LOBBY_INVITE_FRIEND, (payload: { roomId: string; targetUid: string }) => {
+    if (!socket.uid) return;
+    const room = roomManager.getRoom(payload.roomId);
+    if (!room || !room.players.some(p => p.uid === socket.uid)) return;
+    if (!room.code) return; // only private rooms can be invited to
+
+    const inviter = room.players.find(p => p.uid === socket.uid);
+    const targetSocket = findSocketByUid(io, payload.targetUid);
+    if (targetSocket) {
+      targetSocket.emit(SOCKET_EVENTS.LOBBY_INVITE_RECEIVED, {
+        roomCode: room.code,
+        inviterName: inviter?.displayName || 'لاعب',
+        inviterAvatarId: inviter?.avatarId || 'avatar_1',
+        roomName: room.name,
+      });
+    }
+  });
+
   socket.on(SOCKET_EVENTS.LOBBY_KICK_PLAYER, (payload: { roomId: string; targetUid: string }) => {
     if (!socket.uid) return;
     const room = roomManager.getRoom(payload.roomId);

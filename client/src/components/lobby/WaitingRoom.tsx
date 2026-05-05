@@ -6,6 +6,7 @@ import { SOCKET_EVENTS } from '@check-game/shared';
 import { useAuthStore } from '../../store/authStore';
 import { useUiStore } from '../../store/uiStore';
 import { useLang } from '../../i18n/useT';
+import { useLobbyStore } from '../../store/lobbyStore';
 
 const AV_COLORS = ['#C9A84C','#4A90D9','#50C878','#E74C3C','#9B59B6','#E67E22','#1ABC9C','#E91E63'];
 function avatarColor(id: string) {
@@ -13,13 +14,15 @@ function avatarColor(id: string) {
   return AV_COLORS[i % AV_COLORS.length];
 }
 
-function PlayerSlot({ player, isHost, hostUid, onRemoveBot }: {
+function PlayerSlot({ player, isHost, hostUid, onRemoveBot, onKick }: {
   player: RoomPlayer;
   isHost: boolean;
   hostUid: string;
   onRemoveBot: (uid: string) => void;
+  onKick: (player: RoomPlayer) => void;
 }) {
   const lang = useLang();
+  const canRemove = isHost && (player.isBot || player.uid !== hostUid);
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.85 }}
@@ -40,10 +43,10 @@ function PlayerSlot({ player, isHost, hostUid, onRemoveBot }: {
             : 'rgba(201,168,76,0.2)',
       }}
     >
-      {/* Remove bot button */}
-      {isHost && player.isBot && (
+      {/* Remove / kick button */}
+      {canRemove && (
         <button
-          onClick={() => onRemoveBot(player.uid)}
+          onClick={() => player.isBot ? onRemoveBot(player.uid) : onKick(player)}
           className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full transition-all"
           style={{ background: 'rgba(196,92,58,0.15)', color: '#E07040', fontSize: 14, lineHeight: 1 }}
         >
@@ -76,7 +79,7 @@ function PlayerSlot({ player, isHost, hostUid, onRemoveBot }: {
   );
 }
 
-function EmptySlot({ isHost, onAddBot, disabled }: { isHost: boolean; onAddBot: () => void; disabled?: boolean }) {
+function EmptySlot({ isHost, onAddBot }: { isHost: boolean; onAddBot: () => void }) {
   const lang = useLang();
   return (
     <motion.div
@@ -89,9 +92,7 @@ function EmptySlot({ isHost, onAddBot, disabled }: { isHost: boolean; onAddBot: 
       {isHost ? (
         <button
           onClick={onAddBot}
-          disabled={disabled}
           className="flex flex-col items-center gap-1 transition-all group"
-          style={{ opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
         >
           <span className="text-2xl opacity-30 group-hover:opacity-70 transition-opacity">🤖</span>
           <span className="font-arabic text-xs" style={{ color: 'rgba(201,168,76,0.4)' }}>
@@ -116,12 +117,13 @@ export function WaitingRoom({ room, onLeave }: Props) {
   const lang = useLang();
   const { user } = useAuthStore();
   const { addToast } = useUiStore();
+  const { setCurrentRoom } = useLobbyStore();
   const socket = socketService.getSocket();
   const isHost = room.hostUid === user?.uid;
   const me = room.players.find(p => p.uid === user?.uid);
   const [botDifficulty, setBotDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [copied, setCopied] = useState(false);
-  const [addingBot, setAddingBot] = useState(false);
+  const [kickTarget, setKickTarget] = useState<RoomPlayer | null>(null);
 
   const maxPlayers = room.maxPlayers ?? 10;
   const emptySlots = maxPlayers - room.players.length;
@@ -132,21 +134,21 @@ export function WaitingRoom({ room, onLeave }: Props) {
   const handleLeave = () => {
     socket?.emit(SOCKET_EVENTS.LOBBY_LEAVE_ROOM, { roomId: room.roomId });
     onLeave?.();
+    setCurrentRoom(null);
   };
   const handleAddBot = () => {
-    if (addingBot) return;
-    setAddingBot(true);
     socket?.emit(SOCKET_EVENTS.LOBBY_ADD_BOT, { roomId: room.roomId, difficulty: botDifficulty });
-    setTimeout(() => setAddingBot(false), 800);
   };
   const handleRemoveBot = (botUid: string) => socket?.emit(SOCKET_EVENTS.LOBBY_REMOVE_BOT, { roomId: room.roomId, botUid });
   const handleFillWithBots = () => {
-    if (addingBot) return;
-    setAddingBot(true);
     for (let i = 0; i < emptySlots; i++) {
       socket?.emit(SOCKET_EVENTS.LOBBY_ADD_BOT, { roomId: room.roomId, difficulty: botDifficulty });
     }
-    setTimeout(() => setAddingBot(false), 800);
+  };
+  const confirmKick = () => {
+    if (!kickTarget) return;
+    socket?.emit(SOCKET_EVENTS.LOBBY_KICK_PLAYER, { roomId: room.roomId, targetUid: kickTarget.uid });
+    setKickTarget(null);
   };
 
   const copyCode = () => {
@@ -231,9 +233,10 @@ export function WaitingRoom({ room, onLeave }: Props) {
                 isHost={isHost}
                 hostUid={room.hostUid}
                 onRemoveBot={handleRemoveBot}
+                onKick={setKickTarget}
               />
             ) : (
-              <EmptySlot key={`empty-${i}`} isHost={isHost} onAddBot={handleAddBot} disabled={addingBot} />
+              <EmptySlot key={`empty-${i}`} isHost={isHost} onAddBot={handleAddBot} />
             );
           })}
         </AnimatePresence>
@@ -334,28 +337,16 @@ export function WaitingRoom({ room, onLeave }: Props) {
           <div className="flex gap-2">
             <button
               onClick={handleAddBot}
-              disabled={addingBot}
               className="flex-1 py-2 rounded-xl font-arabic text-sm font-bold transition-all border"
-              style={{
-                background: addingBot ? 'rgba(80,200,120,0.04)' : 'rgba(80,200,120,0.08)',
-                borderColor: 'rgba(80,200,120,0.3)',
-                color: addingBot ? 'rgba(80,200,120,0.4)' : 'rgba(80,200,120,0.9)',
-                cursor: addingBot ? 'not-allowed' : 'pointer',
-              }}
+              style={{ background: 'rgba(80,200,120,0.08)', borderColor: 'rgba(80,200,120,0.3)', color: 'rgba(80,200,120,0.9)' }}
             >
-              {addingBot ? '...' : `+ ${lang === 'ar' ? 'بوت واحد' : 'Add Bot'}`}
+              + {lang === 'ar' ? 'بوت واحد' : 'Add Bot'}
             </button>
             {emptySlots > 1 && (
               <button
                 onClick={handleFillWithBots}
-                disabled={addingBot}
                 className="flex-1 py-2 rounded-xl font-arabic text-sm font-bold transition-all border"
-                style={{
-                  background: addingBot ? 'rgba(80,200,120,0.04)' : 'rgba(80,200,120,0.12)',
-                  borderColor: 'rgba(80,200,120,0.4)',
-                  color: addingBot ? 'rgba(80,200,120,0.4)' : 'rgba(80,200,120,1)',
-                  cursor: addingBot ? 'not-allowed' : 'pointer',
-                }}
+                style={{ background: 'rgba(80,200,120,0.12)', borderColor: 'rgba(80,200,120,0.4)', color: 'rgba(80,200,120,1)' }}
               >
                 ⚡ {lang === 'ar' ? `أكمل الكل (${emptySlots})` : `Fill All (${emptySlots})`}
               </button>
@@ -363,6 +354,41 @@ export function WaitingRoom({ room, onLeave }: Props) {
           </div>
         </motion.div>
       )}
+
+      {/* Kick confirm dialog */}
+      <AnimatePresence>
+        {kickTarget && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            className="rounded-xl px-4 py-3 border flex items-center justify-between gap-3"
+            style={{ background: 'rgba(196,92,58,0.08)', borderColor: 'rgba(196,92,58,0.35)' }}
+          >
+            <p className="font-arabic text-sm" style={{ color: '#E07040' }}>
+              {lang === 'ar'
+                ? `هل أنت متأكد من طرد ${kickTarget.displayName}؟`
+                : `Kick ${kickTarget.displayName}?`}
+            </p>
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={confirmKick}
+                className="px-3 py-1.5 rounded-lg font-arabic text-xs font-bold"
+                style={{ background: 'rgba(196,92,58,0.2)', border: '1px solid rgba(196,92,58,0.5)', color: '#E07040' }}
+              >
+                {lang === 'ar' ? 'وجحي' : 'Kick'}
+              </button>
+              <button
+                onClick={() => setKickTarget(null)}
+                className="px-3 py-1.5 rounded-lg font-arabic text-xs"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(245,230,200,0.5)' }}
+              >
+                {lang === 'ar' ? 'لا' : 'No'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Action buttons */}
       <div className="flex gap-3 mt-1">

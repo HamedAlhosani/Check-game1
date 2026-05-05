@@ -5,6 +5,13 @@ import { getUserProfile } from '../services/firestoreService';
 import { SOCKET_EVENTS, CreateRoomPayload } from '@check-game/shared';
 import { startGameSession } from './gameEvents';
 
+function findSocketByUid(io: Server, uid: string): AuthenticatedSocket | undefined {
+  for (const s of io.sockets.sockets.values()) {
+    if ((s as AuthenticatedSocket).uid === uid) return s as AuthenticatedSocket;
+  }
+  return undefined;
+}
+
 export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): void {
   socket.on(SOCKET_EVENTS.LOBBY_CREATE_ROOM, async (payload: CreateRoomPayload) => {
     if (!socket.uid) return;
@@ -129,6 +136,28 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
     if (room.status !== 'waiting') return;
 
     room.removeBot(payload.botUid);
+    io.to(room.roomId).emit(SOCKET_EVENTS.LOBBY_ROOM_UPDATED, room.toState());
+    io.emit(SOCKET_EVENTS.LOBBY_ROOM_LIST, roomManager.getPublicRooms().map(r => r.toState()));
+  });
+
+  socket.on(SOCKET_EVENTS.LOBBY_KICK_PLAYER, (payload: { roomId: string; targetUid: string }) => {
+    if (!socket.uid) return;
+    const room = roomManager.getRoom(payload.roomId);
+    if (!room || room.hostUid !== socket.uid) return;
+    if (payload.targetUid === socket.uid) return;
+
+    const target = room.players.find(p => p.uid === payload.targetUid && !p.isBot);
+    if (!target) return;
+
+    room.removePlayer(payload.targetUid);
+
+    const kickedSocket = findSocketByUid(io, payload.targetUid);
+    if (kickedSocket) {
+      kickedSocket.leave(room.roomId);
+      roomManager.removeSocket(kickedSocket.id);
+      kickedSocket.emit(SOCKET_EVENTS.LOBBY_KICKED, { message: 'تم طردك من الغرفة' });
+    }
+
     io.to(room.roomId).emit(SOCKET_EVENTS.LOBBY_ROOM_UPDATED, room.toState());
     io.emit(SOCKET_EVENTS.LOBBY_ROOM_LIST, roomManager.getPublicRooms().map(r => r.toState()));
   });

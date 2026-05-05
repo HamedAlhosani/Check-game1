@@ -58,12 +58,14 @@ export const SOCKET_EVENTS = {
   LOBBY_START_GAME: 'lobby:start_game',
   LOBBY_ADD_BOT: 'lobby:add_bot',
   LOBBY_REMOVE_BOT: 'lobby:remove_bot',
+  LOBBY_KICK_PLAYER: 'lobby:kick_player',
 
   // Lobby - Server → Client
   LOBBY_ROOM_LIST: 'lobby:room_list',
   LOBBY_ROOM_UPDATED: 'lobby:room_updated',
   LOBBY_GAME_STARTING: 'lobby:game_starting',
   LOBBY_ERROR: 'lobby:error',
+  LOBBY_KICKED: 'lobby:kicked',
 
   // Game - Client → Server
   GAME_PEEK_COMPLETE: 'game:peek_complete',

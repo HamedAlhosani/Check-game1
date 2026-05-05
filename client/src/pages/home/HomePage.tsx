@@ -317,11 +317,16 @@ export function HomePage() {
       addToast(data.message, 'error');
       soundService.playError();
     });
+    socket.on(SOCKET_EVENTS.LOBBY_KICKED, (data: { message: string }) => {
+      setCurrentRoom(null);
+      addToast(data.message, 'error');
+    });
     return () => {
       socket.off(SOCKET_EVENTS.LOBBY_ROOM_LIST);
       socket.off(SOCKET_EVENTS.LOBBY_ROOM_UPDATED);
       socket.off(SOCKET_EVENTS.LOBBY_GAME_STARTING);
       socket.off(SOCKET_EVENTS.LOBBY_ERROR);
+      socket.off(SOCKET_EVENTS.LOBBY_KICKED);
     };
   }, []);
 

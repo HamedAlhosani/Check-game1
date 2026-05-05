@@ -8,14 +8,16 @@ import { SOCKET_EVENTS } from '@check-game/shared';
 interface Props {
   open: boolean;
   onClose: () => void;
+  onBeforeJoin?: () => void;
 }
 
-export function JoinPrivateModal({ open, onClose }: Props) {
+export function JoinPrivateModal({ open, onClose, onBeforeJoin }: Props) {
   const [code, setCode] = useState('');
 
   const handleJoin = () => {
     const socket = socketService.getSocket();
     if (!socket || code.length < 4) return;
+    onBeforeJoin?.();
     socket.emit(SOCKET_EVENTS.LOBBY_JOIN_PRIVATE, { code: code.toUpperCase() });
     onClose();
   };

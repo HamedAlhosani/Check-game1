@@ -233,7 +233,7 @@ export function WaitingRoom({ room, onLeave }: Props) {
                 onRemoveBot={handleRemoveBot}
               />
             ) : (
-              <EmptySlot key={`empty-${i}`} isHost={true} onAddBot={handleAddBot} disabled={addingBot} />
+              <EmptySlot key={`empty-${i}`} isHost={isHost} onAddBot={handleAddBot} disabled={addingBot} />
             );
           })}
         </AnimatePresence>
@@ -299,8 +299,8 @@ export function WaitingRoom({ room, onLeave }: Props) {
         )}
       </motion.div>
 
-      {/* Bot controls — visible to all players when there are empty seats */}
-      {emptySlots > 0 && (
+      {/* Bot controls — host only */}
+      {isHost && emptySlots > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}

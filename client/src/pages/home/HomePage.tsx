@@ -491,14 +491,16 @@ export function HomePage() {
               <ConfigPanel key={mode} mode={mode} coins={coins} onCreate={handleCreate}/>
             </AnimatePresence>
 
-            {/* ── Join private room link ── */}
-            <div className="mt-3 text-center">
-              <button onClick={() => setShowJoin(true)}
-                className="font-arabic text-sm transition-all"
-                style={{ color: 'rgba(245,230,200,0.35)', textDecoration: 'underline', textDecorationColor: 'rgba(245,230,200,0.15)' }}>
-                🔑 {lang === 'ar' ? 'انضم بكود غرفة خاصة' : 'Join with room code'}
-              </button>
-            </div>
+            {/* ── Join private room link — only in private mode ── */}
+            {mode === 'private' && (
+              <div className="mt-3 text-center">
+                <button onClick={() => setShowJoin(true)}
+                  className="font-arabic text-sm transition-all"
+                  style={{ color: 'rgba(245,230,200,0.35)', textDecoration: 'underline', textDecorationColor: 'rgba(245,230,200,0.15)' }}>
+                  🔑 {lang === 'ar' ? 'انضم بكود غرفة خاصة' : 'Join with room code'}
+                </button>
+              </div>
+            )}
 
             {/* ── Sound toggle ── */}
             <div className="mt-5 flex justify-center">
@@ -508,7 +510,7 @@ export function HomePage() {
         )}
       </div>
 
-      <JoinPrivateModal open={showJoin} onClose={() => setShowJoin(false)}/>
+      <JoinPrivateModal open={showJoin} onClose={() => setShowJoin(false)} onBeforeJoin={() => { pendingModeRef.current = 'private'; }}/>
 
       {searching && <SearchingModal onCancel={handleCancelSearch} lang={lang}/>}
       {botLoading && <BotLoadingOverlay lang={lang}/>}

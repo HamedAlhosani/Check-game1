@@ -180,6 +180,30 @@ function EmojiFloat({ em }: { em: string }) {
   );
 }
 
+// ─── Chat bubble above player box ─────────────────────────────────────────────
+function ChatBubble({ text }: { text: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.82, y: 6 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.82, y: -4 }}
+      transition={{ type: 'spring', stiffness: 340, damping: 26 }}
+      className="absolute left-1/2 z-50 pointer-events-none"
+      style={{ bottom: '105%', transform: 'translateX(-50%)', maxWidth: 190 }}
+    >
+      <div className="rounded-xl px-3 py-1.5 font-arabic text-xs text-white text-center"
+        style={{ background: 'rgba(8,3,0,0.97)', border: '1px solid rgba(201,168,76,0.5)',
+                 boxShadow: '0 2px 14px rgba(0,0,0,0.75)', wordBreak: 'break-word', lineHeight: 1.5,
+                 whiteSpace: 'pre-wrap' }}>
+        {text}
+      </div>
+      <div style={{ width: 0, height: 0, margin: '0 auto',
+        borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+        borderTop: '6px solid rgba(201,168,76,0.5)' }}/>
+    </motion.div>
+  );
+}
+
 // ─── Distribute function ──────────────────────────────────────────────────────
 function distribute(opponents: any[]) {
   // Active players first, eliminated last so the top seat stays occupied
@@ -285,33 +309,48 @@ function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap }: any) {
 }
 
 // ─── TOP seat: box above, cards below UPRIGHT ────────────────────────────────
-function TopSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji }: any) {
+function TopSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble }: any) {
   return (
     <div className="relative flex flex-col items-center gap-1.5 shrink-0" style={{ width: 220, zIndex: 20 }}>
       <AnimatePresence>{emoji && <EmojiFloat em={emoji} />}</AnimatePresence>
-      <PlayerBox player={player} gameState={gameState} />
+      <div className="relative w-full">
+        <AnimatePresence>
+          {chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}
+        </AnimatePresence>
+        <PlayerBox player={player} gameState={gameState} />
+      </div>
       <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} />
     </div>
   );
 }
 
 // ─── LEFT seat ───────────────────────────────────────────────────────────────
-function LeftSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji }: any) {
+function LeftSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble }: any) {
   return (
     <div className="relative flex flex-col items-center gap-1.5 shrink-0" style={{ width: 220, zIndex: 20 }}>
       <AnimatePresence>{emoji && <EmojiFloat em={emoji} />}</AnimatePresence>
-      <PlayerBox player={player} gameState={gameState} />
+      <div className="relative w-full">
+        <AnimatePresence>
+          {chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}
+        </AnimatePresence>
+        <PlayerBox player={player} gameState={gameState} />
+      </div>
       <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} />
     </div>
   );
 }
 
 // ─── RIGHT seat ──────────────────────────────────────────────────────────────
-function RightSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji }: any) {
+function RightSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble }: any) {
   return (
     <div className="relative flex flex-col items-center gap-1.5 shrink-0" style={{ width: 220, zIndex: 20 }}>
       <AnimatePresence>{emoji && <EmojiFloat em={emoji} />}</AnimatePresence>
-      <PlayerBox player={player} gameState={gameState} />
+      <div className="relative w-full">
+        <AnimatePresence>
+          {chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}
+        </AnimatePresence>
+        <PlayerBox player={player} gameState={gameState} />
+      </div>
       <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} />
     </div>
   );
@@ -320,7 +359,7 @@ function RightSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, 
 // ─── CheckBoard ───────────────────────────────────────────────────────────────
 export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const { user } = useAuthStore();
-  const { drawnCard, setDrawnCard, gameOverData, setGameOverData, reset: resetGame } = useGameStore();
+  const { drawnCard, setDrawnCard, gameOverData, setGameOverData, reset: resetGame, chatMessages } = useGameStore();
   const navigate = useNavigate();
   const socket = socketService.getSocket();
 
@@ -334,10 +373,11 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const isSpecialJ = gameState.phase === 'SPECIAL_J' && gameState.specialActionUid === user?.uid;
   const isSpecialQ = gameState.phase === 'SPECIAL_Q' && gameState.specialActionUid === user?.uid;
   const activePlCount = gameState.players.filter(p => !p.isEliminated).length;
+  const [hasPlayedThisTurn, setHasPlayedThisTurn] = useState(false);
   const canCallCheck = gameState.phase === 'PLAYING' &&
     gameState.dealTurnCount >= activePlCount * 4 &&
     isMyTurn && !gameState.checkCallerId &&
-    hasPlayedThisTurn; // must draw and resolve before calling check
+    hasPlayedThisTurn;
 
   const tableRef = useRef<HTMLDivElement>(null);
   const [tSize, setTSize] = useState(500);
@@ -352,7 +392,6 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
   const [knownCards, setKnownCards] = useState<Map<number, Card>>(new Map());
   const [selectedPos, setSelectedPos] = useState<number | null>(null);
-  const [hasPlayedThisTurn, setHasPlayedThisTurn] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [emojiMap, setEmojiMap] = useState<Record<string, string | null>>({});
   const [showExitConfirm, setShowExitConfirm] = useState(false);
@@ -364,10 +403,14 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [kingSelectedIdx, setKingSelectedIdx] = useState<number | null>(null);
   const [pendingBurnPos, setPendingBurnPos] = useState<number | null>(null);
   const [discardSelected, setDiscardSelected] = useState(false);
+  const [chatBubbleMap, setChatBubbleMap] = useState<Record<string, { text: string; key: number } | null>>({});
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const prevTurnRef = useRef<string | null>(null);
   const actedRef = useRef(false);
   const afkCountRef = useRef(0);
+  const prevMsgCountRef = useRef(-1);
+  const chatOpenRef = useRef(false);
 
   useEffect(() => {
     if (!socket) return;
@@ -476,6 +519,49 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   useEffect(() => {
     if (!isMyTurn) setDrawnCard(null);
   }, [isMyTurn]);
+
+  // Sync chatOpenRef and clear unread when panel opens
+  useEffect(() => {
+    chatOpenRef.current = chatOpen;
+    if (chatOpen) setUnreadCount(0);
+  }, [chatOpen]);
+
+  // Process incoming chat messages → bubble + emoji + unread count
+  useEffect(() => {
+    if (prevMsgCountRef.current === -1) {
+      prevMsgCountRef.current = chatMessages.length;
+      return;
+    }
+    if (chatMessages.length <= prevMsgCountRef.current) return;
+    const newMsgs = chatMessages.slice(prevMsgCountRef.current);
+    prevMsgCountRef.current = chatMessages.length;
+
+    for (const msg of newMsgs) {
+      if (!chatOpenRef.current) setUnreadCount(c => c + 1);
+
+      // Emoji float for all players
+      if (msg.emoji) {
+        const uid = msg.uid;
+        const em = msg.emoji;
+        setEmojiMap(prev => ({ ...prev, [uid]: em }));
+        setTimeout(() => setEmojiMap(prev => ({ ...prev, [uid]: null })), 2000);
+      }
+
+      // Chat bubble above seat (text only, skip pure-emoji messages)
+      if (msg.text && msg.text !== msg.emoji) {
+        const uid = msg.uid;
+        const key = Date.now() + Math.random();
+        setChatBubbleMap(prev => ({ ...prev, [uid]: { text: msg.text, key } }));
+        setTimeout(() => {
+          setChatBubbleMap(prev => {
+            const cur = prev[uid];
+            if (cur && cur.key === key) return { ...prev, [uid]: null };
+            return prev;
+          });
+        }, 5000);
+      }
+    }
+  }, [chatMessages.length]);
 
   const markActed = useCallback(() => { actedRef.current = true; afkCountRef.current = 0; setShowAfk(false); }, []);
   const canTakeDiscard = isMyTurn && !drawnCard &&
@@ -692,7 +778,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {top.length > 0 && (
           <div className="shrink-0 flex justify-center gap-2 pt-1" style={{ marginBottom: 64 }}>
             {top.map(p => (
-              <TopSeat key={p.uid} player={p} {...commonSeatProps} emoji={emojiMap[p.uid]} />
+              <TopSeat key={p.uid} player={p} {...commonSeatProps} emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
             ))}
           </div>
         )}
@@ -704,7 +790,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           {left.length > 0 && (
             <div className="flex flex-col gap-2 shrink-0 justify-center items-center">
               {left.map(p => (
-                <LeftSeat key={p.uid} player={p} {...commonSeatProps} emoji={emojiMap[p.uid]} />
+                <LeftSeat key={p.uid} player={p} {...commonSeatProps} emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
               ))}
             </div>
           )}
@@ -845,7 +931,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           {right.length > 0 && (
             <div className="flex flex-col gap-2 shrink-0 justify-center items-center">
               {right.map(p => (
-                <RightSeat key={p.uid} player={p} {...commonSeatProps} emoji={emojiMap[p.uid]} />
+                <RightSeat key={p.uid} player={p} {...commonSeatProps} emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
               ))}
             </div>
           )}
@@ -899,7 +985,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
             {/* My player box + CHECK button side by side */}
             <div className="w-full flex items-center gap-2">
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 relative">
+                <AnimatePresence>
+                  {chatBubbleMap[me.uid] && (
+                    <ChatBubble text={chatBubbleMap[me.uid]!.text} key={chatBubbleMap[me.uid]!.key} />
+                  )}
+                </AnimatePresence>
                 <PlayerBox player={me} gameState={gameState} />
               </div>
               {!me?.isEliminated && (
@@ -921,8 +1012,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             {/* My emoji float */}
             <AnimatePresence>
               {emojiMap[me.uid] && (
-                <motion.div key={emojiMap[me.uid]!} initial={{ opacity: 1, y: 0 }} animate={{ opacity: 0, y: -44 }}
-                  transition={{ duration: 1.3 }} className="fixed text-3xl pointer-events-none z-30" style={{ bottom: 80, left: '50%', transform: 'translateX(-50%)' }}>{emojiMap[me.uid]}</motion.div>
+                <motion.div key={emojiMap[me.uid]!} initial={{ opacity: 1, y: 0 }} animate={{ opacity: 0, y: -64 }}
+                  transition={{ duration: 1.5 }} className="fixed text-3xl pointer-events-none z-30" style={{ bottom: 90, left: '50%', transform: 'translateX(-50%)' }}>{emojiMap[me.uid]}</motion.div>
               )}
             </AnimatePresence>
           </div>
@@ -933,9 +1024,23 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       <div className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-3 py-2 border-t border-yellow-900/30"
         style={{ background: 'rgba(8,3,0,.97)', height: 52, position: 'relative', zIndex: 40 }}>
         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
-          className={`px-4 py-1.5 rounded-xl border font-arabic text-sm transition-all
+          className={`relative px-4 py-1.5 rounded-xl border font-arabic text-sm transition-all
             ${chatOpen ? 'border-gold/60 text-gold bg-gold/12' : 'border-white/15 text-white/60 bg-white/5'}`}
-          onClick={() => setChatOpen(s => !s)}>شات</motion.button>
+          onClick={() => { setChatOpen(s => !s); setUnreadCount(0); }}>
+          شات
+          <AnimatePresence>
+            {!chatOpen && unreadCount > 0 && (
+              <motion.span
+                key="badge"
+                initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                className="absolute flex items-center justify-center rounded-full bg-red-500 text-white font-bold"
+                style={{ top: -6, right: -6, minWidth: 17, height: 17, fontSize: 9, lineHeight: 1 }}>
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.button>
 
         <div className="flex gap-2">
           {['😄','😮','😂','🔥','👏','😤'].map(em => (
@@ -943,8 +1048,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               style={{ fontSize: 20 }}
               onClick={() => {
                 if (!me) return;
-                setEmojiMap(prev => ({ ...prev, [me.uid]: em }));
-                setTimeout(() => setEmojiMap(prev => ({ ...prev, [me.uid]: null })), 1500);
+                socket?.emit(SOCKET_EVENTS.CHAT_SEND, { roomId, text: '', emoji: em });
               }}>{em}</motion.button>
           ))}
         </div>

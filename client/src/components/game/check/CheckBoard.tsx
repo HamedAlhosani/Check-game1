@@ -1862,18 +1862,23 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 className="absolute top-2 left-2 text-sand/50 hover:text-sand text-2xl w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/5">
                 ×
               </button>
-              <h2 className="font-arabic font-bold mb-1" style={{ fontSize: 18, color: '#E8C97A' }}>
+              <h2 className="font-arabic font-bold mb-1 text-center" style={{ fontSize: 18, color: '#E8C97A' }}>
                 ورقتك في الموضع {qPeekCard.position + 1}
               </h2>
-              <p className="font-arabic mb-4" style={{ fontSize: 12, color: 'rgba(245,230,200,0.5)' }}>
+              <p className="font-arabic mb-5 text-center" style={{ fontSize: 12, color: 'rgba(245,230,200,0.5)' }}>
                 ستختفي بعد 5 ثوانٍ
               </p>
-              <div style={{ transform: 'scale(2.2)', transformOrigin: 'center', margin: '40px 0' }}>
-                <PlayingCard card={{ ...qPeekCard.card, isRevealed: true }} />
+              {/* Wrapper has the scaled card's actual visual dimensions so it does
+                  not overflow onto the title above or the close button below */}
+              <div className="flex items-center justify-center mb-5"
+                style={{ width: 220, height: 330 }}>
+                <div style={{ transform: 'scale(2.2)', transformOrigin: 'center' }}>
+                  <PlayingCard card={{ ...qPeekCard.card, isRevealed: true }} />
+                </div>
               </div>
               <button
                 onClick={() => setQPeekCard(null)}
-                className="mt-2 px-6 py-2 rounded-xl font-arabic font-bold border"
+                className="px-6 py-2 rounded-xl font-arabic font-bold border"
                 style={{ background: 'rgba(201,168,76,0.12)', borderColor: 'rgba(201,168,76,0.4)', color: '#E8C97A' }}>
                 إغلاق
               </button>

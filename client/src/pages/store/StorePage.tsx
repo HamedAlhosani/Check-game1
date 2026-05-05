@@ -8,6 +8,7 @@ import { apiClient } from '../../services/api.service';
 import { soundService } from '../../services/sound.service';
 import { useT, useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
+import { FrameRing } from '../../components/shared/FrameRing';
 import {
   StoreItem, ItemCategory,
   CATEGORY_LABEL, RARITY_LABEL, RARITY_COLOR,
@@ -227,18 +228,6 @@ export function StorePage() {
           <RechargeTab onRecharge={handleRecharge} busy={busy} t={t} lang={lang} />
         )}
 
-        {/* Earn coins hint */}
-        {activeTab !== 'recharge' && (
-          <div className="mt-8 rounded-2xl p-4 text-center border border-gold/10"
-            style={{ background: 'rgba(201,168,76,0.03)' }}>
-            <p className="text-sand/45 text-sm font-arabic">
-              🪙 {lang === 'ar'
-                ? <>اكسب <span className="text-gold font-bold">5 كوينز</span> لكل لعبة و <span className="text-gold font-bold">15 كوينز</span> لكل انتصار</>
-                : <>Earn <span className="text-gold font-bold">5 coins</span> per game and <span className="text-gold font-bold">15 coins</span> per win</>
-              }
-            </p>
-          </div>
-        )}
       </div>
 
       {/* Preview Modal */}
@@ -656,9 +645,13 @@ function SkinPreviewIcon({ item, size = 'md' }: { item: StoreItem; size?: 'md' |
   const s = size === 'lg' ? 'w-16 h-16' : 'w-10 h-10';
 
   if (item.category === 'avatarFrame') {
+    const px = size === 'lg' ? 110 : 40;
+    const wh = size === 'lg' ? 'w-[110px] h-[110px]' : 'w-10 h-10';
     return (
-      <div className={`${s} rounded-full ${item.preview.bg} border-4 ${item.preview.border} flex items-center justify-center`}>
-        <span className={`text-lg ${item.preview.text} font-bold font-arabic`}>ل</span>
+      <div className={`${wh} relative rounded-full flex items-center justify-center`}
+        style={{ background: 'rgba(10,6,20,0.7)' }}>
+        <span className="font-bold font-arabic" style={{ color: '#E8C97A', fontSize: size === 'lg' ? 32 : 18 }}>ل</span>
+        <FrameRing frameId={item.id} size={px} />
       </div>
     );
   }

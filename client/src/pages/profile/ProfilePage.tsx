@@ -10,6 +10,7 @@ import { useUiStore } from '../../store/uiStore';
 import { soundService } from '../../services/sound.service';
 import { useT, useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
+import { FrameRing } from '../../components/shared/FrameRing';
 import { UserProfile } from '@check-game/shared';
 
 const AVATAR_EMOJIS: Record<string, string> = {
@@ -34,41 +35,6 @@ const CHARACTERS = [
 ];
 
 type Tab = 'info' | 'avatar' | 'password' | 'settings';
-
-const PROFILE_FRAME_COLORS: Record<string, { c1: string; c2: string; glow: string; legendary: boolean }> = {
-  frame_default: { c1: '#C9A84C', c2: '#8B6914', glow: 'rgba(201,168,76,0.35)', legendary: false },
-  frame_falcon:  { c1: '#E8A234', c2: '#7A3E10', glow: 'rgba(232,162,52,0.5)',  legendary: false },
-  frame_desert:  { c1: '#E8C97A', c2: '#A07028', glow: 'rgba(232,201,122,0.45)',legendary: false },
-  frame_pearl:   { c1: '#E0E6F0', c2: '#7A8898', glow: 'rgba(208,216,232,0.55)',legendary: false },
-  frame_palm:    { c1: '#7AE08A', c2: '#1A6028', glow: 'rgba(122,224,138,0.55)',legendary: false },
-  frame_sultan:  { c1: '#FFE062', c2: '#9A6B10', glow: 'rgba(255,224,98,0.7)',  legendary: true },
-  frame_diamond: { c1: '#7BE6FF', c2: '#1A6090', glow: 'rgba(123,230,255,0.7)', legendary: true },
-};
-function ProfileAvatarFrame({ size, frameId }: { size: number; frameId?: string }) {
-  const fr = PROFILE_FRAME_COLORS[frameId || 'frame_default'] || PROFILE_FRAME_COLORS.frame_default;
-  const uid = `${frameId || 'frame_default'}_${size}`;
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="absolute inset-0 pointer-events-none" style={{ overflow: 'visible' }}>
-      <defs>
-        <linearGradient id={`pfr-${uid}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor={fr.c1}/>
-          <stop offset="50%" stopColor={fr.c2}/>
-          <stop offset="100%" stopColor={fr.c1}/>
-        </linearGradient>
-        <radialGradient id={`pfg-${uid}`} cx="50%" cy="50%" r="50%">
-          <stop offset="60%" stopColor="rgba(0,0,0,0)"/>
-          <stop offset="100%" stopColor={fr.glow}/>
-        </radialGradient>
-      </defs>
-      {fr.legendary && <circle cx={size/2} cy={size/2} r={size/2 - 1} fill={`url(#pfg-${uid})`}/>}
-      <circle cx={size/2} cy={size/2} r={size/2 - 1} fill="none" stroke={`url(#pfr-${uid})`} strokeWidth={Math.max(2, size * 0.04)}/>
-      {fr.legendary && (
-        <circle cx={size/2} cy={size/2} r={size/2 - Math.max(3, size * 0.07)} fill="none" stroke={fr.c1} strokeWidth="0.7" opacity="0.55"
-          strokeDasharray={frameId === 'frame_diamond' ? '3 3' : undefined}/>
-      )}
-    </svg>
-  );
-}
 
 export function ProfilePage() {
   const t = useT();
@@ -185,7 +151,7 @@ export function ProfilePage() {
               style={{ background: 'rgba(201,168,76,0.10)' }}>
               {AVATAR_EMOJIS[profile.avatarId] || '👤'}
             </div>
-            <ProfileAvatarFrame size={96} frameId={(profile.equippedItems as any)?.avatarFrame} />
+            <FrameRing size={96} frameId={(profile.equippedItems as any)?.avatarFrame} />
             <div className="absolute -bottom-1 -right-1 rounded-full w-6 h-6 flex items-center justify-center z-10"
               style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', fontSize: 10, color: '#04080F', fontWeight: 800 }}>
               {level}

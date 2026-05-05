@@ -632,6 +632,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [jTargetUid, setJTargetUid] = useState<string | null>(null);
   // Map of uid → position highlighted after a J swap. Tracks both sides.
   const [swapHighlights, setSwapHighlights] = useState<Record<string, number>>({});
+  // Q peek result modal — { card, position }
+  const [qPeekCard, setQPeekCard] = useState<{ card: Card; position: number } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [soundOn, setSoundOn] = useState(soundService.isEnabled());
@@ -653,6 +655,13 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         else if (data.card !== undefined) next.set(data.position, data.card);
         return next;
       });
+      // Q peek result (single-card payload) → show the big modal for 5s
+      if (data.card && typeof data.position === 'number' && !data.cards) {
+        setQPeekCard({ card: data.card, position: data.position });
+        window.setTimeout(() => {
+          setQPeekCard(curr => (curr && curr.position === data.position ? null : curr));
+        }, 5000);
+      }
     });
     socket.on(SOCKET_EVENTS.GAME_CARD_DRAWN, (data: any) => { if (data.card) { setDrawnCard(data.card); soundService.playCardDraw(); } actedRef.current = true; });
     socket.on(SOCKET_EVENTS.GAME_OVER, (data: any) => { setGameOverData(data); soundService.playWin(); });
@@ -1803,6 +1812,54 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       </AnimatePresence>
 
       <RulesModal open={showRules} onClose={() => setShowRules(false)} />
+
+      {/* ── Q peek modal — shows the peeked card for 5s ── */}
+      <AnimatePresence>
+        {qPeekCard && (
+          <motion.div
+            key="q-peek-bg"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(8,4,0,0.88)', backdropFilter: 'blur(10px)' }}
+            onClick={() => setQPeekCard(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.7, y: 20, rotateY: -90 }}
+              animate={{ scale: 1, y: 0, rotateY: 0 }}
+              exit={{ scale: 0.7, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 220, damping: 20 }}
+              onClick={e => e.stopPropagation()}
+              className="relative rounded-3xl border flex flex-col items-center"
+              style={{
+                background: 'linear-gradient(160deg, #241810 0%, #14100A 100%)',
+                borderColor: 'rgba(201,168,76,0.45)',
+                padding: '24px 28px 22px',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.85), 0 0 40px rgba(201,168,76,0.25)',
+              }}>
+              <button
+                onClick={() => setQPeekCard(null)}
+                className="absolute top-2 left-2 text-sand/50 hover:text-sand text-2xl w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/5">
+                ×
+              </button>
+              <h2 className="font-arabic font-bold mb-1" style={{ fontSize: 18, color: '#E8C97A' }}>
+                ورقتك في الموضع {qPeekCard.position + 1}
+              </h2>
+              <p className="font-arabic mb-4" style={{ fontSize: 12, color: 'rgba(245,230,200,0.5)' }}>
+                ستختفي بعد 5 ثوانٍ
+              </p>
+              <div style={{ transform: 'scale(2.2)', transformOrigin: 'center', margin: '40px 0' }}>
+                <PlayingCard card={{ ...qPeekCard.card, isRevealed: true }} />
+              </div>
+              <button
+                onClick={() => setQPeekCard(null)}
+                className="mt-2 px-6 py-2 rounded-xl font-arabic font-bold border"
+                style={{ background: 'rgba(201,168,76,0.12)', borderColor: 'rgba(201,168,76,0.4)', color: '#E8C97A' }}>
+                إغلاق
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── REVEAL phase modal — all cards face-up ── */}
       <AnimatePresence>

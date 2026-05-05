@@ -100,8 +100,7 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
   socket.on(SOCKET_EVENTS.LOBBY_START_GAME, (payload: { roomId: string }) => {
     if (!socket.uid) return;
     const room = roomManager.getRoom(payload.roomId);
-    if (!room) return;
-    if (!room.players.some(p => p.uid === socket.uid)) return;
+    if (!room || room.hostUid !== socket.uid) return;
 
     startGameSession(io, payload.roomId);
   });

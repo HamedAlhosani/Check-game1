@@ -23,18 +23,18 @@ WORKDIR /app
 FROM node:20-alpine AS production
 WORKDIR /app
 
-# Copy root node_modules (all npm packages are here via workspace hoisting)
-COPY --from=builder /app/node_modules ./node_modules
-
-# Copy server bundle
-COPY --from=builder /app/server/dist  ./server/dist
-
-# Copy client build into server/public so Express can serve it
-COPY --from=builder /app/client/dist  ./server/public
-
-# Copy package.json files (Node needs them for module resolution)
-COPY --from=builder /app/package.json ./
+# Copy package files to run a clean production install
+COPY --from=builder /app/package.json       ./
 COPY --from=builder /app/server/package.json ./server/
+COPY --from=builder /app/shared/package.json ./shared/
+COPY --from=builder /app/client/package.json ./client/
+
+# Install only production deps (no dev tools, smaller image)
+RUN npm install --omit=dev
+
+# Copy server bundle and client static files
+COPY --from=builder /app/server/dist  ./server/dist
+COPY --from=builder /app/client/dist  ./server/public
 
 WORKDIR /app/server
 

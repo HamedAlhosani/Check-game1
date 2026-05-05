@@ -239,32 +239,32 @@ function FullBar({ endAt, active, maxMs = 30000 }: { endAt: number | null; activ
 }
 
 // ─── Shared player box (same design for everyone) ─────────────────────────────
-function PlayerBox({ player, gameState }: { player: any; gameState: any }) {
+function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11 }: { player: any; gameState: any; avSize?: number; scoreFs?: number; nameFs?: number }) {
   const isTurn = player.isTurn, isElim = player.isEliminated;
+  const compact = avSize <= 30;
   return (
     <div
-      className={`w-full rounded-2xl border overflow-hidden ${isTurn ? 'border-gold/70' : 'border-yellow-900/30'}`}
+      className={`w-full rounded-xl border overflow-hidden ${isTurn ? 'border-gold/70' : 'border-yellow-900/30'}`}
       style={{
         background: isTurn
           ? 'linear-gradient(135deg,rgba(201,168,76,.18) 0%,rgba(20,8,0,.94) 100%)'
           : 'linear-gradient(135deg,rgba(100,50,10,.14) 0%,rgba(8,3,0,.94) 100%)',
         backdropFilter: 'blur(12px)',
-        boxShadow: isTurn ? '0 0 20px rgba(201,168,76,.28), inset 0 1px 0 rgba(232,201,122,.1)' : 'none',
+        boxShadow: isTurn ? '0 0 16px rgba(201,168,76,.25), inset 0 1px 0 rgba(232,201,122,.1)' : 'none',
       }}
     >
-      {/* Full-width bar at top */}
-      <div style={{ height: 5, background: 'rgba(255,255,255,.06)', width: '100%' }}>
+      <div style={{ height: compact ? 3 : 4, background: 'rgba(255,255,255,.06)', width: '100%' }}>
         <FullBar endAt={gameState.turnEndAt} active={isTurn} />
       </div>
-      <div className="flex items-center gap-3 px-3 py-2.5">
+      <div className={`flex items-center gap-2 ${compact ? 'px-1.5 py-1' : 'px-2.5 py-2'}`}>
         <div className="relative shrink-0">
-          <Av id={player.avatarId} name={player.displayName} size={42} />
-          {isTurn && <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-black animate-pulse" style={{ background: '#C9A84C' }} />}
-          {isElim && <div className="absolute inset-0 rounded-full bg-black/70 flex items-center justify-center"><span className="text-red-400 font-bold" style={{ fontSize: 10 }}>✕</span></div>}
+          <Av id={player.avatarId} name={player.displayName} size={avSize} />
+          {isTurn && <div className="absolute -bottom-0.5 -right-0.5 rounded-full border-2 border-black animate-pulse" style={{ width: compact ? 8 : 11, height: compact ? 8 : 11, background: '#C9A84C' }} />}
+          {isElim && <div className="absolute inset-0 rounded-full bg-black/70 flex items-center justify-center"><span className="text-red-400 font-bold" style={{ fontSize: compact ? 8 : 10 }}>✕</span></div>}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-arabic truncate" style={{ fontSize: 11, color: 'rgba(255,255,255,.75)' }}>{player.displayName}</p>
-          <p className="font-bold leading-none mt-0.5" style={{ fontSize: 26, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,.65)' }}>{player.cumulativeScore}</p>
+          <p className="font-arabic truncate" style={{ fontSize: nameFs, color: 'rgba(255,255,255,.75)' }}>{player.displayName}</p>
+          <p className="font-bold leading-none mt-0.5" style={{ fontSize: scoreFs, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,.65)' }}>{player.cumulativeScore}</p>
         </div>
       </div>
     </div>
@@ -278,7 +278,7 @@ function cardGridCols(count: number) {
 }
 
 // ─── Shared cards row for any seat ───────────────────────────────────────────
-function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap }: any) {
+function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = false }: any) {
   const nonNull = player.cards.filter(Boolean).length;
   return (
     <div className="relative">
@@ -291,7 +291,7 @@ function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap }: any) {
               exit={{ opacity: 0, scale: 0.7 }}
               transition={{ type: 'spring', stiffness: 320, damping: 26 }}
             >
-              <PlayingCard card={c} faceDown={!c?.isRevealed} small
+              <PlayingCard card={c} faceDown={!c?.isRevealed} small={!mini} mini={mini}
                 highlight={isSpecialJ ? 'burn' : 'none'}
                 onClick={isSpecialJ && selectedPos !== null ? () => onSpecialSwap(player.uid, i) : undefined} />
             </motion.div>
@@ -301,57 +301,25 @@ function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap }: any) {
       {player.isEliminated && (
         <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none"
           style={{ background: 'rgba(0,0,0,0.55)' }}>
-          <span className="text-red-400 font-bold" style={{ fontSize: 28 }}>✕</span>
+          <span className="text-red-400 font-bold" style={{ fontSize: 24 }}>✕</span>
         </div>
       )}
     </div>
   );
 }
 
-// ─── TOP seat: box above, cards below UPRIGHT ────────────────────────────────
-function TopSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble }: any) {
+// ─── Unified opponent seat (top / left / right / mobile) ─────────────────────
+function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, cfg }: any) {
   return (
-    <div className="relative flex flex-col items-center gap-1.5 shrink-0" style={{ width: 220, zIndex: 20 }}>
+    <div className="relative flex flex-col items-center gap-1 shrink-0" style={{ width: cfg.w, zIndex: 20 }}>
       <AnimatePresence>{emoji && <EmojiFloat em={emoji} />}</AnimatePresence>
       <div className="relative w-full">
         <AnimatePresence>
           {chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}
         </AnimatePresence>
-        <PlayerBox player={player} gameState={gameState} />
+        <PlayerBox player={player} gameState={gameState} avSize={cfg.avSize} scoreFs={cfg.scoreFs} nameFs={cfg.nameFs} />
       </div>
-      <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} />
-    </div>
-  );
-}
-
-// ─── LEFT seat ───────────────────────────────────────────────────────────────
-function LeftSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble }: any) {
-  return (
-    <div className="relative flex flex-col items-center gap-1.5 shrink-0" style={{ width: 220, zIndex: 20 }}>
-      <AnimatePresence>{emoji && <EmojiFloat em={emoji} />}</AnimatePresence>
-      <div className="relative w-full">
-        <AnimatePresence>
-          {chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}
-        </AnimatePresence>
-        <PlayerBox player={player} gameState={gameState} />
-      </div>
-      <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} />
-    </div>
-  );
-}
-
-// ─── RIGHT seat ──────────────────────────────────────────────────────────────
-function RightSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble }: any) {
-  return (
-    <div className="relative flex flex-col items-center gap-1.5 shrink-0" style={{ width: 220, zIndex: 20 }}>
-      <AnimatePresence>{emoji && <EmojiFloat em={emoji} />}</AnimatePresence>
-      <div className="relative w-full">
-        <AnimatePresence>
-          {chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}
-        </AnimatePresence>
-        <PlayerBox player={player} gameState={gameState} />
-      </div>
-      <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} />
+      <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} mini={cfg.mini} />
     </div>
   );
 }
@@ -378,6 +346,22 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     gameState.dealTurnCount >= activePlCount * 4 &&
     isMyTurn && !gameState.checkCallerId &&
     hasPlayedThisTurn;
+
+  const [winW, setWinW] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const h = () => setWinW(window.innerWidth);
+    window.addEventListener('resize', h);
+    return () => window.removeEventListener('resize', h);
+  }, []);
+  const isMobile = winW < 768;
+  const n = gameState.players.length;
+  const seatCfg = (() => {
+    if (isMobile) return { w: 114, avSize: 24, scoreFs: 14, nameFs: 7, mini: true };
+    if (n <= 4)   return { w: 200, avSize: 42, scoreFs: 26, nameFs: 11, mini: false };
+    if (n <= 6)   return { w: 175, avSize: 38, scoreFs: 22, nameFs: 10, mini: false };
+    if (n <= 8)   return { w: 155, avSize: 34, scoreFs: 18, nameFs: 9,  mini: true };
+                  return { w: 138, avSize: 28, scoreFs: 15, nameFs: 8,  mini: true };
+  })();
 
   const tableRef = useRef<HTMLDivElement>(null);
   const [tSize, setTSize] = useState(500);
@@ -620,9 +604,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     }
   };
 
-  const { top, left, right } = distribute(others);
+  const { top, left, right } = isMobile ? { top: [] as any[], left: [] as any[], right: [] as any[] } : distribute(others);
 
-  const commonSeatProps = { gameState, isSpecialJ, selectedPos, onSpecialSwap };
+  const commonSeatProps = { gameState, isSpecialJ, selectedPos, onSpecialSwap, cfg: seatCfg };
 
   // ── Overlays ──────────────────────────────────────────────────────────────
   const IntroOverlay = () => (
@@ -706,65 +690,50 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   );
 
   // ── Score Bar ──────────────────────────────────────────────────────────────
-  const ScoreBar = () => (
-    <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-center gap-2 px-3"
-      style={{ background: 'rgba(8,3,0,.97)', borderBottom: '1px solid rgba(201,168,76,.22)', height: 44 }}>
-      {/* اللاعبون — في النص */}
-      <div className="flex items-center justify-center gap-3 flex-wrap">
-        {gameState.players.map(p => {
-          const isMe = p.uid === user?.uid;
-          const isTurn = p.isTurn;
-          return (
-            <div key={p.uid}
-              className="flex flex-col items-center gap-0.5"
-              style={{
-                opacity: p.isEliminated ? 0.4 : 1,
-                transition: 'opacity .3s',
-              }}
-            >
-              {/* Avatar + turn ring */}
-              <div className="relative">
-                <div style={{
-                  padding: isTurn ? 2 : 1,
-                  borderRadius: '50%',
-                  background: isTurn ? 'rgba(201,168,76,0.35)' : 'transparent',
-                  border: isTurn ? '1.5px solid #C9A84C' : `1.5px solid ${isMe ? 'rgba(201,168,76,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                  boxShadow: isTurn ? '0 0 8px rgba(201,168,76,0.5)' : 'none',
-                }}>
-                  <Av id={p.avatarId} name={p.displayName} size={20} />
-                </div>
-                {isTurn && (
-                  <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-black animate-pulse"
-                    style={{ background: '#C9A84C' }}/>
-                )}
-                {p.isEliminated && (
-                  <div className="absolute inset-0 rounded-full bg-black/70 flex items-center justify-center">
-                    <span className="text-red-400 font-bold" style={{ fontSize: 9 }}>✕</span>
+  const ScoreBar = () => {
+    const barAv = n <= 6 ? 22 : n <= 8 ? 18 : 15;
+    const barScore = n <= 6 ? 11 : n <= 8 ? 10 : 9;
+    const showName = n <= 8;
+    return (
+      <div className="fixed top-0 left-0 right-0 z-40"
+        style={{ background: 'rgba(8,3,0,.97)', borderBottom: '1px solid rgba(201,168,76,.22)', height: 44 }}>
+        <div className="h-full flex items-center gap-1.5 px-2 overflow-x-auto"
+          style={{ scrollbarWidth: 'none' }}>
+          {gameState.players.map(p => {
+            const isMe = p.uid === user?.uid;
+            const isTurn = p.isTurn;
+            return (
+              <div key={p.uid} className="shrink-0 flex flex-col items-center gap-0.5"
+                style={{ opacity: p.isEliminated ? 0.4 : 1, transition: 'opacity .3s' }}>
+                <div className="relative">
+                  <div style={{
+                    padding: isTurn ? 2 : 1, borderRadius: '50%',
+                    background: isTurn ? 'rgba(201,168,76,0.35)' : 'transparent',
+                    border: isTurn ? '1.5px solid #C9A84C' : `1.5px solid ${isMe ? 'rgba(201,168,76,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                    boxShadow: isTurn ? '0 0 8px rgba(201,168,76,0.5)' : 'none',
+                  }}>
+                    <Av id={p.avatarId} name={p.displayName} size={barAv} />
                   </div>
-                )}
+                  {isTurn && <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-black animate-pulse" style={{ background: '#C9A84C' }}/>}
+                  {p.isEliminated && <div className="absolute inset-0 rounded-full bg-black/70 flex items-center justify-center"><span className="text-red-400 font-bold" style={{ fontSize: 8 }}>✕</span></div>}
+                </div>
+                <div className="flex flex-col items-center" style={{ lineHeight: 1 }}>
+                  {showName && (
+                    <span className="font-arabic truncate" style={{ fontSize: 6, color: isMe ? '#E8C97A' : 'rgba(255,255,255,0.5)', maxWidth: barAv + 10 }}>
+                      {p.displayName}
+                    </span>
+                  )}
+                  <span className="font-bold" style={{ fontSize: barScore, color: isTurn ? '#E8C97A' : isMe ? '#C9A84C' : 'rgba(255,255,255,0.7)' }}>
+                    {p.cumulativeScore}
+                  </span>
+                </div>
               </div>
-              {/* الاسم والنقاط */}
-              <div className="flex flex-col items-center" style={{ lineHeight: 1 }}>
-                <span className="font-arabic truncate" style={{
-                  fontSize: 7,
-                  color: isMe ? '#E8C97A' : 'rgba(255,255,255,0.5)',
-                  maxWidth: 36,
-                }}>
-                  {p.displayName}
-                </span>
-                <span className="font-bold" style={{
-                  fontSize: 11,
-                  color: isTurn ? '#E8C97A' : isMe ? '#C9A84C' : 'rgba(255,255,255,0.7)',
-                }}>
-                  {p.cumulativeScore}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // ─────────────────────────────────────────────────────────────────────────────
   return (
@@ -772,32 +741,48 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       <RoomBackground />
       <ScoreBar />
 
-      <div className="flex-1 flex flex-col pt-11 pb-14 min-h-0 gap-3 px-1.5" style={{ position: 'relative', zIndex: 1 }}>
+      <div className="flex-1 flex flex-col pt-11 pb-14 min-h-0 gap-2 px-1" style={{ position: 'relative', zIndex: 1 }}>
 
-        {/* ══ TOP PLAYERS: cards above, box below ══ */}
-        {top.length > 0 && (
-          <div className="shrink-0 flex justify-center gap-2 pt-1" style={{ marginBottom: 64 }}>
-            {top.map(p => (
-              <TopSeat key={p.uid} player={p} {...commonSeatProps} emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
-            ))}
-          </div>
+        {isMobile ? (
+          /* ══ MOBILE: all opponents in one horizontal scroll strip ══ */
+          others.length > 0 && (
+            <div className="shrink-0 flex gap-1.5 overflow-x-auto py-0.5 px-0.5"
+              style={{ scrollbarWidth: 'none' }}>
+              {others.map(p => (
+                <OpponentSeat key={p.uid} player={p} {...commonSeatProps}
+                  emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
+              ))}
+            </div>
+          )
+        ) : (
+          /* ══ DESKTOP: top row of opponents ══ */
+          top.length > 0 && (
+            <div className="shrink-0 flex justify-center gap-2 pt-0.5"
+              style={{ marginBottom: n <= 6 ? 52 : n <= 8 ? 36 : 24 }}>
+              {top.map(p => (
+                <OpponentSeat key={p.uid} player={p} {...commonSeatProps}
+                  emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
+              ))}
+            </div>
+          )
         )}
 
-        {/* ══ MIDDLE ROW: left zone | table | right zone ══ */}
+        {/* ══ MIDDLE ROW: [left] table [right] ══ */}
         <div className="flex-1 flex items-center gap-1.5 min-h-0">
 
-          {/* LEFT players */}
-          {left.length > 0 && (
+          {/* LEFT players (desktop only) */}
+          {!isMobile && left.length > 0 && (
             <div className="flex flex-col gap-2 shrink-0 justify-center items-center">
               {left.map(p => (
-                <LeftSeat key={p.uid} player={p} {...commonSeatProps} emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
+                <OpponentSeat key={p.uid} player={p} {...commonSeatProps}
+                  emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
               ))}
             </div>
           )}
 
           {/* ══ CIRCULAR TABLE ══ */}
           <div className="flex-1 flex items-center justify-center min-h-0 min-w-0 overflow-visible">
-            <div style={{ position: 'relative', marginTop: 60 }}>
+            <div style={{ position: 'relative', marginTop: isMobile ? 16 : 60 }}>
               {/* Wooden rim — sits behind the felt circle */}
               <div style={{
                 position: 'absolute',
@@ -822,8 +807,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               ref={tableRef}
               className="relative"
               style={{
-                width: 'min(650px, max(200px, 60vw))',
-                height: 'min(650px, max(200px, 60vw))',
+                width: isMobile ? 'min(420px, max(180px, 80vw))' : 'min(650px, max(200px, 55vw))',
+                height: isMobile ? 'min(420px, max(180px, 80vw))' : 'min(650px, max(200px, 55vw))',
                 borderRadius: '50%',
                 background: `
                   radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.055) 0%, transparent 38%),
@@ -927,11 +912,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             </div>{/* end position:relative wrapper */}
           </div>{/* end flex-1 table container */}
 
-          {/* RIGHT players */}
-          {right.length > 0 && (
+          {/* RIGHT players (desktop only) */}
+          {!isMobile && right.length > 0 && (
             <div className="flex flex-col gap-2 shrink-0 justify-center items-center">
               {right.map(p => (
-                <RightSeat key={p.uid} player={p} {...commonSeatProps} emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
+                <OpponentSeat key={p.uid} player={p} {...commonSeatProps}
+                  emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
               ))}
             </div>
           )}
@@ -939,7 +925,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
         {/* ══ MY AREA: cards above, big box below ══ */}
         {me && (
-          <div className="shrink-0 self-center flex flex-col items-center gap-1.5 pb-1" style={{ width: 220, position: 'relative', zIndex: 5, marginTop: 130 }}>
+          <div className="shrink-0 self-center flex flex-col items-center gap-1.5 pb-1"
+            style={{ width: isMobile ? Math.min(seatCfg.w + 32, winW - 16) : 220, position: 'relative', zIndex: 5, marginTop: isMobile ? 12 : n <= 6 ? 100 : n <= 8 ? 70 : 50 }}>
             {/* My cards — always in grid, penalty cards fly in from top/bottom */}
             <div className={cardGridCols(me.cards.filter(Boolean).length)}>
               <AnimatePresence>

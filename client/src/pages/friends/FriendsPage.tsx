@@ -121,10 +121,11 @@ export function FriendsPage() {
     }
   }
 
-  async function handleRemove(uid: string) {
-    const confirmMsg = lang === 'ar' ? 'هل تريد حذف هذا الصديق؟' : 'Remove this friend?';
-    if (!confirm(confirmMsg)) return;
+  const [confirmRemove, setConfirmRemove] = useState<FriendInfo | null>(null);
+
+  async function performRemove(uid: string) {
     setBusy(uid);
+    setConfirmRemove(null);
     try {
       await apiClient.delete(`/api/friends/${uid}`);
       addToast(t('friends_removed'), 'info');
@@ -132,6 +133,11 @@ export function FriendsPage() {
     } catch {} finally {
       setBusy(null);
     }
+  }
+  function handleRemove(uid: string) {
+    const friend = friends.find(f => f.uid === uid);
+    if (!friend) return;
+    setConfirmRemove(friend);
   }
 
   function copyUsername() {
@@ -303,6 +309,56 @@ export function FriendsPage() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* ── Remove friend confirmation modal ── */}
+      <AnimatePresence>
+        {confirmRemove && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(8,4,0,0.85)', backdropFilter: 'blur(8px)' }}
+            onClick={() => setConfirmRemove(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.85, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.85, y: 20 }}
+              onClick={e => e.stopPropagation()}
+              className="relative rounded-3xl border w-full"
+              style={{
+                background: 'linear-gradient(160deg, #241810 0%, #14100A 100%)',
+                borderColor: 'rgba(196,92,58,0.45)',
+                maxWidth: 380,
+                padding: '22px 22px 20px',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.85), 0 0 30px rgba(196,92,58,0.18)',
+              }}>
+              <div className="text-center mb-4">
+                <div className="text-4xl mb-2">⚠</div>
+                <h2 className="font-arabic font-bold mb-1" style={{ fontSize: 18, color: '#E8C97A' }}>
+                  {lang === 'ar' ? 'تأكيد الحذف' : 'Confirm Remove'}
+                </h2>
+                <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(245,230,200,0.65)' }}>
+                  {lang === 'ar' ? 'هل أنت متأكد من حذف' : 'Are you sure you want to remove'}{' '}
+                  <span style={{ color: '#E8C97A', fontWeight: 700 }}>{confirmRemove.displayName}</span>
+                  {lang === 'ar' ? ' من قائمة أصدقائك؟' : ' from your friends?'}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmRemove(null)}
+                  className="flex-1 py-2.5 rounded-xl font-arabic font-bold transition-all border"
+                  style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.12)', color: 'rgba(245,230,200,0.7)' }}>
+                  {lang === 'ar' ? 'إلغاء' : 'Cancel'}
+                </button>
+                <button
+                  onClick={() => performRemove(confirmRemove.uid)}
+                  className="flex-1 py-2.5 rounded-xl font-arabic font-bold transition-all border"
+                  style={{ background: 'rgba(196,92,58,0.15)', borderColor: 'rgba(196,92,58,0.5)', color: '#E07040' }}>
+                  {lang === 'ar' ? 'نعم، احذف' : 'Yes, Remove'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

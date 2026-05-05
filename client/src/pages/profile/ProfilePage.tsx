@@ -112,7 +112,7 @@ export function ProfilePage() {
     : (LEVEL_TITLES_EN[level - 1] || LEVEL_TITLES_EN[0]);
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #060411 0%, #080516 50%, #0A0614 100%)', direction: dir }}>
+    <div className="min-h-screen pb-16 sm:pb-0" style={{ background: 'linear-gradient(180deg, #060411 0%, #080516 50%, #0A0614 100%)', direction: dir }}>
 
       {/* Nav */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 border-b border-white/5"
@@ -139,11 +139,11 @@ export function ProfilePage() {
 
         {/* Hero card */}
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-5 mb-5 flex items-center gap-5 border"
+          className="rounded-2xl p-5 mb-5 flex flex-col sm:flex-row items-center gap-5 border"
           style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(10,6,20,0.95) 100%)', borderColor: 'rgba(201,168,76,0.22)', boxShadow: '0 4px 40px rgba(0,0,0,0.5)' }}>
 
           <div className="relative shrink-0">
-            <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl"
+            <div className="w-24 h-24 rounded-full flex items-center justify-center text-5xl"
               style={{ background: 'rgba(201,168,76,0.10)', border: '2px solid rgba(201,168,76,0.35)', boxShadow: '0 0 20px rgba(201,168,76,0.12)' }}>
               {AVATAR_EMOJIS[profile.avatarId] || '👤'}
             </div>
@@ -153,7 +153,7 @@ export function ProfilePage() {
             </div>
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 w-full sm:w-auto text-center sm:text-start">
             <h1 className="font-arabic font-bold truncate mb-0.5" style={{ fontSize: 22, color: '#E8C97A' }}>
               {profile.displayName}
             </h1>
@@ -164,7 +164,7 @@ export function ProfilePage() {
               {levelTitle} — {t('level')} {level}
             </p>
 
-            <div className="flex gap-4 mb-3 flex-wrap">
+            <div className="flex gap-4 mb-3 flex-wrap justify-center sm:justify-start">
               {[
                 { v: stats.totalWins, l: t('wins'), c: '#C9A84C' },
                 { v: stats.totalGames, l: t('games'), c: 'rgba(245,230,200,0.55)' },
@@ -213,9 +213,9 @@ export function ProfilePage() {
           ].map(s => (
             <div key={s.label} className="rounded-xl p-3 text-center border"
               style={{ background: 'rgba(255,255,255,0.025)', borderColor: 'rgba(255,255,255,0.07)' }}>
-              <span className="text-2xl">{s.icon}</span>
-              <p className="font-bold text-xl mt-1" style={{ color: s.color }}>{s.value || 0}</p>
-              <p className="font-arabic text-xs mt-0.5" style={{ color: 'rgba(245,230,200,0.35)' }}>{s.label}</p>
+              <span className="text-xl sm:text-2xl">{s.icon}</span>
+              <p className="font-bold text-lg sm:text-xl mt-1" style={{ color: s.color }}>{s.value || 0}</p>
+              <p className="font-arabic text-xs mt-0.5" style={{ color: 'rgba(245,230,200,0.35)', fontSize: 10 }}>{s.label}</p>
             </div>
           ))}
         </div>
@@ -329,6 +329,25 @@ export function ProfilePage() {
           </button>
         </div>
       </div>
+
+      {/* Mobile bottom nav */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex sm:hidden items-center border-t"
+        style={{ background: 'rgba(10,6,20,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)', height: 56 }}>
+        {[
+          { to: '/home', icon: '🏠', label: 'الرئيسية' },
+          { to: '/store', icon: '🏪', label: 'المتجر' },
+          { to: '/leaderboard', icon: '🏆', label: 'التصنيف' },
+          { to: '/friends', icon: '👥', label: 'أصدقاء' },
+          { to: '/profile', icon: '👤', label: 'حسابي' },
+        ].map(item => (
+          <Link key={item.to} to={item.to}
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all"
+            style={{ color: 'rgba(245,230,200,0.5)', fontSize: 10 }}>
+            <span style={{ fontSize: 20 }}>{item.icon}</span>
+            <span className="font-arabic">{item.label}</span>
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 }

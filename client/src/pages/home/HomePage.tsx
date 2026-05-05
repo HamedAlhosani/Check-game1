@@ -400,7 +400,7 @@ export function HomePage() {
   const games = profile?.stats?.totalGames ?? 0;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #0D0820 0%, #0A0614 100%)', direction: dir, overflowX: 'hidden' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #0D0820 0%, #0A0614 100%)', direction: dir, overflowX: 'hidden' }} className="pb-16 sm:pb-0">
 
       {/* ── Top nav bar ── */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-4 py-2.5"
@@ -414,29 +414,32 @@ export function HomePage() {
             <span style={{ fontSize: 15 }}>🪙</span>
             <span className="font-bold" style={{ fontSize: 13, color: '#E8C97A' }}>{coins.toLocaleString()}</span>
           </div>
-          <Link to="/" className="rounded-xl px-2.5 py-1.5 transition-all"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
-            🏠 {lang === 'ar' ? 'الصفحة الرئيسية' : 'Home'}
-          </Link>
-          <Link to="/store" className="rounded-xl px-2.5 py-1.5 transition-all"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
-            🏪 {lang === 'ar' ? 'المتجر' : 'Store'}
-          </Link>
-          <Link to="/friends" className="rounded-xl px-2.5 py-1.5 transition-all"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
-            👥 {lang === 'ar' ? 'أصدقاء' : 'Friends'}
-          </Link>
-          <Link to="/history" className="rounded-xl px-2.5 py-1.5 transition-all"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
-            📋 {lang === 'ar' ? 'سجل' : 'History'}
-          </Link>
-          <Link to="/leaderboard" className="rounded-xl px-2.5 py-1.5 transition-all"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
-            🏆 {lang === 'ar' ? 'التصنيف' : 'Ranks'}
-          </Link>
-          <Link to="/profile">
-            {profile && <AvatarCircle id={profile.avatarId} name={profile.displayName} size={32}/>}
-          </Link>
+          {/* Desktop nav links — hidden on mobile */}
+          <div className="hidden sm:flex items-center gap-2">
+            <Link to="/" className="rounded-xl px-2.5 py-1.5 transition-all"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
+              🏠 {lang === 'ar' ? 'الصفحة الرئيسية' : 'Home'}
+            </Link>
+            <Link to="/store" className="rounded-xl px-2.5 py-1.5 transition-all"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
+              🏪 {lang === 'ar' ? 'المتجر' : 'Store'}
+            </Link>
+            <Link to="/friends" className="rounded-xl px-2.5 py-1.5 transition-all"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
+              👥 {lang === 'ar' ? 'أصدقاء' : 'Friends'}
+            </Link>
+            <Link to="/history" className="rounded-xl px-2.5 py-1.5 transition-all"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
+              📋 {lang === 'ar' ? 'سجل' : 'History'}
+            </Link>
+            <Link to="/leaderboard" className="rounded-xl px-2.5 py-1.5 transition-all"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
+              🏆 {lang === 'ar' ? 'التصنيف' : 'Ranks'}
+            </Link>
+            <Link to="/profile">
+              {profile && <AvatarCircle id={profile.avatarId} name={profile.displayName} size={32}/>}
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -535,6 +538,25 @@ export function HomePage() {
 
       {searching && <SearchingModal onCancel={handleCancelSearch} lang={lang}/>}
       {botLoading && <BotLoadingOverlay lang={lang}/>}
+
+      {/* Mobile bottom nav */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex sm:hidden items-center border-t"
+        style={{ background: 'rgba(10,6,20,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)', height: 56 }}>
+        {[
+          { to: '/home', icon: '🏠', label: 'الرئيسية' },
+          { to: '/store', icon: '🏪', label: 'المتجر' },
+          { to: '/leaderboard', icon: '🏆', label: 'التصنيف' },
+          { to: '/friends', icon: '👥', label: 'أصدقاء' },
+          { to: '/profile', icon: '👤', label: 'حسابي' },
+        ].map(item => (
+          <Link key={item.to} to={item.to}
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all"
+            style={{ color: 'rgba(245,230,200,0.5)', fontSize: 10 }}>
+            <span style={{ fontSize: 20 }}>{item.icon}</span>
+            <span className="font-arabic">{item.label}</span>
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 }

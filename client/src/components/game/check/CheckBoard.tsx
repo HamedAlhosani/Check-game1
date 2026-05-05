@@ -813,14 +813,14 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 zIndex: -1,
                 pointerEvents: 'none',
               }}/>
-              {/* Chairs */}
-              <ChairsRing radius={tSize / 2} />
+              {/* Chairs — desktop only */}
+              {!isMobile && <ChairsRing radius={tSize / 2} />}
             <div
               ref={tableRef}
               className="relative"
               style={{
-                width: isMobile ? 'min(310px, max(160px, 76vw))' : 'min(650px, max(200px, 55vw))',
-                height: isMobile ? 'min(310px, max(160px, 76vw))' : 'min(650px, max(200px, 55vw))',
+                width: isMobile ? 'min(248px, max(130px, 62vw))' : 'min(650px, max(200px, 55vw))',
+                height: isMobile ? 'min(248px, max(130px, 62vw))' : 'min(650px, max(200px, 55vw))',
                 borderRadius: '50%',
                 background: `
                   radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.055) 0%, transparent 38%),
@@ -939,8 +939,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {me && (
           <div className="shrink-0 self-center flex flex-col items-center gap-1.5 pb-1"
             style={{ width: isMobile ? winW - 12 : 220, position: 'relative', zIndex: 5, marginTop: isMobile ? 6 : n <= 6 ? 100 : n <= 8 ? 70 : 50 }}>
-            {/* My cards — 4-col row on mobile for compact height */}
-            <div className={isMobile ? 'grid grid-cols-4 gap-1' : cardGridCols(me.cards.filter(Boolean).length)}>
+            {/* My cards — 2×2 grid on mobile */}
+            <div className={isMobile ? 'grid grid-cols-2 gap-1' : cardGridCols(me.cards.filter(Boolean).length)}>
               <AnimatePresence>
                 {me.cards.map((c, i) => c !== null ? (
                   <motion.div key={`me-${i}`}

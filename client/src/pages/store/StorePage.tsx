@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '../../components/shared/Button';
 import { useStoreStore } from '../../store/storeStore';
 import { useAuthStore } from '../../store/authStore';
@@ -108,7 +108,7 @@ export function StorePage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #030610 0%, #050413 50%, #07040F 100%)', direction: dir }}>
+    <div className="min-h-screen pb-16 sm:pb-0" style={{ background: 'linear-gradient(180deg, #030610 0%, #050413 50%, #07040F 100%)', direction: dir }}>
       {/* Nav */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 border-b border-white/5"
         style={{ background: 'rgba(4,8,15,0.96)', backdropFilter: 'blur(14px)' }}>
@@ -237,6 +237,25 @@ export function StorePage() {
           lang={lang}
         />
       )}
+
+      {/* Mobile bottom nav */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex sm:hidden items-center border-t"
+        style={{ background: 'rgba(10,6,20,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)', height: 56 }}>
+        {[
+          { to: '/home', icon: '🏠', label: 'الرئيسية' },
+          { to: '/store', icon: '🏪', label: 'المتجر' },
+          { to: '/leaderboard', icon: '🏆', label: 'التصنيف' },
+          { to: '/friends', icon: '👥', label: 'أصدقاء' },
+          { to: '/profile', icon: '👤', label: 'حسابي' },
+        ].map(item => (
+          <Link key={item.to} to={item.to}
+            className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all"
+            style={{ color: 'rgba(245,230,200,0.5)', fontSize: 10 }}>
+            <span style={{ fontSize: 20 }}>{item.icon}</span>
+            <span className="font-arabic">{item.label}</span>
+          </Link>
+        ))}
+      </nav>
     </div>
   );
 }

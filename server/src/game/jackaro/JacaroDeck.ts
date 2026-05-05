@@ -38,6 +38,10 @@ export function getCardPoints(card: JacaroCard): number {
   return 0;
 }
 
+export function calculateHandPenalty(hand: JacaroCard[]): number {
+  return hand.reduce((sum, card) => sum + getCardPoints(card), 0);
+}
+
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {

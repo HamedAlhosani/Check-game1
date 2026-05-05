@@ -112,44 +112,39 @@ function ChairsRing({ radius }: { radius: number }) {
 // ─── Circular Deck Ring ────────────────────────────────────────────────────────
 function CircleDeck({ count, onClick, disabled }: { count: number; onClick?: () => void; disabled?: boolean }) {
   const MAX = 24;
-  const visible = Math.min(count, MAX);
   const CW = 18, CH = 27, R = 85;
   return (
     <div className="relative" style={{ width: R * 2 + CW, height: R * 2 + CH }}>
-      <AnimatePresence>
-        {Array.from({ length: visible }).map((_, i) => {
-          const angle = (i / MAX) * 2 * Math.PI - Math.PI / 2;
-          const cx = (R + CW / 2) + Math.cos(angle) * R - CW / 2;
-          const cy = (R + CH / 2) + Math.sin(angle) * R - CH / 2;
-          const rot = (i / MAX) * 360;
-          const isTop = i === 0;
-          return (
-            <motion.div
-              key={`card-${i}`}
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.3 }}
-              transition={{ duration: 0.2 }}
-              onClick={isTop && !disabled ? onClick : undefined}
-              style={{
-                position: 'absolute', left: cx, top: cy,
-                width: CW, height: CH,
-                transform: `rotate(${rot}deg)`,
-                transformOrigin: 'center center',
-                borderRadius: 4,
-                background: '#080318',
-                border: isTop && !disabled
-                  ? '1.5px solid rgba(232,201,122,0.9)'
-                  : '1px solid rgba(232,201,122,0.25)',
-                boxShadow: isTop && !disabled ? '0 0 8px rgba(201,168,76,0.5)' : 'none',
-                cursor: isTop && !disabled ? 'pointer' : 'default',
-                zIndex: isTop ? 10 : 1,
-              }}
-            />
-          );
-        })}
-      </AnimatePresence>
-      {/* count label */}
+      {Array.from({ length: MAX }).map((_, i) => {
+        const angle = (i / MAX) * 2 * Math.PI - Math.PI / 2;
+        const cx = (R + CW / 2) + Math.cos(angle) * R - CW / 2;
+        const cy = (R + CH / 2) + Math.sin(angle) * R - CH / 2;
+        const rot = (i / MAX) * 360;
+        const isTop = i === 0;
+        const exists = i < count;
+        return (
+          <div
+            key={i}
+            onClick={isTop && exists && !disabled ? onClick : undefined}
+            style={{
+              position: 'absolute', left: cx, top: cy,
+              width: CW, height: CH,
+              transform: `rotate(${rot}deg)`,
+              transformOrigin: 'center center',
+              borderRadius: 4,
+              background: exists ? '#080318' : 'rgba(255,255,255,0.01)',
+              border: exists
+                ? (isTop && !disabled ? '1.5px solid rgba(232,201,122,0.9)' : '1px solid rgba(232,201,122,0.25)')
+                : '1px solid rgba(232,201,122,0.06)',
+              boxShadow: isTop && exists && !disabled ? '0 0 8px rgba(201,168,76,0.5)' : 'none',
+              cursor: isTop && exists && !disabled ? 'pointer' : 'default',
+              zIndex: isTop && exists ? 10 : 1,
+              opacity: exists ? 1 : 0.18,
+              transition: 'opacity 0.5s',
+            }}
+          />
+        );
+      })}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <span className="text-gold/60 font-bold" style={{ fontSize: 12, textShadow: '0 1px 4px #000' }}>{count}</span>
       </div>
@@ -308,10 +303,23 @@ function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = fals
   );
 }
 
+// ─── Mobile card count dots ───────────────────────────────────────────────────
+function CardCountDots({ count, eliminated }: { count: number; eliminated: boolean }) {
+  if (eliminated) return <div className="flex items-center justify-center mt-0.5"><span className="text-red-400 font-bold" style={{ fontSize: 10 }}>✕</span></div>;
+  return (
+    <div className="flex flex-wrap gap-0.5 justify-center mt-0.5" style={{ maxWidth: 112 }}>
+      {Array.from({ length: Math.max(count, 0) }).map((_, i) => (
+        <div key={i} style={{ width: 11, height: 16, borderRadius: 2, background: '#080318', border: '1px solid rgba(201,168,76,0.38)' }} />
+      ))}
+    </div>
+  );
+}
+
 // ─── Unified opponent seat (top / left / right / mobile) ─────────────────────
 function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, cfg }: any) {
+  const mobileCompact = cfg.w <= 120;
   return (
-    <div className="relative flex flex-col items-center gap-1 shrink-0" style={{ width: cfg.w, zIndex: 20 }}>
+    <div className="relative flex flex-col items-center shrink-0" style={{ width: cfg.w, zIndex: 20, gap: mobileCompact ? 2 : 4 }}>
       <AnimatePresence>{emoji && <EmojiFloat em={emoji} />}</AnimatePresence>
       <div className="relative w-full">
         <AnimatePresence>
@@ -319,7 +327,11 @@ function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwa
         </AnimatePresence>
         <PlayerBox player={player} gameState={gameState} avSize={cfg.avSize} scoreFs={cfg.scoreFs} nameFs={cfg.nameFs} />
       </div>
-      <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} mini={cfg.mini} />
+      {mobileCompact ? (
+        <CardCountDots count={player.cards.filter(Boolean).length} eliminated={player.isEliminated} />
+      ) : (
+        <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} mini={cfg.mini} />
+      )}
     </div>
   );
 }
@@ -614,7 +626,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       style={{ background: 'rgba(4,8,15,0.93)', backdropFilter: 'blur(8px)' }}>
       <p className="font-display text-4xl tracking-widest text-gold mb-1" style={{ textShadow: '0 0 30px rgba(201,168,76,.5)' }}>CHECK</p>
       <p className="text-sand/50 font-arabic text-sm mb-6">اللاعبون</p>
-      <div className="flex flex-wrap justify-center gap-3 mb-8 px-4">
+      <div className="flex flex-wrap justify-center gap-3 mb-8 px-4 overflow-y-auto" style={{ maxHeight: '42vh' }}>
         {gameState.players.map((p, i) => (
           <motion.div key={p.uid} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * .1 }}
             className="flex flex-col items-center gap-2 rounded-xl border border-gold/20 bg-white/5 px-3 py-2.5">
@@ -782,7 +794,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
           {/* ══ CIRCULAR TABLE ══ */}
           <div className="flex-1 flex items-center justify-center min-h-0 min-w-0 overflow-visible">
-            <div style={{ position: 'relative', marginTop: isMobile ? 16 : 60 }}>
+            <div style={{ position: 'relative', marginTop: isMobile ? 4 : 60 }}>
               {/* Wooden rim — sits behind the felt circle */}
               <div style={{
                 position: 'absolute',
@@ -807,8 +819,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               ref={tableRef}
               className="relative"
               style={{
-                width: isMobile ? 'min(420px, max(180px, 80vw))' : 'min(650px, max(200px, 55vw))',
-                height: isMobile ? 'min(420px, max(180px, 80vw))' : 'min(650px, max(200px, 55vw))',
+                width: isMobile ? 'min(310px, max(160px, 76vw))' : 'min(650px, max(200px, 55vw))',
+                height: isMobile ? 'min(310px, max(160px, 76vw))' : 'min(650px, max(200px, 55vw))',
                 borderRadius: '50%',
                 background: `
                   radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.055) 0%, transparent 38%),
@@ -926,9 +938,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {/* ══ MY AREA: cards above, big box below ══ */}
         {me && (
           <div className="shrink-0 self-center flex flex-col items-center gap-1.5 pb-1"
-            style={{ width: isMobile ? Math.min(seatCfg.w + 32, winW - 16) : 220, position: 'relative', zIndex: 5, marginTop: isMobile ? 12 : n <= 6 ? 100 : n <= 8 ? 70 : 50 }}>
-            {/* My cards — always in grid, penalty cards fly in from top/bottom */}
-            <div className={cardGridCols(me.cards.filter(Boolean).length)}>
+            style={{ width: isMobile ? winW - 12 : 220, position: 'relative', zIndex: 5, marginTop: isMobile ? 6 : n <= 6 ? 100 : n <= 8 ? 70 : 50 }}>
+            {/* My cards — 4-col row on mobile for compact height */}
+            <div className={isMobile ? 'grid grid-cols-4 gap-1' : cardGridCols(me.cards.filter(Boolean).length)}>
               <AnimatePresence>
                 {me.cards.map((c, i) => c !== null ? (
                   <motion.div key={`me-${i}`}
@@ -1008,8 +1020,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       </div>
 
       {/* ══ ACTION BAR ══ */}
-      <div className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-3 py-2 border-t border-yellow-900/30"
-        style={{ background: 'rgba(8,3,0,.97)', height: 52, position: 'relative', zIndex: 40 }}>
+      <div className="fixed bottom-0 left-0 right-0 flex items-center justify-between border-t border-yellow-900/30"
+        style={{ background: 'rgba(8,3,0,.97)', height: isMobile ? 46 : 52, zIndex: 40, padding: isMobile ? '0 8px' : '0 12px' }}>
         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
           className={`relative px-4 py-1.5 rounded-xl border font-arabic text-sm transition-all
             ${chatOpen ? 'border-gold/60 text-gold bg-gold/12' : 'border-white/15 text-white/60 bg-white/5'}`}
@@ -1029,10 +1041,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           </AnimatePresence>
         </motion.button>
 
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {['😄','😮','😂','🔥','👏','😤'].map(em => (
             <motion.button key={em} whileHover={{ scale: 1.2 }} whileTap={{ scale: .9 }}
-              style={{ fontSize: 20 }}
+              style={{ fontSize: isMobile ? 17 : 20, padding: isMobile ? '2px' : '2px 2px' }}
               onClick={() => {
                 if (!me) return;
                 socket?.emit(SOCKET_EVENTS.CHAT_SEND, { roomId, text: '', emoji: em });
@@ -1045,8 +1057,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           onClick={() => setShowExitConfirm(true)}>خروج ✕</motion.button>
       </div>
 
-      {/* ── Bottom-left info panel: round + deck remaining ── */}
-      <div className="fixed z-40 flex flex-col items-center gap-1 rounded-xl border border-gold/30 px-4 py-3"
+      {/* ── Bottom-left info panel: round + deck remaining (desktop only) ── */}
+      {!isMobile && <div className="fixed z-40 flex flex-col items-center gap-1 rounded-xl border border-gold/30 px-4 py-3"
         style={{ bottom: 58, left: 8, background: 'rgba(8,3,0,.97)', backdropFilter: 'blur(10px)', minWidth: 72, boxShadow: '0 0 12px rgba(201,168,76,.10)' }}>
         <span className="text-gold/50 font-arabic font-bold" style={{ fontSize: 11 }}>جولة</span>
         <span className="text-gold font-bold" style={{ fontSize: 34, lineHeight: 1 }}>{gameState.roundNumber}</span>
@@ -1056,7 +1068,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {gameState.checkCallerId && (
           <span className="text-gold/80 font-arabic animate-pulse" style={{ fontSize: 9, marginTop: 2 }}>⚠ Check</span>
         )}
-      </div>
+      </div>}
 
       <ChatPanel roomId={roomId} open={chatOpen} onToggle={() => setChatOpen(s => !s)} />
 
@@ -1071,8 +1083,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             className="fixed inset-0 z-50 flex items-center justify-center"
             style={{ background: 'rgba(4,8,15,.92)', backdropFilter: 'blur(10px)' }}
           >
-            <div className="rounded-2xl border border-gold/40 px-6 py-5 flex flex-col items-center gap-4"
-              style={{ background: 'rgba(10,4,0,.98)', minWidth: 320, boxShadow: '0 0 40px rgba(201,168,76,.15)' }}>
+            <div className="rounded-2xl border border-gold/40 flex flex-col items-center gap-4"
+              style={{ background: 'rgba(10,4,0,.98)', boxShadow: '0 0 40px rgba(201,168,76,.15)', width: 'min(92vw, 380px)', maxHeight: '88vh', overflowY: 'auto', padding: '20px 20px' }}>
 
               {/* Header */}
               <div className="flex flex-col items-center gap-1">
@@ -1219,7 +1231,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             style={{ background: 'rgba(4,8,15,.88)', backdropFilter: 'blur(8px)' }}
           >
             <div className="rounded-2xl border border-gold/30 px-6 py-5 flex flex-col items-center gap-3"
-              style={{ background: 'rgba(8,3,0,.97)', minWidth: 280 }}>
+              style={{ background: 'rgba(8,3,0,.97)', width: 'min(96vw, 360px)', maxHeight: '88vh', overflowY: 'auto' }}>
               <p className="text-gold font-bold font-arabic text-lg">نتيجة الجولة {roundScoreData.roundNumber}</p>
               {roundScoreData.checkPenalty && (
                 <p className="text-red-300 font-arabic text-sm animate-pulse">

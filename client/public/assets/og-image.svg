@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="og-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#0E0905"/>
+      <stop offset="35%" stop-color="#14100A"/>
+      <stop offset="70%" stop-color="#241608"/>
+      <stop offset="100%" stop-color="#1C0E04"/>
+    </linearGradient>
+    <linearGradient id="og-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"  stop-color="#FFE062"/>
+      <stop offset="50%" stop-color="#C9A84C"/>
+      <stop offset="100%" stop-color="#8B6914"/>
+    </linearGradient>
+    <radialGradient id="og-sun" cx="50%" cy="80%" r="70%">
+      <stop offset="0%"  stop-color="#E8903A" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#7A3008" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#0E0905" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Sky / sand gradient background -->
+  <rect width="1200" height="630" fill="url(#og-bg)"/>
+
+  <!-- Sunset glow at horizon -->
+  <ellipse cx="600" cy="500" rx="700" ry="180" fill="url(#og-sun)"/>
+
+  <!-- Stars -->
+  <g fill="#F5E6C8">
+    <circle cx="120" cy="80"  r="2" opacity="0.8"/>
+    <circle cx="280" cy="120" r="1.5" opacity="0.6"/>
+    <circle cx="450" cy="60"  r="2.2" opacity="0.85"/>
+    <circle cx="700" cy="100" r="1.5" opacity="0.6"/>
+    <circle cx="900" cy="50"  r="2.5" opacity="0.9"/>
+    <circle cx="1080" cy="130" r="1.5" opacity="0.6"/>
+  </g>
+
+  <!-- Crescent moon top right -->
+  <g transform="translate(1020 110)">
+    <circle r="48" fill="#E8C97A" opacity="0.10"/>
+    <path d="M 14 -28 C -8 -28 -22 -10 -22 14 C -22 38 -8 56 14 56 C -8 48 -18 32 -18 14 C -18 -4 -8 -20 14 -28 Z"
+          fill="#FFEAA0" opacity="0.92"/>
+  </g>
+
+  <!-- Burj-like silhouette (background, far) -->
+  <g transform="translate(280 500)" opacity="0.45">
+    <line x1="0" y1="-340" x2="0" y2="-300" stroke="#E8C97A" stroke-width="1"/>
+    <path d="M -2 -300 L 2 -300 L 4 -250 L -4 -250 Z M -4 -250 L 4 -250 L 6 -200 L -6 -200 Z M -6 -200 L 6 -200 L 9 -150 L -9 -150 Z M -9 -150 L 9 -150 L 13 -100 L -13 -100 Z M -13 -100 L 13 -100 L 18 -50 L -18 -50 Z M -18 -50 L 18 -50 L 25 0 L -25 0 Z" fill="#1A1408"/>
+  </g>
+
+  <!-- Distant city skyline -->
+  <g transform="translate(900 500)" opacity="0.35" fill="#1A1408">
+    <rect x="0" y="-90" width="40" height="90"/>
+    <rect x="44" y="-130" width="50" height="130"/>
+    <rect x="98" y="-70" width="30" height="70"/>
+    <rect x="132" y="-110" width="44" height="110"/>
+    <path d="M 180 0 L 180 -90 Q 200 -110 220 -90 L 220 0 Z"/>
+    <circle cx="200" cy="-100" r="12"/>
+  </g>
+
+  <!-- Front dunes -->
+  <path d="M 0 630 L 0 540 Q 200 500 400 525 Q 600 555 800 510 Q 1000 470 1200 520 L 1200 630 Z" fill="#1F1208"/>
+  <path d="M 0 630 L 0 575 Q 150 555 320 580 Q 500 605 680 575 Q 880 545 1080 580 Q 1140 588 1200 580 L 1200 630 Z" fill="#0E0905"/>
+
+  <!-- Left palm tree -->
+  <g transform="translate(140 540)" opacity="0.92">
+    <path d="M 0 0 Q -2 -50 -4 -100 Q -6 -150 -2 -180" stroke="#3D2810" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <path d="M -2 -180 Q -40 -210 -90 -200 Q -50 -200 -20 -188 Q -10 -184 -2 -180" fill="#1A4A28"/>
+    <path d="M -2 -180 Q -30 -220 -70 -240 Q -38 -218 -20 -195 Q -8 -184 -2 -180" fill="#225F35"/>
+    <path d="M -2 -180 Q 8 -228 28 -250 Q 14 -224 2 -195 Q -1 -184 -2 -180" fill="#2A6B3E"/>
+    <path d="M -2 -180 Q 30 -218 70 -228 Q 36 -212 12 -192 Q 2 -184 -2 -180" fill="#1A4A28"/>
+  </g>
+
+  <!-- Right palm tree (mirrored) -->
+  <g transform="translate(1080 545) scale(-1 1)" opacity="0.85">
+    <path d="M 0 0 Q -2 -50 -4 -100 Q -6 -150 -2 -180" stroke="#3D2810" stroke-width="9" fill="none" stroke-linecap="round"/>
+    <path d="M -2 -180 Q -40 -210 -90 -200 Q -50 -200 -20 -188 Q -10 -184 -2 -180" fill="#1A4A28"/>
+    <path d="M -2 -180 Q -30 -220 -70 -240 Q -38 -218 -20 -195 Q -8 -184 -2 -180" fill="#225F35"/>
+    <path d="M -2 -180 Q 8 -228 28 -250 Q 14 -224 2 -195 Q -1 -184 -2 -180" fill="#2A6B3E"/>
+  </g>
+
+  <!-- Bedouin tent (small, right of center) -->
+  <g transform="translate(820 590)" opacity="0.7">
+    <path d="M -55 0 Q -25 -2 0 0 L 5 -42 Q 8 -50 11 -50 L 15 -42 L 70 0 Q 35 -2 5 0 Z" fill="#1A0F08"/>
+    <line x1="11" y1="-50" x2="11" y2="-58" stroke="#5C3A1E" stroke-width="1.4"/>
+    <ellipse cx="5" cy="2" rx="14" ry="3" fill="#E8903A" opacity="0.4"/>
+  </g>
+
+  <!-- Central card emblem -->
+  <g transform="translate(600 280)">
+    <!-- Card outline -->
+    <rect x="-130" y="-180" width="260" height="360" rx="20" fill="#080503" stroke="url(#og-gold)" stroke-width="3"/>
+    <rect x="-118" y="-168" width="236" height="336" rx="14" fill="none" stroke="#C9A84C" stroke-width="1" opacity="0.4"/>
+
+    <!-- Crescent at top of card -->
+    <path d="M 0 -130 A 18 18 0 1 1 12 -120 A 14 14 0 1 0 0 -130 Z" fill="url(#og-gold)" opacity="0.95"/>
+
+    <!-- 8-point star -->
+    <g>
+      <path d="M 0 -55 L 14 -14 L 55 0 L 14 14 L 0 55 L -14 14 L -55 0 L -14 -14 Z"
+            fill="none" stroke="url(#og-gold)" stroke-width="2.4"/>
+      <path d="M 0 -40 L 10 -10 L 40 0 L 10 10 L 0 40 L -10 10 L -40 0 L -10 -10 Z"
+            fill="url(#og-gold)" fill-opacity="0.18" stroke="url(#og-gold)" stroke-width="1.4"/>
+      <circle r="6" fill="url(#og-gold)"/>
+    </g>
+
+    <!-- "CHECK" inside card -->
+    <text x="0" y="100" font-family="Georgia, 'Times New Roman', serif" font-weight="bold" font-size="34" letter-spacing="14" text-anchor="middle" fill="url(#og-gold)">CHECK</text>
+    <line x1="-85" y1="120" x2="85" y2="120" stroke="#C9A84C" stroke-width="1" opacity="0.4"/>
+    <text x="0" y="148" font-family="Georgia, serif" font-size="13" letter-spacing="3" text-anchor="middle" fill="#C9A84C" opacity="0.6">EMIRATI CARD GAME</text>
+
+    <!-- Corner ornaments -->
+    <path d="M -110 -160 L -90 -160 M -110 -160 L -110 -140" stroke="url(#og-gold)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 110 -160 L 90 -160 M 110 -160 L 110 -140" stroke="url(#og-gold)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M -110 160 L -90 160 M -110 160 L -110 140" stroke="url(#og-gold)" stroke-width="2" stroke-linecap="round"/>
+    <path d="M 110 160 L 90 160 M 110 160 L 110 140" stroke="url(#og-gold)" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Title (Arabic) -->
+  <text x="600" y="540" font-family="Cairo, sans-serif" font-weight="700" font-size="44" text-anchor="middle" fill="url(#og-gold)" direction="rtl">
+    لعبة Check الإماراتية
+  </text>
+  <text x="600" y="585" font-family="Cairo, sans-serif" font-weight="400" font-size="20" text-anchor="middle" fill="#E8C97A" opacity="0.7" direction="rtl">
+    ذكاء · أوراق · خفّة دم
+  </text>
+</svg>

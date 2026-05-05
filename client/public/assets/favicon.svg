@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1A1408"/>
+      <stop offset="100%" stop-color="#0E0905"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFE062"/>
+      <stop offset="50%" stop-color="#C9A84C"/>
+      <stop offset="100%" stop-color="#8B6914"/>
+    </linearGradient>
+    <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#E8C97A" stop-opacity="0.45"/>
+      <stop offset="100%" stop-color="#C9A84C" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- Rounded background -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+  <!-- Subtle glow -->
+  <circle cx="32" cy="32" r="28" fill="url(#goldGlow)"/>
+  <!-- Outer gold ring -->
+  <rect x="3" y="3" width="58" height="58" rx="12" fill="none" stroke="url(#gold)" stroke-width="1.6" opacity="0.85"/>
+  <!-- Inner thin ring -->
+  <rect x="6" y="6" width="52" height="52" rx="10" fill="none" stroke="#C9A84C" stroke-width="0.5" opacity="0.4"/>
+  <!-- Crescent moon (top) -->
+  <path d="M32 11 A6 6 0 1 1 36 14.5 A4.5 4.5 0 1 0 32 11Z" fill="url(#gold)" opacity="0.95"/>
+  <!-- Spade in center -->
+  <g transform="translate(32 38)">
+    <path d="M0 -14 C-9 -3, -10 8, -2 8 L-1 8 L-1 11 L-5 14 L5 14 L1 11 L1 8 L2 8 C10 8, 9 -3, 0 -14 Z"
+          fill="url(#gold)" stroke="#8B6914" stroke-width="0.8"/>
+    <!-- Spade highlight -->
+    <path d="M-3 -7 C-6 -2, -6 4, -2 5" fill="none" stroke="#FFEAA0" stroke-width="0.8" opacity="0.6"/>
+  </g>
+  <!-- "K" letter on spade (Check / King) -->
+  <text x="32" y="42" font-family="Georgia, serif" font-weight="bold" font-size="13" text-anchor="middle" fill="#1A1408" opacity="0.85">K</text>
+  <!-- Corner sparkles -->
+  <circle cx="11" cy="11" r="1" fill="#FFEAA0" opacity="0.7"/>
+  <circle cx="53" cy="11" r="1" fill="#FFEAA0" opacity="0.7"/>
+  <circle cx="11" cy="53" r="1" fill="#FFEAA0" opacity="0.7"/>
+  <circle cx="53" cy="53" r="1" fill="#FFEAA0" opacity="0.7"/>
+</svg>

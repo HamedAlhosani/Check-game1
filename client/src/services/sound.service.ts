@@ -3,6 +3,7 @@
 class SoundService {
   private ctx: AudioContext | null = null;
   private enabled = true;
+  private vol = 0.6;
 
   private get audioCtx(): AudioContext {
     if (!this.ctx) this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -11,6 +12,8 @@ class SoundService {
 
   setEnabled(v: boolean) { this.enabled = v; }
   isEnabled() { return this.enabled; }
+  getVolume() { return this.vol; }
+  setVolume(v: number) { this.vol = Math.max(0, Math.min(1, v)); }
 
   private playTone(freq: number, type: OscillatorType, duration: number, vol = 0.3, startDelay = 0) {
     if (!this.enabled) return;
@@ -23,7 +26,7 @@ class SoundService {
       osc.type = type;
       osc.frequency.value = freq;
       gain.gain.setValueAtTime(0, ctx.currentTime + startDelay);
-      gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + startDelay + 0.01);
+      gain.gain.linearRampToValueAtTime(vol * this.vol, ctx.currentTime + startDelay + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startDelay + duration);
       osc.start(ctx.currentTime + startDelay);
       osc.stop(ctx.currentTime + startDelay + duration + 0.05);

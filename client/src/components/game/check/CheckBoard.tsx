@@ -336,13 +336,12 @@ function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwa
   );
 }
 
-// ─── Mini seat for circular orbit ────────────────────────────────────────────
+// ─── Mini seat for circular orbit (2×2 real cards) ───────────────────────────
 function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob }: any) {
   const isTurn = player.isTurn;
   const isElim = player.isEliminated;
-  const cardCount = player.cards.filter(Boolean).length;
-  const avSz = isMob ? 22 : 30;
-  const w = isMob ? 62 : 88;
+  const w = isMob ? 82 : 104;
+  const avSz = isMob ? 18 : 24;
 
   const handleClick = () => {
     if (isSpecialJ && selectedPos !== null && !isElim) {
@@ -351,32 +350,49 @@ function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatB
     }
   };
 
+  const borderColor = isTurn ? 'rgba(201,168,76,0.75)' : 'rgba(255,255,255,0.10)';
+  const bg = isTurn ? 'rgba(201,168,76,0.15)' : 'rgba(8,3,0,0.88)';
+
   return (
     <div className="relative flex flex-col items-center" onClick={handleClick}
-      style={{ width: w, cursor: isSpecialJ && selectedPos !== null && !isElim ? 'pointer' : 'default' }}>
+      style={{ width: w, cursor: isSpecialJ && selectedPos !== null && !isElim ? 'pointer' : 'default', opacity: isElim ? 0.5 : 1, transition: 'opacity 0.3s' }}>
       <AnimatePresence>{emoji && <EmojiFloat em={emoji} />}</AnimatePresence>
       <AnimatePresence>{chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}</AnimatePresence>
+
+      {/* Header: avatar + name + score */}
       <div style={{
-        width: '100%', borderRadius: 8, backdropFilter: 'blur(10px)',
-        background: isTurn ? 'rgba(201,168,76,0.18)' : 'rgba(8,3,0,0.85)',
-        border: isTurn ? '1.5px solid rgba(201,168,76,0.75)' : '1px solid rgba(255,255,255,0.10)',
-        boxShadow: isTurn ? '0 0 10px rgba(201,168,76,0.35)' : 'none',
-        opacity: isElim ? 0.45 : 1, transition: 'all 0.3s',
-        padding: '4px 3px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+        width: '100%', borderRadius: '8px 8px 0 0', backdropFilter: 'blur(10px)',
+        background: bg, border: `1.5px solid ${borderColor}`, borderBottom: 'none',
+        boxShadow: isTurn ? '0 0 10px rgba(201,168,76,0.3)' : 'none',
+        padding: '3px 4px 2px', display: 'flex', alignItems: 'center', gap: 3,
       }}>
-        <div className="relative">
+        <div className="relative shrink-0">
           <Av id={player.avatarId} name={player.displayName} size={avSz} />
-          {isTurn && <div className="absolute animate-pulse" style={{ bottom: -2, right: -2, width: 7, height: 7, borderRadius: '50%', background: '#C9A84C', border: '1.5px solid #000' }} />}
-          {isElim && <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#ef4444', fontSize: 8, fontWeight: 700 }}>✕</span></div>}
+          {isTurn && <div className="absolute animate-pulse" style={{ bottom: -1, right: -1, width: 6, height: 6, borderRadius: '50%', background: '#C9A84C', border: '1px solid #000' }} />}
+          {isElim && <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#ef4444', fontSize: 7, fontWeight: 700 }}>✕</span></div>}
         </div>
-        <p className="font-arabic" style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.65)', maxWidth: w - 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1 }}>{player.displayName}</p>
-        <p style={{ fontSize: 10, fontWeight: 700, lineHeight: 1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.6)' }}>{player.cumulativeScore}</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, justifyContent: 'center', maxWidth: w - 6, minHeight: 10 }}>
-          {Array.from({ length: Math.min(cardCount, 4) }).map((_, j) => (
-            <div key={j} style={{ width: 7, height: 10, borderRadius: 1.5, background: '#080318', border: '1px solid rgba(201,168,76,0.38)' }} />
-          ))}
-          {cardCount > 4 && <span style={{ fontSize: 6.5, color: 'rgba(201,168,76,0.5)', lineHeight: '10px' }}>+{cardCount - 4}</span>}
+        <div className="flex-1 min-w-0">
+          <p className="font-arabic truncate" style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.65)', lineHeight: 1.1 }}>{player.displayName}</p>
+          <p style={{ fontSize: 10, fontWeight: 700, lineHeight: 1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.65)' }}>{player.cumulativeScore}</p>
         </div>
+      </div>
+
+      {/* 2×2 cards grid */}
+      <div style={{
+        width: '100%', borderRadius: '0 0 8px 8px', position: 'relative',
+        background: isTurn ? 'rgba(201,168,76,0.06)' : 'rgba(4,2,0,0.82)',
+        border: `1.5px solid ${borderColor}`, borderTop: 'none',
+        padding: '2px 3px 3px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2,
+      }}>
+        {player.cards.map((c: any, i: number) => c !== null ? (
+          <PlayingCard key={i} card={c} faceDown={!c?.isRevealed} xmini
+            highlight={isSpecialJ && selectedPos !== null ? 'burn' : 'none'} />
+        ) : null)}
+        {isElim && (
+          <div style={{ position: 'absolute', inset: 0, borderRadius: '0 0 8px 8px', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#ef4444', fontWeight: 700, fontSize: 16 }}>✕</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -389,7 +405,7 @@ function CircularOpponents({ opponents, tableRadius, isMobile, gameState, isSpec
   // Arc from -140° to +140° (avoiding bottom where player sits)
   const arcStart = -(Math.PI * 14) / 18;
   const arcEnd = (Math.PI * 14) / 18;
-  const orbitR = tableRadius + (isMobile ? 46 : 72);
+  const orbitR = tableRadius + (isMobile ? 38 : 72);
   return (
     <>
       {opponents.map((p: any, i: number) => {
@@ -472,6 +488,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [discardSelected, setDiscardSelected] = useState(false);
   const [chatBubbleMap, setChatBubbleMap] = useState<Record<string, { text: string; key: number } | null>>({});
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
+  const [soundOn, setSoundOn] = useState(soundService.isEnabled());
+  const [volume, setVolumeState] = useState(soundService.getVolume());
 
   const prevTurnRef = useRef<string | null>(null);
   const actedRef = useRef(false);
@@ -1125,9 +1144,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           ))}
         </div>
 
-        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
-          className="px-4 py-1.5 rounded-xl border border-red-500/30 text-red-400/70 hover:text-red-400 font-arabic text-sm bg-red-900/10 transition-all"
-          onClick={() => setShowExitConfirm(true)}>خروج ✕</motion.button>
+        <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: .92 }}
+          className="px-3.5 py-1.5 rounded-xl border font-arabic text-sm transition-all"
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(245,230,200,0.65)', fontSize: isMobile ? 18 : 20 }}
+          onClick={() => setShowSettings(true)}>⚙️</motion.button>
       </div>
 
       {/* ── Bottom-left info panel: round + deck remaining (desktop only) ── */}
@@ -1350,6 +1370,83 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {showPeek && !showIntro && <PeekOverlay />}
         {showAfk && <AfkOverlay />}
         {showExitConfirm && <ExitOverlay />}
+      </AnimatePresence>
+
+      {/* ── Settings Panel ── */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div
+            key="settings-panel"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex flex-col justify-end"
+            style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }}
+            onClick={() => setShowSettings(false)}
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+              className="rounded-t-3xl flex flex-col gap-4"
+              style={{ background: 'rgba(8,3,0,0.98)', border: '1px solid rgba(201,168,76,0.2)', padding: '20px 20px 32px', boxShadow: '0 -8px 40px rgba(0,0,0,0.8)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-arabic font-bold text-lg" style={{ color: '#E8C97A' }}>⚙️ الإعدادات</h3>
+                <button onClick={() => setShowSettings(false)} style={{ color: 'rgba(255,255,255,0.4)', fontSize: 22, lineHeight: 1 }}>✕</button>
+              </div>
+
+              {/* Mute toggle */}
+              <div className="flex items-center justify-between rounded-2xl px-4 py-3.5"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <span className="font-arabic text-sm" style={{ color: 'rgba(245,230,200,0.75)' }}>
+                  {soundOn ? '🔊 الصوت مفعّل' : '🔇 الصوت معطّل'}
+                </span>
+                <button
+                  onClick={() => { const n = !soundOn; soundService.setEnabled(n); setSoundOn(n); }}
+                  style={{
+                    width: 50, height: 28, borderRadius: 14, position: 'relative',
+                    background: soundOn ? '#C9A84C' : 'rgba(255,255,255,0.15)',
+                    border: 'none', cursor: 'pointer', transition: 'background 0.25s',
+                  }}>
+                  <div style={{
+                    position: 'absolute', top: 4, width: 20, height: 20, borderRadius: '50%',
+                    background: 'white', transition: 'left 0.25s',
+                    left: soundOn ? 26 : 4,
+                  }} />
+                </button>
+              </div>
+
+              {/* Volume slider */}
+              <div className="flex flex-col gap-3 rounded-2xl px-4 py-3.5"
+                style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', opacity: soundOn ? 1 : 0.35 }}>
+                <div className="flex items-center justify-between">
+                  <span className="font-arabic text-sm" style={{ color: 'rgba(245,230,200,0.75)' }}>🎚️ مستوى الصوت</span>
+                  <span className="font-bold font-mono text-sm" style={{ color: '#C9A84C' }}>{Math.round(volume * 100)}%</span>
+                </div>
+                <input type="range" min={0} max={100} value={Math.round(volume * 100)}
+                  disabled={!soundOn}
+                  onChange={e => { const v = Number(e.target.value) / 100; soundService.setVolume(v); setVolumeState(v); }}
+                  className="w-full" style={{ accentColor: '#C9A84C', height: 4 }} />
+                <div className="flex justify-between font-arabic" style={{ fontSize: 10, color: 'rgba(245,230,200,0.25)' }}>
+                  <span>صامت</span><span>أقصى</span>
+                </div>
+              </div>
+
+              {/* Exit */}
+              <motion.button
+                whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                onClick={() => { setShowSettings(false); setShowExitConfirm(true); }}
+                className="w-full py-3.5 rounded-2xl font-arabic font-bold border"
+                style={{ background: 'rgba(196,92,58,0.10)', borderColor: 'rgba(196,92,58,0.4)', color: '#E07040', fontSize: 15 }}>
+                🚪 الخروج من اللعبة
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {gameOverData && (

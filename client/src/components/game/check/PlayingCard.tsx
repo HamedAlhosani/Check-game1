@@ -8,6 +8,7 @@ interface Props {
   highlight?: 'burn' | 'select' | 'none';
   small?: boolean;
   mini?: boolean;
+  xmini?: boolean;
 }
 
 const SUIT_SYMBOLS: Record<string, string> = {
@@ -167,7 +168,7 @@ function CardBack() {
   );
 }
 
-export function PlayingCard({ card, faceDown = false, onClick, highlight = 'none', small, mini }: Props) {
+export function PlayingCard({ card, faceDown = false, onClick, highlight = 'none', small, mini, xmini }: Props) {
   const isRed = card && RED_SUITS.includes(card.suit);
   const showFront = card && !faceDown && card.isRevealed;
 
@@ -177,7 +178,7 @@ export function PlayingCard({ card, faceDown = false, onClick, highlight = 'none
     ? { boxShadow: '0 0 12px rgba(80,200,120,0.7)', borderColor: '#50C878', transform: 'scale(1.07)' }
     : {};
 
-  const w = mini ? 52 : small ? 72 : 100;
+  const w = xmini ? 36 : mini ? 52 : small ? 72 : 100;
 
   return (
     <motion.div
@@ -201,7 +202,7 @@ export function PlayingCard({ card, faceDown = false, onClick, highlight = 'none
       }}
     >
       {!card ? (
-        <span className="text-gold/20 z-10 relative" style={{ fontSize: mini ? 8 : 18 }}>?</span>
+        <span className="text-gold/20 z-10 relative" style={{ fontSize: xmini ? 7 : mini ? 8 : 18 }}>?</span>
       ) : faceDown || !card.isRevealed ? (
         <CardBack />
       ) : (
@@ -209,7 +210,7 @@ export function PlayingCard({ card, faceDown = false, onClick, highlight = 'none
           style={{ padding: mini ? 1 : 2 }}>
           <span style={{
             fontWeight: 800,
-            fontSize: mini ? 11 : small ? 16 : 22,
+            fontSize: xmini ? 9 : mini ? 11 : small ? 16 : 22,
             lineHeight: 1,
             color: isRed ? '#B91C1C' : '#111827',
             fontFamily: 'Georgia, serif',
@@ -217,7 +218,7 @@ export function PlayingCard({ card, faceDown = false, onClick, highlight = 'none
             {card.rank}
           </span>
           <span style={{
-            fontSize: mini ? 14 : small ? 19 : 28,
+            fontSize: xmini ? 11 : mini ? 14 : small ? 19 : 28,
             lineHeight: 1,
             marginTop: mini ? 1 : 2,
             color: isRed ? '#B91C1C' : '#111827',

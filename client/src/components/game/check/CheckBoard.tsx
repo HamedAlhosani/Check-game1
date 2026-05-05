@@ -192,7 +192,7 @@ function ChatBubble({ text }: { text: string }) {
       style={{ bottom: '105%', transform: 'translateX(-50%)', maxWidth: 190 }}
     >
       <div className="rounded-xl px-3 py-1.5 font-arabic text-xs text-white text-center"
-        style={{ background: 'rgba(8,3,0,0.97)', border: '1px solid rgba(201,168,76,0.5)',
+        style={{ background: 'rgba(20,14,8,0.97)', border: '1px solid rgba(201,168,76,0.5)',
                  boxShadow: '0 2px 14px rgba(0,0,0,0.75)', wordBreak: 'break-word', lineHeight: 1.5,
                  whiteSpace: 'pre-wrap' }}>
         {text}
@@ -248,7 +248,7 @@ function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11 }
       style={{
         background: isTurn
           ? 'linear-gradient(135deg,rgba(201,168,76,.18) 0%,rgba(20,8,0,.94) 100%)'
-          : 'linear-gradient(135deg,rgba(100,50,10,.14) 0%,rgba(8,3,0,.94) 100%)',
+          : 'linear-gradient(135deg,rgba(100,50,10,.14) 0%,rgba(20,14,8,.94) 100%)',
         backdropFilter: 'blur(12px)',
         boxShadow: isTurn ? '0 0 16px rgba(201,168,76,.25), inset 0 1px 0 rgba(232,201,122,.1)' : 'none',
       }}
@@ -395,7 +395,7 @@ function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatB
   };
 
   const borderColor = isTurn ? 'rgba(201,168,76,0.75)' : 'rgba(255,255,255,0.10)';
-  const bg = isTurn ? 'rgba(201,168,76,0.15)' : 'rgba(8,3,0,0.88)';
+  const bg = isTurn ? 'rgba(201,168,76,0.15)' : 'rgba(20,14,8,0.88)';
 
   return (
     <div className="relative flex flex-col items-center" onClick={handleClick}
@@ -805,7 +805,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   // ── Overlays ──────────────────────────────────────────────────────────────
   const IntroOverlay = () => (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-      style={{ background: 'rgba(4,8,15,0.93)', backdropFilter: 'blur(8px)' }}>
+      style={{ background: 'rgba(20,14,8,0.93)', backdropFilter: 'blur(8px)' }}>
       <p className="font-display text-4xl tracking-widest text-gold mb-1" style={{ textShadow: '0 0 30px rgba(201,168,76,.5)' }}>CHECK</p>
       <p className="text-sand/50 font-arabic text-sm mb-6">اللاعبون</p>
       <div className="flex flex-wrap justify-center gap-3 mb-8 px-4 overflow-y-auto" style={{ maxHeight: '42vh' }}>
@@ -827,7 +827,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
   const PeekOverlay = () => (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-      style={{ background: 'rgba(4,8,15,0.91)', backdropFilter: 'blur(8px)' }}>
+      style={{ background: 'rgba(20,14,8,0.91)', backdropFilter: 'blur(8px)' }}>
       <p className="text-gold font-arabic font-bold text-xl mb-1">احفظ أوراقك!</p>
       <p className="text-sand/50 font-arabic text-sm mb-4">الورقتان السفليتان</p>
       {me && (
@@ -867,7 +867,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
   const ExitOverlay = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(4,8,15,0.84)', backdropFilter: 'blur(8px)' }}>
+      style={{ background: 'rgba(20,14,8,0.84)', backdropFilter: 'blur(8px)' }}>
       <div className="rounded-2xl border border-white/10 bg-night-mid/95 px-8 py-6 flex flex-col items-center gap-4">
         <p className="text-white font-arabic text-lg">هل أنت متأكد تريد الخروج؟</p>
         <p className="text-sand/50 font-arabic text-sm text-center">سيحل بوت مكانك مع اللاعبين الحقيقيين</p>
@@ -931,7 +931,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
   // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0E0500' }}>
+    <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0E0905' }}>
       <RoomBackground />
       <ScoreBar />
 
@@ -1023,7 +1023,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               {gameState.checkCallerId && (
                 <div className="absolute top-2 left-0 right-0 flex justify-center pointer-events-none" style={{ zIndex: 22 }}>
                   <p className="text-gold font-arabic font-bold animate-pulse rounded-full px-3 py-0.5"
-                    style={{ fontSize: 11, background: 'rgba(8,3,0,0.85)', border: '1px solid rgba(201,168,76,0.5)' }}>⚠ Check!</p>
+                    style={{ fontSize: 11, background: 'rgba(20,14,8,0.85)', border: '1px solid rgba(201,168,76,0.5)' }}>⚠ Check!</p>
                 </div>
               )}
 
@@ -1266,12 +1266,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       {/* ── Round/Lap badges — top-left of viewport, always visible ── */}
       <div className="fixed z-40 flex gap-1.5" style={{ top: isMobile ? 6 : 14, left: isMobile ? 6 : 14 }}>
         <div className="rounded-xl border border-gold/30 flex flex-col items-center px-2.5 py-1"
-          style={{ background: 'rgba(8,3,0,.92)', backdropFilter: 'blur(8px)', minWidth: 44 }}>
+          style={{ background: 'rgba(20,14,8,.92)', backdropFilter: 'blur(8px)', minWidth: 44 }}>
           <span className="text-gold/50 font-arabic font-bold" style={{ fontSize: 9, lineHeight: 1 }}>راوند</span>
           <span className="text-gold font-bold" style={{ fontSize: 18, lineHeight: 1.1 }}>{gameState.roundNumber}</span>
         </div>
         <div className="rounded-xl border flex flex-col items-center px-2.5 py-1"
-          style={{ background: 'rgba(8,3,0,.92)', backdropFilter: 'blur(8px)', minWidth: 44, borderColor: lapCount >= 4 ? 'rgba(80,200,120,0.5)' : 'rgba(201,168,76,0.3)' }}>
+          style={{ background: 'rgba(20,14,8,.92)', backdropFilter: 'blur(8px)', minWidth: 44, borderColor: lapCount >= 4 ? 'rgba(80,200,120,0.5)' : 'rgba(201,168,76,0.3)' }}>
           <span className="font-arabic font-bold" style={{ fontSize: 9, lineHeight: 1, color: lapCount >= 4 ? 'rgba(122,224,138,0.7)' : 'rgba(201,168,76,0.5)' }}>لفة</span>
           <span className="font-bold" style={{ fontSize: 18, lineHeight: 1.1, color: lapCount >= 4 ? '#7AE08A' : '#E8C97A' }}>{lapCount}</span>
         </div>
@@ -1279,7 +1279,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
       {/* ── Bottom-left deck info panel (desktop only) ── */}
       {!isMobile && <div className="fixed z-40 flex flex-col items-center gap-1 rounded-xl border border-gold/30 px-4 py-3"
-        style={{ bottom: 58, left: 8, background: 'rgba(8,3,0,.97)', backdropFilter: 'blur(10px)', minWidth: 72, boxShadow: '0 0 12px rgba(201,168,76,.10)' }}>
+        style={{ bottom: 58, left: 8, background: 'rgba(20,14,8,.97)', backdropFilter: 'blur(10px)', minWidth: 72, boxShadow: '0 0 12px rgba(201,168,76,.10)' }}>
         <span className="text-gold/40 font-arabic" style={{ fontSize: 10 }}>كروت</span>
         <span className="text-sand/80 font-bold" style={{ fontSize: 24, lineHeight: 1 }}>{gameState.deckCount}</span>
       </div>}
@@ -1295,7 +1295,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: .9 }}
             className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ background: 'rgba(4,8,15,.92)', backdropFilter: 'blur(10px)' }}
+            style={{ background: 'rgba(20,14,8,.92)', backdropFilter: 'blur(10px)' }}
           >
             <div className="rounded-2xl border border-gold/40 flex flex-col items-center gap-4"
               style={{ background: 'rgba(10,4,0,.98)', boxShadow: '0 0 40px rgba(201,168,76,.15)', width: 'min(92vw, 380px)', maxHeight: '88vh', overflowY: 'auto', padding: '20px 20px' }}>
@@ -1442,10 +1442,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: .92 }}
             className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ background: 'rgba(4,8,15,.88)', backdropFilter: 'blur(8px)' }}
+            style={{ background: 'rgba(20,14,8,.88)', backdropFilter: 'blur(8px)' }}
           >
             <div className="rounded-2xl border border-gold/30 px-6 py-5 flex flex-col items-center gap-3"
-              style={{ background: 'rgba(8,3,0,.97)', width: 'min(96vw, 360px)', maxHeight: '88vh', overflowY: 'auto' }}>
+              style={{ background: 'rgba(20,14,8,.97)', width: 'min(96vw, 360px)', maxHeight: '88vh', overflowY: 'auto' }}>
               <p className="text-gold font-bold font-arabic text-lg">نتيجة الجولة {roundScoreData.roundNumber}</p>
               {roundScoreData.checkPenalty && (
                 <p className="text-red-300 font-arabic text-sm animate-pulse">
@@ -1618,7 +1618,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               exit={{ y: '100%' }}
               transition={{ type: 'spring', stiffness: 320, damping: 32 }}
               className="rounded-t-3xl flex flex-col gap-4"
-              style={{ background: 'rgba(8,3,0,0.98)', border: '1px solid rgba(201,168,76,0.2)', padding: '20px 20px 32px', boxShadow: '0 -8px 40px rgba(0,0,0,0.8)' }}
+              style={{ background: 'rgba(20,14,8,0.98)', border: '1px solid rgba(201,168,76,0.2)', padding: '20px 20px 32px', boxShadow: '0 -8px 40px rgba(0,0,0,0.8)' }}
               onClick={e => e.stopPropagation()}
             >
               {/* Header */}

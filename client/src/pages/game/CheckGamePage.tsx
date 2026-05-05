@@ -34,7 +34,7 @@ export function CheckGamePage() {
 
   if (!gameState || !gameId) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#04080F' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0E0905' }}>
         <div className="text-center">
           <p className="font-display text-3xl tracking-widest shimmer-text mb-4">CHECK</p>
           <p className="text-sand/40 font-arabic text-sm animate-pulse">جاري تحميل اللعبة...</p>

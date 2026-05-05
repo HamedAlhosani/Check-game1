@@ -6,7 +6,7 @@
   * { box-sizing: border-box; }
 
   body {
-    background-color: #0A1220;
+    background-color: #14100A;
     color: #F5E6C8;
     font-family: 'Cairo', sans-serif;
     direction: rtl;
@@ -14,10 +14,10 @@
   }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: #101C30; }
-  ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.3); border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(201,168,76,0.55); }
-  ::selection { background: rgba(201,168,76,0.25); color: #F5E6C8; }
+  ::-webkit-scrollbar-track { background: #1A1408; }
+  ::-webkit-scrollbar-thumb { background: rgba(201,168,76,0.35); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(232,144,58,0.7); }
+  ::selection { background: rgba(232,144,58,0.30); color: #F5E6C8; }
 }
 
 @layer utilities {
@@ -26,16 +26,16 @@
   .preserve-3d { transform-style: preserve-3d; }
 
   .glass {
-    background: rgba(10, 18, 32, 0.80);
+    background: rgba(22, 16, 10, 0.82);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }
 
   .glass-card {
-    background: rgba(16, 28, 48, 0.70);
+    background: rgba(30, 22, 14, 0.72);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(201, 168, 76, 0.18);
+    border: 1px solid rgba(201, 168, 76, 0.20);
   }
 
   .text-gradient-gold {

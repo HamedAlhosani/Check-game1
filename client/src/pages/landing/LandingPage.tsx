@@ -12,7 +12,7 @@ function UAESkyline() {
       <defs>
         <linearGradient id="buildingGlow" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#1A0E30" />
-          <stop offset="100%" stopColor="#0D0820" />
+          <stop offset="100%" stopColor="#1A1408" />
         </linearGradient>
         <filter id="glow">
           <feGaussianBlur stdDeviation="3" result="blur"/>
@@ -26,7 +26,7 @@ function UAESkyline() {
         <circle key={`s2-${i}`} cx={x} cy={y} r="1" fill="white" opacity="0.4"/>
       ))}
       <circle cx="820" cy="52" r="32" fill="#E8C97A" opacity="0.9" filter="url(#glow)"/>
-      <circle cx="835" cy="45" r="26" fill="#0A0614"/>
+      <circle cx="835" cy="45" r="26" fill="#0E0905"/>
       <rect x="50" y="210" width="22" height="90" fill="#140C28" opacity="0.6"/>
       <rect x="80" y="195" width="18" height="105" fill="#140C28" opacity="0.6"/>
       <rect x="108" y="220" width="25" height="80" fill="#140C28" opacity="0.6"/>
@@ -120,7 +120,7 @@ function RulesSection({ lang }: { lang: string }) {
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
   return (
-    <section id="rules" style={{ background: '#060F0D', padding: '60px 0' }}>
+    <section id="rules" style={{ background: '#14100A', padding: '60px 0' }}>
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '0 20px' }}>
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <h2 className="text-center font-arabic font-bold mb-2" style={{ fontSize: 28, color: '#E8C97A' }}>
@@ -188,7 +188,7 @@ export function LandingPage() {
   const isAr = lang === 'ar';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0A0614', overflowX: 'hidden', direction: dir }}>
+    <div style={{ minHeight: '100vh', background: '#0E0905', overflowX: 'hidden', direction: dir }}>
 
       {/* ── Top Nav ── */}
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3"
@@ -224,7 +224,7 @@ export function LandingPage() {
       {/* ── Hero Section ── */}
       <section style={{
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #0A0614 0%, #100820 25%, #150D20 55%, #1C0E08 80%, #200C04 100%)',
+        background: 'linear-gradient(180deg, #0E0905 0%, #14100A 28%, #1A1408 55%, #241208 80%, #200C04 100%)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
         position: 'relative', overflow: 'hidden', paddingBottom: 40,
       }}>
@@ -283,14 +283,14 @@ export function LandingPage() {
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/home')}
                 className="font-arabic font-bold px-8 py-3 rounded-2xl"
-                style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0A0614', fontSize: 16, boxShadow: '0 0 32px rgba(201,168,76,0.4)' }}>
+                style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0E0905', fontSize: 16, boxShadow: '0 0 32px rgba(201,168,76,0.4)' }}>
                 {isAr ? 'ابدأ اللعب الآن ←' : 'Play Now →'}
               </motion.button>
             ) : (
               <>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link to="/register" className="font-arabic font-bold px-8 py-3 rounded-2xl block"
-                    style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0A0614', fontSize: 16, boxShadow: '0 0 32px rgba(201,168,76,0.4)', textDecoration: 'none' }}>
+                    style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0E0905', fontSize: 16, boxShadow: '0 0 32px rgba(201,168,76,0.4)', textDecoration: 'none' }}>
                     {isAr ? 'إنشاء حساب مجاني ←' : 'Create Free Account →'}
                   </Link>
                 </motion.div>
@@ -349,7 +349,7 @@ export function LandingPage() {
       <RulesSection lang={lang} />
 
       {/* ── Bottom CTA ── */}
-      <section style={{ background: 'linear-gradient(180deg, #060F0D 0%, #0A0614 100%)', padding: '60px 20px', textAlign: 'center' }}>
+      <section style={{ background: 'linear-gradient(180deg, #14100A 0%, #0E0905 100%)', padding: '60px 20px', textAlign: 'center' }}>
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <h2 className="font-arabic font-bold mb-3" style={{ fontSize: 24, color: '#E8C97A' }}>
             {isAr ? 'جاهز للعب؟' : 'Ready to Play?'}
@@ -360,7 +360,7 @@ export function LandingPage() {
           {!user && (
             <div className="flex justify-center gap-3 flex-wrap">
               <Link to="/register" className="font-arabic font-bold px-8 py-3 rounded-2xl"
-                style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0A0614', fontSize: 15, boxShadow: '0 0 24px rgba(201,168,76,0.35)', textDecoration: 'none' }}>
+                style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0E0905', fontSize: 15, boxShadow: '0 0 24px rgba(201,168,76,0.35)', textDecoration: 'none' }}>
                 {isAr ? 'إنشاء حساب مجاني' : 'Create Free Account'}
               </Link>
               <Link to="/login" className="font-arabic px-8 py-3 rounded-2xl"
@@ -372,7 +372,7 @@ export function LandingPage() {
           {user && (
             <button onClick={() => navigate('/home')}
               className="font-arabic font-bold px-8 py-3 rounded-2xl"
-              style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0A0614', fontSize: 15, boxShadow: '0 0 24px rgba(201,168,76,0.35)' }}>
+              style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0E0905', fontSize: 15, boxShadow: '0 0 24px rgba(201,168,76,0.35)' }}>
               {isAr ? 'ابدأ اللعب الآن ←' : 'Play Now →'}
             </button>
           )}
@@ -380,7 +380,7 @@ export function LandingPage() {
       </section>
 
       {/* ── Footer ── */}
-      <footer style={{ background: '#050308', borderTop: '1px solid rgba(201,168,76,0.10)', padding: '24px 20px' }}>
+      <footer style={{ background: '#0A0604', borderTop: '1px solid rgba(201,168,76,0.10)', padding: '24px 20px' }}>
         <div style={{ maxWidth: 680, margin: '0 auto', textAlign: 'center' }}>
           <p className="font-display tracking-widest mb-2" style={{ fontSize: 18, color: 'rgba(201,168,76,0.5)' }}>CHECK</p>
           <ArabesqueDivider />

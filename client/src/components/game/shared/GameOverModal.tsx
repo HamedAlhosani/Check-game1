@@ -82,7 +82,7 @@ export function GameOverModal({ open, winnerId, finalScores, players, currentUid
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="fixed inset-0 z-[150] flex items-center justify-center"
-            style={{ background: 'rgba(4,8,15,0.93)', backdropFilter: 'blur(10px)' }}
+            style={{ background: 'rgba(20,14,8,0.93)', backdropFilter: 'blur(10px)' }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.85, y: 40 }}
@@ -90,7 +90,7 @@ export function GameOverModal({ open, winnerId, finalScores, players, currentUid
               transition={{ type: 'spring', bounce: 0.35, delay: 0.15 }}
               className="rounded-3xl border border-gold/30 px-6 py-7 flex flex-col items-center gap-4"
               style={{
-                background: 'linear-gradient(160deg, rgba(30,15,0,.99) 0%, rgba(8,3,0,.99) 100%)',
+                background: 'linear-gradient(160deg, rgba(30,15,0,.99) 0%, rgba(20,14,8,.99) 100%)',
                 minWidth: 320, maxWidth: 420, width: '90vw',
                 boxShadow: '0 0 60px rgba(201,168,76,.18), 0 0 120px rgba(201,168,76,.08)',
               }}

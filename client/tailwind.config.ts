@@ -11,10 +11,10 @@ const config: Config = {
           dark: '#A07830',
         },
         night: {
-          DEFAULT: '#0A1220',
-          mid: '#101C30',
-          accent: '#172338',
-          deep: '#060C14',
+          DEFAULT: '#14100A',
+          mid: '#1F1810',
+          accent: '#2A1F12',
+          deep: '#0E0905',
         },
         sand: {
           DEFAULT: '#D4A96A',
@@ -26,7 +26,16 @@ const config: Config = {
           light: '#B07D52',
           dark: '#5C3A1E',
         },
-        palm: '#2D6E4E',
+        sunset: {
+          DEFAULT: '#E8903A',
+          dark: '#C25E1A',
+          deep: '#7A3008',
+        },
+        palm: {
+          DEFAULT: '#3A6028',
+          dark: '#1A2818',
+          light: '#5C8038',
+        },
         danger: '#C45C3A',
         oasis: '#1B6B6B',
       },
@@ -92,7 +101,7 @@ const config: Config = {
         },
       },
       backgroundImage: {
-        'desert-gradient': 'linear-gradient(180deg, #060C14 0%, #0A1220 35%, #0E1A2E 65%, #121A10 100%)',
+        'desert-gradient': 'linear-gradient(180deg, #0E0905 0%, #14100A 30%, #1A1408 60%, #200E04 85%, #160A04 100%)',
         'gold-shimmer': 'linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent)',
         'card-texture': "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0 L60 15 L60 45 L30 60 L0 45 L0 15 Z' fill='none' stroke='%23C9A84C' stroke-width='0.5' opacity='0.08'/%3E%3C/svg%3E\")",
       },

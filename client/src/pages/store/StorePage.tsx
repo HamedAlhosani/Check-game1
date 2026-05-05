@@ -127,10 +127,10 @@ export function StorePage() {
   }
 
   return (
-    <div className="min-h-screen pb-16 sm:pb-0" style={{ background: 'linear-gradient(180deg, #030610 0%, #050413 50%, #07040F 100%)', direction: dir }}>
+    <div className="min-h-screen pb-16 sm:pb-0" style={{ background: 'linear-gradient(180deg, #14100A 0%, #1A1408 45%, #0E0905 100%)', direction: dir }}>
       {/* Nav */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 border-b border-white/5"
-        style={{ background: 'rgba(4,8,15,0.96)', backdropFilter: 'blur(14px)' }}>
+        style={{ background: 'rgba(20,14,8,0.96)', backdropFilter: 'blur(14px)' }}>
         <button onClick={() => navigate('/home')} className="flex items-center gap-2 transition-colors"
           style={{ color: 'rgba(245,230,200,0.45)' }}
           onMouseEnter={e => (e.currentTarget.style.color = '#C9A84C')}
@@ -248,7 +248,7 @@ export function StorePage() {
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex sm:hidden items-center border-t"
-        style={{ background: 'rgba(10,6,20,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)', height: 56 }}>
+        style={{ background: 'rgba(20,16,10,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)', height: 56 }}>
         {[
           { to: '/home', icon: '🏠', label: lang === 'ar' ? 'الرئيسية' : 'Home' },
           { to: '/store', icon: '🏪', label: lang === 'ar' ? 'المتجر' : 'Store' },
@@ -649,7 +649,7 @@ function SkinPreviewIcon({ item, size = 'md' }: { item: StoreItem; size?: 'md' |
     const wh = size === 'lg' ? 'w-[110px] h-[110px]' : 'w-10 h-10';
     return (
       <div className={`${wh} relative rounded-full flex items-center justify-center`}
-        style={{ background: 'rgba(10,6,20,0.7)' }}>
+        style={{ background: 'rgba(20,16,10,0.7)' }}>
         <span className="font-bold font-arabic" style={{ color: '#E8C97A', fontSize: size === 'lg' ? 32 : 18 }}>ل</span>
         <FrameRing frameId={item.id} size={px} />
       </div>
@@ -701,7 +701,7 @@ function ItemPreviewModal({ item, isOwned, isEquipped, coins, busy, onBuy, onEqu
       <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
       <div
         className="relative rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-gold/25"
-        style={{ background: '#0A1220' }}
+        style={{ background: '#1A1408' }}
         onClick={e => e.stopPropagation()}
       >
         <button onClick={onClose} className="absolute top-3 left-3 text-sand/40 hover:text-sand text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5">×</button>

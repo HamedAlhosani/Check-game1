@@ -479,7 +479,7 @@ export function WaitingRoom({ room, onLeave }: Props) {
             className="flex-1 py-3 rounded-xl font-arabic font-bold text-sm transition-all"
             style={room.players.length >= 2 ? {
               background: 'linear-gradient(135deg, #C9A84C, #8B6914)',
-              color: '#0A0614',
+              color: '#0E0905',
               boxShadow: '0 0 20px rgba(201,168,76,0.3)',
               border: '1px solid rgba(201,168,76,0.5)',
             } : {

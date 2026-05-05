@@ -124,7 +124,7 @@ export function FriendsPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #070410 0%, #0A0614 100%)', direction: dir }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #1A1408 0%, #0E0905 100%)', direction: dir }}>
       {/* Nav */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 border-b border-white/5"
         style={{ background: 'rgba(7,4,16,0.95)', backdropFilter: 'blur(12px)' }}>

@@ -60,14 +60,14 @@ export function DailyRewardModal({ open, onClose }: { open: boolean; onClose: ()
         key="daily-bg"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: 'rgba(4,8,16,0.85)', backdropFilter: 'blur(8px)' }}
+        style={{ background: 'rgba(20,14,8,0.85)', backdropFilter: 'blur(8px)' }}
         onClick={onClose}
       >
         <motion.div
           initial={{ scale: 0.85, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.85, y: 20 }}
           onClick={e => e.stopPropagation()}
           className="relative rounded-3xl border border-gold/30 w-full"
-          style={{ background: 'linear-gradient(160deg, #1A0F25 0%, #0A0614 100%)', maxWidth: 460, padding: '24px 22px', boxShadow: '0 20px 80px rgba(0,0,0,0.85), 0 0 50px rgba(201,168,76,0.12)' }}
+          style={{ background: 'linear-gradient(160deg, #241810 0%, #0E0905 100%)', maxWidth: 460, padding: '24px 22px', boxShadow: '0 20px 80px rgba(0,0,0,0.85), 0 0 50px rgba(201,168,76,0.12)' }}
         >
           <button onClick={onClose} className="absolute top-3 left-3 text-sand/40 hover:text-sand text-2xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5">×</button>
 
@@ -112,7 +112,7 @@ export function DailyRewardModal({ open, onClose }: { open: boolean; onClose: ()
                   whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
                   onClick={() => setStage('ad')}
                   className="w-full py-3.5 rounded-xl font-arabic font-bold"
-                  style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0A0614', boxShadow: '0 0 20px rgba(201,168,76,0.35)' }}>
+                  style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0E0905', boxShadow: '0 0 20px rgba(201,168,76,0.35)' }}>
                   {isAr ? 'شاهد إعلاناً واستلم الهدية' : 'Watch Ad & Claim'}
                 </motion.button>
               ) : (

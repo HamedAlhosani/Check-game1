@@ -235,7 +235,7 @@ function ConfigPanel({ mode, coins, onCreate }: {
         className="w-full py-3 rounded-xl font-arabic font-bold text-base transition-all"
         style={{
           background: (mode === 'bots' || canAfford) ? 'linear-gradient(135deg, #C9A84C, #8B6914)' : 'rgba(255,255,255,0.06)',
-          color: (mode === 'bots' || canAfford) ? '#0A0614' : 'rgba(255,255,255,0.25)',
+          color: (mode === 'bots' || canAfford) ? '#0E0905' : 'rgba(255,255,255,0.25)',
           boxShadow: (mode === 'bots' || canAfford) ? '0 0 20px rgba(201,168,76,0.3)' : 'none',
           cursor: (mode === 'bots' || canAfford) ? 'pointer' : 'not-allowed',
         }}>
@@ -259,12 +259,12 @@ function SearchingModal({ onCancel, lang }: { onCancel: () => void; lang: string
   const mm = String(Math.floor(secs / 60)).padStart(2, '0');
   const ss = String(secs % 60).padStart(2, '0');
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(4,8,16,0.88)', backdropFilter: 'blur(8px)' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(20,14,8,0.88)', backdropFilter: 'blur(8px)' }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center gap-6 rounded-3xl p-10 border"
-        style={{ background: 'rgba(10,6,20,0.97)', borderColor: 'rgba(201,168,76,0.2)', minWidth: 300 }}
+        style={{ background: 'rgba(20,16,10,0.97)', borderColor: 'rgba(201,168,76,0.2)', minWidth: 300 }}
       >
         {/* Pulsing rings */}
         <div className="relative flex items-center justify-center" style={{ width: 90, height: 90 }}>
@@ -310,12 +310,12 @@ function SearchingModal({ onCancel, lang }: { onCancel: () => void; lang: string
 // ── Bot loading overlay ───────────────────────────────────────────────────────
 function BotLoadingOverlay({ lang }: { lang: string }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(4,8,16,0.88)', backdropFilter: 'blur(8px)' }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'rgba(20,14,8,0.88)', backdropFilter: 'blur(8px)' }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center gap-6 rounded-3xl p-10 border"
-        style={{ background: 'rgba(10,6,20,0.97)', borderColor: 'rgba(201,168,76,0.2)', minWidth: 280 }}
+        style={{ background: 'rgba(20,16,10,0.97)', borderColor: 'rgba(201,168,76,0.2)', minWidth: 280 }}
       >
         <motion.div
           animate={{ rotate: 360 }}
@@ -465,11 +465,11 @@ export function HomePage() {
   const games = profile?.stats?.totalGames ?? 0;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #0D0820 0%, #0A0614 100%)', direction: dir, overflowX: 'hidden' }} className="pb-16 sm:pb-0">
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #1A1408 0%, #14100A 50%, #0E0905 100%)', direction: dir, overflowX: 'hidden' }} className="pb-16 sm:pb-0">
 
       {/* ── Top nav bar ── */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-4 py-2.5"
-        style={{ background: 'rgba(10,6,20,0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(201,168,76,0.12)' }}>
+        style={{ background: 'rgba(20,16,10,0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(201,168,76,0.12)' }}>
         <span className="font-display tracking-widest" style={{ fontSize: 18, color: '#C9A84C', textShadow: '0 0 16px rgba(201,168,76,0.4)' }}>CHECK</span>
         <div className="flex items-center gap-2">
           <LangToggle />
@@ -522,7 +522,7 @@ export function HomePage() {
               <div className="relative">
                 <AvatarCircle id={profile.avatarId} name={profile.displayName} size={52} frameId={(profile.equippedItems as any)?.avatarFrame}/>
                 <div className="absolute -bottom-0.5 -right-0.5 rounded-full px-1.5"
-                  style={{ background: '#C9A84C', fontSize: 9, color: '#0A0614', fontWeight: 800, lineHeight: '16px' }}>
+                  style={{ background: '#C9A84C', fontSize: 9, color: '#0E0905', fontWeight: 800, lineHeight: '16px' }}>
                   {level}
                 </div>
               </div>
@@ -606,7 +606,7 @@ export function HomePage() {
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex sm:hidden items-center border-t"
-        style={{ background: 'rgba(10,6,20,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)', height: 56 }}>
+        style={{ background: 'rgba(20,16,10,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)', height: 56 }}>
         {[
           { to: '/home', icon: '🏠', label: lang === 'ar' ? 'الرئيسية' : 'Home' },
           { to: '/store', icon: '🏪', label: lang === 'ar' ? 'المتجر' : 'Store' },

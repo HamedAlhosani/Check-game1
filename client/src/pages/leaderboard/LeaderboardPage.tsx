@@ -48,11 +48,11 @@ export function LeaderboardPage() {
   const meLabel = lang === 'ar' ? 'أنت' : 'You';
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #040810 0%, #070412 50%, #0A0614 100%)', direction: dir }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #14100A 0%, #1A1408 45%, #0E0905 100%)', direction: dir }}>
 
       {/* Nav */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 border-b border-white/5"
-        style={{ background: 'rgba(4,8,16,0.96)', backdropFilter: 'blur(14px)' }}>
+        style={{ background: 'rgba(20,14,8,0.96)', backdropFilter: 'blur(14px)' }}>
         <button onClick={() => navigate('/home')} className="flex items-center gap-2 transition-colors"
           style={{ color: 'rgba(245,230,200,0.45)' }}
           onMouseEnter={e => (e.currentTarget.style.color = '#C9A84C')}

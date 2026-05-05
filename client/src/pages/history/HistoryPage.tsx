@@ -54,7 +54,7 @@ export function HistoryPage() {
   const GAME_LABELS = lang === 'ar' ? GAME_LABELS_AR : GAME_LABELS_EN;
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #06040F 0%, #0A0614 100%)', direction: dir }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #1A1408 0%, #0E0905 100%)', direction: dir }}>
       {/* Nav */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 border-b border-white/5"
         style={{ background: 'rgba(6,4,15,0.95)', backdropFilter: 'blur(12px)' }}>

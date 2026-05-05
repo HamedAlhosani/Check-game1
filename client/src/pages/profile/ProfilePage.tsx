@@ -116,11 +116,11 @@ export function ProfilePage() {
     : (LEVEL_TITLES_EN[level - 1] || LEVEL_TITLES_EN[0]);
 
   return (
-    <div className="min-h-screen pb-16 sm:pb-0" style={{ background: 'linear-gradient(180deg, #060411 0%, #080516 50%, #0A0614 100%)', direction: dir }}>
+    <div className="min-h-screen pb-16 sm:pb-0" style={{ background: 'linear-gradient(180deg, #14100A 0%, #1A1408 45%, #0E0905 100%)', direction: dir }}>
 
       {/* Nav */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 border-b border-white/5"
-        style={{ background: 'rgba(6,4,17,0.96)', backdropFilter: 'blur(14px)' }}>
+        style={{ background: 'rgba(22,16,10,0.96)', backdropFilter: 'blur(14px)' }}>
         <button onClick={() => navigate('/home')} className="flex items-center gap-2 transition-colors"
           style={{ color: 'rgba(245,230,200,0.45)' }}
           onMouseEnter={e => (e.currentTarget.style.color = '#C9A84C')}
@@ -144,7 +144,7 @@ export function ProfilePage() {
         {/* Hero card */}
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
           className="rounded-2xl p-5 mb-5 flex flex-col sm:flex-row items-center gap-5 border"
-          style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(10,6,20,0.95) 100%)', borderColor: 'rgba(201,168,76,0.22)', boxShadow: '0 4px 40px rgba(0,0,0,0.5)' }}>
+          style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(20,16,10,0.95) 100%)', borderColor: 'rgba(201,168,76,0.22)', boxShadow: '0 4px 40px rgba(0,0,0,0.5)' }}>
 
           <div className="relative shrink-0" style={{ width: 96, height: 96 }}>
             <div className="w-24 h-24 rounded-full flex items-center justify-center text-5xl"
@@ -418,7 +418,7 @@ export function ProfilePage() {
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex sm:hidden items-center border-t"
-        style={{ background: 'rgba(10,6,20,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)', height: 56 }}>
+        style={{ background: 'rgba(20,16,10,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)', height: 56 }}>
         {[
           { to: '/home', icon: '🏠', label: lang === 'ar' ? 'الرئيسية' : 'Home' },
           { to: '/store', icon: '🏪', label: lang === 'ar' ? 'المتجر' : 'Store' },

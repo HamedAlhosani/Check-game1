@@ -410,7 +410,7 @@ function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwa
 }
 
 // ─── Compact seat for mobile strip (shows all opponents in one row) ─────────
-function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSelectForJ }: any) {
+function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSelectForJ, swapPos }: any) {
   const isTurn = player.isTurn;
   const isElim = player.isEliminated;
   const cardCount = player.cards.filter(Boolean).length;
@@ -436,10 +436,28 @@ function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSel
       <p className="font-arabic" style={{ fontSize: 5.5, color:'rgba(255,255,255,0.55)', lineHeight:1, maxWidth:'100%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{player.displayName}</p>
       <p style={{ fontSize: 8.5, fontWeight:700, lineHeight:1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.55)' }}>{player.cumulativeScore}</p>
       {/* 2×2 card indicators */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1.5, marginTop:1 }}>
-        {Array.from({ length: Math.min(cardCount, 4) }).map((_, j) => (
-          <div key={j} style={{ width:13, height:19, borderRadius:2, background:'#060B1F', border:`1px solid ${isTurn ? 'rgba(201,168,76,0.5)' : 'rgba(201,168,76,0.22)'}` }} />
-        ))}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1.5, marginTop:1, position: 'relative' }}>
+        {Array.from({ length: Math.min(cardCount, 4) }).map((_, j) => {
+          const isSwap = swapPos === j;
+          return (
+            <div key={j} className="relative" style={{
+              width:13, height:19, borderRadius:2,
+              background: isSwap ? 'rgba(224,64,48,0.25)' : '#060B1F',
+              border:`1.5px solid ${isSwap ? '#E04030' : isTurn ? 'rgba(201,168,76,0.5)' : 'rgba(201,168,76,0.22)'}`,
+              boxShadow: isSwap ? '0 0 6px rgba(224,64,48,0.7)' : 'none',
+              animation: isSwap ? 'pulse 1s ease-in-out infinite' : undefined,
+            }}>
+              {isSwap && (
+                <span className="absolute" style={{
+                  left: '50%', top: -10, transform: 'translateX(-50%)',
+                  fontSize: 8, fontWeight: 800, color: '#fff',
+                  background: '#E04030', borderRadius: 4, padding: '0 3px', lineHeight: 1.2,
+                  boxShadow: '0 0 6px rgba(224,64,48,0.7)', whiteSpace: 'nowrap',
+                }}>J</span>
+              )}
+            </div>
+          );
+        })}
       </div>
       {isSpecialJ && selectedPos !== null && !isElim && (
         <div className="absolute inset-0 rounded-lg" style={{ border: '1.5px solid rgba(80,200,120,0.7)', boxShadow: '0 0 8px rgba(80,200,120,0.4)', pointerEvents:'none' }} />
@@ -1042,7 +1060,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               <CompactSeat key={p.uid} player={p}
                 emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null}
                 isSpecialJ={isSpecialJ} selectedPos={selectedPos}
-                onSelectForJ={(uid: string) => setJTargetUid(uid)} />
+                onSelectForJ={(uid: string) => setJTargetUid(uid)}
+                swapPos={swapHighlights[p.uid]} />
             ))}
           </div>
         )}

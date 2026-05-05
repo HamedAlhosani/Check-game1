@@ -132,6 +132,73 @@ export async function purchaseItem(uid: string, itemId: string): Promise<{ ok: b
   return { ok: true, coins: p.coins };
 }
 
+export async function rechargeCoins(uid: string, packageId: string): Promise<{ ok: boolean; error?: string; coins?: number; granted?: number }> {
+  const PACKAGES: Record<string, number> = {
+    pkg_100:   100,
+    pkg_500:   550,
+    pkg_1000: 1150,
+    pkg_3000: 3500,
+    pkg_5000: 6000,
+    pkg_10000:13000,
+  };
+  const granted = PACKAGES[packageId];
+  if (!granted) return { ok: false, error: 'Unknown package' };
+  const p = users.get(uid);
+  if (!p) return { ok: false, error: 'User not found' };
+  p.coins = (p.coins || 0) + granted;
+  saveUsers();
+  return { ok: true, coins: p.coins, granted };
+}
+
+const DAILY_REWARDS = [
+  { coins: 100, frame: null },
+  { coins: 200, frame: null },
+  { coins: 300, frame: null },
+  { coins: 500, frame: 'frame_desert' },
+  { coins: 700, frame: null },
+  { coins: 1000, frame: null },
+  { coins: 2000, frame: 'frame_sultan' },
+];
+
+function dayKey(d = new Date()): string {
+  return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
+}
+
+export async function getDailyReward(uid: string): Promise<{ day: number; canClaim: boolean; lastClaimDay: string | null; rewards: typeof DAILY_REWARDS }> {
+  const p = users.get(uid) as any;
+  if (!p) return { day: 0, canClaim: false, lastClaimDay: null, rewards: DAILY_REWARDS };
+  const today = dayKey();
+  const lastClaimDay: string | null = p.dailyLastClaimDay || null;
+  const dayIdx: number = p.dailyDayIndex ?? 0;
+  const canClaim = lastClaimDay !== today;
+  return { day: dayIdx, canClaim, lastClaimDay, rewards: DAILY_REWARDS };
+}
+
+export async function claimDailyReward(uid: string): Promise<{ ok: boolean; error?: string; coins?: number; granted?: { coins: number; frame: string | null }; nextDay?: number }> {
+  const p = users.get(uid) as any;
+  if (!p) return { ok: false, error: 'User not found' };
+  const today = dayKey();
+  const yesterday = (() => { const d = new Date(); d.setUTCDate(d.getUTCDate() - 1); return dayKey(d); })();
+  if (p.dailyLastClaimDay === today) return { ok: false, error: 'Already claimed today' };
+
+  let dayIdx: number = p.dailyDayIndex ?? 0;
+  if (p.dailyLastClaimDay && p.dailyLastClaimDay !== yesterday) {
+    dayIdx = 0;
+  }
+  if (dayIdx >= DAILY_REWARDS.length) dayIdx = 0;
+  const reward = DAILY_REWARDS[dayIdx];
+
+  p.coins = (p.coins || 0) + reward.coins;
+  if (reward.frame) {
+    const owned: string[] = p.ownedItems || [];
+    if (!owned.includes(reward.frame)) p.ownedItems = [...owned, reward.frame];
+  }
+  p.dailyLastClaimDay = today;
+  p.dailyDayIndex = (dayIdx + 1) % DAILY_REWARDS.length;
+  saveUsers();
+  return { ok: true, coins: p.coins, granted: reward, nextDay: p.dailyDayIndex };
+}
+
 export async function equipItem(uid: string, itemId: string): Promise<{ ok: boolean; error?: string }> {
   const p = users.get(uid);
   if (!p) return { ok: false, error: 'User not found' };

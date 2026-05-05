@@ -13,6 +13,9 @@ import {
   getLeaderboard,
   purchaseItem,
   equipItem,
+  rechargeCoins,
+  getDailyReward,
+  claimDailyReward,
   sendFriendRequest,
   acceptFriendRequest,
   declineOrRemoveFriend,
@@ -207,6 +210,32 @@ app.patch('/api/store/equip', requireAuth, wrap(async (req, res) => {
   if (!result.ok) return res.status(400).json({ error: result.error });
   const profile = await getUserProfile(uid);
   res.json({ ok: true, profile });
+}));
+
+app.post('/api/store/recharge', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const { packageId } = req.body;
+  if (!packageId) return res.status(400).json({ error: 'Missing packageId' });
+  const result = await rechargeCoins(uid, packageId);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, coins: result.coins, granted: result.granted, profile });
+}));
+
+// ── Daily reward ───────────────────────────────────────────────────────────────
+
+app.get('/api/daily/status', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const status = await getDailyReward(uid);
+  res.json(status);
+}));
+
+app.post('/api/daily/claim', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const result = await claimDailyReward(uid);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, coins: result.coins, granted: result.granted, nextDay: result.nextDay, profile });
 }));
 
 // ── Friends ────────────────────────────────────────────────────────────────────

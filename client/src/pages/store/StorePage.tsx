@@ -99,9 +99,24 @@ export function StorePage() {
     }
   }
 
-  function handleRecharge() {
+  async function handleRecharge(packageId: string) {
+    if (busy) return;
+    setBusy(packageId);
     soundService.playClick();
-    addToast(t('store_recharge_soon'), 'info');
+    try {
+      const res = await apiClient.post<{ profile: UserProfile; granted: number }>('/api/store/recharge', { packageId });
+      if (res.profile) setProfile(res.profile);
+      soundService.playCoins();
+      addToast(
+        lang === 'ar' ? `أُضيفت ${res.granted.toLocaleString()} كوينز (وضع تجريبي)` : `Added ${res.granted.toLocaleString()} coins (test mode)`,
+        'success'
+      );
+    } catch (e: any) {
+      soundService.playError();
+      addToast(e?.message || 'error', 'error');
+    } finally {
+      setBusy(null);
+    }
   }
 
   function isCharEquipped(item: StoreItem) {
@@ -209,7 +224,7 @@ export function StorePage() {
 
         {/* Recharge tab */}
         {activeTab === 'recharge' && (
-          <RechargeTab onRecharge={handleRecharge} t={t} lang={lang} />
+          <RechargeTab onRecharge={handleRecharge} busy={busy} t={t} lang={lang} />
         )}
 
         {/* Earn coins hint */}
@@ -453,7 +468,7 @@ function ItemCard({
 
 // ── Recharge Tab ───────────────────────────────────────────────────────────────
 
-function RechargeTab({ onRecharge, t, lang }: { onRecharge: () => void; t: (k: any) => string; lang: string }) {
+function RechargeTab({ onRecharge, busy, t, lang }: { onRecharge: (packageId: string) => void; busy: string | null; t: (k: any) => string; lang: string }) {
   return (
     <div>
       <div className="text-center mb-8">
@@ -496,23 +511,29 @@ function RechargeTab({ onRecharge, t, lang }: { onRecharge: () => void; t: (k: a
             </div>
 
             <button
-              onClick={onRecharge}
-              className="w-full py-2.5 rounded-xl font-arabic font-bold text-sm transition-all"
+              onClick={() => onRecharge(pkg.id)}
+              disabled={!!busy}
+              className="w-full py-2.5 rounded-xl font-arabic font-bold text-sm transition-all disabled:opacity-50"
               style={pkg.popular
                 ? { background: 'linear-gradient(135deg, #C9A84C, #A07830)', color: '#04080F' }
                 : { background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.35)', color: '#C9A84C' }}
             >
-              {lang === 'ar' ? `${pkg.price} درهم إماراتي` : `${pkg.price} AED`}
+              {busy === pkg.id
+                ? (lang === 'ar' ? '...' : '...')
+                : (lang === 'ar' ? `شراء (تجريبي)` : `Buy (Test)`)}
             </button>
+            <p className="text-center text-sand/30 text-[10px] font-arabic mt-1">
+              {lang === 'ar' ? `${pkg.price} درهم · بدون دفع حقيقي` : `${pkg.price} AED · no real payment`}
+            </p>
           </div>
         ))}
       </div>
 
-      <div className="rounded-2xl p-4 border border-white/5 text-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
-        <p className="text-sand/30 text-xs font-arabic leading-relaxed">
+      <div className="rounded-2xl p-4 border border-gold/15 text-center" style={{ background: 'rgba(201,168,76,0.04)' }}>
+        <p className="text-gold/80 text-xs font-arabic leading-relaxed font-bold">
           {lang === 'ar'
-            ? '💳 الدفع آمن ومشفر · الكوينز تُضاف فوراً لحسابك · للاستفسار: support@check-game.ae'
-            : '💳 Secure & encrypted payment · Coins added instantly · Support: support@check-game.ae'}
+            ? 'وضع تجريبي · الكوينز تُضاف بدون دفع حقيقي'
+            : 'Test mode · Coins added without real payment'}
         </p>
       </div>
     </div>

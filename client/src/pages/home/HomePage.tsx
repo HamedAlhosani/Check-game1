@@ -11,8 +11,53 @@ import { JoinPrivateModal } from '../../components/lobby/JoinPrivateModal';
 import { soundService } from '../../services/sound.service';
 import { useT, useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
+import { DailyRewardModal } from '../../components/shared/DailyRewardModal';
+import { apiClient } from '../../services/api.service';
 
 type GameMode = 'online' | 'private' | 'bots';
+
+function DailyRewardBanner({ onOpen, lang }: { onOpen: () => void; lang: string }) {
+  const [canClaim, setCanClaim] = useState<boolean | null>(null);
+  useEffect(() => {
+    apiClient.get<{ canClaim: boolean }>('/api/daily/status').then(r => setCanClaim(r.canClaim)).catch(() => setCanClaim(false));
+  }, []);
+  const isAr = lang === 'ar';
+  return (
+    <motion.button
+      whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+      onClick={onOpen}
+      className="relative w-full mb-4 rounded-2xl overflow-hidden"
+      style={{
+        background: canClaim
+          ? 'linear-gradient(135deg, rgba(201,168,76,0.18), rgba(160,120,48,0.10))'
+          : 'rgba(255,255,255,0.04)',
+        border: `1px solid ${canClaim ? 'rgba(201,168,76,0.45)' : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: canClaim ? '0 0 24px rgba(201,168,76,0.18)' : 'none',
+        padding: '12px 16px',
+      }}>
+      {canClaim && (
+        <span className="absolute top-2 right-2 text-[10px] font-bold rounded-full px-1.5 py-0.5 animate-pulse"
+          style={{ background: '#E04030', color: '#fff' }}>
+          {isAr ? 'جديد' : 'NEW'}
+        </span>
+      )}
+      <div className="flex items-center gap-3">
+        <span className="text-3xl">{canClaim ? '🎁' : '📦'}</span>
+        <div className="flex-1 text-start">
+          <p className="font-arabic font-bold" style={{ fontSize: 14, color: canClaim ? '#E8C97A' : 'rgba(245,230,200,0.7)' }}>
+            {isAr ? 'الهدية اليومية' : 'Daily Reward'}
+          </p>
+          <p className="font-arabic" style={{ fontSize: 11, color: canClaim ? 'rgba(232,201,122,0.7)' : 'rgba(245,230,200,0.4)' }}>
+            {canClaim
+              ? (isAr ? 'استلم هديتك الآن — 7 أيام' : 'Claim your reward now — 7 days')
+              : (isAr ? 'تم الاستلام · ارجع غداً' : 'Claimed · come back tomorrow')}
+          </p>
+        </div>
+        <span className="text-gold/60 text-xl">›</span>
+      </div>
+    </motion.button>
+  );
+}
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
 const AV_COLORS = ['#C9A84C','#4A90D9','#50C878','#E74C3C','#9B59B6','#E67E22','#1ABC9C','#E91E63'];
@@ -21,13 +66,45 @@ const HOME_AVATAR_EMOJIS: Record<string, string> = {
   avatar_5: '👩', avatar_6: '👨', avatar_7: '🧑', avatar_8: '👵',
   avatar_9: '🕌', avatar_10: '🏙️', avatar_11: '💎', avatar_12: '🌟',
 };
-function AvatarCircle({ id, name, size = 40 }: { id: string; name: string; size?: number }) {
+const FRAME_COLORS: Record<string, { c1: string; c2: string; glow: string; legendary: boolean }> = {
+  frame_default: { c1: '#C9A84C', c2: '#8B6914', glow: 'rgba(201,168,76,0.35)', legendary: false },
+  frame_falcon:  { c1: '#E8A234', c2: '#7A3E10', glow: 'rgba(232,162,52,0.5)',  legendary: false },
+  frame_desert:  { c1: '#E8C97A', c2: '#A07028', glow: 'rgba(232,201,122,0.45)',legendary: false },
+  frame_pearl:   { c1: '#E0E6F0', c2: '#7A8898', glow: 'rgba(208,216,232,0.55)',legendary: false },
+  frame_palm:    { c1: '#7AE08A', c2: '#1A6028', glow: 'rgba(122,224,138,0.55)',legendary: false },
+  frame_sultan:  { c1: '#FFE062', c2: '#9A6B10', glow: 'rgba(255,224,98,0.7)',  legendary: true },
+  frame_diamond: { c1: '#7BE6FF', c2: '#1A6090', glow: 'rgba(123,230,255,0.7)', legendary: true },
+};
+function AvatarCircle({ id, name, size = 40, frameId }: { id: string; name: string; size?: number; frameId?: string }) {
   const i = parseInt(id?.replace(/\D/g, '') || '1', 10) - 1;
   const emoji = HOME_AVATAR_EMOJIS[id];
+  const fr = FRAME_COLORS[frameId || 'frame_default'] || FRAME_COLORS.frame_default;
+  const uid = `${frameId || 'frame_default'}_${size}`;
   return (
-    <div className="rounded-full flex items-center justify-center font-bold text-white shrink-0"
-      style={{ width: size, height: size, background: AV_COLORS[i % AV_COLORS.length], fontSize: emoji ? size * 0.52 : size * 0.36, border: '2px solid rgba(201,168,76,0.3)' }}>
-      {emoji || name?.slice(0, 2) || '?'}
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <div className="rounded-full flex items-center justify-center font-bold text-white"
+        style={{ width: size, height: size, background: AV_COLORS[i % AV_COLORS.length], fontSize: emoji ? size * 0.52 : size * 0.36 }}>
+        {emoji || name?.slice(0, 2) || '?'}
+      </div>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="absolute inset-0 pointer-events-none" style={{ overflow: 'visible' }}>
+        <defs>
+          <linearGradient id={`hfr-${uid}`} x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor={fr.c1}/>
+            <stop offset="50%" stopColor={fr.c2}/>
+            <stop offset="100%" stopColor={fr.c1}/>
+          </linearGradient>
+          <radialGradient id={`hfg-${uid}`} cx="50%" cy="50%" r="50%">
+            <stop offset="60%" stopColor="rgba(0,0,0,0)"/>
+            <stop offset="100%" stopColor={fr.glow}/>
+          </radialGradient>
+        </defs>
+        {fr.legendary && <circle cx={size/2} cy={size/2} r={size/2 - 1} fill={`url(#hfg-${uid})`}/>}
+        <circle cx={size/2} cy={size/2} r={size/2 - 1} fill="none" stroke={`url(#hfr-${uid})`} strokeWidth={Math.max(2, size * 0.045)} />
+        {fr.legendary && (
+          <circle cx={size/2} cy={size/2} r={size/2 - Math.max(3, size * 0.07)} fill="none" stroke={fr.c1} strokeWidth="0.6" opacity="0.55"
+            strokeDasharray={frameId === 'frame_diamond' ? '2 2' : undefined}/>
+        )}
+      </svg>
     </div>
   );
 }
@@ -97,7 +174,7 @@ function NumSlider({ label, value, min, max, onChange, unit = '' }: {
 }
 
 // ── Config panel ──────────────────────────────────────────────────────────────
-function ConfigPanel({ mode, coins, onCreate }: {
+function ConfigPanel({ mode, onCreate }: {
   mode: GameMode;
   coins: number;
   onCreate: (cfg: any) => void;
@@ -105,24 +182,19 @@ function ConfigPanel({ mode, coins, onCreate }: {
   const t = useT();
   const lang = useLang();
   const [playerCount, setPlayerCount] = useState(4);
-  const [betAmount, setBetAmount] = useState(0);
   const [botCount, setBotCount] = useState(3);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
 
-  const canBet = betAmount <= coins;
-
   const handleCreate = () => {
-    if (!canBet) return;
     soundService.playClick();
     if (mode === 'bots') {
       onCreate({ type: 'bots', botCount, difficulty, bet: 0 });
     } else {
-      onCreate({ type: mode, playerCount, bet: betAmount });
+      onCreate({ type: mode, playerCount, bet: 0 });
     }
   };
 
   const playersLabel = lang === 'ar' ? 'عدد اللاعبين' : 'Players';
-  const betLabel = lang === 'ar' ? 'رهان الكوينز' : 'Coin Bet';
   const botsLabel = lang === 'ar' ? 'عدد البوتات' : 'Number of Bots';
   const diffLabel = lang === 'ar' ? 'مستوى البوتات' : 'Bot Difficulty';
 
@@ -136,18 +208,7 @@ function ConfigPanel({ mode, coins, onCreate }: {
       style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,168,76,0.15)' }}
     >
       {mode !== 'bots' ? (
-        <>
-          <NumSlider label={playersLabel} value={playerCount} min={2} max={10} onChange={setPlayerCount}/>
-          <div className="flex flex-col gap-1.5">
-            <NumSlider label={betLabel} value={betAmount} min={0} max={500} onChange={setBetAmount} unit=" 🪙"/>
-            {!canBet && <p className="text-red-400 font-arabic text-xs">{lang === 'ar' ? 'كوينزك غير كافية!' : 'Not enough coins!'}</p>}
-            {betAmount > 0 && (
-              <p className="font-arabic text-xs" style={{ color: 'rgba(201,168,76,0.5)' }}>
-                {lang === 'ar' ? `الفائز يحصل على ${betAmount * playerCount} 🪙` : `Winner gets ${betAmount * playerCount} 🪙`}
-              </p>
-            )}
-          </div>
-        </>
+        <NumSlider label={playersLabel} value={playerCount} min={2} max={10} onChange={setPlayerCount}/>
       ) : (
         <>
           <NumSlider label={botsLabel} value={botCount} min={1} max={10} onChange={setBotCount}/>
@@ -173,19 +234,17 @@ function ConfigPanel({ mode, coins, onCreate }: {
       <motion.button
         whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
         onClick={handleCreate}
-        disabled={!canBet}
         className="w-full py-3 rounded-xl font-arabic font-bold text-base transition-all"
         style={{
-          background: canBet ? 'linear-gradient(135deg, #C9A84C, #8B6914)' : 'rgba(255,255,255,0.06)',
-          color: canBet ? '#0A0614' : 'rgba(255,255,255,0.25)',
-          boxShadow: canBet ? '0 0 20px rgba(201,168,76,0.3)' : 'none',
-          cursor: canBet ? 'pointer' : 'not-allowed',
+          background: 'linear-gradient(135deg, #C9A84C, #8B6914)',
+          color: '#0A0614',
+          boxShadow: '0 0 20px rgba(201,168,76,0.3)',
         }}>
         {mode === 'online'
-          ? (lang === 'ar' ? '🌍 ابحث عن لعبة' : '🌍 Find a Game')
+          ? (lang === 'ar' ? 'ابحث عن لعبة' : 'Find a Game')
           : mode === 'private'
-            ? (lang === 'ar' ? '🔒 إنشاء غرفة خاصة' : '🔒 Create Private Room')
-            : (lang === 'ar' ? '🤖 ابدأ اللعبة' : '🤖 Start Game')}
+            ? (lang === 'ar' ? 'إنشاء غرفة خاصة' : 'Create Private Room')
+            : (lang === 'ar' ? 'ابدأ اللعبة' : 'Start Game')}
       </motion.button>
     </motion.div>
   );
@@ -291,6 +350,7 @@ export function HomePage() {
   const [searching, setSearching] = useState(false);
   const [botLoading, setBotLoading] = useState(false);
   const [searchRoomId, setSearchRoomId] = useState<string | null>(null);
+  const [showDaily, setShowDaily] = useState(false);
   const pendingModeRef = useRef<GameMode>('bots');
 
   useEffect(() => {
@@ -443,7 +503,7 @@ export function HomePage() {
               🏆 {lang === 'ar' ? 'التصنيف' : 'Ranks'}
             </Link>
             <Link to="/profile">
-              {profile && <AvatarCircle id={profile.avatarId} name={profile.displayName} size={32}/>}
+              {profile && <AvatarCircle id={profile.avatarId} name={profile.displayName} size={32} frameId={(profile.equippedItems as any)?.avatarFrame}/>}
             </Link>
           </div>
         </div>
@@ -461,7 +521,7 @@ export function HomePage() {
           >
             <Link to="/profile" style={{ textDecoration: 'none' }}>
               <div className="relative">
-                <AvatarCircle id={profile.avatarId} name={profile.displayName} size={52}/>
+                <AvatarCircle id={profile.avatarId} name={profile.displayName} size={52} frameId={(profile.equippedItems as any)?.avatarFrame}/>
                 <div className="absolute -bottom-0.5 -right-0.5 rounded-full px-1.5"
                   style={{ background: '#C9A84C', fontSize: 9, color: '#0A0614', fontWeight: 800, lineHeight: '16px' }}>
                   {level}
@@ -503,6 +563,9 @@ export function HomePage() {
               <p className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.3)' }}>{t('home_subtitle')}</p>
             </div>
 
+            {/* ── Daily reward banner ── */}
+            <DailyRewardBanner onOpen={() => setShowDaily(true)} lang={lang}/>
+
             {/* ── Mode cards ── */}
             <div className="grid grid-cols-3 gap-3 mb-4">
               <ModeCard icon="🌍" title={t('mode_online')} sub={t('mode_online_desc')}
@@ -537,6 +600,7 @@ export function HomePage() {
       </div>
 
       <JoinPrivateModal open={showJoin} onClose={() => setShowJoin(false)} onBeforeJoin={() => { pendingModeRef.current = 'private'; }}/>
+      <DailyRewardModal open={showDaily} onClose={() => setShowDaily(false)}/>
 
       {searching && <SearchingModal onCancel={handleCancelSearch} lang={lang}/>}
       {botLoading && <BotLoadingOverlay lang={lang}/>}

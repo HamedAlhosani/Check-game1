@@ -28,7 +28,9 @@ export function LoginPage() {
               <span className="text-4xl select-none">🂡</span>
             </div>
             <h1 className="font-display text-4xl font-bold tracking-widest shimmer-text mb-1">CHECK</h1>
-            <p className="text-sand/50 font-arabic text-sm tracking-wide">لعبة الأوراق الإماراتية</p>
+            <p className="text-sand/50 font-arabic text-sm tracking-wide">
+              {lang === 'ar' ? 'لعبة الأوراق الإماراتية' : 'The Emirati Card Game'}
+            </p>
           </div>
 
           {/* Card */}
@@ -36,7 +38,7 @@ export function LoginPage() {
             <div className="h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent"/>
             <div className="p-8">
               <h2 className="font-arabic text-lg font-bold text-sand-light mb-6 text-center">
-                أهلاً بعودتك
+                {lang === 'ar' ? 'أهلاً بعودتك' : 'Welcome Back'}
               </h2>
               <LoginForm />
             </div>

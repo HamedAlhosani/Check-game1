@@ -902,7 +902,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
         {/* ══ MOBILE: compact opponent strip ══ */}
         {isMobile && others.length > 0 && (
-          <div className="shrink-0 flex items-stretch gap-1" style={{ padding: '3px 4px 4px', minHeight: 88, maxHeight: 96 }}>
+          <div className="shrink-0 flex items-stretch gap-1" style={{ padding: '3px 4px 4px', minHeight: 88, maxHeight: 96, position: 'relative', zIndex: 20 }}>
             {others.map(p => (
               <CompactSeat key={p.uid} player={p}
                 emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null}
@@ -924,7 +924,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         )}
 
         {/* ══ MIDDLE ROW: [left] table [right] ══ */}
-        <div className="flex-1 flex items-center gap-1.5 min-h-0">
+        <div className="flex-1 flex items-center gap-1.5 min-h-0" style={{ position: 'relative', zIndex: 1 }}>
 
           {/* LEFT players (desktop only) */}
           {!isMobile && left.length > 0 && (

@@ -9,6 +9,7 @@ import { apiClient } from '../../services/api.service';
 import { socketService } from '../../services/socket.service';
 import { UserProfile } from '@check-game/shared';
 import { GoogleLoginButton } from './GoogleLoginButton';
+import { useLang } from '../../i18n/useT';
 
 export function RegisterForm() {
   const [name, setName] = useState('');
@@ -19,12 +20,20 @@ export function RegisterForm() {
   const { addToast } = useUiStore();
   const { setUser, setProfile } = useAuthStore();
   const navigate = useNavigate();
+  const lang = useLang();
+  const isAr = lang === 'ar';
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim().length < 2) { addToast('الاسم قصير جداً', 'error'); return; }
-    if (password.length < 8) { addToast('كلمة المرور يجب أن تكون 8 أحرف على الأقل', 'error'); return; }
-    if (password !== confirm) { addToast('كلمتا المرور غير متطابقتين', 'error'); return; }
+    if (name.trim().length < 2) {
+      addToast(isAr ? 'الاسم قصير جداً' : 'Name is too short', 'error'); return;
+    }
+    if (password.length < 8) {
+      addToast(isAr ? 'كلمة المرور يجب أن تكون 8 أحرف على الأقل' : 'Password must be at least 8 characters', 'error'); return;
+    }
+    if (password !== confirm) {
+      addToast(isAr ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match', 'error'); return;
+    }
 
     setLoading(true);
     try {
@@ -37,11 +46,11 @@ export function RegisterForm() {
     } catch (err: any) {
       const msg = err.message || '';
       if (msg.includes('use') || msg.includes('409') || msg.includes('already')) {
-        addToast('البريد الإلكتروني مستخدم بالفعل', 'error');
+        addToast(isAr ? 'البريد الإلكتروني مستخدم بالفعل' : 'Email already in use', 'error');
       } else if (msg.includes('fetch') || msg.includes('network') || msg.toLowerCase().includes('failed to fetch')) {
-        addToast('تعذر الاتصال بالخادم، تحقق من اتصالك بالإنترنت', 'error');
+        addToast(isAr ? 'تعذر الاتصال بالخادم' : 'Connection failed', 'error');
       } else {
-        addToast('حدث خطأ في إنشاء الحساب: ' + (msg || 'خطأ غير معروف'), 'error');
+        addToast(isAr ? 'حدث خطأ في إنشاء الحساب' : 'Registration error', 'error');
       }
     } finally {
       setLoading(false);
@@ -51,14 +60,14 @@ export function RegisterForm() {
   return (
     <form onSubmit={handleRegister} className="space-y-4">
       <Input
-        label="الاسم"
+        label={isAr ? 'الاسم' : 'Name'}
         value={name}
         onChange={e => setName(e.target.value)}
-        placeholder="اسمك في اللعبة"
+        placeholder={isAr ? 'اسمك في اللعبة' : 'Your game name'}
         required
       />
       <Input
-        label="البريد الإلكتروني"
+        label={isAr ? 'البريد الإلكتروني' : 'Email'}
         type="email"
         value={email}
         onChange={e => setEmail(e.target.value)}
@@ -67,34 +76,34 @@ export function RegisterForm() {
         dir="ltr"
       />
       <Input
-        label="كلمة المرور"
+        label={isAr ? 'كلمة المرور' : 'Password'}
         type="password"
         value={password}
         onChange={e => setPassword(e.target.value)}
-        placeholder="8 أحرف على الأقل"
+        placeholder={isAr ? '8 أحرف على الأقل' : 'At least 8 characters'}
         required
         dir="ltr"
       />
       <Input
-        label="تأكيد كلمة المرور"
+        label={isAr ? 'تأكيد كلمة المرور' : 'Confirm Password'}
         type="password"
         value={confirm}
         onChange={e => setConfirm(e.target.value)}
-        placeholder="أعد كتابة كلمة المرور"
+        placeholder={isAr ? 'أعد كتابة كلمة المرور' : 'Re-enter password'}
         required
         dir="ltr"
       />
 
       <Button type="submit" loading={loading} className="w-full mt-2">
-        إنشاء الحساب
+        {isAr ? 'إنشاء الحساب' : 'Create Account'}
       </Button>
 
       <GoogleLoginButton />
 
       <p className="text-center text-sand/60 text-sm font-arabic pt-1">
-        لديك حساب؟{' '}
+        {isAr ? 'لديك حساب؟' : 'Already have an account?'}{' '}
         <Link to="/login" className="text-gold hover:text-gold-light transition-colors">
-          تسجيل الدخول
+          {isAr ? 'تسجيل الدخول' : 'Login'}
         </Link>
       </p>
     </form>

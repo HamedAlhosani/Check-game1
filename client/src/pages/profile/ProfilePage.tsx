@@ -41,7 +41,7 @@ export function ProfilePage() {
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
   const navigate = useNavigate();
-  const { profile, setProfile } = useAuthStore();
+  const { profile, setProfile, setUser } = useAuthStore();
   const { addToast } = useUiStore();
 
   const [tab, setTab] = useState<Tab>('info');
@@ -55,6 +55,7 @@ export function ProfilePage() {
 
   const handleLogout = async () => {
     await logout();
+    setUser(null);
     setProfile(null);
     navigate('/', { replace: true });
   };

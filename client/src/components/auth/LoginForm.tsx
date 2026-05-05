@@ -9,6 +9,7 @@ import { apiClient } from '../../services/api.service';
 import { socketService } from '../../services/socket.service';
 import { UserProfile } from '@check-game/shared';
 import { GoogleLoginButton } from './GoogleLoginButton';
+import { useLang } from '../../i18n/useT';
 
 export function LoginForm() {
   const [email, setEmail] = useState('');
@@ -17,6 +18,8 @@ export function LoginForm() {
   const { addToast } = useUiStore();
   const { setUser, setProfile } = useAuthStore();
   const navigate = useNavigate();
+  const lang = useLang();
+  const isAr = lang === 'ar';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,13 +34,13 @@ export function LoginForm() {
     } catch (err: any) {
       const msg = err.message || '';
       if (msg.includes('password') || msg.includes('Wrong')) {
-        addToast('كلمة المرور غير صحيحة', 'error');
+        addToast(isAr ? 'كلمة المرور غير صحيحة' : 'Incorrect password', 'error');
       } else if (msg.includes('not found') || msg.includes('Email')) {
-        addToast('البريد الإلكتروني غير موجود', 'error');
+        addToast(isAr ? 'البريد الإلكتروني غير موجود' : 'Email not found', 'error');
       } else if (msg.toLowerCase().includes('failed to fetch') || msg.includes('network')) {
-        addToast('تعذر الاتصال بالخادم', 'error');
+        addToast(isAr ? 'تعذر الاتصال بالخادم' : 'Connection failed', 'error');
       } else {
-        addToast('خطأ في تسجيل الدخول: ' + (msg || 'خطأ غير معروف'), 'error');
+        addToast(isAr ? 'خطأ في تسجيل الدخول' : 'Login error', 'error');
       }
     } finally {
       setLoading(false);
@@ -47,7 +50,7 @@ export function LoginForm() {
   return (
     <form onSubmit={handleLogin} className="space-y-4">
       <Input
-        label="البريد الإلكتروني"
+        label={isAr ? 'البريد الإلكتروني' : 'Email'}
         type="email"
         value={email}
         onChange={e => setEmail(e.target.value)}
@@ -56,7 +59,7 @@ export function LoginForm() {
         dir="ltr"
       />
       <Input
-        label="كلمة المرور"
+        label={isAr ? 'كلمة المرور' : 'Password'}
         type="password"
         value={password}
         onChange={e => setPassword(e.target.value)}
@@ -66,15 +69,15 @@ export function LoginForm() {
       />
 
       <Button type="submit" loading={loading} className="w-full">
-        تسجيل الدخول
+        {isAr ? 'تسجيل الدخول' : 'Login'}
       </Button>
 
       <GoogleLoginButton />
 
       <p className="text-center text-sand/60 text-sm font-arabic pt-1">
-        ليس لديك حساب؟{' '}
+        {isAr ? 'ليس لديك حساب؟' : "Don't have an account?"}{' '}
         <Link to="/register" className="text-gold hover:text-gold-light transition-colors">
-          إنشاء حساب
+          {isAr ? 'إنشاء حساب' : 'Register'}
         </Link>
       </p>
     </form>

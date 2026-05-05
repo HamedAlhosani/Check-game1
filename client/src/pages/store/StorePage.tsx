@@ -198,6 +198,7 @@ export function StorePage() {
                       onEquip={handleEquip}
                       onPreview={setPreview}
                       t={t}
+                      lang={lang}
                     />
                   );
                 })}
@@ -376,7 +377,7 @@ function CharacterGrid({
 // ── Regular Item Card ──────────────────────────────────────────────────────────
 
 function ItemCard({
-  item, isOwned, isEquipped, isBusy, coins, onBuy, onEquip, onPreview, t,
+  item, isOwned, isEquipped, isBusy, coins, onBuy, onEquip, onPreview, t, lang,
 }: {
   item: StoreItem;
   isOwned: boolean;
@@ -387,7 +388,9 @@ function ItemCard({
   onEquip: (item: StoreItem) => void;
   onPreview: (item: StoreItem) => void;
   t: (k: any) => string;
+  lang: string;
 }) {
+  const isVisual = item.category === 'cardBack' || item.category === 'boardTheme';
   return (
     <div
       onClick={() => onPreview(item)}
@@ -395,12 +398,17 @@ function ItemCard({
         ${isEquipped ? 'border-gold shadow-md' : 'border-gold/15 hover:border-gold/35'}`}
       style={{ background: 'rgba(10,18,32,0.75)' }}
     >
-      <div className={`h-28 flex items-center justify-center ${item.preview.bg} border-b ${item.preview.border}`}>
+      <div
+        className={`h-28 flex items-center justify-center border-b ${isVisual ? '' : item.preview.bg} ${item.preview.border}`}
+        style={isVisual ? { background: 'linear-gradient(160deg, #04080F 0%, #060C1E 100%)' } : undefined}
+      >
         <SkinPreviewIcon item={item} size="lg" />
       </div>
 
       <div className="p-3">
-        <p className="font-arabic text-sand-light text-sm font-semibold truncate">{item.nameAr}</p>
+        <p className="font-arabic text-sand-light text-sm font-semibold truncate">
+          {lang === 'ar' ? item.nameAr : ((item as any).nameEn || item.nameAr)}
+        </p>
         <p className={`text-xs font-arabic mt-0.5 ${RARITY_COLOR[item.rarity]}`}>
           {RARITY_LABEL[item.rarity]}
         </p>
@@ -511,6 +519,116 @@ function RechargeTab({ onRecharge, t, lang }: { onRecharge: () => void; t: (k: a
   );
 }
 
+// ── Card back theme colors ────────────────────────────────────────────────────
+const CARD_BACK_STORE: Record<string, { bg1: string; bg2: string; accent: string }> = {
+  card_classic: { bg1: '#080D22', bg2: '#040918', accent: '#C9A84C' },
+  card_arabian: { bg1: '#0D0A2A', bg2: '#06040F', accent: '#6B8AFF' },
+  card_desert:  { bg1: '#2A1208', bg2: '#180800', accent: '#E8903A' },
+  card_pearl:   { bg1: '#1C1E24', bg2: '#0E1018', accent: '#D0D8E8' },
+  card_uae:     { bg1: '#061A0C', bg2: '#020C05', accent: '#50C878' },
+  card_galaxy:  { bg1: '#120828', bg2: '#06021A', accent: '#A06EFF' },
+};
+
+const BOARD_STORE: Record<string, { c1: string; c2: string; c3: string; rim1: string; rim2: string }> = {
+  board_classic: { c1: '#17432E', c2: '#0D2D1F', c3: '#071810', rim1: '#1A2A3A', rim2: '#243548' },
+  board_desert:  { c1: '#6B3A10', c2: '#4A2508', c3: '#2A1003', rim1: '#5A3010', rim2: '#7A4518' },
+  board_oasis:   { c1: '#1A5A30', c2: '#104020', c3: '#082010', rim1: '#1A4028', rim2: '#286038' },
+  board_night:   { c1: '#0A1840', c2: '#061028', c3: '#020810', rim1: '#102040', rim2: '#183058' },
+  board_royal:   { c1: '#2A0A50', c2: '#1A0638', c3: '#0A0220', rim1: '#2A1050', rim2: '#3A1868' },
+};
+
+function CardBackMini({ id, size = 'lg' }: { id: string; size?: 'md' | 'lg' }) {
+  const t = CARD_BACK_STORE[id] || CARD_BACK_STORE.card_classic;
+  const uid = `store_${id}`;
+  const w = size === 'lg' ? 56 : 36;
+  const h = size === 'lg' ? 80 : 52;
+  return (
+    <svg width={w} height={h} viewBox="0 0 56 80" xmlns="http://www.w3.org/2000/svg" style={{ borderRadius: 5, display: 'block' }}>
+      <defs>
+        <linearGradient id={`s-bg-${uid}`} x1="0" y1="0" x2="0.2" y2="1">
+          <stop offset="0%" stopColor={t.bg1}/>
+          <stop offset="100%" stopColor={t.bg2}/>
+        </linearGradient>
+        <radialGradient id={`s-glow-${uid}`} cx="50%" cy="45%" r="55%">
+          <stop offset="0%" stopColor={t.accent} stopOpacity="0.08"/>
+          <stop offset="100%" stopColor="rgba(0,0,0,0)"/>
+        </radialGradient>
+      </defs>
+      <rect width="56" height="80" fill={`url(#s-bg-${uid})`} rx="4"/>
+      <rect width="56" height="80" fill={`url(#s-glow-${uid})`} rx="4"/>
+      {/* Outer border */}
+      <rect x="2" y="2" width="52" height="76" rx="3" fill="none" stroke={t.accent} strokeWidth="0.8" opacity="0.7"/>
+      {/* Inner border */}
+      <rect x="4" y="4" width="48" height="72" rx="2" fill="none" stroke={t.accent} strokeWidth="0.35" opacity="0.3"/>
+      {/* Crescent */}
+      <path d="M28,10 A5,5 0 1,1 32,12.5 A4,4 0 1,0 28,10 Z" fill={t.accent} opacity="0.45"/>
+      {/* 8-pt star center */}
+      <g transform="translate(28,40)">
+        <path d="M0,-9 L2,-2 L9,0 L2,2 L0,9 L-2,2 L-9,0 L-2,-2 Z" fill="none" stroke={t.accent} strokeWidth="0.7" opacity="0.65"/>
+        <path d="M0,-9 L2,-2 L9,0 L2,2 L0,9 L-2,2 L-9,0 L-2,-2 Z" fill="none" stroke={t.accent} strokeWidth="0.5" opacity="0.3" transform="rotate(45)"/>
+        <path d="M0,-4 L1,-1 L4,0 L1,1 L0,4 L-1,1 L-4,0 L-1,-1 Z" fill={t.accent} fillOpacity="0.25" stroke={t.accent} strokeWidth="0.5" opacity="0.7"/>
+        <circle r="1.2" fill={t.accent} opacity="0.55"/>
+      </g>
+      {/* CHECK text */}
+      <text x="28" y="56" textAnchor="middle" fill={t.accent} fontSize="4.5" fontFamily="Georgia, serif" fontWeight="bold" letterSpacing="2.5" opacity="0.7">CHECK</text>
+      {/* Divider */}
+      <line x1="9" y1="59" x2="47" y2="59" stroke={t.accent} strokeWidth="0.3" opacity="0.2"/>
+      {/* Burj mini */}
+      <g fill={t.accent} opacity="0.18" transform="translate(28,79)">
+        <rect x="-0.4" y="-20" width="0.8" height="5"/>
+        <rect x="-1" y="-15" width="2" height="3"/>
+        <rect x="-1.7" y="-12" width="3.4" height="2.5"/>
+        <rect x="-2.5" y="-9.5" width="5" height="2"/>
+        <rect x="-3.5" y="-7.5" width="7" height="7.5"/>
+      </g>
+      {/* Corner ornaments */}
+      <path d="M5,5 L9,5 M5,5 L5,9" stroke={t.accent} strokeWidth="0.6" opacity="0.5" strokeLinecap="round"/>
+      <path d="M51,5 L47,5 M51,5 L51,9" stroke={t.accent} strokeWidth="0.6" opacity="0.5" strokeLinecap="round"/>
+      <path d="M5,75 L9,75 M5,75 L5,71" stroke={t.accent} strokeWidth="0.6" opacity="0.5" strokeLinecap="round"/>
+      <path d="M51,75 L47,75 M51,75 L51,71" stroke={t.accent} strokeWidth="0.6" opacity="0.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
+function BoardThemeMini({ id, size = 'lg' }: { id: string; size?: 'md' | 'lg' }) {
+  const th = BOARD_STORE[id] || BOARD_STORE.board_classic;
+  const uid = `store_board_${id}`;
+  const r = size === 'lg' ? 36 : 26;
+  const rim = size === 'lg' ? 8 : 6;
+  const cx = r + rim + 2;
+  const viewSize = cx * 2;
+  return (
+    <svg width={viewSize} height={viewSize} viewBox={`0 0 ${viewSize} ${viewSize}`} xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+      <defs>
+        <radialGradient id={`sb-felt-${uid}`} cx="44%" cy="30%" r="70%">
+          <stop offset="0%" stopColor={th.c1}/>
+          <stop offset="55%" stopColor={th.c2}/>
+          <stop offset="100%" stopColor={th.c3}/>
+        </radialGradient>
+        <radialGradient id={`sb-rim-${uid}`} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor={th.rim2}/>
+          <stop offset="100%" stopColor={th.rim1}/>
+        </radialGradient>
+      </defs>
+      {/* Rim */}
+      <circle cx={cx} cy={cx} r={r + rim} fill={`url(#sb-rim-${uid})`}/>
+      {/* Rim ring highlight */}
+      <circle cx={cx} cy={cx} r={r + rim} fill="none" stroke="rgba(201,168,76,0.18)" strokeWidth="0.8"/>
+      {/* Felt */}
+      <circle cx={cx} cy={cx} r={r} fill={`url(#sb-felt-${uid})`}/>
+      {/* Felt inner sheen */}
+      <circle cx={cx - r*0.12} cy={cx - r*0.18} r={r * 0.55} fill="rgba(255,255,255,0.025)"/>
+      {/* Inner dashed ring */}
+      <circle cx={cx} cy={cx} r={r * 0.78} fill="none" stroke="rgba(201,168,76,0.13)" strokeWidth="0.5" strokeDasharray="2 2"/>
+      {/* CHECK watermark */}
+      <text x={cx} y={cx + 2.5} textAnchor="middle" fill="rgba(201,168,76,0.12)" fontSize={size === 'lg' ? 7 : 5} fontFamily="Georgia, serif" fontWeight="bold" letterSpacing="2">CHECK</text>
+      {/* Deck dot */}
+      <circle cx={cx - 7} cy={cx} r="3.5" fill="rgba(0,0,0,0.35)" stroke="rgba(201,168,76,0.25)" strokeWidth="0.6"/>
+      <circle cx={cx + 7} cy={cx} r="3.5" fill="rgba(255,255,255,0.08)" stroke="rgba(201,168,76,0.18)" strokeWidth="0.6"/>
+    </svg>
+  );
+}
+
 // ── Skin preview icon ──────────────────────────────────────────────────────────
 
 function SkinPreviewIcon({ item, size = 'md' }: { item: StoreItem; size?: 'md' | 'lg' }) {
@@ -524,11 +642,10 @@ function SkinPreviewIcon({ item, size = 'md' }: { item: StoreItem; size?: 'md' |
     );
   }
   if (item.category === 'cardBack') {
-    return (
-      <div className={`${size === 'lg' ? 'w-12 h-16' : 'w-8 h-12'} rounded-lg ${item.preview.bg} border-2 ${item.preview.border} flex items-center justify-center`}>
-        <span className={`text-xs ${item.preview.text} font-bold`}>♠</span>
-      </div>
-    );
+    return <CardBackMini id={item.id} size={size} />;
+  }
+  if (item.category === 'boardTheme') {
+    return <BoardThemeMini id={item.id} size={size} />;
   }
   if (item.category === 'diceSkin') {
     return (

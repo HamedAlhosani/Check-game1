@@ -30,7 +30,41 @@ function TimerBar({ endAt, active, maxMs = 30000, w = 48 }: { endAt: number | nu
   );
 }
 
-// ─── Turn Timer Badge — big, with seconds + bar ──────────────────────────────
+// ─── Swap arrow badge (shown above a card after a J swap) ───────────────────
+function SwapArrowBadge() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6, scale: 0.6 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.6 }}
+      className="absolute pointer-events-none flex flex-col items-center"
+      style={{ left: '50%', top: -22, transform: 'translateX(-50%)', zIndex: 30 }}
+    >
+      <div className="rounded-full px-1.5 py-0.5 font-arabic font-bold animate-pulse"
+        style={{ background: '#E04030', color: '#fff', fontSize: 9, lineHeight: 1.2, boxShadow: '0 0 8px rgba(224,64,48,0.7)' }}>
+        بدّل J
+      </div>
+      <div style={{
+        width: 0, height: 0,
+        borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
+        borderTop: '6px solid #E04030', marginTop: -1,
+      }}/>
+    </motion.div>
+  );
+}
+
+// ─── Mini badge (round / lap) ────────────────────────────────────────────────
+function MiniBadge({ label, value, valueColor, labelColor, borderColor }: { label: string; value: number; valueColor: string; labelColor?: string; borderColor: string }) {
+  return (
+    <div className="rounded-lg border flex flex-col items-center px-2 py-0.5"
+      style={{ background: 'rgba(20,14,8,.92)', backdropFilter: 'blur(8px)', minWidth: 34, borderColor }}>
+      <span className="font-arabic font-bold" style={{ fontSize: 8, lineHeight: 1, color: labelColor || 'rgba(201,168,76,0.55)' }}>{label}</span>
+      <span className="font-bold" style={{ fontSize: 13, lineHeight: 1.1, color: valueColor }}>{value}</span>
+    </div>
+  );
+}
+
+// ─── Turn Timer Badge — compact, with seconds + bar ──────────────────────────
 function TurnTimerBadge({ endAt, maxMs = 30000 }: { endAt: number | null; maxMs?: number }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -44,18 +78,18 @@ function TurnTimerBadge({ endAt, maxMs = 30000 }: { endAt: number | null; maxMs?
   const color = pct > 50 ? '#7AE08A' : pct > 25 ? '#E8C97A' : '#E04030';
   const borderColor = pct > 50 ? 'rgba(80,200,120,0.5)' : pct > 25 ? 'rgba(201,168,76,0.4)' : 'rgba(224,64,48,0.55)';
   return (
-    <div className="rounded-xl border flex flex-col items-center px-2.5 py-1"
+    <div className="rounded-lg border flex flex-col items-center px-2 py-0.5"
       style={{
         background: 'rgba(20,14,8,.92)',
         backdropFilter: 'blur(8px)',
-        minWidth: 56,
+        minWidth: 42,
         borderColor,
-        boxShadow: pct <= 25 ? '0 0 12px rgba(224,64,48,0.4)' : 'none',
+        boxShadow: pct <= 25 ? '0 0 10px rgba(224,64,48,0.35)' : 'none',
       }}>
-      <span className="font-arabic font-bold" style={{ fontSize: 9, lineHeight: 1, color: 'rgba(245,230,200,0.55)' }}>الوقت</span>
-      <span className="font-bold font-mono" style={{ fontSize: 18, lineHeight: 1.1, color }}>{secs}</span>
-      <div className="w-full mt-0.5" style={{ height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.10)' }}>
-        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: color, transition: 'width 0.2s linear' }}/>
+      <span className="font-arabic font-bold" style={{ fontSize: 8, lineHeight: 1, color: 'rgba(245,230,200,0.55)' }}>الوقت</span>
+      <span className="font-bold font-mono" style={{ fontSize: 13, lineHeight: 1.1, color }}>{secs}</span>
+      <div className="w-full" style={{ height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.10)', marginTop: 1 }}>
+        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 1, background: color, transition: 'width 0.2s linear' }}/>
       </div>
     </div>
   );
@@ -310,7 +344,7 @@ function cardGridCols(count: number) {
 }
 
 // ─── Shared cards row for any seat ───────────────────────────────────────────
-function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = false }: any) {
+function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = false, swapPos }: any) {
   const nonNull = player.cards.filter(Boolean).length;
   return (
     <div className="relative">
@@ -322,10 +356,12 @@ function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = fals
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.7 }}
               transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+              className="relative"
             >
               <PlayingCard card={c} faceDown={!c?.isRevealed} small={!mini} mini={mini}
                 highlight={isSpecialJ ? 'burn' : 'none'}
                 onClick={isSpecialJ && selectedPos !== null ? () => onSpecialSwap(player.uid, i) : undefined} />
+              {swapPos === i && <SwapArrowBadge />}
             </motion.div>
           ) : null)}
         </AnimatePresence>
@@ -353,7 +389,7 @@ function CardCountDots({ count, eliminated }: { count: number; eliminated: boole
 }
 
 // ─── Unified opponent seat (top / left / right / mobile) ─────────────────────
-function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, cfg }: any) {
+function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, cfg, swapPos }: any) {
   const mobileCompact = cfg.w <= 120;
   return (
     <div className="relative flex flex-col items-center shrink-0" style={{ width: cfg.w, zIndex: 20, gap: mobileCompact ? 2 : 4 }}>
@@ -367,7 +403,7 @@ function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwa
       {mobileCompact ? (
         <CardCountDots count={player.cards.filter(Boolean).length} eliminated={player.isEliminated} />
       ) : (
-        <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} mini={cfg.mini} />
+        <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} mini={cfg.mini} swapPos={swapPos} />
       )}
     </div>
   );
@@ -413,7 +449,7 @@ function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSel
 }
 
 // ─── Mini seat for circular orbit (2×2 real cards) ───────────────────────────
-function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob }: any) {
+function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob, swapPos }: any) {
   const isTurn = player.isTurn;
   const isElim = player.isEliminated;
   const w = isMob ? 82 : 104;
@@ -461,8 +497,11 @@ function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatB
         padding: '2px 3px 3px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2,
       }}>
         {player.cards.map((c: any, i: number) => c !== null ? (
-          <PlayingCard key={i} card={c} faceDown={!c?.isRevealed} xmini
-            highlight={isSpecialJ && selectedPos !== null ? 'burn' : 'none'} />
+          <div key={i} className="relative">
+            <PlayingCard card={c} faceDown={!c?.isRevealed} xmini
+              highlight={isSpecialJ && selectedPos !== null ? 'burn' : 'none'} />
+            {swapPos === i && <SwapArrowBadge />}
+          </div>
         ) : null)}
         {isElim && (
           <div style={{ position: 'absolute', inset: 0, borderRadius: '0 0 8px 8px', background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -475,7 +514,7 @@ function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatB
 }
 
 // ─── Opponents orbiting the table ─────────────────────────────────────────────
-function CircularOpponents({ opponents, tableRadius, isMobile, gameState, isSpecialJ, selectedPos, onSpecialSwap, emojiMap, chatBubbleMap }: any) {
+function CircularOpponents({ opponents, tableRadius, isMobile, gameState, isSpecialJ, selectedPos, onSpecialSwap, emojiMap, chatBubbleMap, swapHighlights = {} }: any) {
   const n = opponents.length;
   if (n === 0) return null;
   // Arc from -140° to +140° (avoiding bottom where player sits)
@@ -491,7 +530,8 @@ function CircularOpponents({ opponents, tableRadius, isMobile, gameState, isSpec
         return (
           <div key={p.uid} style={{ position: 'absolute', left: '50%', top: '50%', transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`, zIndex: 20 }}>
             <MiniSeat player={p} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap}
-              emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} isMob={isMobile} />
+              emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} isMob={isMobile}
+              swapPos={swapHighlights[p.uid]} />
           </div>
         );
       })}
@@ -590,7 +630,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [chatBubbleMap, setChatBubbleMap] = useState<Record<string, { text: string; key: number } | null>>({});
   const [unreadCount, setUnreadCount] = useState(0);
   const [jTargetUid, setJTargetUid] = useState<string | null>(null);
-  const [swapHighlight, setSwapHighlight] = useState<{ pos: number; byUid: string } | null>(null);
+  // Map of uid → position highlighted after a J swap. Tracks both sides.
+  const [swapHighlights, setSwapHighlights] = useState<Record<string, number>>({});
   const [showSettings, setShowSettings] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [soundOn, setSoundOn] = useState(soundService.isEnabled());
@@ -632,10 +673,21 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       }
     });
     socket.on(SOCKET_EVENTS.GAME_SWAP_EXECUTED, (data: any) => {
-      // If someone (not me) swapped a card with one of mine, mark that card for 5s
-      if (data?.targetUid === user?.uid && data?.uid !== user?.uid && typeof data.targetPosition === 'number') {
-        setSwapHighlight({ pos: data.targetPosition, byUid: data.uid });
-        window.setTimeout(() => setSwapHighlight(null), 5000);
+      // After a J swap, mark BOTH sides for 5 seconds:
+      //  - target's hand at targetPosition (where they got the swapper's card)
+      //  - swapper's hand at myPosition (where they placed the target's card)
+      const swapperUid: string | undefined = data?.uid;
+      const targetUid: string | undefined = data?.targetUid;
+      if (typeof data?.myPosition === 'number' && typeof data?.targetPosition === 'number' && swapperUid && targetUid) {
+        setSwapHighlights(prev => ({ ...prev, [swapperUid]: data.myPosition, [targetUid]: data.targetPosition }));
+        window.setTimeout(() => {
+          setSwapHighlights(prev => {
+            const next = { ...prev };
+            if (next[swapperUid] === data.myPosition) delete next[swapperUid];
+            if (next[targetUid] === data.targetPosition) delete next[targetUid];
+            return next;
+          });
+        }, 5000);
       }
     });
     return () => {
@@ -991,7 +1043,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           <div className="shrink-0 flex justify-center gap-2 pt-0.5"
             style={{ marginBottom: n <= 6 ? 52 : n <= 8 ? 36 : 24 }}>
             {top.map(p => (
-              <OpponentSeat key={p.uid} player={p} {...commonSeatProps}
+              <OpponentSeat key={p.uid} player={p} {...commonSeatProps} swapPos={swapHighlights[p.uid]}
                 emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
             ))}
           </div>
@@ -1004,7 +1056,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           {!isMobile && left.length > 0 && (
             <div className="flex flex-col gap-2 shrink-0 justify-center items-center">
               {left.map(p => (
-                <OpponentSeat key={p.uid} player={p} {...commonSeatProps}
+                <OpponentSeat key={p.uid} player={p} {...commonSeatProps} swapPos={swapHighlights[p.uid]}
                   emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
               ))}
             </div>
@@ -1152,7 +1204,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           {!isMobile && right.length > 0 && (
             <div className="flex flex-col gap-2 shrink-0 justify-center items-center">
               {right.map(p => (
-                <OpponentSeat key={p.uid} player={p} {...commonSeatProps}
+                <OpponentSeat key={p.uid} player={p} {...commonSeatProps} swapPos={swapHighlights[p.uid]}
                   emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
               ))}
             </div>
@@ -1183,25 +1235,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                       mini={isMobile && useMiniCards}
                       backId={cardBackId}
                     />
-                    {swapHighlight?.pos === i && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 6, scale: 0.6 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.6 }}
-                        className="absolute pointer-events-none flex flex-col items-center"
-                        style={{ left: '50%', top: -22, transform: 'translateX(-50%)', zIndex: 30 }}
-                      >
-                        <div className="rounded-full px-1.5 py-0.5 font-arabic font-bold animate-pulse"
-                          style={{ background: '#E04030', color: '#fff', fontSize: 9, lineHeight: 1.2, boxShadow: '0 0 8px rgba(224,64,48,0.7)' }}>
-                          بدّل J
-                        </div>
-                        <div style={{
-                          width: 0, height: 0,
-                          borderLeft: '5px solid transparent', borderRight: '5px solid transparent',
-                          borderTop: '6px solid #E04030', marginTop: -1,
-                        }}/>
-                      </motion.div>
-                    )}
+                    {me && swapHighlights[me.uid] === i && <SwapArrowBadge />}
                   </motion.div>
                 ) : null)}
               </AnimatePresence>
@@ -1300,47 +1334,64 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           onClick={() => setShowSettings(true)}>إعدادات</motion.button>
       </div>
 
-      {/* ── Round/Lap badges — top-left of viewport, always visible ── */}
-      <div className="fixed z-40 flex gap-1.5" style={{ top: isMobile ? 6 : 14, left: isMobile ? 6 : 14 }}>
-        <div className="rounded-xl border border-gold/30 flex flex-col items-center px-2.5 py-1"
-          style={{ background: 'rgba(20,14,8,.92)', backdropFilter: 'blur(8px)', minWidth: 44 }}>
-          <span className="text-gold/50 font-arabic font-bold" style={{ fontSize: 9, lineHeight: 1 }}>راوند</span>
-          <span className="text-gold font-bold" style={{ fontSize: 18, lineHeight: 1.1 }}>{gameState.roundNumber}</span>
+      {/* ── Top header: small badges row + player strip ── */}
+      <div className="fixed z-40 flex flex-col items-center gap-1 pointer-events-none"
+        style={{ top: isMobile ? 4 : 8, left: 0, right: 0, padding: '0 6px' }}>
+        {/* Row 1: Round + Lap + Time + Turn (compact) */}
+        <div className="flex items-stretch gap-1 pointer-events-auto">
+          <MiniBadge label="راوند" value={gameState.roundNumber} valueColor="#E8C97A" borderColor="rgba(201,168,76,0.3)" />
+          <MiniBadge label="لفة" value={lapCount} valueColor={lapCount >= 4 ? '#7AE08A' : '#E8C97A'} borderColor={lapCount >= 4 ? 'rgba(80,200,120,0.5)' : 'rgba(201,168,76,0.3)'} labelColor={lapCount >= 4 ? 'rgba(122,224,138,0.7)' : 'rgba(201,168,76,0.55)'} />
+          <TurnTimerBadge endAt={gameState.turnEndAt} />
+          {(() => {
+            const turnPlayer = gameState.players.find(p => p.uid === gameState.currentTurnUid);
+            if (!turnPlayer || (gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED')) return null;
+            const isMine = turnPlayer.uid === user?.uid;
+            return (
+              <div className="rounded-lg border flex items-center gap-1.5 px-2 py-1"
+                style={{
+                  background: 'rgba(20,14,8,.92)', backdropFilter: 'blur(8px)',
+                  borderColor: isMine ? 'rgba(80,200,120,0.55)' : 'rgba(201,168,76,0.35)',
+                  boxShadow: isMine ? '0 0 10px rgba(80,200,120,0.25)' : 'none',
+                  maxWidth: isMobile ? 120 : 180,
+                }}>
+                <Av id={turnPlayer.avatarId} name={turnPlayer.displayName} frameId={(turnPlayer as any).equippedFrame} size={18}/>
+                <div className="flex flex-col">
+                  <span className="font-arabic" style={{ fontSize: 8, lineHeight: 1, color: isMine ? 'rgba(122,224,138,0.85)' : 'rgba(201,168,76,0.65)' }}>دور</span>
+                  <span className="font-arabic font-bold truncate" style={{ fontSize: 11, lineHeight: 1.1, color: isMine ? '#7AE08A' : '#E8C97A', maxWidth: isMobile ? 70 : 130 }}>
+                    {isMine ? 'أنت' : turnPlayer.displayName}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
-        <div className="rounded-xl border flex flex-col items-center px-2.5 py-1"
-          style={{ background: 'rgba(20,14,8,.92)', backdropFilter: 'blur(8px)', minWidth: 44, borderColor: lapCount >= 4 ? 'rgba(80,200,120,0.5)' : 'rgba(201,168,76,0.3)' }}>
-          <span className="font-arabic font-bold" style={{ fontSize: 9, lineHeight: 1, color: lapCount >= 4 ? 'rgba(122,224,138,0.7)' : 'rgba(201,168,76,0.5)' }}>لفة</span>
-          <span className="font-bold" style={{ fontSize: 18, lineHeight: 1.1, color: lapCount >= 4 ? '#7AE08A' : '#E8C97A' }}>{lapCount}</span>
-        </div>
-        <TurnTimerBadge endAt={gameState.turnEndAt} />
-      </div>
 
-      {/* ── Current turn (right side, big and obvious) ── */}
-      {(() => {
-        const turnPlayer = gameState.players.find(p => p.uid === gameState.currentTurnUid);
-        if (!turnPlayer || gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED') return null;
-        const isMine = turnPlayer.uid === user?.uid;
-        return (
-          <div className="fixed z-40 flex items-center gap-2 rounded-xl border px-3 py-1.5"
-            style={{
-              top: isMobile ? 6 : 14,
-              right: isMobile ? 6 : 14,
-              background: 'rgba(20,14,8,.92)',
-              backdropFilter: 'blur(8px)',
-              borderColor: isMine ? 'rgba(80,200,120,0.5)' : 'rgba(201,168,76,0.35)',
-              boxShadow: isMine ? '0 0 14px rgba(80,200,120,0.25)' : '0 0 10px rgba(201,168,76,0.15)',
-              maxWidth: isMobile ? 150 : 220,
-            }}>
-            <Av id={turnPlayer.avatarId} name={turnPlayer.displayName} frameId={(turnPlayer as any).equippedFrame} size={isMobile ? 22 : 28}/>
-            <div className="flex flex-col">
-              <span className="font-arabic" style={{ fontSize: 9, lineHeight: 1, color: isMine ? 'rgba(122,224,138,0.85)' : 'rgba(201,168,76,0.65)' }}>دور</span>
-              <span className="font-arabic font-bold truncate" style={{ fontSize: isMobile ? 12 : 13, lineHeight: 1.2, color: isMine ? '#7AE08A' : '#E8C97A', maxWidth: isMobile ? 100 : 160 }}>
-                {isMine ? 'أنت' : turnPlayer.displayName}
-              </span>
-            </div>
-          </div>
-        );
-      })()}
+        {/* Row 2: Player chip strip — all characters in the game */}
+        <div className="flex items-center gap-0.5 overflow-x-auto pointer-events-auto rounded-xl px-1.5 py-1"
+          style={{ background: 'rgba(20,14,8,.78)', backdropFilter: 'blur(8px)', border: '1px solid rgba(201,168,76,0.18)', maxWidth: '96vw' }}>
+          {gameState.players.map(p => {
+            const isTurn = p.uid === gameState.currentTurnUid;
+            const isMine = p.uid === user?.uid;
+            const isElim = p.isEliminated;
+            return (
+              <div key={p.uid} className="relative flex flex-col items-center shrink-0" style={{ width: 30, opacity: isElim ? 0.4 : 1 }}>
+                <Av id={p.avatarId} name={p.displayName} frameId={(p as any).equippedFrame} size={26}/>
+                {isTurn && !isElim && (
+                  <div className="absolute -bottom-0.5 -right-0.5 rounded-full animate-pulse"
+                    style={{ width: 7, height: 7, background: isMine ? '#7AE08A' : '#C9A84C', border: '1.5px solid #14100A' }}/>
+                )}
+                {p.uid === gameState.checkCallerId && (
+                  <div className="absolute -top-1 -left-1 rounded-full font-bold"
+                    style={{ fontSize: 7, background: '#E04030', color: '#fff', padding: '0 3px', border: '1px solid #14100A' }}>!</div>
+                )}
+                {isElim && (
+                  <span className="absolute" style={{ color: '#E04030', fontWeight: 800, fontSize: 13 }}>✕</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
       {/* ── Bottom-left deck info panel (desktop only) ── */}
       {!isMobile && <div className="fixed z-40 flex flex-col items-center gap-1 rounded-xl border border-gold/30 px-4 py-3"

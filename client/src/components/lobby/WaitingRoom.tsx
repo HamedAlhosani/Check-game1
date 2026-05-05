@@ -239,6 +239,66 @@ export function WaitingRoom({ room, onLeave }: Props) {
         </AnimatePresence>
       </div>
 
+      {/* Room info summary — visible to ALL players */}
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-xl px-4 py-3 border flex items-center gap-4 flex-wrap"
+        style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(201,168,76,0.12)' }}
+      >
+        {/* Host name */}
+        <div className="flex items-center gap-1.5">
+          <span style={{ fontSize: 13 }}>👑</span>
+          <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.5)' }}>
+            {lang === 'ar' ? 'المضيف:' : 'Host:'}
+          </span>
+          <span className="font-arabic text-xs font-bold" style={{ color: '#E8C97A' }}>
+            {room.players.find(p => p.uid === room.hostUid)?.displayName || '—'}
+          </span>
+        </div>
+
+        <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)' }} />
+
+        {/* Real players count */}
+        <div className="flex items-center gap-1.5">
+          <span style={{ fontSize: 13 }}>👥</span>
+          <span className="font-arabic text-xs font-bold" style={{ color: 'rgba(245,230,200,0.7)' }}>
+            {room.players.filter(p => !p.isBot).length} {lang === 'ar' ? 'لاعب' : 'players'}
+          </span>
+        </div>
+
+        {/* Bots info */}
+        {room.players.some(p => p.isBot) && (
+          <>
+            <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)' }} />
+            <div className="flex items-center gap-1.5">
+              <span style={{ fontSize: 13 }}>🤖</span>
+              <span className="font-arabic text-xs font-bold" style={{ color: 'rgba(80,200,120,0.8)' }}>
+                {room.players.filter(p => p.isBot).length} {lang === 'ar' ? 'بوت' : 'bots'}
+              </span>
+              <span className="font-arabic text-xs px-2 py-0.5 rounded-lg"
+                style={{ background: 'rgba(80,200,120,0.1)', border: '1px solid rgba(80,200,120,0.25)', color: 'rgba(80,200,120,0.9)' }}>
+                {(() => {
+                  const d = room.players.find(p => p.isBot)?.botDifficulty || 'medium';
+                  if (lang === 'ar') return d === 'easy' ? 'سهل' : d === 'hard' ? 'صعب' : 'متوسط';
+                  return d === 'easy' ? 'Easy' : d === 'hard' ? 'Hard' : 'Medium';
+                })()}
+              </span>
+            </div>
+          </>
+        )}
+
+        {/* Empty seats */}
+        {emptySlots > 0 && (
+          <>
+            <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)' }} />
+            <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.3)' }}>
+              {emptySlots} {lang === 'ar' ? 'مقعد فارغ' : 'empty'}
+            </span>
+          </>
+        )}
+      </motion.div>
+
       {/* Bot controls — host only, when there are empty seats */}
       {isHost && emptySlots > 0 && (
         <motion.div

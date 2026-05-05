@@ -36,7 +36,13 @@ export function RegisterForm() {
       navigate('/home');
     } catch (err: any) {
       const msg = err.message || '';
-      addToast(msg.includes('use') || msg.includes('409') ? 'البريد الإلكتروني مستخدم بالفعل' : 'حدث خطأ في إنشاء الحساب', 'error');
+      if (msg.includes('use') || msg.includes('409') || msg.includes('already')) {
+        addToast('البريد الإلكتروني مستخدم بالفعل', 'error');
+      } else if (msg.includes('fetch') || msg.includes('network') || msg.toLowerCase().includes('failed to fetch')) {
+        addToast('تعذر الاتصال بالخادم، تحقق من اتصالك بالإنترنت', 'error');
+      } else {
+        addToast('حدث خطأ في إنشاء الحساب: ' + (msg || 'خطأ غير معروف'), 'error');
+      }
     } finally {
       setLoading(false);
     }

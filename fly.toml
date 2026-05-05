@@ -4,6 +4,9 @@ primary_region = "sin"
 [build]
   dockerfile = "Dockerfile"
 
+  [build.args]
+    VITE_GOOGLE_CLIENT_ID = "958779468996-htmee1pfl9btjab8kag7b1lbo2pd5fq1.apps.googleusercontent.com"
+
 [env]
   NODE_ENV = "production"
   PORT     = "3001"

@@ -30,7 +30,15 @@ export function LoginForm() {
       navigate('/home');
     } catch (err: any) {
       const msg = err.message || '';
-      addToast(msg.includes('password') || msg.includes('Wrong') ? 'كلمة المرور غير صحيحة' : 'البريد الإلكتروني غير موجود', 'error');
+      if (msg.includes('password') || msg.includes('Wrong')) {
+        addToast('كلمة المرور غير صحيحة', 'error');
+      } else if (msg.includes('not found') || msg.includes('Email')) {
+        addToast('البريد الإلكتروني غير موجود', 'error');
+      } else if (msg.toLowerCase().includes('failed to fetch') || msg.includes('network')) {
+        addToast('تعذر الاتصال بالخادم', 'error');
+      } else {
+        addToast('خطأ في تسجيل الدخول: ' + (msg || 'خطأ غير معروف'), 'error');
+      }
     } finally {
       setLoading(false);
     }

@@ -30,6 +30,12 @@ app.use(cors({
 }));
 app.use(express.json());
 
+function wrap(fn: (req: express.Request, res: express.Response, next: express.NextFunction) => Promise<any>) {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    fn(req, res, next).catch(next);
+  };
+}
+
 async function requireAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
   const token = req.headers.authorization?.replace('Bearer ', '');
   if (!token) return res.status(401).json({ error: 'Unauthorized' });
@@ -41,7 +47,7 @@ async function requireAuth(req: express.Request, res: express.Response, next: ex
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', wrap(async (req, res) => {
   const { email, password, displayName } = req.body;
   if (!email || !password || !displayName) return res.status(400).json({ error: 'Missing fields' });
 
@@ -56,9 +62,9 @@ app.post('/api/auth/register', async (req, res) => {
   await createUserProfile(uid, displayName, emailKey);
   const token = signToken(uid);
   res.json({ token, uid });
-});
+}));
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', wrap(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Missing fields' });
 
@@ -71,7 +77,7 @@ app.post('/api/auth/login', async (req, res) => {
 
   const token = signToken(cred.uid);
   res.json({ token, uid: cred.uid });
-});
+}));
 
 app.post('/api/auth/google', async (req, res) => {
   const { idToken } = req.body;
@@ -117,7 +123,7 @@ app.post('/api/auth/google', async (req, res) => {
   }
 });
 
-app.post('/api/auth/change-password', requireAuth, async (req, res) => {
+app.post('/api/auth/change-password', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const { currentPassword, newPassword } = req.body;
 
@@ -134,11 +140,11 @@ app.post('/api/auth/change-password', requireAuth, async (req, res) => {
   cred.passwordHash = await hashPassword(newPassword);
   saveCredentials();
   res.json({ ok: true });
-});
+}));
 
 // ── Profile ────────────────────────────────────────────────────────────────────
 
-app.post('/api/profile', requireAuth, async (req, res) => {
+app.post('/api/profile', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const { displayName, email } = req.body;
   let profile = await getUserProfile(uid);
@@ -147,35 +153,35 @@ app.post('/api/profile', requireAuth, async (req, res) => {
     profile = await getUserProfile(uid);
   }
   res.json(profile);
-});
+}));
 
-app.get('/api/profile', requireAuth, async (req, res) => {
+app.get('/api/profile', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const profile = await getUserProfile(uid);
   if (!profile) return res.status(404).json({ error: 'Not found' });
   res.json(profile);
-});
+}));
 
-app.patch('/api/profile', requireAuth, async (req, res) => {
+app.patch('/api/profile', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const { displayName, avatarId } = req.body;
   if (displayName) await updateProfileName(uid, displayName);
   if (avatarId) await updateProfileAvatar(uid, avatarId);
   const profile = await getUserProfile(uid);
   res.json(profile);
-});
+}));
 
-app.post('/api/profile/rules-seen', requireAuth, async (req, res) => {
+app.post('/api/profile/rules-seen', requireAuth, wrap(async (req, res) => {
   await markRulesSeen((req as any).uid);
   res.json({ ok: true });
-});
+}));
 
 // ── Leaderboard ────────────────────────────────────────────────────────────────
 
-app.get('/api/leaderboard', async (_req, res) => {
+app.get('/api/leaderboard', wrap(async (_req, res) => {
   const entries = await getLeaderboard(50);
   res.json(entries);
-});
+}));
 
 // ── Store ──────────────────────────────────────────────────────────────────────
 
@@ -183,7 +189,7 @@ app.get('/api/store/items', (_req, res) => {
   res.json(STORE_ITEMS);
 });
 
-app.post('/api/store/purchase', requireAuth, async (req, res) => {
+app.post('/api/store/purchase', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const { itemId } = req.body;
   if (!itemId) return res.status(400).json({ error: 'Missing itemId' });
@@ -191,9 +197,9 @@ app.post('/api/store/purchase', requireAuth, async (req, res) => {
   if (!result.ok) return res.status(400).json({ error: result.error });
   const profile = await getUserProfile(uid);
   res.json({ ok: true, coins: result.coins, profile });
-});
+}));
 
-app.patch('/api/store/equip', requireAuth, async (req, res) => {
+app.patch('/api/store/equip', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const { itemId } = req.body;
   if (!itemId) return res.status(400).json({ error: 'Missing itemId' });
@@ -201,54 +207,54 @@ app.patch('/api/store/equip', requireAuth, async (req, res) => {
   if (!result.ok) return res.status(400).json({ error: result.error });
   const profile = await getUserProfile(uid);
   res.json({ ok: true, profile });
-});
+}));
 
 // ── Friends ────────────────────────────────────────────────────────────────────
 
-app.get('/api/friends', requireAuth, async (req, res) => {
+app.get('/api/friends', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const friends = await getFriendsList(uid);
   res.json(friends);
-});
+}));
 
-app.get('/api/friends/requests', requireAuth, async (req, res) => {
+app.get('/api/friends/requests', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const requests = await getFriendRequests(uid);
   res.json(requests);
-});
+}));
 
-app.post('/api/friends/request', requireAuth, async (req, res) => {
+app.post('/api/friends/request', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const { username } = req.body;
   if (!username) return res.status(400).json({ error: 'Missing username' });
   const result = await sendFriendRequest(uid, username);
   if (!result.ok) return res.status(400).json({ error: result.error });
   res.json({ ok: true });
-});
+}));
 
-app.post('/api/friends/accept', requireAuth, async (req, res) => {
+app.post('/api/friends/accept', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const { uid: friendUid } = req.body;
   if (!friendUid) return res.status(400).json({ error: 'Missing uid' });
   const result = await acceptFriendRequest(uid, friendUid);
   if (!result.ok) return res.status(400).json({ error: result.error });
   res.json({ ok: true });
-});
+}));
 
-app.delete('/api/friends/:friendUid', requireAuth, async (req, res) => {
+app.delete('/api/friends/:friendUid', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const { friendUid } = req.params;
   await declineOrRemoveFriend(uid, friendUid);
   res.json({ ok: true });
-});
+}));
 
 // ── Match History ──────────────────────────────────────────────────────────────
 
-app.get('/api/history', requireAuth, async (req, res) => {
+app.get('/api/history', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const records = await getUserHistory(uid, 20);
   res.json(records);
-});
+}));
 
 // ── Static client (production) ─────────────────────────────────────────────────
 if (process.env.NODE_ENV === 'production') {
@@ -256,5 +262,11 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(clientDist));
   app.get('*', (_req, res) => res.sendFile(path.join(clientDist, 'index.html')));
 }
+
+// ── Global error handler ───────────────────────────────────────────────────────
+app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('[API Error]', err?.message || err);
+  res.status(500).json({ error: err?.message || 'Internal server error' });
+});
 
 export default app;

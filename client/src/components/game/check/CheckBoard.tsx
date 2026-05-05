@@ -497,12 +497,25 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     hasPlayedThisTurn;
 
   const [winW, setWinW] = useState(() => window.innerWidth);
+  const [winH, setWinH] = useState(() => window.innerHeight);
   useEffect(() => {
-    const h = () => setWinW(window.innerWidth);
+    const h = () => { setWinW(window.innerWidth); setWinH(window.innerHeight); };
     window.addEventListener('resize', h);
     return () => window.removeEventListener('resize', h);
   }, []);
   const isMobile = winW < 768;
+
+  // Dynamic mobile sizing — everything must fit inside the fixed viewport
+  const useMiniCards = isMobile && winH < 780;
+  const myAreaH = useMiniCards ? 218 : 280; // mini vs small cards height estimate
+  const stripH = isMobile ? 82 : 0;
+  const mobileTableSize = isMobile
+    ? Math.min(
+        Math.floor(winW * 0.72),           // max 72% of screen width
+        winH - 100 - stripH - myAreaH - 20, // max from available height
+        290                                  // hard cap
+      )
+    : 0;
   const n = gameState.players.length;
   const seatCfg = (() => {
     if (isMobile) return { w: 114, avSize: 24, scoreFs: 14, nameFs: 7, mini: true };
@@ -898,11 +911,11 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       <RoomBackground />
       <ScoreBar />
 
-      <div className="flex-1 flex flex-col pt-11 pb-14 min-h-0 gap-2 px-1" style={{ position: 'relative', zIndex: 1 }}>
+      <div className={`flex-1 flex flex-col pt-11 pb-14 min-h-0 px-1 ${isMobile ? 'gap-1' : 'gap-2'}`} style={{ position: 'relative', zIndex: 1 }}>
 
         {/* ══ MOBILE: compact opponent strip ══ */}
         {isMobile && others.length > 0 && (
-          <div className="shrink-0 flex items-stretch gap-1" style={{ padding: '3px 4px 4px', minHeight: 76, maxHeight: 84, position: 'relative', zIndex: 20 }}>
+          <div className="shrink-0 flex items-stretch gap-1" style={{ padding: '3px 4px 4px', height: stripH, position: 'relative', zIndex: 20 }}>
             {others.map(p => (
               <CompactSeat key={p.uid} player={p}
                 emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null}
@@ -963,8 +976,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               ref={tableRef}
               className="relative"
               style={{
-                width: isMobile ? 'min(260px, max(120px, 58vw))' : 'min(650px, max(200px, 55vw))',
-                height: isMobile ? 'min(260px, max(120px, 58vw))' : 'min(650px, max(200px, 55vw))',
+                width: isMobile ? Math.max(120, mobileTableSize) : 'min(650px, max(200px, 55vw))',
+                height: isMobile ? Math.max(120, mobileTableSize) : 'min(650px, max(200px, 55vw))',
                 borderRadius: '50%',
                 background: `
                   radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.045) 0%, transparent 38%),
@@ -1087,7 +1100,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {/* ══ MY AREA: cards above, big box below ══ */}
         {me && (
           <div className="shrink-0 self-center flex flex-col items-center gap-1.5 pb-1"
-            style={{ width: isMobile ? winW - 12 : 220, position: 'relative', zIndex: 5, marginTop: isMobile ? 6 : n <= 6 ? 100 : n <= 8 ? 70 : 50 }}>
+            style={{ width: isMobile ? winW - 12 : 220, position: 'relative', zIndex: 5, marginTop: isMobile ? 2 : n <= 6 ? 100 : n <= 8 ? 70 : 50 }}>
             {/* My cards — 2×2 grid on mobile */}
             <div className={isMobile ? 'grid grid-cols-2 gap-1' : cardGridCols(me.cards.filter(Boolean).length)}>
               <AnimatePresence>
@@ -1103,7 +1116,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                       faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
                       highlight={myCardHighlight(i)}
                       onClick={() => onMyCardClick(i)}
-                      small={!isMobile} mini={isMobile} backId={cardBackId}
+                      small={!isMobile || !useMiniCards}
+                      mini={isMobile && useMiniCards}
+                      backId={cardBackId}
                     />
                   </motion.div>
                 ) : null)}

@@ -2,13 +2,26 @@ import { AppShell } from '../../components/layout/AppShell';
 import { LoginForm } from '../../components/auth/LoginForm';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { useLang } from '../../i18n/useT';
+import { useNavigate } from 'react-router-dom';
 
 export function LoginPage() {
   const lang = useLang();
+  const navigate = useNavigate();
   return (
     <AppShell showNav={false}>
-      {/* Lang toggle fixed — always visible regardless of scroll or direction */}
+      {/* Lang toggle fixed */}
       <div className="fixed top-4 right-4 z-50"><LangToggle /></div>
+      {/* Back button fixed */}
+      <button
+        onClick={() => navigate('/')}
+        className="fixed top-4 left-4 z-50 flex items-center gap-1.5 font-arabic text-sm transition-colors"
+        style={{ color: 'rgba(201,168,76,0.6)', background: 'rgba(201,168,76,0.07)', border: '1px solid rgba(201,168,76,0.2)', borderRadius: 10, padding: '5px 12px' }}
+        onMouseEnter={e => (e.currentTarget.style.color = '#C9A84C')}
+        onMouseLeave={e => (e.currentTarget.style.color = 'rgba(201,168,76,0.6)')}
+      >
+        <span>{lang === 'ar' ? '→' : '←'}</span>
+        <span>{lang === 'ar' ? 'الرئيسية' : 'Home'}</span>
+      </button>
 
       <div className="min-h-screen flex items-center justify-center px-4 pt-14 pb-8 relative" style={{ direction: lang === 'ar' ? 'rtl' : 'ltr' }}>
 

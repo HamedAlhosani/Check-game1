@@ -1359,7 +1359,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                     count={gameState.deckCount}
                     onClick={isMyTurn && !drawnCard && (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') ? onDraw : undefined}
                     disabled={!isMyTurn || !!drawnCard || (gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED')}
-                    size={isMobile ? 'small' : isTablet ? 'small' : 'normal'}
+                    size={isMobile ? 'small' : isTablet ? 'normal' : 'normal'}
                   />
                   {/* Discard pile — large and clearly tappable */}
                   <div
@@ -1436,8 +1436,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                         faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
                         highlight={myCardHighlight(i)}
                         onClick={() => onMyCardClick(i)}
-                        small={isMobile}
-                        mini={isTablet}
+                        small={isMobile || isTablet}
                         backId={cardBackId}
                       />
                       {me && swapHighlights[me.uid] === i && <SwapArrowBadge />}

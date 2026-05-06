@@ -291,10 +291,13 @@ export function PlayingCard({ card, faceDown = false, onClick, highlight = 'none
   const w = xmini ? 36 : mini ? 52 : small ? 72 : 100;
   const special = card ? specialOf(card.rank, card.suit) : null;
 
+  // Highlight is shown via outline + glow only — NOT a scale transform.
+  // Scaling one card in a grid made it visually bigger than the others
+  // and the user asked for all hand cards to be exactly the same size.
   const highlightStyle = highlight === 'burn'
-    ? { boxShadow: '0 0 12px rgba(201,168,76,0.7)', transform: 'scale(1.07)' }
+    ? { boxShadow: '0 0 0 2px #C9A84C, 0 0 14px rgba(201,168,76,0.85)' }
     : highlight === 'select'
-    ? { boxShadow: '0 0 12px rgba(80,200,120,0.7)', transform: 'scale(1.07)' }
+    ? { boxShadow: '0 0 0 2px #50C878, 0 0 14px rgba(80,200,120,0.85)' }
     : {};
 
   // Action label (only on the larger sizes — the text would be illegible on

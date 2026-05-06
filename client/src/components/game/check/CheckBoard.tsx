@@ -1261,7 +1261,11 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {!isMobile && top.length > 0 && (
           <div className="shrink-0 flex justify-center gap-2"
             style={{
-              marginTop: isTablet ? 32 : -18,   // tablet: clear the badges header (~50px tall)
+              // Tablet: opponent's box hugs right under the badges header.
+              // The badges sit on the left/right of the row leaving the
+              // center empty for the opponent — so a small positive margin
+              // is enough to clear the header without leaving dead space.
+              marginTop: isTablet ? 4 : -18,
               marginBottom: isTablet ? (n <= 6 ? 2 : 0) : (n <= 6 ? 14 : n <= 8 ? 10 : 6),
             }}>
             {top.map(p => (
@@ -1400,9 +1404,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {me && (
           <div className="shrink-0 self-center flex flex-col items-center gap-1.5 pb-1"
             style={{
-              width: isMobile ? winW - 12 : isTablet ? 320 : 360,
+              width: isMobile ? winW - 12 : isTablet ? 280 : 360,
               position: 'relative', zIndex: 5,
-              marginTop: isMobile ? 2 : isTablet ? (n <= 6 ? 6 : 2) : (n <= 6 ? 40 : n <= 8 ? 28 : 18),
+              marginTop: isMobile ? 2 : isTablet ? (n <= 6 ? 28 : 22) : (n <= 6 ? 40 : n <= 8 ? 28 : 18),
             }}>
             {/* My cards — hidden when I'm eliminated */}
             {me.isEliminated ? (
@@ -1427,7 +1431,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                         faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
                         highlight={myCardHighlight(i)}
                         onClick={() => onMyCardClick(i)}
-                        small={isMobile || isTablet}
+                        small={isMobile}
+                        mini={isTablet}
                         backId={cardBackId}
                       />
                       {me && swapHighlights[me.uid] === i && <SwapArrowBadge />}

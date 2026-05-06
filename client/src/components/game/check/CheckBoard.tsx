@@ -1358,7 +1358,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             top opponent. Sized larger than the opponent itself so there's
             comfortable breathing room between the opponent and the felt. */}
         {!isMobile && top.length > 0 && (
-          <div className="shrink-0" style={{ height: isTablet ? 200 : 240 }} aria-hidden="true" />
+          <div className="shrink-0" style={{ height: isTablet ? 230 : 270 }} aria-hidden="true" />
         )}
 
         {/* ══ MIDDLE ROW: [left] table [right] ══ */}

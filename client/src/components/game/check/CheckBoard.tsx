@@ -520,6 +520,9 @@ function samePlayerSeat(prev: any, next: any): boolean {
   if (prev.swapPos !== next.swapPos) return false;
   if (prev.emoji !== next.emoji) return false;
   if (prev.chatBubble?.key !== next.chatBubble?.key) return false;
+  // Without this, OpponentSeats don't re-render when tableReady flips, so
+  // opponent cards stayed hidden after my own cards revealed.
+  if (prev.hideCards !== next.hideCards) return false;
   return true;
 }
 

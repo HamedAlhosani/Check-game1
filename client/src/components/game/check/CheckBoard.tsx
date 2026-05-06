@@ -1334,22 +1334,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               {/* Inner ring */}
               <div className="absolute pointer-events-none" style={{ inset: '5%', borderRadius: '50%', border: '1px dashed rgba(201,168,76,.13)' }} />
 
-              {/* Check called indicator — sits just above the deck + discard pile */}
-              {gameState.checkCallerId && (
-                <div className="absolute left-0 right-0 flex justify-center pointer-events-none"
-                  style={{ top: `calc(50% - ${isMobile ? 90 : 115}px)`, zIndex: 22 }}>
-                  <p className="font-arabic font-bold animate-pulse rounded-full"
-                    style={{
-                      fontSize: isMobile ? 14 : 16,
-                      padding: '6px 16px',
-                      background: 'linear-gradient(135deg, rgba(224,64,48,0.95) 0%, rgba(176,40,24,0.95) 100%)',
-                      color: '#fff',
-                      border: '2px solid #FF6048',
-                      boxShadow: '0 0 18px rgba(224,64,48,0.6)',
-                      letterSpacing: 1,
-                    }}>⚠ CHECK!</p>
-                </div>
-              )}
+              {/* (CHECK called banner moved to a screen-fixed position so it
+                  can't get covered by opponent cards above the table — see
+                  the AnimatePresence group near the bottom of the file) */}
 
               {/* Stacked deck + discard side by side, both large and clear */}
               <div className="absolute inset-0 flex items-center justify-center">
@@ -1948,6 +1935,34 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {showPeek && !showIntro && <PeekOverlay />}
         {showExitConfirm && <ExitOverlay />}
         {showScoreboard && <ScoreboardModal />}
+      </AnimatePresence>
+
+      {/* ── Screen-level CHECK banner — always visible, never covered ── */}
+      <AnimatePresence>
+        {gameState.checkCallerId && (
+          <motion.div
+            key="check-banner"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="fixed pointer-events-none flex justify-center"
+            style={{
+              top: isMobile ? 56 : isTablet ? 50 : 60,
+              left: 0, right: 0, zIndex: 45,
+            }}
+          >
+            <p className="font-arabic font-bold animate-pulse rounded-full"
+              style={{
+                fontSize: isMobile ? 14 : 16,
+                padding: '6px 18px',
+                background: 'linear-gradient(135deg, rgba(224,64,48,0.96) 0%, rgba(176,40,24,0.96) 100%)',
+                color: '#fff',
+                border: '2px solid #FF6048',
+                boxShadow: '0 4px 18px rgba(0,0,0,0.45), 0 0 18px rgba(224,64,48,0.7)',
+                letterSpacing: 1,
+              }}>⚠ CHECK!</p>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* ── Drawn card — framed panel high up, big and clear ── */}

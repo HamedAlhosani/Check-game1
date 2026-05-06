@@ -674,6 +674,11 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
   const [showPeek, setShowPeek] = useState(false);
+  // Records when the user opened the peek overlay so we can guarantee a 5s
+  // minimum display, even if the server transitions PEEK_PHASE → PLAYING
+  // earlier (e.g. all bots finished their peek instantly).
+  const peekOpenedAtRef = useRef<number | null>(null);
+  const peekMinTimerRef = useRef<number | null>(null);
   const [showAfk, setShowAfk] = useState(false);
   const [roundScoreData, setRoundScoreData] = useState<any>(null);
   const [kingChoiceCards, setKingChoiceCards] = useState<Card[] | null>(null);
@@ -774,10 +779,27 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     // only show it during the very first PEEK_PHASE on round 1.
     if (gameState.phase !== 'PEEK_PHASE' || gameState.roundNumber > 1) setShowIntro(false);
     if (gameState.phase === 'PEEK_PHASE') {
+      if (!peekOpenedAtRef.current) peekOpenedAtRef.current = Date.now();
       setShowPeek(true);
       setDrawnCard(null);  // belt-and-suspenders: clear any stale drawn card
     }
-    if (gameState.phase === 'PLAYING') { setShowPeek(false); setKnownCards(new Map()); }
+    if (gameState.phase === 'PLAYING') {
+      // Guarantee at least 5s of peek display even if server raced ahead.
+      const opened = peekOpenedAtRef.current;
+      const remaining = opened ? 5000 - (Date.now() - opened) : 0;
+      if (remaining > 0) {
+        if (peekMinTimerRef.current) window.clearTimeout(peekMinTimerRef.current);
+        peekMinTimerRef.current = window.setTimeout(() => {
+          setShowPeek(false);
+          setKnownCards(new Map());
+          peekOpenedAtRef.current = null;
+        }, remaining);
+      } else {
+        setShowPeek(false);
+        setKnownCards(new Map());
+        peekOpenedAtRef.current = null;
+      }
+    }
     if (gameState.phase !== 'KING_CHOICE') { setKingChoiceCards(null); setKingSelectedIdx(null); }
   }, [gameState.phase, gameState.roundNumber]);
 
@@ -968,7 +990,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       </div>
       <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
         className="px-8 py-3 rounded-xl border border-gold/60 text-gold font-arabic text-lg bg-gold/10 hover:bg-gold/20 transition-all"
-        onClick={() => { setShowIntro(false); socket?.emit(SOCKET_EVENTS.GAME_PEEK_COMPLETE, { gameId }); }}>
+        onClick={() => setShowIntro(false)}>
         تخطي
       </motion.button>
     </div>

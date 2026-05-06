@@ -21,4 +21,20 @@ export default defineConfig({
       '/api': 'http://localhost:3001',
     },
   },
+  build: {
+    // Smaller initial bundle = faster first paint and faster navigation.
+    // Split big vendor libraries into their own cacheable chunks so they
+    // don't get re-downloaded after every code change.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'motion':       ['framer-motion'],
+          'socket':       ['socket.io-client'],
+          'emoji':        ['emoji-picker-react'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 700,
+  },
 });

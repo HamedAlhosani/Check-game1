@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { apiClient } from './services/api.service';
 import { socketService } from './services/socket.service';
@@ -7,20 +7,23 @@ import { useUiStore } from './store/uiStore';
 import { useGameStore } from './store/gameStore';
 import { UserProfile, SOCKET_EVENTS, GameState } from '@check-game/shared';
 
+// Critical-path pages — keep eager so first paint is instant
 import { LoginPage } from './pages/auth/LoginPage';
-import { RegisterPage } from './pages/auth/RegisterPage';
 import { LandingPage } from './pages/landing/LandingPage';
 import { HomePage } from './pages/home/HomePage';
 import { CheckGamePage } from './pages/game/CheckGamePage';
-import { ProfilePage } from './pages/profile/ProfilePage';
-import { UserProfilePage } from './pages/profile/UserProfilePage';
-import { LeaderboardPage } from './pages/leaderboard/LeaderboardPage';
-import { StorePage } from './pages/store/StorePage';
-import { FriendsPage } from './pages/friends/FriendsPage';
-import { HistoryPage } from './pages/history/HistoryPage';
-import { CardsPreviewPage } from './pages/cards-preview/CardsPreviewPage';
 import { ToastContainer } from './components/shared/ToastContainer';
 import { RulesModal } from './components/shared/RulesModal';
+
+// Secondary pages — code-split. Loaded on first navigation.
+const RegisterPage      = lazy(() => import('./pages/auth/RegisterPage').then(m => ({ default: m.RegisterPage })));
+const ProfilePage       = lazy(() => import('./pages/profile/ProfilePage').then(m => ({ default: m.ProfilePage })));
+const UserProfilePage   = lazy(() => import('./pages/profile/UserProfilePage').then(m => ({ default: m.UserProfilePage })));
+const LeaderboardPage   = lazy(() => import('./pages/leaderboard/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })));
+const StorePage         = lazy(() => import('./pages/store/StorePage').then(m => ({ default: m.StorePage })));
+const FriendsPage       = lazy(() => import('./pages/friends/FriendsPage').then(m => ({ default: m.FriendsPage })));
+const HistoryPage       = lazy(() => import('./pages/history/HistoryPage').then(m => ({ default: m.HistoryPage })));
+const CardsPreviewPage  = lazy(() => import('./pages/cards-preview/CardsPreviewPage').then(m => ({ default: m.CardsPreviewPage })));
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { setUser, setProfile, setLoading } = useAuthStore();
@@ -155,21 +158,23 @@ export function App() {
       <AuthGate>
         <GlobalOverlays />
         <ResumeGameGate />
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
-          <Route path="/register" element={<PublicOnly><RegisterPage /></PublicOnly>} />
-          <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-          <Route path="/game/check/:gameId" element={<ProtectedRoute><CheckGamePage /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-          <Route path="/user/:uid" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
-          <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
-          <Route path="/store" element={<ProtectedRoute><StorePage /></ProtectedRoute>} />
-          <Route path="/friends" element={<ProtectedRoute><FriendsPage /></ProtectedRoute>} />
-          <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
-          <Route path="/cards-preview" element={<CardsPreviewPage />} />
-          <Route path="*" element={<FallbackRoute />} />
-        </Routes>
+        <Suspense fallback={<Loading />}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />
+            <Route path="/register" element={<PublicOnly><RegisterPage /></PublicOnly>} />
+            <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+            <Route path="/game/check/:gameId" element={<ProtectedRoute><CheckGamePage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/user/:uid" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
+            <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />
+            <Route path="/store" element={<ProtectedRoute><StorePage /></ProtectedRoute>} />
+            <Route path="/friends" element={<ProtectedRoute><FriendsPage /></ProtectedRoute>} />
+            <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+            <Route path="/cards-preview" element={<CardsPreviewPage />} />
+            <Route path="*" element={<FallbackRoute />} />
+          </Routes>
+        </Suspense>
       </AuthGate>
     </BrowserRouter>
   );

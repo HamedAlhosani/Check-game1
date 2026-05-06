@@ -654,8 +654,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const tabletTableSize = isTablet
     ? Math.min(
         Math.floor(shortDim * 0.55),
-        winH - 360,
-        520
+        winH - 320,
+        500
       )
     : 0;
 
@@ -1241,7 +1241,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       <RoomBackground />
 
       <div className={`flex-1 flex flex-col pb-14 min-h-0 px-1 ${
-        isMobile ? 'gap-1 pt-16' : isTablet ? 'gap-1 pt-12' : 'gap-2 pt-14'
+        isMobile ? 'gap-1 pt-16' : isTablet ? 'gap-0 pt-2' : 'gap-2 pt-14'
       }`} style={{ position: 'relative', zIndex: 1 }}>
 
         {/* ══ MOBILE: compact opponent strip ══ */}
@@ -1257,12 +1257,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           </div>
         )}
 
-        {/* ══ DESKTOP ONLY: top row of opponents — pulled up to the top */}
+        {/* ══ DESKTOP ONLY: top row of opponents */}
         {!isMobile && top.length > 0 && (
           <div className="shrink-0 flex justify-center gap-2"
             style={{
-              marginTop: isTablet ? -28 : -18,
-              marginBottom: isTablet ? (n <= 6 ? 4 : 0) : (n <= 6 ? 14 : n <= 8 ? 10 : 6),
+              marginTop: isTablet ? 32 : -18,   // tablet: clear the badges header (~50px tall)
+              marginBottom: isTablet ? (n <= 6 ? 2 : 0) : (n <= 6 ? 14 : n <= 8 ? 10 : 6),
             }}>
             {top.map(p => (
               <OpponentSeat key={p.uid} player={p} {...commonSeatProps} swapPos={swapHighlights[p.uid]}
@@ -1286,7 +1286,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
           {/* ══ CIRCULAR TABLE ══ */}
           <div className="flex-1 flex items-center justify-center min-h-0 min-w-0 overflow-visible">
-            <div style={{ position: 'relative', marginTop: isMobile ? 0 : isTablet ? -10 : 6 }}>
+            <div style={{ position: 'relative', marginTop: isMobile ? 0 : isTablet ? 4 : 6 }}>
               {/* Wooden rim — sits behind the felt circle */}
               <div style={{
                 position: 'absolute',
@@ -1402,7 +1402,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             style={{
               width: isMobile ? winW - 12 : isTablet ? 320 : 360,
               position: 'relative', zIndex: 5,
-              marginTop: isMobile ? 2 : isTablet ? (n <= 6 ? 18 : 12) : (n <= 6 ? 40 : n <= 8 ? 28 : 18),
+              marginTop: isMobile ? 2 : isTablet ? (n <= 6 ? 6 : 2) : (n <= 6 ? 40 : n <= 8 ? 28 : 18),
             }}>
             {/* My cards — hidden when I'm eliminated */}
             {me.isEliminated ? (

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <linearGradient id="goldRich" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"  stop-color="#FFE07A"/>
+      <stop offset="35%" stop-color="#E8C97A"/>
+      <stop offset="70%" stop-color="#A07830"/>
+      <stop offset="100%" stop-color="#6B4A14"/>
+    </linearGradient>
+    <linearGradient id="goldLight" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#FFE07A"/>
+      <stop offset="100%" stop-color="#C9A84C"/>
+    </linearGradient>
+    <radialGradient id="darkPlate" cx="50%" cy="40%" r="60%">
+      <stop offset="0%"  stop-color="#241830"/>
+      <stop offset="60%" stop-color="#0E0820"/>
+      <stop offset="100%" stop-color="#040108"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#FFE07A" stop-opacity="0.30"/>
+      <stop offset="60%" stop-color="#FFE07A" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#FFE07A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="128" cy="128" r="120" fill="url(#halo)"/>
+
+  <!-- Outer rim -->
+  <circle cx="128" cy="128" r="110" fill="url(#darkPlate)" stroke="url(#goldRich)" stroke-width="6"/>
+  <circle cx="128" cy="128" r="100" fill="none" stroke="url(#goldLight)" stroke-width="1.2" opacity="0.6"/>
+
+  <!-- 8-point star watermark -->
+  <g transform="translate(128 128)" opacity="0.10">
+    <path d="M0,-86 L22,-22 L86,0 L22,22 L0,86 L-22,22 L-86,0 L-22,-22 Z"
+      fill="none" stroke="#FFE07A" stroke-width="2"/>
+    <path d="M0,-86 L22,-22 L86,0 L22,22 L0,86 L-22,22 L-86,0 L-22,-22 Z"
+      fill="none" stroke="#FFE07A" stroke-width="2" transform="rotate(45)"/>
+  </g>
+
+  <!-- Diamond markers around the rim -->
+  <g fill="url(#goldRich)" opacity="0.9">
+    <g transform="translate(128 22)"><path d="M0,-5 L3,0 L0,5 L-3,0 Z"/></g>
+    <g transform="translate(128 234)"><path d="M0,-5 L3,0 L0,5 L-3,0 Z"/></g>
+    <g transform="translate(22 128)"><path d="M0,-5 L3,0 L0,5 L-3,0 Z"/></g>
+    <g transform="translate(234 128)"><path d="M0,-5 L3,0 L0,5 L-3,0 Z"/></g>
+  </g>
+
+  <!-- UAE flag bar at top -->
+  <g transform="translate(74 56)">
+    <clipPath id="flagClip2">
+      <rect x="0" y="0" width="108" height="22" rx="3"/>
+    </clipPath>
+    <g clip-path="url(#flagClip2)">
+      <rect x="0" y="0" width="27" height="22" fill="#EF3340"/>
+      <rect x="27" y="0" width="81" height="7.33" fill="#009639"/>
+      <rect x="27" y="7.33" width="81" height="7.34" fill="#FFFFFF"/>
+      <rect x="27" y="14.67" width="81" height="7.33" fill="#1A1A1A"/>
+    </g>
+    <rect x="0" y="0" width="108" height="22" rx="3" fill="none" stroke="url(#goldRich)" stroke-width="1.4"/>
+  </g>
+
+  <!-- Card body with C+checkmark -->
+  <g transform="translate(128 154)">
+    <rect x="-50" y="-54" width="100" height="108" rx="10" fill="#0A0418" stroke="url(#goldRich)" stroke-width="2.8"/>
+    <rect x="-46" y="-50" width="92" height="100" rx="7" fill="none" stroke="#E8C97A" stroke-width="0.7" opacity="0.5"/>
+
+    <!-- Stylised "C" crescent -->
+    <path d="M 24 -30
+             A 34 34 0 1 0 24 30
+             L 16 19
+             A 23 23 0 1 1 16 -19 Z"
+      fill="url(#goldRich)" stroke="url(#goldLight)" stroke-width="1.5"/>
+    <path d="M 16 -19 A 23 23 0 0 0 16 19"
+      fill="none" stroke="#FFE07A" stroke-width="2" opacity="0.85"/>
+
+    <!-- Checkmark across the C -->
+    <path d="M -18 4 L -2 18 L 26 -16"
+      fill="none" stroke="#FFE07A" stroke-width="6.5"
+      stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M -18 4 L -2 18 L 26 -16"
+      fill="none" stroke="#FFFFFF" stroke-width="1.6"
+      stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+  </g>
+</svg>

@@ -101,65 +101,89 @@ function PullIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
 }
 
 function PeekIllustration({ ink, accent, accent2 }: { ink: string; accent: string; accent2: string }) {
-  // Big almond eye with kohl wings, lashes and a "?" card peeking from the top.
+  // Card with its corner being lifted up to reveal a hidden value — clearer
+  // 'reveal' metaphor than the previous eye design.
   return (
     <g transform="translate(50 72)">
-      {/* Card with "?" tilted behind the eye */}
-      <g transform="translate(0 -22) rotate(-8)">
-        <rect x={-12} y={-9} width={24} height={18} rx={2} fill="#FFF" stroke={accent} strokeWidth={0.9}/>
-        <text x={0} y={4} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="11" fill={accent2}>?</text>
+      {/* Soft glow behind the card */}
+      <ellipse cx={0} cy={6} rx={28} ry={6} fill={accent} opacity={0.18}/>
+
+      {/* The face-down card body (its back) */}
+      <rect x={-22} y={-22} width={44} height={36} rx={4} fill={ink} stroke={accent} strokeWidth={1.5}/>
+      {/* faint pattern on the back */}
+      <g opacity="0.35" stroke={accent} strokeWidth={0.7} fill="none">
+        <path d="M -14 -16 L 14 12 M 14 -16 L -14 12"/>
+        <circle cx={0} cy={-2} r={5}/>
       </g>
 
-      {/* Eye outline */}
-      <path d="M -28 0 Q 0 -16 28 0 Q 0 16 -28 0 Z" fill="#FFFCF2" stroke={ink} strokeWidth={1.8}/>
+      {/* Lifted bottom-left corner — a triangular flap folded up showing the
+          face underneath. */}
+      <g>
+        {/* The flap (face/white) — folded from bottom-left */}
+        <path d="M -22 14 L 4 14 L -22 -8 Z" fill="#FFF" stroke={ink} strokeWidth={1.3}/>
+        {/* Reveal sparkle on the flap */}
+        <text x={-12} y={9} fontFamily="Georgia, serif" fontWeight="900" fontSize="13" fill={accent2}>?</text>
+        {/* Crease line */}
+        <line x1={-22} y1={-8} x2={4} y2={14} stroke={ink} strokeWidth={1} opacity={0.55}/>
+      </g>
 
-      {/* Kohl wings */}
-      <path d="M -28 0 Q -34 -3 -38 -8" stroke={ink} strokeWidth={2.2} fill="none" strokeLinecap="round"/>
-      <path d="M 28 0 Q 34 -3 38 -8" stroke={ink} strokeWidth={2.2} fill="none" strokeLinecap="round"/>
+      {/* Hand cursor / pointing finger lifting the corner — a tiny arrow */}
+      <g transform="translate(-26 -10) rotate(-25)">
+        <path d="M 0 0 Q 4 -3 8 -1 L 6 3 L 10 4 L 4 8 Z" fill={accent} stroke={ink} strokeWidth={0.6}/>
+      </g>
 
-      {/* Lashes */}
-      {[-18, -12, -6, 0, 6, 12, 18].map((x, i) => (
-        <line key={i} x1={x * 0.95} y1={-13} x2={x * 1.06} y2={-17} stroke={ink} strokeWidth={1} strokeLinecap="round"/>
+      {/* Sparkle bursts around the flap to scream "REVEAL" */}
+      {[
+        [-30, 18, 2.5],
+        [10, 18, 2],
+        [-22, 22, 1.5],
+      ].map(([cx, cy, r], i) => (
+        <g key={i}>
+          <line x1={cx} y1={cy - r * 1.6} x2={cx} y2={cy + r * 1.6} stroke={accent} strokeWidth={1} strokeLinecap="round"/>
+          <line x1={cx - r * 1.6} y1={cy} x2={cx + r * 1.6} y2={cy} stroke={accent} strokeWidth={1} strokeLinecap="round"/>
+        </g>
       ))}
-
-      {/* Iris + pupil */}
-      <circle cx={0} cy={0} r={11} fill={accent2}/>
-      <circle cx={0} cy={0} r={6} fill={ink}/>
-      <circle cx={-2} cy={-2} r={2.2} fill="#FFF"/>
-      <circle cx={3} cy={3} r={1} fill="#FFF" opacity={0.7}/>
     </g>
   );
 }
 
 function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: string; accent2: string }) {
-  // A central radiant burst with sparkles around a hollow "0" ring.
+  // HUGE unmistakable digit '0' with a halo + sparkle bursts around it.
+  // Previous version put the 0 inside a thick ring, which read as "circle"
+  // rather than "the digit zero". Now the digit IS the centerpiece.
   return (
     <g transform="translate(50 72)">
-      {/* Radiant rays — 12 evenly-spaced */}
+      {/* Subtle radial halo to make the 0 pop without competing with it */}
       {Array.from({ length: 12 }).map((_, i) => {
         const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
-        const x1 = Math.cos(a) * 18;
-        const y1 = Math.sin(a) * 18;
-        const x2 = Math.cos(a) * 30;
-        const y2 = Math.sin(a) * 30;
-        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={accent} strokeWidth={1.6} strokeLinecap="round" opacity={0.85}/>;
+        const x1 = Math.cos(a) * 26;
+        const y1 = Math.sin(a) * 26;
+        const x2 = Math.cos(a) * 36;
+        const y2 = Math.sin(a) * 36;
+        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={accent} strokeWidth={1.4} strokeLinecap="round" opacity={0.7}/>;
       })}
-      {/* Sparkle stars in the corners */}
+
+      {/* Sparkle stars around the corners */}
       {[
-        [-32, -22, 3],
-        [32, -22, 3.5],
-        [-32, 22, 3],
-        [32, 22, 3.5],
+        [-34, -20, 3],
+        [34, -20, 3.5],
+        [-30, 24, 2.5],
+        [32, 24, 3],
       ].map(([cx, cy, r], i) => (
         <g key={i}>
-          <line x1={cx} y1={cy - r * 1.6} x2={cx} y2={cy + r * 1.6} stroke={accent2} strokeWidth={1} strokeLinecap="round"/>
-          <line x1={cx - r * 1.6} y1={cy} x2={cx + r * 1.6} y2={cy} stroke={accent2} strokeWidth={1} strokeLinecap="round"/>
-          <circle cx={cx} cy={cy} r={r * 0.5} fill={accent2}/>
+          <line x1={cx} y1={cy - r * 1.8} x2={cx} y2={cy + r * 1.8} stroke={accent2} strokeWidth={1.2} strokeLinecap="round"/>
+          <line x1={cx - r * 1.8} y1={cy} x2={cx + r * 1.8} y2={cy} stroke={accent2} strokeWidth={1.2} strokeLinecap="round"/>
+          <circle cx={cx} cy={cy} r={r * 0.45} fill={accent2}/>
         </g>
       ))}
-      {/* Center: hollow ring with 0 inside */}
-      <circle r={16} fill="#FFFCF2" stroke={ink} strokeWidth={3.5}/>
-      <text y={6} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="22" fill={ink}>0</text>
+
+      {/* The big digit '0' itself — large, bold, unmistakable */}
+      {/* outer ghost stroke for extra contrast */}
+      <text y={16} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="56"
+        fill="none" stroke={accent} strokeWidth={3.5} opacity={0.4}>0</text>
+      {/* main digit */}
+      <text y={16} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="56"
+        fill={ink}>0</text>
     </g>
   );
 }

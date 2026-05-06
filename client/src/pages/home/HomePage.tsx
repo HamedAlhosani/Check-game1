@@ -15,6 +15,8 @@ import { DailyRewardModal } from '../../components/shared/DailyRewardModal';
 import { RulesModal } from '../../components/shared/RulesModal';
 import { ProgressionModal } from '../../components/shared/ProgressionModal';
 import { deriveLevel } from '@check-game/shared';
+import type { GameMode as MatchLength } from '@check-game/shared';
+import { ELIMINATION_SCORE } from '@check-game/shared';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { apiClient } from '../../services/api.service';
 
@@ -547,6 +549,56 @@ function GiantPlayingCard({ mode, children }: { mode: GameMode; children: React.
 }
 
 // ── PlayBox — the giant playing-card hero with everything inside ────────────
+// ── Match-length picker (Quick / Standard / Long) ─────────────────────────
+// Sets the elimination score threshold. Compact pill row that fits inside
+// the giant card next to player/coin steppers.
+function MatchLengthPicker({ value, onChange, accent, lang }: {
+  value: MatchLength;
+  onChange: (m: MatchLength) => void;
+  accent: string;
+  lang: string;
+}) {
+  const opts: { id: MatchLength; emoji: string; ar: string; en: string }[] = [
+    { id: 'quick',    emoji: '⚡', ar: 'سريع', en: 'Quick' },
+    { id: 'standard', emoji: '📊', ar: 'عادي', en: 'Standard' },
+    { id: 'long',     emoji: '🏛️', ar: 'طويل', en: 'Long' },
+  ];
+  return (
+    <div className="w-full flex flex-col items-center gap-2">
+      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.55)' }}>
+        {lang === 'ar' ? 'طول المباراة' : 'Match Length'}
+      </span>
+      <div className="flex gap-2 w-full" style={{ maxWidth: 320 }}>
+        {opts.map(o => {
+          const sel = value === o.id;
+          return (
+            <motion.button
+              key={o.id}
+              whileTap={{ scale: 0.94 }}
+              onClick={() => { onChange(o.id); soundService.playClick(); }}
+              className="flex-1 rounded-xl font-arabic font-bold transition-all"
+              style={{
+                padding: '8px 4px',
+                background: sel ? `${accent}26` : 'rgba(255,255,255,0.04)',
+                color: sel ? accent : 'rgba(245,230,200,0.55)',
+                border: `1.5px solid ${sel ? `${accent}99` : 'rgba(255,255,255,0.08)'}`,
+                boxShadow: sel ? `0 0 14px ${accent}55` : 'none',
+                fontSize: 11.5, lineHeight: 1.25,
+                cursor: 'pointer',
+              }}>
+              <div style={{ fontSize: 16, marginBottom: 2 }}>{o.emoji}</div>
+              {lang === 'ar' ? o.ar : o.en}
+              <div style={{ fontSize: 9, opacity: 0.75, marginTop: 1 }}>
+                {ELIMINATION_SCORE[o.id]} {lang === 'ar' ? 'نقطة' : 'pts'}
+              </div>
+            </motion.button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function PlayBox({ mode, setMode, coins, onCreate, lang }: {
   mode: GameMode;
   setMode: (m: GameMode) => void;
@@ -558,6 +610,7 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
   const [coinAmount, setCoinAmount] = useState(50);
   const [botCount, setBotCount] = useState(3);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  const [matchLength, setMatchLength] = useState<MatchLength>('standard');
   const theme = MODE_THEMES[mode];
 
   useEffect(() => {
@@ -574,9 +627,9 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
     if (!isOk) return;
     soundService.playClick();
     if (mode === 'bots') {
-      onCreate({ type: 'bots', botCount, difficulty, bet: 0 });
+      onCreate({ type: 'bots', botCount, difficulty, bet: 0, matchLength });
     } else {
-      onCreate({ type: mode, playerCount, bet: coinAmount });
+      onCreate({ type: mode, playerCount, bet: coinAmount, matchLength });
     }
   };
 
@@ -631,6 +684,7 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
                     {lang === 'ar' ? 'كوينزك غير كافية!' : 'Not enough coins!'}
                   </p>
                 )}
+                <MatchLengthPicker value={matchLength} onChange={setMatchLength} accent={theme.accent} lang={lang} />
               </>
             ) : (
               <>
@@ -638,6 +692,7 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
                   min={1} max={9} accent={theme.accent} lang={lang}
                   label={lang === 'ar' ? 'عدد البوتات' : 'Bots'} />
                 <DifficultyCards value={difficulty} onChange={setDifficulty} lang={lang} />
+                <MatchLengthPicker value={matchLength} onChange={setMatchLength} accent={theme.accent} lang={lang} />
               </>
             )}
           </div>
@@ -873,6 +928,7 @@ export function HomePage() {
         botCount: cfg.botCount,
         botDifficulty: cfg.difficulty,
         gameType: 'check',
+        gameMode: cfg.matchLength,
       });
     } else if (cfg.type === 'private') {
       socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, {
@@ -883,6 +939,7 @@ export function HomePage() {
         gameType: 'check',
         betAmount: cfg.bet,
         maxPlayers: cfg.playerCount,
+        gameMode: cfg.matchLength,
       });
     } else {
       socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, {
@@ -893,6 +950,7 @@ export function HomePage() {
         gameType: 'check',
         betAmount: cfg.bet,
         maxPlayers: cfg.playerCount,
+        gameMode: cfg.matchLength,
       });
     }
   };

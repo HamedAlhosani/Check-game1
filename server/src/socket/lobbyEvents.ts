@@ -25,7 +25,8 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
     if ((payload.type || 'public') === 'public' && (payload.botCount || 0) === 0) {
       const gameType = payload.gameType || 'check';
       const maxPlayers = payload.maxPlayers || 10;
-      const existing = roomManager.findMatchableRoom(gameType, maxPlayers);
+      const gameMode = payload.gameMode || 'standard';
+      const existing = roomManager.findMatchableRoom(gameType, maxPlayers, gameMode);
       if (existing) {
         const joined = roomManager.joinRoom(existing.roomId, socket.uid, displayName, avatarId, equippedFrame);
         if (joined) {
@@ -51,7 +52,8 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
       payload.botDifficulty || 'medium',
       payload.gameType || 'check',
       equippedFrame,
-      payload.maxPlayers || 10
+      payload.maxPlayers || 10,
+      payload.gameMode || 'standard'
     );
 
     socket.join(room.roomId);

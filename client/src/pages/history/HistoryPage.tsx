@@ -7,6 +7,7 @@ import { useT, useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { MatchRecord } from '@check-game/shared';
+import { ReplayModal } from '../../components/shared/ReplayModal';
 
 const AVATAR_EMOJIS: Record<string, string> = {
   avatar_1: '🦅', avatar_2: '🐪', avatar_3: '🌴', avatar_4: '⚔️',
@@ -26,6 +27,7 @@ export function HistoryPage() {
   const { profile } = useAuthStore();
   const [records, setRecords] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [replayRecord, setReplayRecord] = useState<MatchRecord | null>(null);
 
   useEffect(() => {
     apiClient.get<MatchRecord[]>('/api/history')
@@ -129,7 +131,7 @@ export function HistoryPage() {
 
                   {/* Players */}
                   <div className="px-4 py-3">
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 mb-2">
                       {sortedPlayers.map(p => {
                         const isThisWinner = p.uid === rec.winnerId;
                         const isMe = p.uid === myUid;
@@ -161,6 +163,26 @@ export function HistoryPage() {
                         );
                       })}
                     </div>
+
+                    {/* Replay button — only on rich Check matches */}
+                    {rec.gameType === 'check' && rec.rounds && rec.rounds.length > 0 && (
+                      <button
+                        onClick={() => setReplayRecord(rec)}
+                        className="w-full rounded-lg flex items-center justify-center gap-2 font-arabic font-bold transition-all"
+                        style={{
+                          padding: '6px 10px',
+                          background: 'rgba(201,168,76,0.10)',
+                          border: '1px solid rgba(201,168,76,0.30)',
+                          color: '#E8C97A',
+                          fontSize: 12,
+                          cursor: 'pointer',
+                        }}>
+                        📺 {lang === 'ar' ? 'إعادة المباراة' : 'Replay match'}
+                        <span style={{ fontSize: 10, color: 'rgba(245,230,200,0.55)', fontWeight: 400 }}>
+                          · {rec.rounds.length} {lang === 'ar' ? 'جولات' : 'rounds'}
+                        </span>
+                      </button>
+                    )}
                   </div>
                 </motion.div>
               );
@@ -168,6 +190,14 @@ export function HistoryPage() {
           </div>
         )}
       </div>
+
+      <ReplayModal
+        open={!!replayRecord}
+        record={replayRecord}
+        myUid={myUid}
+        lang={lang}
+        onClose={() => setReplayRecord(null)}
+      />
     </div>
   );
 }

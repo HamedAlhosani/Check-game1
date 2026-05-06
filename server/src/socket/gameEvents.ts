@@ -151,11 +151,15 @@ function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): 
         recordGameResult(p.uid, p.uid === winnerId, 'check').catch(() => null);
       }
       if (realPlayers.length > 0) {
+        // Capture both human and bot players in the record so the replay
+        // shows the full table (the leaderboard credits only humans, but
+        // the replay needs everyone for context).
+        const meta = engine.getMatchMeta();
         saveMatchHistory({
-          gameId: (engine as any).gameId ?? 'unknown',
+          gameId: engine.gameId ?? 'unknown',
           gameType: 'check',
           playedAt: Date.now(),
-          players: realPlayers.map(p => ({
+          players: state.players.map(p => ({
             uid: p.uid,
             displayName: p.displayName,
             avatarId: p.avatarId,
@@ -163,6 +167,10 @@ function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): 
             score: p.cumulativeScore,
           })),
           winnerId,
+          rounds: engine.getRoundsLog(),
+          gameMode: meta.gameMode,
+          eliminationScore: meta.eliminationScore,
+          durationMs: meta.durationMs,
         }).catch(() => null);
       }
       return;

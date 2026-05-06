@@ -127,6 +127,7 @@ export interface CreateRoomPayload {
   botDifficulty: 'easy' | 'medium' | 'hard';
   gameType: import('./game.types').GameType;
   maxPlayers?: number;
+  gameMode?: import('./game.types').GameMode;
 }
 
 export interface SwapDrawnPayload {

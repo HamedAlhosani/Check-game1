@@ -1,4 +1,4 @@
-import { RoomPlayer, RoomState, GameType } from '@check-game/shared';
+import { RoomPlayer, RoomState, GameType, GameMode } from '@check-game/shared';
 
 const MAX_PLAYERS = 10;
 const BOT_NAMES = [
@@ -18,6 +18,7 @@ export class Room {
   createdAt: number;
   gameId: string | null = null;
   gameType: GameType;
+  gameMode: GameMode;
   maxPlayers: number;
 
   constructor(
@@ -29,7 +30,8 @@ export class Room {
     hostAvatar: string,
     gameType: GameType = 'check',
     hostEquippedFrame = 'frame_default',
-    maxPlayers = 10
+    maxPlayers = 10,
+    gameMode: GameMode = 'standard'
   ) {
     this.roomId = roomId;
     this.name = name;
@@ -38,6 +40,7 @@ export class Room {
     this.hostUid = hostUid;
     this.status = 'waiting';
     this.gameType = gameType;
+    this.gameMode = gameMode;
     this.createdAt = Date.now();
     this.maxPlayers = Math.min(Math.max(maxPlayers, 2), 10);
     this.players = [{
@@ -136,6 +139,7 @@ export class Room {
       gameId: this.gameId,
       gameType: this.gameType,
       maxPlayers: this.maxPlayers,
+      gameMode: this.gameMode,
     };
   }
 }

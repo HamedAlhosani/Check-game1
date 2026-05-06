@@ -61,6 +61,8 @@ export interface GameState {
   burnWindowEndAt: number | null;
   specialActionUid: string | null;
   dealTurnCount: number;
+  eliminationScore?: number;
+  gameMode?: GameMode;
 }
 
 export interface RoundScore {
@@ -78,6 +80,15 @@ export interface RoomPlayer {
   equippedFrame?: string;
 }
 
+export type GameMode = 'quick' | 'standard' | 'long';
+
+/** Score threshold a player must reach to be eliminated, per game mode. */
+export const ELIMINATION_SCORE: Record<GameMode, number> = {
+  quick: 50,       // ~2-3 rounds, fast
+  standard: 100,   // ~5 rounds, default
+  long: 150,       // ~7-8 rounds, epic
+};
+
 export interface RoomState {
   roomId: string;
   name: string;
@@ -90,6 +101,7 @@ export interface RoomState {
   gameId: string | null;
   gameType: GameType;
   maxPlayers: number;
+  gameMode?: GameMode;
 }
 
 export interface UserProfile {
@@ -139,12 +151,36 @@ export interface MatchPlayer {
   score: number;
 }
 
+/** One round of a Check match, captured for the replay/summary view. */
+export interface MatchRound {
+  roundNumber: number;
+  checkCallerId: string | null;
+  /** What happened to the CHECK caller's hand: lowest = win-bonus (-X),
+   *  tied = pay raw hand, beaten = pay 2x hand. null when no CHECK was called. */
+  checkOutcome: 'win' | 'tied' | 'beaten' | null;
+  /** Round score delta per uid (negative = bonus, positive = penalty). */
+  scores: Record<string, number>;
+  /** Sum of card values in each player's hand at scoring time. */
+  rawHandSums: Record<string, number>;
+  /** Cumulative score per uid AFTER this round was applied. */
+  cumulative: Record<string, number>;
+  /** uids eliminated by this round (cumulative crossed the threshold). */
+  eliminations: string[];
+}
+
 export interface MatchRecord {
   gameId: string;
   gameType: GameType;
   playedAt: number;
   players: MatchPlayer[];
   winnerId: string | null;
+  // Optional, populated for Check matches with the per-round breakdown so
+  // we can show a replay/summary in the history page.
+  rounds?: MatchRound[];
+  /** Wall-clock duration of the match (ms). */
+  durationMs?: number;
+  gameMode?: GameMode;
+  eliminationScore?: number;
 }
 
 export interface LeaderboardEntry {

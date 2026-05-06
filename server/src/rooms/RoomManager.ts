@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { GameType } from '@check-game/shared';
+import { GameType, GameMode, ELIMINATION_SCORE } from '@check-game/shared';
 import { Room } from './Room';
 import { GameEngine, GameEventEmitter } from '../game/GameEngine';
 import { BotPlayer } from '../game/BotPlayer';
@@ -31,10 +31,11 @@ export class RoomManager {
     botDifficulty: 'easy' | 'medium' | 'hard',
     gameType: GameType = 'check',
     equippedFrame = 'frame_default',
-    maxPlayers = 10
+    maxPlayers = 10,
+    gameMode: GameMode = 'standard'
   ): Room {
     const roomId = uuidv4();
-    const room = new Room(roomId, name, type, hostUid, hostName, hostAvatar, gameType, equippedFrame, maxPlayers);
+    const room = new Room(roomId, name, type, hostUid, hostName, hostAvatar, gameType, equippedFrame, maxPlayers, gameMode);
 
     if (botCount > 0) {
       room.addBots(Math.min(botCount, 10), botDifficulty);
@@ -143,7 +144,8 @@ export class RoomManager {
         break;
       }
       default: {
-        const e = new GameEngine(roomId, players, emit);
+        const eliminationScore = ELIMINATION_SCORE[room.gameMode];
+        const e = new GameEngine(roomId, players, emit, { eliminationScore, gameMode: room.gameMode });
         engine = e;
         const bots = room.players.filter(p => p.isBot)
           .map(p => new BotPlayer(p.uid, p.botDifficulty || 'medium'));
@@ -174,12 +176,13 @@ export class RoomManager {
   getDominoBots(roomId: string): DominoBotPlayer[] { return this.dominoBots.get(roomId) || []; }
   getJacaroBots(roomId: string): JacaroBotPlayer[] { return this.jacaroBots.get(roomId) || []; }
 
-  findMatchableRoom(gameType: GameType, maxPlayers: number): Room | undefined {
+  findMatchableRoom(gameType: GameType, maxPlayers: number, gameMode: GameMode = 'standard'): Room | undefined {
     for (const room of this.rooms.values()) {
       if (
         room.type === 'public' &&
         room.status === 'waiting' &&
         room.gameType === gameType &&
+        room.gameMode === gameMode &&
         room.maxPlayers === maxPlayers &&
         room.players.length < room.maxPlayers
       ) {

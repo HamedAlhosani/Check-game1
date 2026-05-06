@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Card, GamePhase, GameState, PlayerGameState } from '@check-game/shared';
+import { Card, GamePhase, GameState, PlayerGameState, GameMode, MatchRound } from '@check-game/shared';
 import { Deck, decksNeededFor } from './Deck';
 import { getCardValue, isSpecialCard } from './Card';
 import { canBurnCard } from './BurnValidator';
@@ -59,17 +59,28 @@ export class GameEngine {
   private peekDoneSet: Set<string> = new Set();
   private turnActedUid: string | null = null; // blocks double-action in check window
 
+  // ── Game-mode config ────────────────────────────────────────────────────────
+  private eliminationScore: number;
+  private gameMode: GameMode;
+
+  // ── Replay data — per-round summary captured during scoring ────────────────
+  private rounds: MatchRound[] = [];
+  readonly startedAt: number = Date.now();
+
   private emit: GameEventEmitter;
 
   constructor(
     roomId: string,
     players: { uid: string; displayName: string; avatarId: string; isBot: boolean; equippedFrame?: string }[],
-    emit: GameEventEmitter
+    emit: GameEventEmitter,
+    config?: { eliminationScore?: number; gameMode?: GameMode }
   ) {
     this.gameId = uuidv4();
     this.roomId = roomId;
     this.deck = new Deck(decksNeededFor(players.length));
     this.emit = emit;
+    this.eliminationScore = config?.eliminationScore ?? 100;
+    this.gameMode = config?.gameMode ?? 'standard';
 
     this.players = players.map((p, i) => ({
       ...p,
@@ -728,12 +739,25 @@ export class GameEngine {
       lowestUid: result.lowestUid,
     });
 
+    const eliminations: string[] = [];
     for (const p of this.players) {
-      if (!p.isEliminated && p.cumulativeScore >= 100) {
+      if (!p.isEliminated && p.cumulativeScore >= this.eliminationScore) {
         p.isEliminated = true;
+        eliminations.push(p.uid);
         this.emit('game:elimination', { uid: p.uid, totalScore: p.cumulativeScore });
       }
     }
+
+    // Capture the round for the post-match replay/summary view.
+    this.rounds.push({
+      roundNumber: this.roundNumber,
+      checkCallerId: this.checkCallerId,
+      checkOutcome: result.checkOutcome,
+      scores: { ...result.roundScores },
+      rawHandSums: { ...result.rawHandSums },
+      cumulative: { ...cumulative },
+      eliminations,
+    });
 
     const remaining = this.activePlayers();
     if (remaining.length <= 1) {
@@ -779,6 +803,20 @@ export class GameEngine {
     return this.drawnCards.get(uid);
   }
 
+  /** Per-round breakdown captured during scoring — used to build the
+   *  match-replay summary saved to history at game end. */
+  getRoundsLog(): MatchRound[] {
+    return this.rounds.slice();
+  }
+
+  getMatchMeta(): { gameMode: GameMode; eliminationScore: number; durationMs: number } {
+    return {
+      gameMode: this.gameMode,
+      eliminationScore: this.eliminationScore,
+      durationMs: Date.now() - this.startedAt,
+    };
+  }
+
   getPublicState(): GameState {
     return {
       gameId: this.gameId,
@@ -811,6 +849,8 @@ export class GameEngine {
       burnWindowEndAt: this.burnWindowEndAt,
       specialActionUid: this.specialActionUid,
       dealTurnCount: this.dealTurnCount,
+      eliminationScore: this.eliminationScore,
+      gameMode: this.gameMode,
     };
   }
 

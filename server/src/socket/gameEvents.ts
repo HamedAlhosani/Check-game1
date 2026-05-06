@@ -320,9 +320,9 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     engine?.onTakeDiscard(socket.uid, payload.handPosition);
   });
 
-  // Player explicitly leaves mid-game → replace immediately with bot.
-  // The Room.players entry stays as a human for 60s so the user can come
-  // back and reclaim their seat. After 60s the seat is fully abandoned.
+  // Player explicitly leaves mid-game → replace immediately with bot AND
+  // mark the seat as fully abandoned so the user is NEVER auto-resumed
+  // back into this game. (60s grace is only for accidental disconnects.)
   socket.on(SOCKET_EVENTS.GAME_PLAYER_LEAVE, (payload: { gameId: string }) => {
     if (!socket.uid) return;
     const engine = roomManager.getGame(payload.gameId) as GameEngine | undefined;
@@ -335,7 +335,13 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     const roomId = engine.roomId;
     roomManager.removeSocket(socket.id);
     socket.leave(roomId);
-    scheduleAbandon(roomId, socket.uid);
+    // Cancel any pending abandon timer and abandon the seat immediately.
+    cancelAbandon(roomId, socket.uid);
+    const room = roomManager.getRoom(roomId);
+    if (room) {
+      const rp = room.players.find(p => p.uid === socket.uid);
+      if (rp) rp.isBot = true;
+    }
   });
 
   // Client-requested smart auto-play (used when AFK fast-play kicks in)

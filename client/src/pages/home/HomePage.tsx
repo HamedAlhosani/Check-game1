@@ -98,8 +98,8 @@ const MODE_THEMES: Record<GameMode, ModeTheme> = {
   // Aurora teal — feels global / live / connected
   online:  { bg1: '#0F4C5C', bg2: '#04181E', accent: '#5EEAD4', glow: 'rgba(94,234,212,0.6)',  suit: '♠', rank: 'O', icon: '🌍',
              label: { ar: 'أونلاين',  en: 'Online'  }, tagline: { ar: 'العب مع لاعبين حول العالم', en: 'Worldwide players' } },
-  // Sunset magenta — intimate / exclusive
-  private: { bg1: '#7A1B5C', bg2: '#1F0418', accent: '#F472B6', glow: 'rgba(244,114,182,0.55)', suit: '♥', rank: 'P', icon: '🔒',
+  // Imperial violet — exclusive, royal
+  private: { bg1: '#4C1D95', bg2: '#170435', accent: '#C495FF', glow: 'rgba(196,149,255,0.55)', suit: '♥', rank: 'P', icon: '🔒',
              label: { ar: 'غرفة خاصة', en: 'Private' }, tagline: { ar: 'غرفة لك ولأصدقائك',         en: 'Just you and friends' } },
   // Phoenix amber — warm / arena / training fire
   bots:    { bg1: '#6B2D0E', bg2: '#1F0905', accent: '#FCA85B', glow: 'rgba(252,168,91,0.55)',  suit: '♣', rank: 'B', icon: '🤖',
@@ -331,21 +331,21 @@ function CoinStepper({ value, onChange, accent, max, lang }: {
   );
 }
 
-// ── DifficultyCards — 3 distinct character cards ─────────────────────────────
+// ── DifficultyCards — 3 big text-only buttons ────────────────────────────────
 function DifficultyCards({ value, onChange, lang }: {
   value: 'easy' | 'medium' | 'hard'; onChange: (d: 'easy'|'medium'|'hard') => void; lang: string;
 }) {
   const opts = [
-    { v: 'easy' as const,   icon: '🌱', ar: 'سهل',   en: 'Easy',   color: '#7AE08A', desc: { ar: 'تدريبي', en: 'Training' } },
-    { v: 'medium' as const, icon: '⚔️', ar: 'متوسط', en: 'Medium', color: '#E8C97A', desc: { ar: 'طبيعي',  en: 'Normal'   } },
-    { v: 'hard' as const,   icon: '🔥', ar: 'صعب',   en: 'Hard',   color: '#E04030', desc: { ar: 'محترف',  en: 'Pro'      } },
+    { v: 'easy' as const,   ar: 'سهل',   en: 'Easy',   color: '#7AE08A' },
+    { v: 'medium' as const, ar: 'متوسط', en: 'Medium', color: '#E8C97A' },
+    { v: 'hard' as const,   ar: 'صعب',   en: 'Hard',   color: '#E04030' },
   ];
   return (
-    <div className="flex flex-col gap-2">
-      <span className="font-arabic" style={{ fontSize: 13, color: 'rgba(245,230,200,0.6)' }}>
+    <div className="w-full flex flex-col gap-2 items-center">
+      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.55)' }}>
         {lang === 'ar' ? 'مستوى البوتات' : 'Bot difficulty'}
       </span>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2.5 w-full" style={{ maxWidth: 320 }}>
         {opts.map(o => {
           const sel = value === o.v;
           return (
@@ -353,20 +353,22 @@ function DifficultyCards({ value, onChange, lang }: {
               whileTap={{ scale: 0.96 }}
               whileHover={{ y: -2 }}
               onClick={() => { onChange(o.v); soundService.playClick(); }}
-              className="rounded-2xl flex flex-col items-center py-3 transition-all"
+              className="rounded-2xl flex items-center justify-center transition-all"
               style={{
-                background: sel ? `linear-gradient(160deg, ${o.color}33, ${o.color}11)` : 'rgba(255,255,255,0.04)',
-                border: `1.5px solid ${sel ? o.color : 'rgba(255,255,255,0.08)'}`,
-                boxShadow: sel ? `0 0 18px ${o.color}55` : 'none',
+                padding: '18px 8px',
+                background: sel ? `linear-gradient(160deg, ${o.color}40, ${o.color}15)` : 'rgba(255,255,255,0.05)',
+                border: `2px solid ${sel ? o.color : 'rgba(255,255,255,0.10)'}`,
+                boxShadow: sel ? `0 0 22px ${o.color}66` : 'none',
                 cursor: 'pointer',
               }}
             >
-              <span style={{ fontSize: 26, lineHeight: 1, marginBottom: 4 }}>{o.icon}</span>
-              <span className="font-arabic font-bold" style={{ fontSize: 13, color: sel ? o.color : 'rgba(245,230,200,0.85)' }}>
+              <span className="font-arabic font-bold" style={{
+                fontSize: 20,
+                color: sel ? o.color : 'rgba(245,230,200,0.85)',
+                textShadow: sel ? `0 0 12px ${o.color}99` : 'none',
+                letterSpacing: 1,
+              }}>
                 {lang === 'ar' ? o.ar : o.en}
-              </span>
-              <span className="font-arabic" style={{ fontSize: 9, color: 'rgba(245,230,200,0.4)' }}>
-                {lang === 'ar' ? o.desc.ar : o.desc.en}
               </span>
             </motion.button>
           );
@@ -379,7 +381,6 @@ function DifficultyCards({ value, onChange, lang }: {
 // ── Giant playing-card frame: corner ranks + suit watermark + central artwork ─
 function GiantPlayingCard({ mode, children }: { mode: GameMode; children: React.ReactNode }) {
   const t = MODE_THEMES[mode];
-  const isRed = mode === 'private';
   return (
     <motion.div
       key={mode}
@@ -401,19 +402,6 @@ function GiantPlayingCard({ mode, children }: { mode: GameMode; children: React.
       {/* Inner border (real-card 'pip line') */}
       <div className="absolute pointer-events-none rounded-[20px]"
         style={{ inset: 14, border: `1px solid ${t.accent}33` }} />
-
-      {/* Top-left corner mark */}
-      <div className="absolute flex flex-col items-center pointer-events-none"
-        style={{ top: 18, insetInlineStart: 18, color: isRed ? '#FFB4DC' : '#fff', textShadow: `0 0 12px ${t.glow}` }}>
-        <span className="font-bold font-display" style={{ fontSize: 30, lineHeight: 1, fontFamily: 'Georgia, serif' }}>{t.rank}</span>
-        <span style={{ fontSize: 22, lineHeight: 1, marginTop: 2 }}>{t.suit}</span>
-      </div>
-      {/* Bottom-right corner mark (flipped 180°) */}
-      <div className="absolute flex flex-col items-center pointer-events-none"
-        style={{ bottom: 18, insetInlineEnd: 18, transform: 'rotate(180deg)', color: isRed ? '#FFB4DC' : '#fff', textShadow: `0 0 12px ${t.glow}` }}>
-        <span className="font-bold font-display" style={{ fontSize: 30, lineHeight: 1, fontFamily: 'Georgia, serif' }}>{t.rank}</span>
-        <span style={{ fontSize: 22, lineHeight: 1, marginTop: 2 }}>{t.suit}</span>
-      </div>
 
       {/* Big faint suit watermark BEHIND the content */}
       <span aria-hidden="true" style={{

@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { memo } from 'react';
 import { Card } from '@check-game/shared';
 
 interface Props {
@@ -137,7 +138,9 @@ function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
 }
 
 // ─── Card face SVG (the new Check design) ───────────────────────────────────
-function CardFaceSVG({ rank, suit }: { rank: string; suit: string }) {
+// Memoised: same rank+suit → same SVG output. Skips the (sizeable) re-render
+// on every state change for cards that haven't actually changed face.
+const CardFaceSVG = memo(function CardFaceSVG({ rank, suit }: { rank: string; suit: string }) {
   const red = RED_SUITS.includes(suit);
   const ink = red ? '#9B1C1C' : '#0E1B2C';
   const accent = '#C9A84C';
@@ -222,10 +225,10 @@ function CardFaceSVG({ rank, suit }: { rank: string; suit: string }) {
       </g>
     </svg>
   );
-}
+});
 
 // ─── Emirati card back SVG (kept as-is) ─────────────────────────────────────
-function CardBack({ backId = 'card_classic' }: { backId?: string }) {
+const CardBack = memo(function CardBack({ backId = 'card_classic' }: { backId?: string }) {
   const t = CARD_BACK_THEMES[backId] || CARD_BACK_THEMES.card_classic;
   const uid = backId.replace(/_/g, '');
   return (
@@ -277,7 +280,7 @@ function CardBack({ backId = 'card_classic' }: { backId?: string }) {
       <line x1="12" y1="145" x2="88" y2="145" stroke={t.accent} strokeWidth="0.5" opacity="0.18"/>
     </svg>
   );
-}
+});
 
 export function PlayingCard({ card, faceDown = false, onClick, highlight = 'none', small, mini, xmini, backId }: Props) {
   const showFront = card && !faceDown && card.isRevealed;

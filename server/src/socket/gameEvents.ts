@@ -38,6 +38,15 @@ export function startGameSession(io: Server, roomId: string): void {
   // Wrap emitter to intercept game:over for non-bot (online) sessions
   const wrappedEmitter: GameEventEmitter = (event, data, rid, toUid) => {
     createEmitter(io, roomId)(event, data, rid, toUid);
+    // When a J swap lands on a bot, let it remember who attacked it so it
+    // can swap back later when it draws a J of its own.
+    if (event === 'game:swap_executed' && gameType === 'check') {
+      const d = data as any;
+      if (d?.targetUid && d?.uid && d.targetUid !== d.uid) {
+        const targetBot = roomManager.getCheckBots(roomId).find(b => b.uid === d.targetUid);
+        targetBot?.noteJSwapAgainstMe(d.uid);
+      }
+    }
     if (event === 'game:over' && gameType === 'check') {
       const d = data as any;
       const engine = roomManager.getGame(d.gameId) as GameEngine | undefined;

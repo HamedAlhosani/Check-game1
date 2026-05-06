@@ -16,6 +16,9 @@ export class BotPlayer {
   readonly uid: string;
   private difficulty: 'easy' | 'medium' | 'hard';
   private myCards: Map<number, Card> = new Map();
+  // Last opponent who used J to dump a card on us — when we get a J, we
+  // prefer to swap it back to them. Cleared once we use a J ourselves.
+  private lastJAttacker: string | null = null;
 
   constructor(uid: string, difficulty: 'easy' | 'medium' | 'hard' = 'medium') {
     this.uid = uid;
@@ -27,6 +30,11 @@ export class BotPlayer {
     for (let i = 0; i < cards.length; i++) {
       if (cards[i]) this.myCards.set(i, cards[i]!);
     }
+  }
+
+  /** Called when an opponent has just J-swapped a card onto us. */
+  noteJSwapAgainstMe(attackerUid: string): void {
+    this.lastJAttacker = attackerUid;
   }
 
   decideTurn(state: GameState, drawnCard?: Card): BotAction {
@@ -165,10 +173,33 @@ export class BotPlayer {
   private decideSpecialSwap(state: GameState): BotAction {
     const opponents = state.players.filter(p => p.uid !== this.uid && !p.isEliminated);
     if (!opponents.length) return { type: 'DRAW' };
-    const target = opponents.reduce((best, p) => p.cardCount > best.cardCount ? p : best, opponents[0]);
+
+    const worstPos = this.findWorstPosition();
+    const worstVal = worstPos !== -1 ? this.getCardVal(worstPos) : 0;
+
+    // If our hand is already low, swapping is a gamble that can only hurt us
+    // (we'd receive an unknown opponent card). Only J-swap when we have a
+    // genuinely bad card to dump (≥ 7 for medium/hard, ≥ 9 for easy).
+    const dumpThreshold = this.difficulty === 'easy' ? 9 : 7;
+    if (worstVal < dumpThreshold) return { type: 'DRAW' }; // skip → engine timeout advances turn
+
+    // Target preference: the opponent who most recently J-swapped us back
+    // ("اذا قوي يرجعه") — we hand them their gift back. Otherwise pick the
+    // opponent with the most cards (more positions = more chance of bad card
+    // for them).
+    const preferred = this.lastJAttacker
+      ? opponents.find(p => p.uid === this.lastJAttacker)
+      : null;
+    const target = preferred
+      ?? opponents.reduce((best, p) => p.cardCount > best.cardCount ? p : best, opponents[0]);
+
     const validCards = target.cards.map((c, i) => ({ c, i })).filter(x => x.c !== null);
     const targetPos = validCards[Math.floor(Math.random() * validCards.length)]?.i ?? 0;
-    const worstPos = this.findWorstPosition();
+
+    // Used the J — clear the revenge memory so we don't keep targeting the
+    // same player after every subsequent J.
+    this.lastJAttacker = null;
+
     return {
       type: 'SPECIAL_SWAP',
       myPosition: worstPos !== -1 ? worstPos : 0,

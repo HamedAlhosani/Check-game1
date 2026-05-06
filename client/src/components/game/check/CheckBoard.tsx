@@ -632,18 +632,38 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     return () => window.removeEventListener('resize', h);
   }, []);
   const isMobile = winW < 768;
+  // Tablet (iPad portrait/landscape) and Desktop get their own table sizes
+  // so the felt + chairs never spill past the viewport. Mobile is left alone
+  // — the user said the phone layout is fine.
+  const isTablet = !isMobile && winW < 1280;
 
-  // Dynamic mobile sizing — everything must fit inside the fixed viewport
-  // User asked for big cards even if they overlap the table edge — we keep
-  // the table generously sized and let absolute-positioned my-cards float
-  // over the bottom of the table circle.
   const myAreaH = 300; // small cards (72w → 108h) 2×2 + box + CHECK button
   const stripH = isMobile ? 100 : 0;
   const mobileTableSize = isMobile
     ? Math.min(
-        Math.floor(winW * 0.92),                // most of screen width
-        winH - 130 - stripH - 100,              // leave ~100 for my-cards overlap zone
-        460                                      // hard cap
+        Math.floor(winW * 0.92),
+        winH - 130 - stripH - 100,
+        460
+      )
+    : 0;
+
+  // Tablet: medium-tight table — caps at 540, eats at most 60% width and
+  // leaves ~340px of vertical space for top header + my-area + action bar.
+  const tabletTableSize = isTablet
+    ? Math.min(
+        Math.floor(winW * 0.60),
+        winH - 340,
+        540
+      )
+    : 0;
+
+  // Desktop: larger but still height-aware so large player counts (which
+  // need wider opponent seats on the sides) still fit in 1080p.
+  const desktopTableSize = !isMobile && !isTablet
+    ? Math.min(
+        Math.floor(winW * 0.55),
+        winH - 360,
+        720
       )
     : 0;
   const n = gameState.players.length;
@@ -1274,8 +1294,16 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               ref={tableRef}
               className="relative"
               style={{
-                width: isMobile ? Math.max(180, mobileTableSize) : 'min(960px, max(320px, 75vw))',
-                height: isMobile ? Math.max(180, mobileTableSize) : 'min(960px, max(320px, 75vw))',
+                width: isMobile
+                  ? Math.max(180, mobileTableSize)
+                  : isTablet
+                    ? Math.max(280, tabletTableSize)
+                    : Math.max(360, desktopTableSize),
+                height: isMobile
+                  ? Math.max(180, mobileTableSize)
+                  : isTablet
+                    ? Math.max(280, tabletTableSize)
+                    : Math.max(360, desktopTableSize),
                 borderRadius: '50%',
                 background: `
                   radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.045) 0%, transparent 38%),

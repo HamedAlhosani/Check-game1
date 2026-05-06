@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 import { AuthenticatedSocket } from '../middleware/authMiddleware';
-import { SOCKET_EVENTS, TournamentSize, GameMode, TournamentVisibility, TournamentKind } from '@check-game/shared';
+import { SOCKET_EVENTS, TournamentSize, GameMode, TournamentVisibility, TournamentKind, PrizeSplit } from '@check-game/shared';
 import { tournamentManager } from '../rooms/TournamentManager';
 import { getUserProfile } from '../services/firestoreService';
 
@@ -20,6 +20,8 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
     size?: TournamentSize;
     difficulty?: 'easy' | 'medium' | 'hard';
     matchLength?: GameMode;
+    entryFee?: number;
+    prizeSplit?: PrizeSplit;
   }) => {
     if (!socket.uid) return;
     const profile = await getUserProfile(socket.uid);
@@ -27,7 +29,6 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
 
     const kind: TournamentKind = payload.kind === 'online' ? 'online' : 'solo';
 
-    // Block multiple tournaments for the same host (any kind).
     const active = tournamentManager.getActiveForPlayer(socket.uid)
       .find(t => t.state.hostUid === socket.uid);
     if (active) {
@@ -39,7 +40,7 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
     const difficulty = payload.difficulty || 'medium';
     const matchLength: GameMode = payload.matchLength || (kind === 'online' ? 'standard' : 'quick');
 
-    const t = tournamentManager.create({
+    const r = await tournamentManager.create({
       io,
       hostUid:    socket.uid,
       hostName:   profile.displayName,
@@ -48,9 +49,15 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
       name:       payload.name,
       visibility: payload.visibility,
       kind, size, difficulty, matchLength,
+      entryFee:   kind === 'online' ? Math.max(0, Math.floor(payload.entryFee || 0)) : 0,
+      prizeSplit: payload.prizeSplit,
     });
+    if (!r.ok || !r.tournament) {
+      socket.emit(SOCKET_EVENTS.TOURNAMENT_ERROR, { message: r.error || 'Could not create tournament' });
+      return;
+    }
 
-    socket.emit(SOCKET_EVENTS.TOURNAMENT_STATE, t.getStateFor(socket.uid));
+    socket.emit(SOCKET_EVENTS.TOURNAMENT_STATE, r.tournament.getStateFor(socket.uid));
     tournamentManager.broadcastPublicList(io);
   });
 
@@ -58,7 +65,7 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
     if (!socket.uid) return;
     const profile = await getUserProfile(socket.uid);
     if (!profile) return;
-    const r = tournamentManager.join(io, payload.tournamentId, {
+    const r = await tournamentManager.join(io, payload.tournamentId, {
       uid: socket.uid,
       displayName: profile.displayName,
       avatarId: profile.avatarId,
@@ -81,7 +88,7 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
       socket.emit(SOCKET_EVENTS.TOURNAMENT_ERROR, { message: 'Invalid code' });
       return;
     }
-    const r = tournamentManager.join(io, t.state.id, {
+    const r = await tournamentManager.join(io, t.state.id, {
       uid: socket.uid,
       displayName: profile.displayName,
       avatarId: profile.avatarId,
@@ -128,8 +135,8 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
     }
   });
 
-  socket.on(SOCKET_EVENTS.TOURNAMENT_LEAVE, (payload: { tournamentId: string }) => {
+  socket.on(SOCKET_EVENTS.TOURNAMENT_LEAVE, async (payload: { tournamentId: string }) => {
     if (!socket.uid) return;
-    tournamentManager.leave(io, payload.tournamentId, socket.uid);
+    await tournamentManager.leave(io, payload.tournamentId, socket.uid);
   });
 }

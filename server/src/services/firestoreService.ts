@@ -329,6 +329,48 @@ export async function grantCoins(uid: string, amount: number): Promise<{ ok: boo
   return { ok: true, coins: p.coins };
 }
 
+/** Atomic coin deduction — fails (returns ok:false) if balance is insufficient. */
+export async function deductCoins(uid: string, amount: number): Promise<{ ok: boolean; error?: string; coins?: number }> {
+  const p = users.get(uid);
+  if (!p) return { ok: false, error: 'User not found' };
+  const cost = Math.max(0, Math.floor(amount));
+  if ((p.coins || 0) < cost) return { ok: false, error: 'Not enough coins' };
+  p.coins = (p.coins || 0) - cost;
+  saveUsers();
+  return { ok: true, coins: p.coins };
+}
+
+/** Update tournament-related stats on a profile. Idempotent-ish; merges with
+ *  existing values. Used by the tournament engine when a cup finishes. */
+export async function recordTournamentResult(uid: string, opts: {
+  rank: number;       // final placement (1 = champion, 2 = runner-up, etc.)
+  size: number;       // bracket size
+  prize: number;      // coins awarded for this finish
+}): Promise<void> {
+  const p = users.get(uid) as any;
+  if (!p) return;
+  const stats = p.tournamentStats || { cupsWon: 0, podiums: 0, entered: 0, totalPrizeWon: 0, bestPrize: 0, lastCupAt: null };
+  stats.entered      = (stats.entered || 0) + 1;
+  if (opts.rank === 1)  { stats.cupsWon = (stats.cupsWon || 0) + 1; stats.lastCupAt = Date.now(); }
+  if (opts.rank <= 3)   stats.podiums = (stats.podiums || 0) + 1;
+  stats.totalPrizeWon  = (stats.totalPrizeWon || 0) + Math.max(0, opts.prize);
+  stats.bestPrize      = Math.max(stats.bestPrize || 0, opts.prize);
+  p.tournamentStats = stats;
+  saveUsers();
+}
+
+/** Increment the entered counter without granting/recording a finish — used
+ *  when a player joins a tournament so the stat reflects participation
+ *  even if they don't make the podium. */
+export async function recordTournamentEntered(uid: string): Promise<void> {
+  const p = users.get(uid) as any;
+  if (!p) return;
+  const stats = p.tournamentStats || { cupsWon: 0, podiums: 0, entered: 0, totalPrizeWon: 0, bestPrize: 0, lastCupAt: null };
+  stats.entered = (stats.entered || 0) + 1;
+  p.tournamentStats = stats;
+  saveUsers();
+}
+
 export async function rechargeCoins(uid: string, packageId: string): Promise<{ ok: boolean; error?: string; coins?: number; granted?: number }> {
   const PACKAGES: Record<string, number> = {
     pkg_100:   100,

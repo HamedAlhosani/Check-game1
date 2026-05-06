@@ -141,6 +141,16 @@ export interface UserProfile {
   dailyMissions?: { date: string; missions: { id: string; progress: number; claimed: boolean }[] };
   claimedAchievements?: string[];
   claimedLevelRewards?: number[];
+  // Tournament stats — set by server when a tournament finishes
+  tournamentStats?: {
+    cupsWon: number;          // 1st place finishes
+    podiums: number;          // top-3 finishes
+    entered: number;          // total tournaments joined
+    totalPrizeWon: number;    // lifetime tournament prize money
+    bestPrize: number;        // single largest prize
+    /** Last cup-win timestamp — used to show a 24h "champion" badge. */
+    lastCupAt?: number | null;
+  };
 }
 
 export interface MatchPlayer {

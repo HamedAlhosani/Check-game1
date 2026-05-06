@@ -1211,6 +1211,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   // ── Scoreboard Modal — opened via the top-right "النقاط" button ───────────
   const ScoreboardModal = () => {
     const sorted = [...gameState.players].sort((a, b) => a.cumulativeScore - b.cumulativeScore);
+    // Threshold the engine actually eliminates at — from the game's mode
+    // (Quick=50, Standard=100, Long=150). Falls back to 100 for safety.
+    const elimScore = gameState.eliminationScore ?? 100;
+    const modeLabel = gameState.gameMode === 'quick' ? '⚡ سريع'
+                    : gameState.gameMode === 'long'  ? '🏛️ طويل'
+                    : '📊 عادي';
     return (
       <motion.div
         key="scoreboard-bg"
@@ -1238,9 +1244,15 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="font-arabic font-bold" style={{ fontSize: 22, color: '#E8C97A' }}>النقاط</h2>
+              <h2 className="font-arabic font-bold flex items-baseline gap-2" style={{ fontSize: 22, color: '#E8C97A' }}>
+                النقاط
+                <span className="rounded-full px-2.5 py-0.5 font-arabic font-bold"
+                  style={{ fontSize: 11, background: 'rgba(201,168,76,0.15)', color: '#E8C97A', border: '1px solid rgba(201,168,76,0.35)' }}>
+                  {modeLabel}
+                </span>
+              </h2>
               <p className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.45)' }}>
-                اللاعب الأقل نقاطاً يفوز · يخرج عند 100
+                اللاعب الأقل نقاطاً يفوز · يخرج عند {elimScore}
               </p>
             </div>
             <button
@@ -1253,9 +1265,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             {sorted.map((p, i) => {
               const isMe = p.uid === user?.uid;
               const score = p.cumulativeScore;
-              const pct = Math.min(100, (score / 100) * 100);
-              const danger = score >= 80;
-              const warn = score >= 60 && score < 80;
+              const pct = Math.min(100, (score / Math.max(1, elimScore)) * 100);
+              // Danger zone: within 20 of being eliminated. Warn at 60% of threshold.
+              const danger = score >= elimScore - 20;
+              const warn = !danger && score >= elimScore * 0.6;
               const barColor = danger ? '#E04030' : warn ? '#E8C97A' : '#7AE08A';
               return (
                 <div
@@ -1297,14 +1310,14 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                     </div>
                   </div>
 
-                  {/* Score / 100 */}
-                  <div className="text-end shrink-0" style={{ minWidth: 56 }}>
+                  {/* Score / elimination threshold */}
+                  <div className="text-end shrink-0" style={{ minWidth: 64 }}>
                     <div className="font-bold font-mono leading-none"
                       style={{ fontSize: 22, color: barColor }}>
                       {score}
                     </div>
                     <div className="font-arabic" style={{ fontSize: 10, color: 'rgba(245,230,200,0.4)', marginTop: 2 }}>
-                      من 100
+                      من {elimScore}
                     </div>
                   </div>
                 </div>

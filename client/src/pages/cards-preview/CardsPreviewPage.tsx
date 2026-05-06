@@ -166,15 +166,20 @@ function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
         </g>
       ))}
 
-      {/* "حظك حلو" banner on top */}
-      <g transform="translate(0 -32)">
-        <rect x={-32} y={-9} width={64} height={18} rx={9} fill={accent2} opacity={0.92}/>
-        <text y={4} textAnchor="middle" direction="rtl"
-          fontFamily="'Tajawal', 'Cairo', 'Segoe UI', sans-serif"
-          fontWeight="900" fontSize="11" fill="#FFF">
-          {'‫حظك حلو ✨‬'}
-        </text>
-      </g>
+      {/* "حظك حلو" banner on top — HTML foreignObject so the browser
+          handles Arabic shaping correctly. SVG <text> can flip the glyph
+          order on iOS/Safari even with direction='rtl'. */}
+      <foreignObject x={-40} y={-44} width={80} height={22}>
+        <div style={{
+          width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          direction: 'rtl', textAlign: 'center',
+          background: accent2, opacity: 0.95, borderRadius: 11,
+          color: '#FFF', fontWeight: 900, fontSize: 11,
+          fontFamily: "'Tajawal','Cairo','Segoe UI',sans-serif",
+        }}>
+          حظك حلو ✨
+        </div>
+      </foreignObject>
 
       {/* The big digit '0' in the centre */}
       <text y={20} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="50"
@@ -182,12 +187,18 @@ function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
       <text y={20} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="50"
         fill={ink}>0</text>
 
-      {/* "صفر" word below the digit */}
-      <text y={36} textAnchor="middle" direction="rtl"
-        fontFamily="'Tajawal', 'Cairo', 'Segoe UI', sans-serif"
-        fontWeight="800" fontSize="11" fill={accent2} letterSpacing="1">
-        {'‫صفر‬'}
-      </text>
+      {/* "صفر" word below the digit — also foreignObject for safe RTL */}
+      <foreignObject x={-30} y={26} width={60} height={16}>
+        <div style={{
+          width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          direction: 'rtl', textAlign: 'center',
+          color: accent2, fontWeight: 800, fontSize: 12,
+          fontFamily: "'Tajawal','Cairo','Segoe UI',sans-serif",
+          letterSpacing: 1,
+        }}>
+          صفر
+        </div>
+      </foreignObject>
     </g>
   );
 }
@@ -296,27 +307,26 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
       {special === 'Q_RED' && <PeekIllustration ink={ink} accent={accent} accent2={accent2}/>}
       {special === 'TEN_RED' && <LuckIllustration ink={ink} accent={accent} accent2={accent2}/>}
 
-      {/* Action label for special cards (wrapped in RTL marks so Arabic
-          glyphs don't get reversed by SVG's default LTR text shaping) */}
+      {/* Action label for special cards — HTML foreignObject so Arabic
+          glyphs render in the correct order on every browser (SVG <text>
+          alone is unreliable for short Arabic words). */}
       {actionLabel && (
-        <text
-          x={50}
-          y={120}
-          textAnchor="middle"
-          direction="rtl"
-          fontFamily="'Tajawal', 'Cairo', 'Segoe UI', sans-serif"
-          fontWeight="800"
-          fontSize="11"
-          fill={accent2}
-        >
-          {`‫${actionLabel}‬`}
-        </text>
+        <foreignObject x={20} y={114} width={60} height={14}>
+          <div style={{
+            width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            direction: 'rtl', textAlign: 'center',
+            color: accent2, fontWeight: 800, fontSize: 11,
+            fontFamily: "'Tajawal','Cairo','Segoe UI',sans-serif",
+          }}>
+            {actionLabel}
+          </div>
+        </foreignObject>
       )}
 
-      {/* CHECK brand — bottom centre */}
+      {/* CHECK brand — bottom centre, wider pill */}
       <g>
-        <rect x="36" y="135" width="28" height="8" rx="4" fill={ink} opacity="0.85"/>
-        <text x="50" y="141" textAnchor="middle" fontFamily="Georgia, serif" fontWeight="800" fontSize="5.5" letterSpacing="2" fill={accent}>CHECK</text>
+        <rect x="22" y="133" width="56" height="11" rx="5.5" fill={ink} opacity="0.9"/>
+        <text x="50" y="141" textAnchor="middle" fontFamily="Georgia, serif" fontWeight="800" fontSize="7" letterSpacing="2.5" fill={accent}>CHECK</text>
       </g>
     </svg>
   );

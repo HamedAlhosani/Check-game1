@@ -148,26 +148,16 @@ function PeekIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
 }
 
 function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: string; accent2: string }) {
-  // Layout: "حظك حلو" banner on top, then BIG '0' below it. Sparkle bursts
-  // and a subtle halo decorate without competing with the digit.
+  // Layout: "حظك حلو" banner on top, BIG '0' in the middle, "صفر" word below.
+  // Arabic text needs direction="rtl" inside SVG or it can render reversed.
   return (
     <g transform="translate(50 72)">
-      {/* Subtle radial halo around the digit */}
-      {Array.from({ length: 12 }).map((_, i) => {
-        const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
-        const x1 = Math.cos(a) * 26;
-        const y1 = Math.sin(a) * 26;
-        const x2 = Math.cos(a) * 34;
-        const y2 = Math.sin(a) * 34;
-        return <line key={i} x1={x1} y1={y1 + 8} x2={x2} y2={y2 + 8} stroke={accent} strokeWidth={1.2} strokeLinecap="round" opacity={0.5}/>;
-      })}
-
       {/* Sparkle stars in the corners */}
       {[
-        [-34, -2, 3],
-        [34, -2, 3.5],
-        [-30, 30, 2.5],
-        [32, 30, 3],
+        [-34, -8, 3],
+        [34, -8, 3.5],
+        [-30, 26, 2.5],
+        [32, 26, 3],
       ].map(([cx, cy, r], i) => (
         <g key={i}>
           <line x1={cx} y1={cy - r * 1.8} x2={cx} y2={cy + r * 1.8} stroke={accent2} strokeWidth={1.2} strokeLinecap="round"/>
@@ -177,21 +167,27 @@ function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
       ))}
 
       {/* "حظك حلو" banner on top */}
-      <g transform="translate(0 -28)">
-        {/* Background pill */}
-        <rect x={-30} y={-9} width={60} height={18} rx={9} fill={accent2} opacity={0.9}/>
-        <text y={4} textAnchor="middle" fontFamily="'Tajawal', 'Cairo', sans-serif" fontWeight="900" fontSize="11" fill="#FFF" letterSpacing="0.5">
-          حظك حلو ✨
+      <g transform="translate(0 -32)">
+        <rect x={-32} y={-9} width={64} height={18} rx={9} fill={accent2} opacity={0.92}/>
+        <text y={4} textAnchor="middle" direction="rtl"
+          fontFamily="'Tajawal', 'Cairo', 'Segoe UI', sans-serif"
+          fontWeight="900" fontSize="11" fill="#FFF">
+          {'‫حظك حلو ✨‬'}
         </text>
       </g>
 
-      {/* The big digit '0' below the banner */}
-      {/* ghost stroke for contrast */}
-      <text y={26} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="56"
+      {/* The big digit '0' in the centre */}
+      <text y={20} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="50"
         fill="none" stroke={accent} strokeWidth={3.5} opacity={0.45}>0</text>
-      {/* main digit */}
-      <text y={26} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="56"
+      <text y={20} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="50"
         fill={ink}>0</text>
+
+      {/* "صفر" word below the digit */}
+      <text y={36} textAnchor="middle" direction="rtl"
+        fontFamily="'Tajawal', 'Cairo', 'Segoe UI', sans-serif"
+        fontWeight="800" fontSize="11" fill={accent2} letterSpacing="1">
+        {'‫صفر‬'}
+      </text>
     </g>
   );
 }
@@ -300,18 +296,20 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
       {special === 'Q_RED' && <PeekIllustration ink={ink} accent={accent} accent2={accent2}/>}
       {special === 'TEN_RED' && <LuckIllustration ink={ink} accent={accent} accent2={accent2}/>}
 
-      {/* Action label for special cards */}
+      {/* Action label for special cards (wrapped in RTL marks so Arabic
+          glyphs don't get reversed by SVG's default LTR text shaping) */}
       {actionLabel && (
         <text
           x={50}
           y={120}
           textAnchor="middle"
-          fontFamily="'Tajawal', 'Cairo', sans-serif"
+          direction="rtl"
+          fontFamily="'Tajawal', 'Cairo', 'Segoe UI', sans-serif"
           fontWeight="800"
           fontSize="11"
           fill={accent2}
         >
-          {actionLabel}
+          {`‫${actionLabel}‬`}
         </text>
       )}
 

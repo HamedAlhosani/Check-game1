@@ -108,6 +108,7 @@ export const SOCKET_EVENTS = {
   GAME_ELIMINATION: 'game:elimination',
   GAME_OVER: 'game:over',
   GAME_ERROR: 'game:error',
+  GAME_EPIC_MOMENT: 'game:epic_moment',
 
   // Chat
   CHAT_SEND: 'chat:send',

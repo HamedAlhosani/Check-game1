@@ -140,6 +140,31 @@ export interface AchievementDef {
   emoji: string;
 }
 
+// ── Treasure Chests ────────────────────────────────────────────────────────
+export type ChestTier = 'wooden' | 'silver' | 'gold' | 'dragon';
+
+export interface ChestDef {
+  tier: ChestTier;
+  emoji: string;
+  labelAr: string;
+  labelEn: string;
+  keyCost: number;
+  /** Coin range: random pick between min..max. */
+  minCoins: number;
+  maxCoins: number;
+  /** Chance (0..1) of also dropping a store item alongside coins. */
+  itemChance: number;
+  /** Rarities the item is picked from when itemChance hits. */
+  itemRarities: ('bronze' | 'silver' | 'gold' | 'legendary')[];
+}
+
+export const CHESTS: ChestDef[] = [
+  { tier: 'wooden', emoji: '🪵', labelAr: 'صندوق خشبي',  labelEn: 'Wooden Chest',  keyCost: 1,  minCoins: 100,  maxCoins: 400,   itemChance: 0.10, itemRarities: ['bronze'] },
+  { tier: 'silver', emoji: '🥈', labelAr: 'صندوق فضي',   labelEn: 'Silver Chest',  keyCost: 3,  minCoins: 500,  maxCoins: 1500,  itemChance: 0.30, itemRarities: ['bronze', 'silver'] },
+  { tier: 'gold',   emoji: '🥇', labelAr: 'صندوق ذهبي',  labelEn: 'Gold Chest',    keyCost: 5,  minCoins: 1500, maxCoins: 4000,  itemChance: 1.0,  itemRarities: ['silver', 'gold'] },
+  { tier: 'dragon', emoji: '🐉', labelAr: 'صندوق التنين', labelEn: 'Dragon Chest',  keyCost: 10, minCoins: 5000, maxCoins: 12000, itemChance: 1.0,  itemRarities: ['gold', 'legendary'] },
+];
+
 export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   // Wins
   { id: 'a_first_win',  stat: 'totalWins',     target: 1,   rewardCoins: 200,   emoji: '🥇', labelAr: 'الفوز الأول',        labelEn: 'First Win',         descAr: 'اكسب أول مباراة',          descEn: 'Win your first match' },

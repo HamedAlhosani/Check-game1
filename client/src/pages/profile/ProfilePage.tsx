@@ -18,6 +18,7 @@ const AVATAR_EMOJIS: Record<string, string> = {
   avatar_1: '👳', avatar_2: '🧕', avatar_3: '👴', avatar_4: '🧔',
   avatar_5: '👩', avatar_6: '👨', avatar_7: '🧑', avatar_8: '👵',
   avatar_9: '🕌', avatar_10: '🏙️', avatar_11: '💎', avatar_12: '🌟',
+  avatar_13: '⚔️', avatar_14: '⛵', avatar_15: '🧭', avatar_16: '🇦🇪',
 };
 
 const CHARACTERS = [
@@ -33,6 +34,10 @@ const CHARACTERS = [
   { id: 'avatar_10', nameAr: 'المدينة', nameEn: 'The City', price: 800 },
   { id: 'avatar_11', nameAr: 'أمير الماس', nameEn: 'Diamond Prince', price: 1200 },
   { id: 'avatar_12', nameAr: 'نجم أسطوري', nameEn: 'Legendary Star', price: 2000 },
+  { id: 'avatar_13', nameAr: 'عنترة بن شداد', nameEn: 'Antara ibn Shaddad', price: 5000 },
+  { id: 'avatar_14', nameAr: 'السندباد',     nameEn: 'Sindbad',             price: 5000 },
+  { id: 'avatar_15', nameAr: 'ابن بطوطة',    nameEn: 'Ibn Battuta',         price: 5000 },
+  { id: 'avatar_16', nameAr: 'الشيخ زايد',   nameEn: 'Sheikh Zayed',        price: 10000 },
 ];
 
 type Tab = 'info' | 'avatar' | 'password' | 'settings';

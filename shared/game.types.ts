@@ -151,6 +151,10 @@ export interface UserProfile {
     /** Last cup-win timestamp — used to show a 24h "champion" badge. */
     lastCupAt?: number | null;
   };
+  /** Keys for opening treasure chests — earned from wins / missions. */
+  keys?: number;
+  /** Premium currency earned from rare achievements only — not buyable. */
+  gems?: number;
 }
 
 export interface MatchPlayer {

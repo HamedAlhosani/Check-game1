@@ -149,6 +149,43 @@ export const STORE_ITEMS: StoreItem[] = [
     rarity: 'legendary',
     preview: { bg: 'bg-purple-950', border: 'border-purple-400', text: 'text-purple-100' },
   },
+  // ── Historical legends — characters from Arab history & heritage ──────────
+  {
+    id: 'avatar_13',
+    category: 'character',
+    nameAr: 'عنترة بن شداد',
+    descriptionAr: 'فارس بني عبس — شاعر الفروسية والشجاعة',
+    price: 5000,
+    rarity: 'legendary',
+    preview: { bg: 'bg-red-950', border: 'border-red-300', text: 'text-red-100' },
+  },
+  {
+    id: 'avatar_14',
+    category: 'character',
+    nameAr: 'السندباد',
+    descriptionAr: 'بحّار بغداد ورحّالة البحار السبعة',
+    price: 5000,
+    rarity: 'legendary',
+    preview: { bg: 'bg-blue-950', border: 'border-blue-300', text: 'text-blue-100' },
+  },
+  {
+    id: 'avatar_15',
+    category: 'character',
+    nameAr: 'ابن بطوطة',
+    descriptionAr: 'أعظم رحّالة العالم — جاب القارات الثلاث',
+    price: 5000,
+    rarity: 'legendary',
+    preview: { bg: 'bg-green-950', border: 'border-green-300', text: 'text-green-100' },
+  },
+  {
+    id: 'avatar_16',
+    category: 'character',
+    nameAr: 'الشيخ زايد',
+    descriptionAr: 'باني الإمارات ووالد الأمة — رحمه الله',
+    price: 10000,
+    rarity: 'legendary',
+    preview: { bg: 'bg-emerald-950', border: 'border-yellow-300', text: 'text-yellow-100' },
+  },
 
   // ── Avatar Frames ──────────────────────────────────────────────────────────
   {

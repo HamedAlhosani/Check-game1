@@ -739,6 +739,21 @@ export class GameEngine {
       lowestUid: result.lowestUid,
     });
 
+    // ── Epic moment detection ────────────────────────────────────────────
+    // Whenever a round ends, look for big narrative moments and broadcast
+    // them so the client can pop a celebratory banner with TTS-style
+    // commentary text + sound. Only one moment per round to keep it special.
+    if (this.checkCallerId) {
+      const callerHand = result.rawHandSums[this.checkCallerId];
+      if (callerHand === 0 && result.checkOutcome === 'win') {
+        this.emit('game:epic_moment', { kind: 'check_zero', uid: this.checkCallerId });
+      } else if (result.checkOutcome === 'win') {
+        this.emit('game:epic_moment', { kind: 'check_win', uid: this.checkCallerId });
+      } else if (result.checkOutcome === 'beaten') {
+        this.emit('game:epic_moment', { kind: 'check_beaten', uid: this.checkCallerId });
+      }
+    }
+
     const eliminations: string[] = [];
     for (const p of this.players) {
       if (!p.isEliminated && p.cumulativeScore >= this.eliminationScore) {
@@ -746,6 +761,9 @@ export class GameEngine {
         eliminations.push(p.uid);
         this.emit('game:elimination', { uid: p.uid, totalScore: p.cumulativeScore });
       }
+    }
+    if (eliminations.length > 0) {
+      this.emit('game:epic_moment', { kind: 'elimination', uid: eliminations[0] });
     }
 
     // Capture the round for the post-match replay/summary view.

@@ -107,6 +107,48 @@ const TurnTimerBadge = memo(function TurnTimerBadge({ endAt, maxMs = 30000, big 
 
 const CARD_BACK = '/card-back.png';
 
+// ─── Epic moment banner — slides down from the top for a 3.5s celebratory line ──
+const EPIC_LINES: Record<string, { ar: (n: string, isMe: boolean) => string; en: (n: string, isMe: boolean) => string; emoji: string; tone: 'win' | 'loss' | 'neutral' }> = {
+  check_zero:    { emoji: '🎯', tone: 'win',  ar: (n, me) => me ? 'ضربة عبقرية! نادى CHECK بصفر!' : `${n} ضرب CHECK بصفر — أسطورة!`, en: (n, me) => me ? 'GENIUS! Called CHECK with 0!' : `${n} called CHECK with ZERO — legendary!` },
+  check_win:     { emoji: '🏆', tone: 'win',  ar: (n, me) => me ? 'CHECK ناجح! ربحت الجولة!' : `${n} نادى CHECK وكسب الجولة!`, en: (n, me) => me ? 'CHECK paid off! You won the round!' : `${n} called CHECK and took the round!` },
+  check_beaten:  { emoji: '💥', tone: 'loss', ar: (n, me) => me ? 'CHECK خاسر! ضِعف العقاب!' : `${n} نادى CHECK لكن خسر!`, en: (n, me) => me ? 'CHECK backfired! Double penalty!' : `${n}'s CHECK got beaten!` },
+  elimination:   { emoji: '☠️', tone: 'loss', ar: (n, me) => me ? 'تم استبعادك من الجولة!' : `استبعاد! ${n} خرج من اللعبة`, en: (n, me) => me ? 'You\'ve been eliminated!' : `KO! ${n} is out of the game` },
+};
+
+const EpicMomentBanner = memo(function EpicMomentBanner({ kind, playerName, isMe }: { kind: string; playerName: string; isMe: boolean }) {
+  const def = EPIC_LINES[kind];
+  if (!def) return null;
+  const text = (kind === 'elimination' || kind === 'check_beaten') && (typeof window !== 'undefined' ? document?.documentElement?.dir === 'ltr' : false)
+    ? def.en(playerName, isMe) : def.ar(playerName, isMe);
+  const colour =
+    def.tone === 'win'  ? { bg: 'rgba(232,201,122,0.18)', border: 'rgba(232,201,122,0.65)', text: '#FFE07A', glow: 'rgba(232,201,122,0.45)' } :
+    def.tone === 'loss' ? { bg: 'rgba(224,64,48,0.18)',   border: 'rgba(224,64,48,0.55)',   text: '#FF8A7A', glow: 'rgba(224,64,48,0.40)' } :
+                          { bg: 'rgba(122,196,255,0.18)', border: 'rgba(122,196,255,0.55)', text: '#7AC4FF', glow: 'rgba(122,196,255,0.40)' };
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -50, scale: 0.85 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -30, scale: 0.92 }}
+      transition={{ type: 'spring', stiffness: 360, damping: 22 }}
+      className="fixed top-20 left-0 right-0 z-[60] flex items-center justify-center pointer-events-none px-4">
+      <div className="rounded-2xl px-5 py-2.5 flex items-center gap-3"
+        style={{
+          background: `linear-gradient(135deg, ${colour.bg}, rgba(20,16,10,0.95))`,
+          border: `2px solid ${colour.border}`,
+          boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 32px ${colour.glow}`,
+          maxWidth: 480,
+        }}>
+        <motion.span
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 0.6, repeat: 2 }}
+          style={{ fontSize: 28 }}>{def.emoji}</motion.span>
+        <p className="font-arabic font-bold"
+          style={{ fontSize: 14, color: colour.text, letterSpacing: 0.3 }}>{text}</p>
+      </div>
+    </motion.div>
+  );
+});
+
 // ─── Room background (midnight blue luxury) ───────────────────────────────────
 const RoomBackground = memo(function RoomBackground() {
   return (
@@ -257,6 +299,7 @@ const AVATAR_EMOJIS: Record<string, string> = {
   avatar_1: '👳', avatar_2: '🧕', avatar_3: '👴', avatar_4: '🧔',
   avatar_5: '👩', avatar_6: '👨', avatar_7: '🧑', avatar_8: '👵',
   avatar_9: '🕌', avatar_10: '🏙️', avatar_11: '💎', avatar_12: '🌟',
+  avatar_13: '⚔️', avatar_14: '⛵', avatar_15: '🧭', avatar_16: '🇦🇪',
 };
 const Av = memo(function Av({ id, name, size = 32, frameId }: { id: string; name: string; size?: number; frameId?: string }) {
   const i = parseInt(id?.replace(/\D/g, '') || '1', 10) - 1;
@@ -781,6 +824,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [jTargetUid, setJTargetUid] = useState<string | null>(null);
   // Map of uid → position highlighted after a J swap. Tracks both sides.
   const [swapHighlights, setSwapHighlights] = useState<Record<string, number>>({});
+  // Epic moment banner (CHECK with 0, alone-lowest CHECK, beaten CHECK, eliminations).
+  const [epicMoment, setEpicMoment] = useState<{ kind: string; uid: string; key: number } | null>(null);
   // Q peek result modal — { card, position }
   const [qPeekCard, setQPeekCard] = useState<{ card: Card; position: number } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -823,6 +868,11 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       soundService.playCheckVoice(data?.callerAvatarId);
     });
     socket.on(SOCKET_EVENTS.GAME_BURN_INVALID, () => { soundService.playError(); });
+    socket.on(SOCKET_EVENTS.GAME_EPIC_MOMENT, (data: any) => {
+      setEpicMoment({ kind: data.kind, uid: data.uid, key: Date.now() });
+      // Auto-clear after the banner has played its animation
+      setTimeout(() => setEpicMoment(prev => prev?.key === Date.now() ? null : prev), 3500);
+    });
     socket.on(SOCKET_EVENTS.GAME_SCORES, (data: any) => {
       setRoundScoreData(data);
       setTimeout(() => setRoundScoreData(null), 5500);
@@ -860,6 +910,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       socket.off(SOCKET_EVENTS.GAME_SWAP_EXECUTED);
       socket.off(SOCKET_EVENTS.GAME_CHECK_CALLED);
       socket.off(SOCKET_EVENTS.GAME_BURN_INVALID);
+      socket.off(SOCKET_EVENTS.GAME_EPIC_MOMENT);
       // Reset game state so a new game starts fresh
       resetGame();
     };
@@ -2534,6 +2585,18 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           currentUid={user?.uid}
           onPlayAgain={() => navigate('/lobby/check')} />
       )}
+
+      {/* Epic moment commentary banner — slides in from the top with a
+          dramatic line + sound. Fades after 3.5s. */}
+      <AnimatePresence>
+        {epicMoment && (
+          <EpicMomentBanner key={epicMoment.key}
+            kind={epicMoment.kind}
+            playerName={gameState.players.find(p => p.uid === epicMoment.uid)?.displayName || ''}
+            isMe={epicMoment.uid === user?.uid}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

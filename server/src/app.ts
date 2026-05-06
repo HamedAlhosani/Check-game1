@@ -25,6 +25,8 @@ import {
   spinWheel,
   getReferralCode,
   redeemReferral,
+  openChest,
+  getChestStatus,
   sendFriendRequest,
   acceptFriendRequest,
   declineOrRemoveFriend,
@@ -389,6 +391,22 @@ app.post('/api/referral/redeem', requireAuth, wrap(async (req, res) => {
   if (!result.ok) return res.status(400).json({ error: result.error });
   const profile = await getUserProfile(uid);
   res.json({ ok: true, granted: result.granted, profile });
+}));
+
+// ── Treasure Chests ────────────────────────────────────────────────────────
+app.get('/api/chests', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  res.json(await getChestStatus(uid));
+}));
+
+app.post('/api/chests/open', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const { tier } = req.body || {};
+  if (!tier) return res.status(400).json({ error: 'Missing tier' });
+  const result = await openChest(uid, tier);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ...result, profile });
 }));
 
 // ── Daily reward ───────────────────────────────────────────────────────────────

@@ -3,6 +3,7 @@ import { STORE_ITEMS, FREE_ITEMS, DEFAULT_EQUIPPED } from '@check-game/shared';
 import {
   deriveLevel, rollDailyMissions,
   MISSION_POOL, ACHIEVEMENT_DEFS, LEVEL_REWARDS, AchievementStat,
+  CHESTS, ChestTier,
 } from '@check-game/shared';
 import { users, leaderboard, history, saveUsers, saveLeaderboard, saveHistory } from '../data/store';
 
@@ -136,6 +137,13 @@ export async function recordGameResult(uid: string, isWinner: boolean, gameType:
   p.stats = stats;
   p.ranking = { level, xp: newXp, title };
   p.coins = (p.coins || 0) + coinsGain;
+  // Treasure key drop: 1 key per win, 1 every 3 losses (so engagement
+  // stays positive even on a losing streak).
+  if (isWinner) {
+    (p as any).keys = ((p as any).keys || 0) + 1;
+  } else if (stats.totalGames % 3 === 0) {
+    (p as any).keys = ((p as any).keys || 0) + 1;
+  }
 
   // ── Daily mission progress ────────────────────────────────────────────────
   const today = todayKey();
@@ -415,6 +423,66 @@ export async function spinWheel(uid: string): Promise<{ ok: boolean; error?: str
     coinsGranted, itemGranted, itemNameAr,
     newCoinBalance: p.coins,
   };
+}
+
+// ── Treasure Chests ───────────────────────────────────────────────────────
+export async function openChest(uid: string, tier: ChestTier): Promise<{
+  ok: boolean;
+  error?: string;
+  coins?: number;
+  itemGranted?: string;
+  itemNameAr?: string;
+  itemRarity?: string;
+  newKeyBalance?: number;
+  newCoinBalance?: number;
+}> {
+  const p = users.get(uid) as any;
+  if (!p) return { ok: false, error: 'User not found' };
+  const def = CHESTS.find(c => c.tier === tier);
+  if (!def) return { ok: false, error: 'Unknown chest' };
+  const keys = p.keys || 0;
+  if (keys < def.keyCost) return { ok: false, error: `Need ${def.keyCost} keys (you have ${keys})` };
+
+  // Pay cost
+  p.keys = keys - def.keyCost;
+
+  // Roll coins
+  const coins = Math.floor(def.minCoins + Math.random() * (def.maxCoins - def.minCoins + 1));
+  p.coins = (p.coins || 0) + coins;
+
+  // Roll item
+  let itemGranted: string | undefined;
+  let itemNameAr: string | undefined;
+  let itemRarity: string | undefined;
+  if (Math.random() < def.itemChance) {
+    const owned: string[] = p.ownedItems || [];
+    const candidates = STORE_ITEMS.filter(it =>
+      def.itemRarities.includes(it.rarity as any) && !owned.includes(it.id)
+    );
+    if (candidates.length > 0) {
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      p.ownedItems = [...owned, pick.id];
+      itemGranted = pick.id;
+      itemNameAr = pick.nameAr;
+      itemRarity = pick.rarity;
+    }
+    // Fallback: if owned everything in tier, give bonus coins
+    else {
+      const bonus = Math.floor(def.minCoins * 1.5);
+      p.coins += bonus;
+    }
+  }
+  saveUsers();
+  return {
+    ok: true,
+    coins, itemGranted, itemNameAr, itemRarity,
+    newKeyBalance: p.keys, newCoinBalance: p.coins,
+  };
+}
+
+export async function getChestStatus(uid: string): Promise<{ keys: number; chests: typeof CHESTS }> {
+  const p = users.get(uid) as any;
+  return { keys: p?.keys || 0, chests: CHESTS };
 }
 
 // ── Friend referral ───────────────────────────────────────────────────────

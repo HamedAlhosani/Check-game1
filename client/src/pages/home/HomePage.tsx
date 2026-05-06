@@ -15,6 +15,7 @@ import { DailyRewardModal } from '../../components/shared/DailyRewardModal';
 import { RulesModal } from '../../components/shared/RulesModal';
 import { ProgressionModal } from '../../components/shared/ProgressionModal';
 import { WheelModal } from '../../components/shared/WheelModal';
+import { ChestsModal } from '../../components/shared/ChestsModal';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { deriveLevel } from '@check-game/shared';
 import type { GameMode as MatchLength, TournamentState } from '@check-game/shared';
@@ -251,6 +252,7 @@ const HOME_AVATAR_EMOJIS: Record<string, string> = {
   avatar_1: '👳', avatar_2: '🧕', avatar_3: '👴', avatar_4: '🧔',
   avatar_5: '👩', avatar_6: '👨', avatar_7: '🧑', avatar_8: '👵',
   avatar_9: '🕌', avatar_10: '🏙️', avatar_11: '💎', avatar_12: '🌟',
+  avatar_13: '⚔️', avatar_14: '⛵', avatar_15: '🧭', avatar_16: '🇦🇪',
 };
 function AvatarCircle({ id, name, size = 40, frameId }: { id: string; name: string; size?: number; frameId?: string }) {
   const i = parseInt(id?.replace(/\D/g, '') || '1', 10) - 1;
@@ -931,6 +933,7 @@ export function HomePage() {
   const [showRules, setShowRules] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
   const [showWheel, setShowWheel] = useState(false);
+  const [showChests, setShowChests] = useState(false);
   const [progressInitialTab, setProgressInitialTab] = useState<'missions' | 'achievements' | 'levels'>('missions');
   const setTournamentState = useTournamentStore(s => s.setState);
   const setTournamentFinished = useTournamentStore(s => s.setFinished);
@@ -1118,6 +1121,29 @@ export function HomePage() {
           {/* Daily reward — moved out of the games area into the top nav */}
           <DailyRewardNavButton onOpen={() => setShowDaily(true)} lang={lang} />
           <WheelNavButton onOpen={() => setShowWheel(true)} lang={lang} />
+          {/* Chests button — shows key count */}
+          <motion.button
+            whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+            onClick={() => setShowChests(true)}
+            className="relative rounded-xl flex items-center justify-center"
+            title={lang === 'ar' ? 'صناديق الكنز' : 'Treasure Chests'}
+            style={{
+              width: 36, height: 34,
+              background: ((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.18)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.55)' : 'rgba(255,255,255,0.08)'}`,
+              boxShadow: ((profile as any)?.keys || 0) > 0 ? '0 0 14px rgba(196,149,255,0.30)' : 'none',
+              cursor: 'pointer',
+            }}>
+            <span style={{ fontSize: 18, lineHeight: 1 }}>🎁</span>
+            {((profile as any)?.keys || 0) > 0 && (
+              <span className="absolute rounded-full font-bold"
+                style={{
+                  top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px',
+                  background: '#C495FF', color: '#fff', fontSize: 9, lineHeight: '16px',
+                  border: '1.5px solid #14100A',
+                }}>{(profile as any)?.keys || 0}</span>
+            )}
+          </motion.button>
           {/* Coins */}
           <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5"
             style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)' }}>
@@ -1258,6 +1284,7 @@ export function HomePage() {
       <RulesModal open={showRules} onClose={() => setShowRules(false)}/>
       <ProgressionModal open={showProgress} onClose={() => setShowProgress(false)} lang={lang} initialTab={progressInitialTab}/>
       <WheelModal open={showWheel} onClose={() => setShowWheel(false)} lang={lang}/>
+      <ChestsModal open={showChests} onClose={() => setShowChests(false)} lang={lang}/>
 
       {searching && <SearchingModal onCancel={handleCancelSearch} lang={lang}/>}
       {botLoading && <BotLoadingOverlay lang={lang}/>}

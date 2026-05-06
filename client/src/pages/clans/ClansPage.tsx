@@ -53,7 +53,9 @@ export function ClansPage() {
       await refresh(true);
       if (!cancelled && myClan) setTab('mine');
     })();
-    const id = setInterval(() => { if (!cancelled) refresh(false); }, 4000);
+    // 1 second poll — feels nearly instant. The refresh is a quiet GET that
+    // doesn't flash the UI, so spamming it is fine for the file-backed store.
+    const id = setInterval(() => { if (!cancelled) refresh(false); }, 1000);
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
@@ -368,7 +370,7 @@ function MineTab({ clan, myUid, lang, onChanged, onLeft }: {
   async function deleteIt() {
     setConfirmDelete(false);
     try {
-      const res = await apiClient.del<{ profile: UserProfile }>(`/api/clans/${clan!.id}`);
+      const res = await apiClient.delete<{ profile: UserProfile }>(`/api/clans/${clan!.id}`);
       if (res?.profile) setProfile(res.profile);
       addToast(lang === 'ar' ? 'تم حذف القبيلة' : 'Clan deleted', 'success');
       onLeft();

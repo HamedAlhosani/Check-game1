@@ -14,6 +14,7 @@ const AVATAR_EMOJIS: Record<string, string> = {
   avatar_5: '🌙', avatar_6: '⭐', avatar_7: '🏜️', avatar_8: '🌊',
   avatar_9: '🦁', avatar_10: '🔥', avatar_11: '💎', avatar_12: '🎭',
   avatar_13: '⚔️', avatar_14: '⛵', avatar_15: '🧭', avatar_16: '🇦🇪',
+  avatar_17: '👸', avatar_18: '🧕', avatar_19: '🤵', avatar_20: '👳', avatar_21: '👩', avatar_22: '🧓',
 };
 
 const GAME_LABELS_AR: Record<string, string> = { check: 'Check', ludo: 'لودو', domino: 'دومنو', jackaro: 'جكارو' };

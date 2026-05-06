@@ -56,18 +56,31 @@ export function ReferralCard({ lang, myUid }: { lang: string; myUid?: string }) 
 
   async function redeem() {
     if (!redeemInput.trim() || busy) return;
-    setBusy(true);
+    const code = redeemInput.trim().toUpperCase();
     soundService.playClick();
-    try {
-      const res = await apiClient.post<{ profile: UserProfile; granted: number }>('/api/referral/redeem', { code: redeemInput.trim().toUpperCase() });
-      if (res?.profile) setProfile(res.profile);
+    setRedeemInput('');
+
+    // Optimistic update — flip the UI immediately so the user sees the
+    // 1,000 coins + "redeemed" state without waiting for the network.
+    // Snapshot the previous profile so we can roll back on failure.
+    const previousProfile = profile;
+    if (profile) {
+      setProfile({
+        ...profile,
+        referredBy: 'pending',
+        coins: (profile.coins || 0) + 1000,
+      } as any);
       soundService.playCoins();
-      addToast(
-        lang === 'ar' ? `+${res.granted.toLocaleString()} كوينز 🎉` : `+${res.granted.toLocaleString()} coins 🎉`,
-        'success'
-      );
-      setRedeemInput('');
+      addToast(lang === 'ar' ? `+1,000 كوينز 🎉` : `+1,000 coins 🎉`, 'success');
+    }
+
+    setBusy(true);
+    try {
+      const res = await apiClient.post<{ profile: UserProfile; granted: number }>('/api/referral/redeem', { code });
+      if (res?.profile) setProfile(res.profile);
     } catch (e: any) {
+      // Roll back the optimistic update.
+      if (previousProfile) setProfile(previousProfile);
       soundService.playError();
       addToast(e?.message || (lang === 'ar' ? 'كود غير صالح' : 'Invalid code'), 'error');
     } finally {

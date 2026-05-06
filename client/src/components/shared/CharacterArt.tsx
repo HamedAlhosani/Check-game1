@@ -18,6 +18,8 @@ const EMOJI: Record<string, string> = {
   avatar_5: '🌙', avatar_6: '⭐', avatar_7: '🏜️', avatar_8: '🌊',
   avatar_9: '🦁', avatar_10: '🔥', avatar_11: '💎', avatar_12: '🌟',
   avatar_13: '⚔️', avatar_14: '⛵', avatar_15: '🧭', avatar_16: '🇦🇪',
+  avatar_17: '👸', avatar_18: '🧕', avatar_19: '🤵', avatar_20: '👳',
+  avatar_21: '👩', avatar_22: '🧓',
 };
 
 const NAMES_AR: Record<string, string> = {
@@ -25,6 +27,8 @@ const NAMES_AR: Record<string, string> = {
   avatar_5: 'صياد الليل', avatar_6: 'نجم الخليج', avatar_7: 'أمير البر', avatar_8: 'جدّة',
   avatar_9: 'المسجد', avatar_10: 'المدينة', avatar_11: 'أمير الماس', avatar_12: 'سلطان الرياح',
   avatar_13: 'عنترة بن شداد', avatar_14: 'السندباد', avatar_15: 'ابن بطوطة', avatar_16: 'الشيخ زايد',
+  avatar_17: 'الأميرة', avatar_18: 'الست', avatar_19: 'الفارس النجدي', avatar_20: 'التاجر',
+  avatar_21: 'الشاعرة', avatar_22: 'الحكيم',
 };
 
 // Module-level probe cache: avatarId → 'real' | 'fallback' (or undefined while pending)
@@ -77,7 +81,11 @@ export function CharacterArt({ id, size = 64, ring }: { id: string; size?: numbe
 // a distinctive silhouette (headwear, beard, accent colour) so they read
 // as different at a glance, even before custom art is dropped in.
 
-const PORTRAITS: Record<string, { skin: string; hair: string; accent: string; headwear: 'ghutra' | 'turban' | 'crown' | 'helmet' | 'sailor' | 'scholar' | 'none'; beard?: 'short' | 'long' | 'none' }> = {
+type HeadwearKind = 'ghutra' | 'red-ghutra' | 'gold-ghutra' | 'turban' | 'crown' | 'helmet' | 'sailor' | 'scholar' | 'shayla' | 'niqab' | 'none';
+type BeardKind = 'short' | 'long' | 'none';
+type GenderHint = 'male' | 'female';
+
+const PORTRAITS: Record<string, { skin: string; hair: string; accent: string; headwear: HeadwearKind; beard?: BeardKind; gender?: GenderHint; lashes?: boolean }> = {
   avatar_1:  { skin: '#F4D5A5', hair: '#3B2516', accent: '#C9A84C', headwear: 'ghutra' },
   avatar_2:  { skin: '#E8C088', hair: '#2A1A0E', accent: '#A07830', headwear: 'ghutra', beard: 'short' },
   avatar_3:  { skin: '#E8B888', hair: '#5C5C5C', accent: '#8B6914', headwear: 'ghutra', beard: 'long' },
@@ -91,10 +99,17 @@ const PORTRAITS: Record<string, { skin: string; hair: string; accent: string; he
   avatar_11: { skin: '#F4D5A5', hair: '#3B2516', accent: '#7AC4FF', headwear: 'crown' },
   avatar_12: { skin: '#F4D5A5', hair: '#2A1A0E', accent: '#FFE07A', headwear: 'crown', beard: 'short' },
   // Historical legends — distinctive silhouettes
-  avatar_13: { skin: '#D8A878', hair: '#1F1108', accent: '#B83020', headwear: 'helmet',  beard: 'long' },  // Antara — warrior
-  avatar_14: { skin: '#E8B888', hair: '#1F1108', accent: '#3A8060', headwear: 'sailor',  beard: 'short' }, // Sindbad — sailor
-  avatar_15: { skin: '#E8B888', hair: '#3B2516', accent: '#C9A84C', headwear: 'scholar', beard: 'long' },  // Ibn Battuta — scholar
+  avatar_13: { skin: '#D8A878', hair: '#1F1108', accent: '#B83020', headwear: 'helmet',  beard: 'long' },  // Antara
+  avatar_14: { skin: '#E8B888', hair: '#1F1108', accent: '#3A8060', headwear: 'sailor',  beard: 'short' }, // Sindbad
+  avatar_15: { skin: '#E8B888', hair: '#3B2516', accent: '#C9A84C', headwear: 'scholar', beard: 'long' },  // Ibn Battuta
   avatar_16: { skin: '#F0D0A0', hair: '#7A7A7A', accent: '#005A28', headwear: 'ghutra',  beard: 'short' }, // Sheikh Zayed
+  // New variety set
+  avatar_17: { skin: '#F4D8B8', hair: '#2A1A0E', accent: '#E895BB', headwear: 'shayla',     gender: 'female', lashes: true },  // Princess (shayla, hair showing)
+  avatar_18: { skin: '#E8C8A0', hair: '#1F1108', accent: '#B383CC', headwear: 'niqab',      gender: 'female', lashes: true },  // Lady (niqab)
+  avatar_19: { skin: '#E0A878', hair: '#1F1108', accent: '#B83020', headwear: 'red-ghutra', beard: 'short' },                  // Najdi knight (red shemagh)
+  avatar_20: { skin: '#E8C098', hair: '#2A1A0E', accent: '#FFB840', headwear: 'gold-ghutra', beard: 'short' },                 // Trader (gold ghutra)
+  avatar_21: { skin: '#F4D8B8', hair: '#3B2516', accent: '#FF6B95', headwear: 'shayla',     gender: 'female', lashes: true },  // Poetess (warm pink)
+  avatar_22: { skin: '#F0D0A0', hair: '#9A9A9A', accent: '#F5F0E5', headwear: 'ghutra',     beard: 'long' },                   // Wise elder (white ghutra)
 };
 
 /** Lighten or darken a hex colour by a 0..1 factor (negative = darker). */
@@ -110,6 +125,8 @@ function shade(hex: string, factor: number): string {
 
 function SvgPortrait({ id, size, ring }: { id: string; size: number; ring?: boolean }) {
   const p = PORTRAITS[id] || PORTRAITS.avatar_1;
+  const isFemale = p.gender === 'female';
+  const isNiqab  = p.headwear === 'niqab';
   const ringStyle = ring
     ? { boxShadow: '0 0 0 2px rgba(232,201,122,0.5), 0 0 16px rgba(232,201,122,0.3)' }
     : {};
@@ -179,32 +196,75 @@ function SvgPortrait({ id, size, ring }: { id: string; size: number; ring?: bool
         {/* Forehead highlight */}
         <ellipse cx="50" cy="32" rx="10" ry="4" fill={skinHi} opacity="0.55"/>
 
-        {/* Nose — bridge shadow + nostril hint */}
-        <path d="M 49 44 Q 49 54 47 58 Q 49 60 51 58 Q 51 54 51 44 Z" fill={skinShadow} opacity="0.35"/>
-        <ellipse cx="50" cy="58" rx="2.5" ry="1.2" fill={skinShadow} opacity="0.45"/>
+        {/* Nose — hidden under niqab */}
+        {!isNiqab && (
+          <>
+            <path d="M 49 44 Q 49 54 47 58 Q 49 60 51 58 Q 51 54 51 44 Z" fill={skinShadow} opacity="0.35"/>
+            <ellipse cx="50" cy="58" rx="2.5" ry="1.2" fill={skinShadow} opacity="0.45"/>
+          </>
+        )}
 
-        {/* Mouth — subtle lips */}
-        <path d="M 44 65 Q 50 67 56 65 Q 50 64 44 65 Z" fill={shade(p.skin, -0.40)} opacity="0.85"/>
-        <path d="M 44 65 Q 50 64 56 65" stroke={shade(p.skin, -0.55)} strokeWidth="0.6" fill="none" strokeLinecap="round"/>
+        {/* Mouth — pink lipstick tint for female chars, subtle for male */}
+        {!isNiqab && (isFemale ? (
+          <g>
+            <path d="M 44 65 Q 50 68 56 65 Q 53 67 50 67 Q 47 67 44 65 Z" fill="#C4314D" opacity="0.85"/>
+            <path d="M 44 65 Q 50 63.5 56 65 Q 53 64.2 50 64.2 Q 47 64.2 44 65 Z" fill="#D8506E" opacity="0.85"/>
+          </g>
+        ) : (
+          <>
+            <path d="M 44 65 Q 50 67 56 65 Q 50 64 44 65 Z" fill={shade(p.skin, -0.40)} opacity="0.85"/>
+            <path d="M 44 65 Q 50 64 56 65" stroke={shade(p.skin, -0.55)} strokeWidth="0.6" fill="none" strokeLinecap="round"/>
+          </>
+        ))}
 
         {/* Eyes — sclera (white) under iris, with eyelid shadow + lashes */}
         {/* Left eye */}
         <ellipse cx="40" cy="48" rx="3.6" ry="2.2" fill="#FAF6EE"/>
         <circle cx="40" cy="48" r="2" fill={`url(#${uid}-iris)`}/>
         <circle cx="40.6" cy="47.4" r="0.5" fill="#fff"/>
-        <path d="M 36.5 46 Q 40 44 43.5 46" stroke="#1A1408" strokeWidth="0.5" fill="none" strokeLinecap="round"/>
+        <path d="M 36.5 46 Q 40 44 43.5 46" stroke="#1A1408" strokeWidth={p.lashes ? 0.9 : 0.5} fill="none" strokeLinecap="round"/>
         {/* Right eye */}
         <ellipse cx="60" cy="48" rx="3.6" ry="2.2" fill="#FAF6EE"/>
         <circle cx="60" cy="48" r="2" fill={`url(#${uid}-iris)`}/>
         <circle cx="60.6" cy="47.4" r="0.5" fill="#fff"/>
-        <path d="M 56.5 46 Q 60 44 63.5 46" stroke="#1A1408" strokeWidth="0.5" fill="none" strokeLinecap="round"/>
+        <path d="M 56.5 46 Q 60 44 63.5 46" stroke="#1A1408" strokeWidth={p.lashes ? 0.9 : 0.5} fill="none" strokeLinecap="round"/>
+        {/* Long lashes for female chars */}
+        {p.lashes && (
+          <g stroke="#1A1408" strokeWidth="0.5" strokeLinecap="round" fill="none">
+            <path d="M 37 46 L 36 44.5"/>
+            <path d="M 38.5 45.5 L 38 43.8"/>
+            <path d="M 41.5 45.5 L 42 43.8"/>
+            <path d="M 43 46 L 44 44.5"/>
+            <path d="M 57 46 L 56 44.5"/>
+            <path d="M 58.5 45.5 L 58 43.8"/>
+            <path d="M 61.5 45.5 L 62 43.8"/>
+            <path d="M 63 46 L 64 44.5"/>
+          </g>
+        )}
 
-        {/* Eyebrows — thicker arched */}
-        <path d="M 35 42 Q 40 39 45 42 Q 40 41 35 42 Z" fill={p.hair}/>
-        <path d="M 55 42 Q 60 39 65 42 Q 60 41 55 42 Z" fill={p.hair}/>
+        {/* Eyebrows — thinner arched for female, thicker for male */}
+        {isFemale ? (
+          <>
+            <path d="M 35 42 Q 40 39.5 45 42" stroke={p.hair} strokeWidth="1.3" fill="none" strokeLinecap="round"/>
+            <path d="M 55 42 Q 60 39.5 65 42" stroke={p.hair} strokeWidth="1.3" fill="none" strokeLinecap="round"/>
+          </>
+        ) : (
+          <>
+            <path d="M 35 42 Q 40 39 45 42 Q 40 41 35 42 Z" fill={p.hair}/>
+            <path d="M 55 42 Q 60 39 65 42 Q 60 41 55 42 Z" fill={p.hair}/>
+          </>
+        )}
 
-        {/* Beard layers — depth via a darker base + textured top */}
-        {p.beard === 'short' && (
+        {/* Niqab face cover — black fabric covering nose + mouth + chin */}
+        {isNiqab && (
+          <g>
+            <path d="M 28 50 Q 28 60 32 70 Q 50 84 68 70 Q 72 60 72 50 Q 50 56 28 50 Z" fill="#0E0905"/>
+            <path d="M 28 50 Q 50 56 72 50 Q 50 53 28 50 Z" fill="#3A2A18" opacity="0.6"/>
+          </g>
+        )}
+
+        {/* Beard layers — skipped for female + niqab */}
+        {!isFemale && !isNiqab && p.beard === 'short' && (
           <g>
             <path d={`M 30 60 Q 50 80 70 60 Q 65 73 50 75 Q 35 73 30 60 Z`} fill={`url(#${uid}-beard)`}/>
             <path d={`M 33 62 Q 50 75 67 62 Q 60 70 50 71 Q 40 70 33 62 Z`} fill={beardHi} opacity="0.35"/>
@@ -235,23 +295,88 @@ function Headwear({ kind, accent, hair }: { kind: string; accent: string; hair?:
   const accentDark = shade(accent, -0.30);
   const accentHi   = shade(accent, +0.20);
 
-  if (kind === 'ghutra') {
+  if (kind === 'ghutra' || kind === 'red-ghutra' || kind === 'gold-ghutra') {
+    // Same shape — different fabric colour & pattern
+    const fabric = kind === 'red-ghutra' ? '#C42424' : kind === 'gold-ghutra' ? '#E8C97A' : '#F8F4EA';
+    const fabricShade = kind === 'red-ghutra' ? '#9A1A1A' : kind === 'gold-ghutra' ? '#A07830' : '#E8E0D0';
+    const stripeAlt   = kind === 'red-ghutra' ? '#F8F4EA' : kind === 'gold-ghutra' ? '#FFE07A' : '#E8E0D0';
     return (
       <g>
-        {/* White ghutra falling down both sides */}
+        {/* Ghutra falling down both sides */}
         <path d="M 18 40 Q 18 16 50 12 Q 82 16 82 40 L 82 70 Q 75 75 68 68 L 68 40 Q 50 30 32 40 L 32 68 Q 25 75 18 70 Z"
-          fill="#F8F4EA"/>
-        {/* Side shading — folds */}
-        <path d="M 18 40 Q 18 16 50 12 L 50 28 Q 32 30 25 50 L 18 70 Z" fill="#E8E0D0" opacity="0.45"/>
-        <path d="M 82 40 Q 82 16 50 12 L 50 28 Q 68 30 75 50 L 82 70 Z" fill="#E8E0D0" opacity="0.25"/>
+          fill={fabric}/>
+        {/* Red shemagh checkered pattern */}
+        {kind === 'red-ghutra' && (
+          <g opacity="0.55">
+            {/* Diagonal grid hint */}
+            <path d="M 22 22 L 32 30" stroke={stripeAlt} strokeWidth="0.6"/>
+            <path d="M 30 18 L 40 28" stroke={stripeAlt} strokeWidth="0.6"/>
+            <path d="M 38 14 L 48 24" stroke={stripeAlt} strokeWidth="0.6"/>
+            <path d="M 50 12 L 60 22" stroke={stripeAlt} strokeWidth="0.6"/>
+            <path d="M 60 14 L 70 24" stroke={stripeAlt} strokeWidth="0.6"/>
+            <path d="M 70 18 L 78 26" stroke={stripeAlt} strokeWidth="0.6"/>
+            {/* Sides */}
+            <path d="M 24 50 L 32 56" stroke={stripeAlt} strokeWidth="0.5"/>
+            <path d="M 22 60 L 30 66" stroke={stripeAlt} strokeWidth="0.5"/>
+            <path d="M 70 56 L 78 50" stroke={stripeAlt} strokeWidth="0.5"/>
+            <path d="M 70 66 L 78 60" stroke={stripeAlt} strokeWidth="0.5"/>
+          </g>
+        )}
+        {/* Gold ghutra: subtle shimmer stripe */}
+        {kind === 'gold-ghutra' && (
+          <path d="M 28 28 Q 50 18 72 28" stroke={stripeAlt} strokeWidth="1.2" fill="none" opacity="0.7"/>
+        )}
+        {/* Side shading */}
+        <path d="M 18 40 Q 18 16 50 12 L 50 28 Q 32 30 25 50 L 18 70 Z" fill={fabricShade} opacity="0.45"/>
+        <path d="M 82 40 Q 82 16 50 12 L 50 28 Q 68 30 75 50 L 82 70 Z" fill={fabricShade} opacity="0.25"/>
         {/* Crown line */}
-        <path d="M 26 28 Q 50 18 74 28" stroke="#D8D0BD" strokeWidth="0.8" fill="none" opacity="0.7"/>
-        {/* Black agal cord — twisted rope */}
+        <path d="M 26 28 Q 50 18 74 28" stroke={fabricShade} strokeWidth="0.8" fill="none" opacity="0.6"/>
+        {/* Black agal cord */}
         <path d="M 28 30 Q 50 21 72 30" stroke="#0E0905" strokeWidth="3" fill="none" strokeLinecap="round"/>
         <path d="M 28 33 Q 50 24 72 33" stroke="#1A1408" strokeWidth="2.4" fill="none" strokeLinecap="round"/>
         <path d="M 30 31 Q 50 23 70 31" stroke="#3A2A18" strokeWidth="0.6" fill="none" opacity="0.7"/>
-        {/* Accent piping (subtle) */}
-        <path d="M 32 40 Q 50 32 68 40" stroke={accent} strokeWidth="0.8" fill="none" opacity="0.45"/>
+      </g>
+    );
+  }
+  if (kind === 'shayla') {
+    // Woman's headscarf — leaves face open, drapes over shoulders
+    const fabric = accent;
+    const fabricShade = shade(accent, -0.30);
+    return (
+      <g>
+        {/* Shayla — wraps around the head & drapes down both sides */}
+        <path d="M 18 38 Q 18 12 50 10 Q 82 12 82 38 L 82 78 Q 75 84 68 78 L 68 40 Q 50 32 32 40 L 32 78 Q 25 84 18 78 Z"
+          fill={fabric}/>
+        {/* Top fold highlight */}
+        <path d="M 22 28 Q 50 16 78 28" stroke={shade(fabric, +0.18)} strokeWidth="1" fill="none" opacity="0.7"/>
+        {/* Side fold shadows */}
+        <path d="M 18 38 Q 18 12 50 10 L 50 26 Q 32 28 25 50 L 18 78 Z" fill={fabricShade} opacity="0.4"/>
+        <path d="M 82 38 Q 82 12 50 10 L 50 26 Q 68 28 75 50 L 82 78 Z" fill={fabricShade} opacity="0.25"/>
+        {/* Hair peek at the front (small dark crescent under the scarf edge) */}
+        <path d="M 36 36 Q 50 32 64 36 Q 50 38 36 36 Z" fill="#1A1408" opacity="0.7"/>
+        {/* Decorative band along the hairline */}
+        <path d="M 32 39 Q 50 35 68 39" stroke={shade(fabric, +0.30)} strokeWidth="0.6" fill="none" opacity="0.8"/>
+        {/* Small jewel at temple */}
+        <circle cx="68" cy="36" r="1.4" fill="#FFE07A" stroke="#0E0905" strokeWidth="0.3"/>
+      </g>
+    );
+  }
+  if (kind === 'niqab') {
+    // Same wrap as shayla, but rendered above the niqab cloth (which the
+    // SvgPortrait already drew over the lower face).
+    const fabric = '#1A1408';
+    const trim   = accent;
+    return (
+      <g>
+        {/* Black abaya wrap */}
+        <path d="M 16 38 Q 16 10 50 8 Q 84 10 84 38 L 84 80 Q 76 86 68 80 L 68 40 Q 50 32 32 40 L 32 80 Q 24 86 16 80 Z"
+          fill={fabric}/>
+        {/* Subtle highlight to give depth */}
+        <path d="M 22 26 Q 50 14 78 26" stroke="#3A2A18" strokeWidth="0.8" fill="none" opacity="0.6"/>
+        {/* Decorative trim */}
+        <path d="M 30 40 Q 50 36 70 40" stroke={trim} strokeWidth="0.6" fill="none" opacity="0.7"/>
+        {/* Tiny gem */}
+        <circle cx="50" cy="20" r="1.2" fill={trim}/>
       </g>
     );
   }

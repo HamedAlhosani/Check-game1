@@ -20,6 +20,7 @@ const AVATAR_EMOJIS: Record<string, string> = {
   avatar_5: '👩', avatar_6: '👨', avatar_7: '🧑', avatar_8: '👵',
   avatar_9: '🕌', avatar_10: '🏙️', avatar_11: '💎', avatar_12: '🌟',
   avatar_13: '⚔️', avatar_14: '⛵', avatar_15: '🧭', avatar_16: '🇦🇪',
+  avatar_17: '👸', avatar_18: '🧕', avatar_19: '🤵', avatar_20: '👳', avatar_21: '👩', avatar_22: '🧓',
 };
 
 const CHARACTERS = [
@@ -39,6 +40,12 @@ const CHARACTERS = [
   { id: 'avatar_14', nameAr: 'السندباد',     nameEn: 'Sindbad',             price: 5000 },
   { id: 'avatar_15', nameAr: 'ابن بطوطة',    nameEn: 'Ibn Battuta',         price: 5000 },
   { id: 'avatar_16', nameAr: 'الشيخ زايد',   nameEn: 'Sheikh Zayed',        price: 10000 },
+  { id: 'avatar_17', nameAr: 'الأميرة',       nameEn: 'The Princess',        price: 350 },
+  { id: 'avatar_18', nameAr: 'الست',          nameEn: 'The Lady',            price: 500 },
+  { id: 'avatar_19', nameAr: 'الفارس النجدي', nameEn: 'Najdi Knight',        price: 600 },
+  { id: 'avatar_20', nameAr: 'التاجر',        nameEn: 'The Merchant',        price: 800 },
+  { id: 'avatar_21', nameAr: 'الشاعرة',       nameEn: 'The Poetess',         price: 1500 },
+  { id: 'avatar_22', nameAr: 'الحكيم',        nameEn: 'The Wise One',        price: 1200 },
 ];
 
 type Tab = 'info' | 'avatar' | 'password' | 'settings';

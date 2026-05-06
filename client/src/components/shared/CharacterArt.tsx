@@ -97,11 +97,28 @@ const PORTRAITS: Record<string, { skin: string; hair: string; accent: string; he
   avatar_16: { skin: '#F0D0A0', hair: '#7A7A7A', accent: '#005A28', headwear: 'ghutra',  beard: 'short' }, // Sheikh Zayed
 };
 
+/** Lighten or darken a hex colour by a 0..1 factor (negative = darker). */
+function shade(hex: string, factor: number): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  const adj = (c: number) => Math.max(0, Math.min(255, Math.round(c + (factor > 0 ? (255 - c) * factor : c * factor))));
+  const toHex = (n: number) => n.toString(16).padStart(2, '0');
+  return `#${toHex(adj(r))}${toHex(adj(g))}${toHex(adj(b))}`;
+}
+
 function SvgPortrait({ id, size, ring }: { id: string; size: number; ring?: boolean }) {
   const p = PORTRAITS[id] || PORTRAITS.avatar_1;
   const ringStyle = ring
     ? { boxShadow: '0 0 0 2px rgba(232,201,122,0.5), 0 0 16px rgba(232,201,122,0.3)' }
     : {};
+  // Unique gradient id per character so multiple portraits don't collide
+  const uid = `pt-${id}`;
+  const skinShadow = shade(p.skin, -0.18);
+  const skinHi     = shade(p.skin, +0.10);
+  const beardHi    = shade(p.hair, +0.18);
+  const beardSh    = shade(p.hair, -0.30);
   return (
     <div style={{
       width: size, height: size, borderRadius: '50%',
@@ -109,100 +126,220 @@ function SvgPortrait({ id, size, ring }: { id: string; size: number; ring?: bool
       background: `radial-gradient(circle at 30% 25%, ${p.accent}33, ${p.accent}11 40%, #0E0905 100%)`,
       ...ringStyle,
     }}>
-      <svg viewBox="0 0 100 100" width={size} height={size}>
-        {/* Neck/shoulders */}
-        <ellipse cx="50" cy="105" rx="38" ry="22" fill={p.accent} opacity="0.9"/>
-        <ellipse cx="50" cy="78"  rx="14" ry="10" fill={p.skin}/>
-        {/* Face */}
-        <ellipse cx="50" cy="50" rx="22" ry="26" fill={p.skin}/>
-        {/* Beard */}
+      <svg viewBox="0 0 100 110" width={size} height={size * 1.1}
+        style={{ marginTop: -size * 0.05, display: 'block' }}>
+        <defs>
+          {/* Skin: warm forehead → cooler jaw + slight side shadow */}
+          <radialGradient id={`${uid}-skin`} cx="50%" cy="38%" r="65%">
+            <stop offset="0%"  stopColor={skinHi}/>
+            <stop offset="55%" stopColor={p.skin}/>
+            <stop offset="100%" stopColor={skinShadow}/>
+          </radialGradient>
+          {/* Beard texture: depth + a brighter highlight near the chin */}
+          <linearGradient id={`${uid}-beard`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stopColor={p.hair}/>
+            <stop offset="55%" stopColor={beardSh}/>
+            <stop offset="100%" stopColor={p.hair}/>
+          </linearGradient>
+          {/* Cheek glow — soft warm spot */}
+          <radialGradient id={`${uid}-cheek`} cx="50%" cy="50%" r="50%">
+            <stop offset="0%"  stopColor="#E07A6A" stopOpacity="0.35"/>
+            <stop offset="100%" stopColor="#E07A6A" stopOpacity="0"/>
+          </radialGradient>
+          {/* Iris radial — darker rim, lighter centre */}
+          <radialGradient id={`${uid}-iris`} cx="50%" cy="50%" r="50%">
+            <stop offset="0%"  stopColor="#5A3F1A"/>
+            <stop offset="80%" stopColor="#2A1A08"/>
+            <stop offset="100%" stopColor="#0A0500"/>
+          </radialGradient>
+        </defs>
+
+        {/* Shoulders / robe */}
+        <path d={`M 8 110 Q 50 80 92 110 L 92 115 L 8 115 Z`} fill={p.accent}/>
+        <path d={`M 8 110 Q 50 80 92 110 L 92 113 L 8 113 Z`} fill={shade(p.accent, -0.15)} opacity="0.6"/>
+
+        {/* Neck */}
+        <path d="M 42 76 Q 50 84 58 76 L 60 90 Q 50 95 40 90 Z" fill={p.skin}/>
+        <path d="M 42 78 Q 50 84 58 78 L 58 80 Q 50 84 42 80 Z" fill={skinShadow} opacity="0.55"/>
+
+        {/* Face — slightly heart-shaped: wider forehead, narrower chin */}
+        <path d={`M 28 42
+                  Q 26 25 50 22
+                  Q 74 25 72 42
+                  Q 73 60 65 70
+                  Q 58 78 50 78
+                  Q 42 78 35 70
+                  Q 27 60 28 42 Z`}
+          fill={`url(#${uid}-skin)`}/>
+
+        {/* Cheeks — warm spots */}
+        <ellipse cx="36" cy="58" rx="6" ry="4" fill={`url(#${uid}-cheek)`}/>
+        <ellipse cx="64" cy="58" rx="6" ry="4" fill={`url(#${uid}-cheek)`}/>
+
+        {/* Forehead highlight */}
+        <ellipse cx="50" cy="32" rx="10" ry="4" fill={skinHi} opacity="0.55"/>
+
+        {/* Nose — bridge shadow + nostril hint */}
+        <path d="M 49 44 Q 49 54 47 58 Q 49 60 51 58 Q 51 54 51 44 Z" fill={skinShadow} opacity="0.35"/>
+        <ellipse cx="50" cy="58" rx="2.5" ry="1.2" fill={skinShadow} opacity="0.45"/>
+
+        {/* Mouth — subtle lips */}
+        <path d="M 44 65 Q 50 67 56 65 Q 50 64 44 65 Z" fill={shade(p.skin, -0.40)} opacity="0.85"/>
+        <path d="M 44 65 Q 50 64 56 65" stroke={shade(p.skin, -0.55)} strokeWidth="0.6" fill="none" strokeLinecap="round"/>
+
+        {/* Eyes — sclera (white) under iris, with eyelid shadow + lashes */}
+        {/* Left eye */}
+        <ellipse cx="40" cy="48" rx="3.6" ry="2.2" fill="#FAF6EE"/>
+        <circle cx="40" cy="48" r="2" fill={`url(#${uid}-iris)`}/>
+        <circle cx="40.6" cy="47.4" r="0.5" fill="#fff"/>
+        <path d="M 36.5 46 Q 40 44 43.5 46" stroke="#1A1408" strokeWidth="0.5" fill="none" strokeLinecap="round"/>
+        {/* Right eye */}
+        <ellipse cx="60" cy="48" rx="3.6" ry="2.2" fill="#FAF6EE"/>
+        <circle cx="60" cy="48" r="2" fill={`url(#${uid}-iris)`}/>
+        <circle cx="60.6" cy="47.4" r="0.5" fill="#fff"/>
+        <path d="M 56.5 46 Q 60 44 63.5 46" stroke="#1A1408" strokeWidth="0.5" fill="none" strokeLinecap="round"/>
+
+        {/* Eyebrows — thicker arched */}
+        <path d="M 35 42 Q 40 39 45 42 Q 40 41 35 42 Z" fill={p.hair}/>
+        <path d="M 55 42 Q 60 39 65 42 Q 60 41 55 42 Z" fill={p.hair}/>
+
+        {/* Beard layers — depth via a darker base + textured top */}
         {p.beard === 'short' && (
-          <path d={`M 32 60 Q 50 78 68 60 Q 64 70 50 72 Q 36 70 32 60 Z`} fill={p.hair}/>
+          <g>
+            <path d={`M 30 60 Q 50 80 70 60 Q 65 73 50 75 Q 35 73 30 60 Z`} fill={`url(#${uid}-beard)`}/>
+            <path d={`M 33 62 Q 50 75 67 62 Q 60 70 50 71 Q 40 70 33 62 Z`} fill={beardHi} opacity="0.35"/>
+            {/* Mustache */}
+            <path d="M 42 62 Q 50 65 58 62 Q 50 60 42 62 Z" fill={p.hair}/>
+          </g>
         )}
         {p.beard === 'long' && (
-          <path d={`M 30 56 Q 50 90 70 56 Q 64 80 50 82 Q 36 80 30 56 Z`} fill={p.hair}/>
+          <g>
+            <path d={`M 28 56 Q 50 95 72 56 Q 65 85 50 88 Q 35 85 28 56 Z`} fill={`url(#${uid}-beard)`}/>
+            <path d={`M 32 60 Q 50 88 68 60 Q 60 80 50 82 Q 40 80 32 60 Z`} fill={beardHi} opacity="0.30"/>
+            <path d="M 42 62 Q 50 66 58 62 Q 50 60 42 62 Z" fill={p.hair}/>
+            {/* Beard strands */}
+            <path d="M 38 75 L 36 88" stroke={beardSh} strokeWidth="0.6" fill="none" strokeLinecap="round" opacity="0.5"/>
+            <path d="M 50 80 L 50 92" stroke={beardSh} strokeWidth="0.6" fill="none" strokeLinecap="round" opacity="0.5"/>
+            <path d="M 62 75 L 64 88" stroke={beardSh} strokeWidth="0.6" fill="none" strokeLinecap="round" opacity="0.5"/>
+          </g>
         )}
-        {/* Eyes */}
-        <ellipse cx="42" cy="48" rx="2" ry="2.4" fill="#1A1408"/>
-        <ellipse cx="58" cy="48" rx="2" ry="2.4" fill="#1A1408"/>
-        {/* Eyebrows */}
-        <path d="M 38 43 Q 42 41 46 43" stroke={p.hair} strokeWidth="1.6" fill="none" strokeLinecap="round"/>
-        <path d="M 54 43 Q 58 41 62 43" stroke={p.hair} strokeWidth="1.6" fill="none" strokeLinecap="round"/>
-        {/* Headwear */}
-        <Headwear kind={p.headwear} accent={p.accent}/>
+
+        {/* Headwear sits on top of everything */}
+        <Headwear kind={p.headwear} accent={p.accent} hair={p.hair}/>
       </svg>
     </div>
   );
 }
 
-function Headwear({ kind, accent }: { kind: string; accent: string }) {
+function Headwear({ kind, accent, hair }: { kind: string; accent: string; hair?: string }) {
+  const accentDark = shade(accent, -0.30);
+  const accentHi   = shade(accent, +0.20);
+
   if (kind === 'ghutra') {
     return (
       <g>
-        {/* White ghutra base */}
-        <path d="M 22 38 Q 22 18 50 16 Q 78 18 78 38 L 78 62 Q 70 64 65 58 L 65 38 Q 50 28 35 38 L 35 58 Q 30 64 22 62 Z"
-          fill="#F5F0E5"/>
-        {/* Black agal cord */}
-        <path d="M 28 32 Q 50 22 72 32" stroke="#1A1408" strokeWidth="2.5" fill="none"/>
-        <path d="M 28 36 Q 50 26 72 36" stroke="#1A1408" strokeWidth="2.5" fill="none"/>
-        {/* Accent stripe */}
-        <path d="M 35 38 Q 50 30 65 38" stroke={accent} strokeWidth="1.2" fill="none" opacity="0.6"/>
+        {/* White ghutra falling down both sides */}
+        <path d="M 18 40 Q 18 16 50 12 Q 82 16 82 40 L 82 70 Q 75 75 68 68 L 68 40 Q 50 30 32 40 L 32 68 Q 25 75 18 70 Z"
+          fill="#F8F4EA"/>
+        {/* Side shading — folds */}
+        <path d="M 18 40 Q 18 16 50 12 L 50 28 Q 32 30 25 50 L 18 70 Z" fill="#E8E0D0" opacity="0.45"/>
+        <path d="M 82 40 Q 82 16 50 12 L 50 28 Q 68 30 75 50 L 82 70 Z" fill="#E8E0D0" opacity="0.25"/>
+        {/* Crown line */}
+        <path d="M 26 28 Q 50 18 74 28" stroke="#D8D0BD" strokeWidth="0.8" fill="none" opacity="0.7"/>
+        {/* Black agal cord — twisted rope */}
+        <path d="M 28 30 Q 50 21 72 30" stroke="#0E0905" strokeWidth="3" fill="none" strokeLinecap="round"/>
+        <path d="M 28 33 Q 50 24 72 33" stroke="#1A1408" strokeWidth="2.4" fill="none" strokeLinecap="round"/>
+        <path d="M 30 31 Q 50 23 70 31" stroke="#3A2A18" strokeWidth="0.6" fill="none" opacity="0.7"/>
+        {/* Accent piping (subtle) */}
+        <path d="M 32 40 Q 50 32 68 40" stroke={accent} strokeWidth="0.8" fill="none" opacity="0.45"/>
       </g>
     );
   }
   if (kind === 'turban') {
     return (
       <g>
-        <path d="M 24 36 Q 50 14 76 36 L 76 32 Q 50 16 24 32 Z" fill={accent}/>
-        <path d="M 24 36 Q 50 22 76 36 L 76 40 Q 50 30 24 40 Z" fill="#F5F0E5"/>
-        <path d="M 24 40 Q 50 30 76 40 L 76 44 Q 50 36 24 44 Z" fill={accent}/>
+        {/* Three wrapped layers with shadow between */}
+        <path d="M 22 36 Q 50 12 78 36 L 78 30 Q 50 14 22 30 Z" fill={accent}/>
+        <path d="M 22 36 L 78 36" stroke={accentDark} strokeWidth="0.5" opacity="0.6"/>
+        <path d="M 22 38 Q 50 24 78 38 L 78 32 Q 50 18 22 32 Z" fill="#F5F0E5"/>
+        <path d="M 22 42 Q 50 30 78 42 L 78 38 Q 50 26 22 38 Z" fill={accent}/>
+        {/* Highlight stripe */}
+        <path d="M 28 28 Q 50 18 72 28" stroke={accentHi} strokeWidth="0.8" fill="none" opacity="0.7"/>
       </g>
     );
   }
   if (kind === 'crown') {
     return (
       <g>
-        <path d="M 28 30 L 36 18 L 44 28 L 50 14 L 56 28 L 64 18 L 72 30 L 72 36 L 28 36 Z" fill={accent}/>
-        <circle cx="36" cy="22" r="2" fill="#FFE07A"/>
-        <circle cx="50" cy="18" r="2.5" fill="#7AC4FF"/>
-        <circle cx="64" cy="22" r="2" fill="#FFE07A"/>
+        {/* Crown body */}
+        <path d="M 24 32 L 30 18 L 38 28 L 44 14 L 50 24 L 56 14 L 62 28 L 70 18 L 76 32 L 76 38 L 24 38 Z"
+          fill={accent} stroke={accentDark} strokeWidth="0.8"/>
+        {/* Inner shading */}
+        <path d="M 24 38 L 76 38 L 74 42 L 26 42 Z" fill={accentDark} opacity="0.5"/>
+        {/* Jewels */}
+        <circle cx="30" cy="22" r="1.8" fill="#FFE07A" stroke="#0E0905" strokeWidth="0.3"/>
+        <circle cx="50" cy="20" r="2.5" fill="#7AC4FF" stroke="#0E0905" strokeWidth="0.3"/>
+        <circle cx="70" cy="22" r="1.8" fill="#FFE07A" stroke="#0E0905" strokeWidth="0.3"/>
+        <circle cx="50" cy="22" r="0.8" fill="#FFFFFF" opacity="0.8"/>
       </g>
     );
   }
   if (kind === 'helmet') {
     return (
       <g>
-        <path d="M 26 36 Q 26 18 50 14 Q 74 18 74 36 L 74 42 Q 50 36 26 42 Z" fill={accent}/>
-        <path d="M 50 14 L 50 8 L 56 12" stroke="#FFE07A" strokeWidth="2" fill="none"/>
-        <rect x="48" y="36" width="4" height="20" fill="#1A1408"/>
+        {/* Domed warrior helmet with edge band */}
+        <path d="M 24 40 Q 24 14 50 10 Q 76 14 76 40 L 76 44 Q 50 38 24 44 Z" fill={accent}/>
+        <path d="M 24 40 Q 24 14 50 10 Q 60 12 60 28 L 50 30 Q 36 30 24 40 Z" fill={accentHi} opacity="0.4"/>
+        {/* Edge band */}
+        <path d="M 24 40 Q 50 36 76 40 L 76 44 Q 50 40 24 44 Z" fill={accentDark}/>
+        {/* Top spike */}
+        <path d="M 50 10 L 48 4 L 52 4 Z" fill={accentDark}/>
+        <circle cx="50" cy="3" r="1.5" fill="#FFE07A"/>
+        {/* Nose guard down to face */}
+        <path d="M 48 38 Q 50 50 52 38" fill={accentDark}/>
+        {/* Rivet details */}
+        <circle cx="32" cy="42" r="0.8" fill={accentDark}/>
+        <circle cx="68" cy="42" r="0.8" fill={accentDark}/>
       </g>
     );
   }
   if (kind === 'sailor') {
     return (
       <g>
-        {/* Sailor's headscarf — striped */}
-        <path d="M 24 38 Q 50 18 76 38 L 76 32 Q 50 18 24 32 Z" fill="#F5F0E5"/>
-        <path d="M 24 32 Q 50 18 76 32 L 76 28 Q 50 16 24 28 Z" fill={accent}/>
-        <circle cx="50" cy="22" r="3" fill="#FFE07A" stroke="#1A1408" strokeWidth="0.5"/>
+        {/* Striped headscarf with knot at side */}
+        <path d="M 22 36 Q 50 14 78 36 L 78 30 Q 50 14 22 30 Z" fill="#F5F0E5"/>
+        <path d="M 22 32 Q 50 16 78 32 L 78 28 Q 50 14 22 28 Z" fill={accent}/>
+        <path d="M 22 28 Q 50 14 78 28 L 78 24 Q 50 12 22 24 Z" fill="#F5F0E5"/>
+        <path d="M 22 24 Q 50 12 78 24 L 78 20 Q 50 10 22 20 Z" fill={accent}/>
+        {/* Knot on the side */}
+        <ellipse cx="76" cy="32" rx="5" ry="3" fill="#F5F0E5" stroke={accentDark} strokeWidth="0.5"/>
+        <ellipse cx="76" cy="32" rx="2" ry="1.5" fill={accent} opacity="0.5"/>
+        {/* Forehead earring/jewel */}
+        <circle cx="50" cy="22" r="2" fill="#FFE07A" stroke="#0E0905" strokeWidth="0.4"/>
       </g>
     );
   }
   if (kind === 'scholar') {
     return (
       <g>
-        {/* Scholar turban with extra layer */}
-        <path d="M 22 36 Q 50 12 78 36 L 78 32 Q 50 14 22 32 Z" fill={accent}/>
-        <path d="M 22 36 Q 50 24 78 36 L 78 40 Q 50 32 22 40 Z" fill="#F5F0E5"/>
-        <path d="M 22 40 Q 50 32 78 40 L 78 44 Q 50 38 22 44 Z" fill={accent}/>
-        <circle cx="50" cy="20" r="2.5" fill="#FFE07A"/>
+        {/* Scholar's tall layered turban with brooch */}
+        <path d="M 20 38 Q 50 8 80 38 L 80 32 Q 50 10 20 32 Z" fill={accent}/>
+        <path d="M 20 38 Q 50 22 80 38 L 80 42 Q 50 30 20 42 Z" fill="#F5F0E5"/>
+        <path d="M 20 42 Q 50 30 80 42 L 80 46 Q 50 34 20 46 Z" fill={accent}/>
+        {/* Highlight on top */}
+        <path d="M 28 24 Q 50 14 72 24" stroke={accentHi} strokeWidth="0.8" fill="none" opacity="0.65"/>
+        {/* Brooch / feather */}
+        <path d="M 50 22 L 48 12 L 52 12 Z" fill="#FFE07A"/>
+        <circle cx="50" cy="22" r="2" fill="#FFE07A" stroke="#0E0905" strokeWidth="0.3"/>
+        <circle cx="50" cy="22" r="0.8" fill="#FF9D5C"/>
       </g>
     );
   }
-  // 'none' — small hair lock
+  // 'none' — visible hair with strands
   return (
     <g>
-      <path d="M 30 40 Q 35 22 50 22 Q 65 22 70 40" fill="#1A1408" opacity="0.85"/>
+      <path d="M 28 38 Q 30 18 50 18 Q 70 18 72 38 Q 70 30 50 28 Q 30 30 28 38 Z" fill={hair || '#1A1408'}/>
+      <path d="M 32 32 Q 40 22 50 24" stroke={shade(hair || '#1A1408', +0.2)} strokeWidth="0.6" fill="none" opacity="0.6"/>
     </g>
   );
 }

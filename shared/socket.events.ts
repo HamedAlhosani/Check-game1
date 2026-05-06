@@ -110,6 +110,7 @@ export const SOCKET_EVENTS = {
   GAME_OVER: 'game:over',
   GAME_ERROR: 'game:error',
   GAME_EPIC_MOMENT: 'game:epic_moment',
+  GAME_DECK_RESHUFFLED: 'game:deck_reshuffled',
 
   // Chat
   CHAT_SEND: 'chat:send',

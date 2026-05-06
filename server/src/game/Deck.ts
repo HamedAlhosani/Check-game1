@@ -17,6 +17,10 @@ export class Deck {
   private drawPile: Card[] = [];
   private discardPile: Card[] = [];
   private numDecks: number;
+  /** Set true when draw() refilled the draw pile from discards. The
+   *  GameEngine drains this after each draw and emits a reshuffle event
+   *  so the client can play a swirl animation. */
+  private justReshuffled = false;
 
   constructor(numDecks = 1) {
     this.numDecks = Math.max(1, numDecks);
@@ -50,8 +54,16 @@ export class Deck {
       this.drawPile = this.discardPile.splice(0);
       this.discardPile = [top];
       this.shuffle();
+      this.justReshuffled = true;
     }
     return this.drawPile.pop() || null;
+  }
+
+  /** Returns true exactly once after a reshuffle, then resets. */
+  consumeReshuffleEvent(): boolean {
+    const r = this.justReshuffled;
+    this.justReshuffled = false;
+    return r;
   }
 
   discard(card: Card): void {

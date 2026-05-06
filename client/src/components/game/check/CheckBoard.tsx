@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { soundService } from '../../../services/sound.service';
 import { FrameRing } from '../../shared/FrameRing';
 import { CharacterArt } from '../../shared/CharacterArt';
+import { RoundStartCinematic, ReshuffleAnimation } from './GameCinematics';
 import { RulesModal } from '../../shared/RulesModal';
 
 interface Props { gameId: string; roomId: string; gameState: GameState; }
@@ -282,11 +283,13 @@ const StackedDeck = memo(function StackedDeck({ count, onClick, disabled, size =
           transition: 'box-shadow .2s, border-color .2s',
         }}
       >
-        <span className="font-display tracking-widest" style={{ fontSize: size === 'large' ? 14 : 11, opacity: 0.55, letterSpacing: '0.25em' }}>
-          CHECK
-        </span>
-        <span className="font-bold" style={{ fontSize: size === 'large' ? 28 : 22, lineHeight: 1, color: enabled ? '#E8C97A' : 'rgba(232,201,122,0.55)' }}>
+        {/* Count goes ABOVE the CHECK label so the number reads like a
+            prominent badge — user-requested order. */}
+        <span className="font-bold" style={{ fontSize: size === 'large' ? 30 : 22, lineHeight: 1, color: enabled ? '#E8C97A' : 'rgba(232,201,122,0.55)' }}>
           {count}
+        </span>
+        <span className="font-display tracking-widest" style={{ fontSize: size === 'large' ? 13 : 11, opacity: 0.6, letterSpacing: '0.2em' }}>
+          CHECK
         </span>
       </div>
     </div>
@@ -824,6 +827,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [swapHighlights, setSwapHighlights] = useState<Record<string, number>>({});
   // Epic moment banner (CHECK with 0, alone-lowest CHECK, beaten CHECK, eliminations).
   const [epicMoment, setEpicMoment] = useState<{ kind: string; uid: string; key: number } | null>(null);
+  // Cinematics — round-start deal animation + reshuffle swirl.
+  const [showCinematic, setShowCinematic] = useState(false);
+  const [showReshuffle, setShowReshuffle] = useState(false);
+  const prevRoundRef = useRef<number>(-1);
   // Q peek result modal — { card, position }
   const [qPeekCard, setQPeekCard] = useState<{ card: Card; position: number } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -874,6 +881,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       setEpicMoment({ kind: data.kind, uid: data.uid, key });
       setTimeout(() => setEpicMoment(prev => prev?.key === key ? null : prev), 3500);
     });
+    socket.on(SOCKET_EVENTS.GAME_DECK_RESHUFFLED, () => {
+      setShowReshuffle(true);
+    });
     socket.on(SOCKET_EVENTS.GAME_SCORES, (data: any) => {
       setRoundScoreData(data);
       setTimeout(() => setRoundScoreData(null), 5500);
@@ -912,6 +922,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       socket.off(SOCKET_EVENTS.GAME_CHECK_CALLED);
       socket.off(SOCKET_EVENTS.GAME_BURN_INVALID);
       socket.off(SOCKET_EVENTS.GAME_EPIC_MOMENT);
+      socket.off(SOCKET_EVENTS.GAME_DECK_RESHUFFLED);
       // Reset game state so a new game starts fresh
       resetGame();
     };
@@ -949,6 +960,16 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   useEffect(() => {
     if (gameState.phase !== 'SPECIAL_J') { setJTargetUid(null); }
   }, [gameState.phase]);
+
+  // Round-start cinematic — fires once per round on entry to PEEK_PHASE.
+  // The roundNumber bump is the most reliable signal (handles round 1
+  // and every subsequent reset alike).
+  useEffect(() => {
+    if (gameState.phase === 'PEEK_PHASE' && gameState.roundNumber !== prevRoundRef.current) {
+      prevRoundRef.current = gameState.roundNumber;
+      setShowCinematic(true);
+    }
+  }, [gameState.phase, gameState.roundNumber]);
 
   // Pre-warm the audio context the first time the user touches the board,
   // so the first card-draw sound doesn't take 100-200ms to initialise.
@@ -1512,7 +1533,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                     count={gameState.deckCount}
                     onClick={isMyTurn && !drawnCard && (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') ? onDraw : undefined}
                     disabled={!isMyTurn || !!drawnCard || (gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED')}
-                    size={isMobile ? 'small' : isTablet ? 'normal' : 'normal'}
+                    size={isMobile ? 'large' : isTablet ? 'normal' : 'normal'}
                   />
                   {/* Discard pile — large and clearly tappable */}
                   <div
@@ -1869,24 +1890,17 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         </motion.button>
       </div>
 
-      {/* ── Deck info panel — sized + positioned per device ──
-         Desktop / tablet: bottom-left corner like before.
-         Mobile: top-right corner, compact, so it doesn't fight with
-         the chat & emote buttons at the bottom. */}
-      <div className="fixed z-40 flex flex-col items-center gap-0.5 rounded-xl border border-gold/30"
-        style={{
-          bottom: isMobile ? undefined : 58,
-          top:    isMobile ? 56 : undefined,
-          right:  isMobile ? 6  : undefined,
-          left:   isMobile ? undefined : 8,
-          padding: isMobile ? '4px 8px' : '12px 16px',
-          background: 'rgba(20,14,8,.97)',
-          minWidth: isMobile ? 44 : 72,
-          boxShadow: '0 0 12px rgba(201,168,76,.10)',
-        }}>
-        <span className="text-gold/40 font-arabic" style={{ fontSize: isMobile ? 8.5 : 10 }}>كروت</span>
-        <span className="text-sand/80 font-bold" style={{ fontSize: isMobile ? 16 : 24, lineHeight: 1 }}>{gameState.deckCount}</span>
-      </div>
+      {/* ── Deck card-count panel — per device ──
+         Desktop / tablet: bottom-left corner.
+         Mobile: floating right above the CHECK deck label so it reads
+         as "X cards in CHECK [pile]" stacked vertically. */}
+      {!isMobile && (
+        <div className="fixed z-40 flex flex-col items-center gap-1 rounded-xl border border-gold/30 px-4 py-3"
+          style={{ bottom: 58, left: 8, background: 'rgba(20,14,8,.97)', minWidth: 72, boxShadow: '0 0 12px rgba(201,168,76,.10)' }}>
+          <span className="text-gold/40 font-arabic" style={{ fontSize: 10 }}>كروت</span>
+          <span className="text-sand/80 font-bold" style={{ fontSize: 24, lineHeight: 1 }}>{gameState.deckCount}</span>
+        </div>
+      )}
 
       <ChatPanel roomId={roomId} open={chatOpen} onToggle={() => setChatOpen(s => !s)} />
 
@@ -2643,6 +2657,23 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             playerName={gameState.players.find(p => p.uid === epicMoment.uid)?.displayName || ''}
             isMe={epicMoment.uid === user?.uid}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Round-start cinematic — deal animation → "CHECK!" voice */}
+      <AnimatePresence>
+        {showCinematic && (
+          <RoundStartCinematic
+            playerCount={gameState.players.length}
+            onComplete={() => setShowCinematic(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Reshuffle animation — when discard pile recycles into the deck */}
+      <AnimatePresence>
+        {showReshuffle && (
+          <ReshuffleAnimation onComplete={() => setShowReshuffle(false)}/>
         )}
       </AnimatePresence>
     </div>

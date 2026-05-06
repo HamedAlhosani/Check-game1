@@ -265,7 +265,7 @@ export class GameEngine {
     if (this.turnActedUid === uid) return false; // already acted this turn
 
     this.clearTimers();
-    const card = this.deck.draw();
+    const card = this.drawCard();
     if (!card) return false;
 
     this.turnActedUid = uid;
@@ -299,7 +299,7 @@ export class GameEngine {
     // and replaced by 1 fresh card so the choice count stays at 2.
     this.kingChoiceCards = [];
     while (this.kingChoiceCards.length < 2) {
-      const c = this.deck.draw();
+      const c = this.drawCard();
       if (!c) break;
       if (c.rank === 'K') {
         this.deck.discard(c);
@@ -865,6 +865,16 @@ export class GameEngine {
 
   getDrawnCard(uid: string): Card | undefined {
     return this.drawnCards.get(uid);
+  }
+
+  /** Wraps deck.draw() and emits a reshuffle event if the draw triggered
+   *  one — so the client can play a swirl/shuffle animation. */
+  private drawCard(): Card | null {
+    const card = this.deck.draw();
+    if (this.deck.consumeReshuffleEvent()) {
+      this.emit('game:deck_reshuffled', { newCount: this.deck.drawCount });
+    }
+    return card;
   }
 
   /** Per-round breakdown captured during scoring — used to build the

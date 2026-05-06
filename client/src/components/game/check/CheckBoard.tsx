@@ -990,10 +990,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     peekDeferredRef.current = true;
     pendingPeekRef.current = [];
 
-    const tCine = setTimeout(() => setShowCinematic(true), 300);
-    // Safety: if the cinematic somehow never completes, reveal the peek
-    // after 5.5s so the player isn't permanently blind to their own cards.
-    const tFallback = setTimeout(() => flushPendingPeek(), 5500);
+    // 2-second gap after the intro list dismisses, then start dealing.
+    const tCine = setTimeout(() => setShowCinematic(true), 2000);
+    // Safety fallback — cinematic itself runs ~3.7s, so 8s covers everything.
+    const tFallback = setTimeout(() => flushPendingPeek(), 8000);
     return () => { clearTimeout(tCine); clearTimeout(tFallback); };
   }, [gameState.phase, gameState.roundNumber, showIntro]);
 

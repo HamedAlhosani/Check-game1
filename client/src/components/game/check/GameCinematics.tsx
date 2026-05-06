@@ -4,27 +4,28 @@ import { soundService } from '../../../services/sound.service';
 import { useLang } from '../../../i18n/useT';
 
 /**
- * Round-start cinematic — plays for ~2.5s when a new round begins.
- * Stage 1 (0-1.5s): cards fly out from the centre to each player position
- * Stage 2 (1.5-2.5s): big "CHECK!" announcement with the call voice
- * After: hands control back to the regular peek-phase UI
+ * Round-start cinematic — plays for ~3.7s when a new round begins.
+ * Stage 1 (0–1.5s):  cards fly out from the centre to each player position
+ * Pause  (1.5–2.5s): empty table beat — lets the deal settle (user-requested 1s gap)
+ * Stage 2 (2.5–3.5s): big "CHECK!" announcement with the call voice
+ * After (3.5s+): onComplete fires → bottom-2 peek reveals
  */
 export function RoundStartCinematic({ playerCount, onComplete }: {
   playerCount: number;
   onComplete: () => void;
 }) {
   const lang = useLang();
-  const [stage, setStage] = useState<'dealing' | 'announce'>('dealing');
+  const [stage, setStage] = useState<'dealing' | 'pause' | 'announce'>('dealing');
 
   useEffect(() => {
-    // Tiny shuffle sound at the start
     soundService.playCardDraw();
-    const t1 = setTimeout(() => {
+    const t1 = setTimeout(() => setStage('pause'), 1500);          // dealing → quiet 1s pause
+    const t2 = setTimeout(() => {                                  // pause → CHECK announce
       setStage('announce');
       soundService.playCheckVoice();
-    }, 1500);
-    const t2 = setTimeout(() => onComplete(), 2700);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    }, 2500);
+    const t3 = setTimeout(() => onComplete(), 3700);               // done → reveal peek
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [onComplete]);
 
   // Pre-compute per-player target positions on a ring around the screen

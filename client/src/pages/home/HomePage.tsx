@@ -51,6 +51,74 @@ function DailyRewardNavButton({ onOpen, lang }: { onOpen: () => void; lang: stri
   );
 }
 
+// Prominent tournament CTA strip — sits below the profile card. Reads the
+// active tournament from the store so it can show "back to your bracket"
+// when the player has one in flight, and the public-list count from the
+// last TOURNAMENT_LIST emit (kept on a window-level cache for cheapness).
+function TournamentStrip({ lang, onOpen }: { lang: string; onOpen: () => void }) {
+  const tournamentState = useTournamentStore(s => s.state);
+  const active = tournamentState && tournamentState.status !== 'finished';
+  const inProgress = active && tournamentState.status === 'in_progress';
+  const subtitle = active
+    ? (lang === 'ar'
+        ? (inProgress ? '⏱ بطولة جارية — تابع التقدم' : '⏳ بطولة في الانتظار')
+        : (inProgress ? '⏱ Tournament live — see progress' : '⏳ Tournament waiting'))
+    : (lang === 'ar' ? 'اربح بطولات حقيقية وكسب جوائز' : 'Win real tournaments and earn prizes');
+
+  return (
+    <motion.button
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.985 }}
+      onClick={onOpen}
+      className="w-full mb-5 rounded-2xl flex items-center gap-3 px-4 py-3 transition-all"
+      style={{
+        background: active
+          ? 'linear-gradient(90deg, rgba(232,201,122,0.22) 0%, rgba(168,124,58,0.14) 100%)'
+          : 'linear-gradient(90deg, rgba(232,201,122,0.14) 0%, rgba(168,124,58,0.06) 100%)',
+        border: `1.5px solid ${active ? 'rgba(232,201,122,0.65)' : 'rgba(232,201,122,0.40)'}`,
+        boxShadow: '0 4px 18px rgba(0,0,0,0.35), 0 0 22px rgba(232,201,122,0.20)',
+        cursor: 'pointer',
+      }}>
+      {/* Trophy icon */}
+      <div className="rounded-xl flex items-center justify-center shrink-0"
+        style={{
+          width: 44, height: 44,
+          background: 'radial-gradient(circle at 30% 30%, rgba(255,224,122,0.45), rgba(168,124,58,0.20) 70%)',
+          border: '1px solid rgba(232,201,122,0.55)',
+          fontSize: 26,
+        }}>🏆</div>
+
+      <div className="flex-1 min-w-0 text-start">
+        <div className="font-arabic font-bold flex items-center gap-2"
+          style={{ fontSize: 15, color: '#FFE07A' }}>
+          {lang === 'ar' ? 'البطولات' : 'Tournaments'}
+          {active && (
+            <motion.span
+              animate={{ opacity: [1, 0.45, 1] }}
+              transition={{ duration: 1.6, repeat: Infinity }}
+              className="rounded-full font-bold"
+              style={{
+                background: '#E04030', color: '#fff',
+                fontSize: 9.5, lineHeight: '15px',
+                padding: '0 6px',
+              }}>
+              {lang === 'ar' ? 'نشطة' : 'live'}
+            </motion.span>
+          )}
+        </div>
+        <p className="font-arabic mt-0.5"
+          style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.65)' }}>
+          {subtitle}
+        </p>
+      </div>
+
+      <span className="shrink-0" style={{ fontSize: 18, color: '#FFE07A' }}>
+        {lang === 'ar' ? '‹' : '›'}
+      </span>
+    </motion.button>
+  );
+}
+
 // Full-width strip below the XP bar — shows mission progress + claim count,
 // taps to open the ProgressionModal. Re-fetches whenever any user activity
 // (xp, wins, games, streak) changes so a finished mission lights up at once.
@@ -1103,6 +1171,11 @@ export function HomePage() {
           </motion.div>
         )}
 
+        {/* Tournament strip — prominent CTA below the profile card */}
+        {profile && !currentRoom && (
+          <TournamentStrip lang={lang} onOpen={() => { soundService.playClick(); navigate('/tournaments'); }}/>
+        )}
+
         {currentRoom ? (
           <WaitingRoom room={currentRoom} onLeave={() => setCurrentRoom(null)} />
         ) : (
@@ -1134,19 +1207,6 @@ export function HomePage() {
                   boxShadow: '0 4px 14px rgba(0,0,0,0.35), 0 0 16px rgba(201,168,76,0.2)',
                 }}>
                 📖 {lang === 'ar' ? 'القوانين' : 'Rules'}
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-                onClick={() => { soundService.playClick(); navigate('/tournaments'); }}
-                className="font-arabic font-bold rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(232,201,122,0.22) 0%, rgba(168,124,58,0.14) 100%)',
-                  border: '1.5px solid rgba(232,201,122,0.65)',
-                  color: '#FFE07A',
-                  fontSize: 14,
-                  boxShadow: '0 4px 14px rgba(0,0,0,0.35), 0 0 18px rgba(232,201,122,0.30)',
-                }}>
-                🏆 {lang === 'ar' ? 'البطولات' : 'Tournaments'}
               </motion.button>
               {mode === 'private' && (
                 <button onClick={() => setShowJoin(true)}

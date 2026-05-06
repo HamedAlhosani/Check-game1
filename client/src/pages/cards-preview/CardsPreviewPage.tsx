@@ -243,16 +243,17 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
         </g>
       ))}
 
-      {/* Corner rank+suit (always shown — small, in the corners only) */}
+      {/* Corner rank+suit — both corners upright, with breathing room between
+          the number and the suit glyph */}
       <g>
         <text x="14" y="22" fontFamily="Georgia, serif" fontWeight="800"
           fontSize={label.length > 1 ? 12 : 16} fill={ink} textAnchor="middle">{label}</text>
-        <text x="14" y="34" fontSize="12" fill={ink} textAnchor="middle">{SUIT_GLYPH[suit]}</text>
+        <text x="14" y="36" fontSize="12" fill={ink} textAnchor="middle">{SUIT_GLYPH[suit]}</text>
       </g>
-      <g transform="rotate(180 50 75)">
-        <text x="14" y="22" fontFamily="Georgia, serif" fontWeight="800"
+      <g>
+        <text x="86" y="124" fontFamily="Georgia, serif" fontWeight="800"
           fontSize={label.length > 1 ? 12 : 16} fill={ink} textAnchor="middle">{label}</text>
-        <text x="14" y="34" fontSize="12" fill={ink} textAnchor="middle">{SUIT_GLYPH[suit]}</text>
+        <text x="86" y="138" fontSize="12" fill={ink} textAnchor="middle">{SUIT_GLYPH[suit]}</text>
       </g>
 
       {/* Soft halo behind the centre */}

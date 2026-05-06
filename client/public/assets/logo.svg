@@ -1,92 +1,107 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none" style="background: transparent;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="none">
   <defs>
-    <!-- Gold gradient — light at top-left, deep at bottom-right -->
-    <linearGradient id="goldFill" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%"  stop-color="#FFE07A"/>
-      <stop offset="40%" stop-color="#E8C97A"/>
-      <stop offset="80%" stop-color="#A07830"/>
-      <stop offset="100%" stop-color="#6B4A14"/>
+    <!-- Card body — deep navy / black with subtle gradient -->
+    <linearGradient id="cardBody" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0%"  stop-color="#1A1428"/>
+      <stop offset="100%" stop-color="#040108"/>
     </linearGradient>
-    <linearGradient id="goldStroke" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FFE07A"/>
+    <!-- Gold gradient for borders + text -->
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%"  stop-color="#FFE07A"/>
+      <stop offset="50%" stop-color="#E8C97A"/>
       <stop offset="100%" stop-color="#8B6914"/>
     </linearGradient>
-    <linearGradient id="cardA" x1="0" y1="0" x2="0.4" y2="1">
-      <stop offset="0%"  stop-color="#1A1428"/>
-      <stop offset="100%" stop-color="#080216"/>
+    <linearGradient id="goldDeep" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#FFE07A"/>
+      <stop offset="100%" stop-color="#6B4A14"/>
     </linearGradient>
-    <linearGradient id="cardB" x1="0" y1="0" x2="0.4" y2="1">
-      <stop offset="0%"  stop-color="#22182E"/>
-      <stop offset="100%" stop-color="#0A0418"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#FFE07A" stop-opacity="0.35"/>
-      <stop offset="60%" stop-color="#FFE07A" stop-opacity="0.08"/>
+    <!-- Soft halo behind the card -->
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"  stop-color="#FFE07A" stop-opacity="0.30"/>
+      <stop offset="60%" stop-color="#FFE07A" stop-opacity="0.06"/>
       <stop offset="100%" stop-color="#FFE07A" stop-opacity="0"/>
     </radialGradient>
     <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity="0.55"/>
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000" flood-opacity="0.55"/>
     </filter>
   </defs>
 
-  <!-- Soft outer glow -->
-  <circle cx="128" cy="128" r="120" fill="url(#glow)"/>
+  <!-- Outer halo -->
+  <circle cx="128" cy="128" r="120" fill="url(#halo)"/>
 
-  <!-- Back card (rotated left) -->
-  <g transform="translate(128 128) rotate(-14) translate(-50 -78)" filter="url(#cardShadow)">
-    <rect x="0" y="0" width="100" height="156" rx="12" fill="url(#cardA)" stroke="url(#goldStroke)" stroke-width="3"/>
-    <rect x="6" y="6" width="88" height="144" rx="9" fill="none" stroke="#E8C97A" stroke-width="0.8" opacity="0.55"/>
-    <!-- 8-point star top -->
-    <g transform="translate(50 38)">
-      <path d="M0,-12 L3.4,-3.4 L12,0 L3.4,3.4 L0,12 L-3.4,3.4 L-12,0 L-3.4,-3.4 Z"
-        fill="none" stroke="#E8C97A" stroke-width="1.4" opacity="0.85"/>
-      <path d="M0,-12 L3.4,-3.4 L12,0 L3.4,3.4 L0,12 L-3.4,3.4 L-12,0 L-3.4,-3.4 Z"
-        fill="none" stroke="#E8C97A" stroke-width="0.9" opacity="0.5" transform="rotate(45)"/>
-      <circle cx="0" cy="0" r="2" fill="url(#goldFill)"/>
+  <!-- Main card -->
+  <g filter="url(#cardShadow)">
+    <!-- Outer gold frame -->
+    <rect x="40" y="20" width="176" height="216" rx="18" fill="url(#cardBody)" stroke="url(#goldDeep)" stroke-width="4"/>
+    <!-- Inner gold border (filigree) -->
+    <rect x="50" y="30" width="156" height="196" rx="12" fill="none" stroke="#E8C97A" stroke-width="1" opacity="0.55"/>
+
+    <!-- ── UAE FLAG strip at the top ──
+         Authentic layout: vertical RED bar on the hoist side (1/4 width),
+         then GREEN/WHITE/BLACK horizontal stripes on the rest. -->
+    <g transform="translate(74 44)">
+      <!-- Whole flag area: 108 wide × 46 tall, with rounded corners -->
+      <clipPath id="flagClip">
+        <rect x="0" y="0" width="108" height="46" rx="4"/>
+      </clipPath>
+      <g clip-path="url(#flagClip)">
+        <!-- Red hoist (left 1/4) -->
+        <rect x="0" y="0" width="27" height="46" fill="#EF3340"/>
+        <!-- Green top stripe (right 3/4) -->
+        <rect x="27" y="0" width="81" height="15.33" fill="#009639"/>
+        <!-- White middle -->
+        <rect x="27" y="15.33" width="81" height="15.34" fill="#FFFFFF"/>
+        <!-- Black bottom -->
+        <rect x="27" y="30.67" width="81" height="15.33" fill="#1A1A1A"/>
+      </g>
+      <!-- Gold trim around the flag -->
+      <rect x="0" y="0" width="108" height="46" rx="4" fill="none" stroke="url(#gold)" stroke-width="1.5"/>
     </g>
-    <!-- Crescent moon centre -->
-    <g transform="translate(50 78)">
-      <path d="M-10,-12 A14,14 0 1 0 -10,12 A11,11 0 1 1 -10,-12 Z" fill="url(#goldFill)" opacity="0.85"/>
+
+    <!-- ── BIG CHECKMARK in the centre — heart of the brand ── -->
+    <g transform="translate(128 130)">
+      <!-- Glow underlay -->
+      <path d="M -42 4 L -14 30 L 42 -28"
+        fill="none" stroke="#FFE07A" stroke-width="20"
+        stroke-linecap="round" stroke-linejoin="round" opacity="0.18"/>
+      <!-- Main thick stroke -->
+      <path d="M -42 4 L -14 30 L 42 -28"
+        fill="none" stroke="url(#gold)" stroke-width="14"
+        stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Top highlight -->
+      <path d="M -42 4 L -14 30 L 42 -28"
+        fill="none" stroke="#FFE07A" stroke-width="3"
+        stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
     </g>
-    <!-- Mini palm tree base -->
-    <g transform="translate(50 124)" fill="#E8C97A" opacity="0.7">
-      <rect x="-1" y="-12" width="2" height="14"/>
-      <path d="M-1,-12 Q-9,-16 -12,-10 Q-6,-12 -1,-10 Z"/>
-      <path d="M1,-12 Q9,-16 12,-10 Q6,-12 1,-10 Z"/>
-      <path d="M-1,-14 Q-4,-22 0,-24 Q4,-22 1,-14 Z"/>
+
+    <!-- ── CHECK wordmark — bold serif under the checkmark ── -->
+    <text x="128" y="190" text-anchor="middle"
+      font-family="Cinzel, Georgia, serif"
+      font-size="26" font-weight="900"
+      fill="url(#gold)" letter-spacing="6">CHECK</text>
+
+    <!-- ── Arabic name ── -->
+    <text x="128" y="210" text-anchor="middle"
+      font-family="Scheherazade New, Cairo, serif"
+      font-size="14" font-weight="700"
+      fill="#E8C97A" opacity="0.85" letter-spacing="2">شيك</text>
+
+    <!-- Decorative corner ornaments — Arabic-style filigree -->
+    <g fill="none" stroke="#E8C97A" stroke-width="1.2" stroke-linecap="round" opacity="0.7">
+      <path d="M58 38 Q58 32 64 32"/>
+      <path d="M198 38 Q198 32 192 32"/>
+      <path d="M58 218 Q58 224 64 224"/>
+      <path d="M198 218 Q198 224 192 224"/>
+    </g>
+
+    <!-- Tiny crescent + 8-point star on the bottom centre — Arabic motif -->
+    <g transform="translate(128 222)">
+      <path d="M-4,0 A4,4 0 1,0 -1,3 A3,3 0 1,1 -4,0 Z" fill="#E8C97A" opacity="0.55"/>
+      <g transform="translate(8 0)">
+        <path d="M0,-3 L0.8,-0.8 L3,0 L0.8,0.8 L0,3 L-0.8,0.8 L-3,0 L-0.8,-0.8 Z"
+          fill="#E8C97A" opacity="0.55"/>
+      </g>
     </g>
   </g>
-
-  <!-- Front card (rotated right) -->
-  <g transform="translate(128 128) rotate(8) translate(-50 -78)" filter="url(#cardShadow)">
-    <rect x="0" y="0" width="100" height="156" rx="12" fill="url(#cardB)" stroke="url(#goldStroke)" stroke-width="3"/>
-    <rect x="6" y="6" width="88" height="144" rx="9" fill="none" stroke="#E8C97A" stroke-width="0.8" opacity="0.55"/>
-
-    <!-- BIG checkmark — the heart of the logo -->
-    <path d="M 22 80 L 44 110 L 80 50"
-      fill="none"
-      stroke="url(#goldFill)"
-      stroke-width="14"
-      stroke-linecap="round"
-      stroke-linejoin="round"/>
-    <path d="M 22 80 L 44 110 L 80 50"
-      fill="none"
-      stroke="#FFE07A"
-      stroke-width="3"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      opacity="0.65"/>
-
-    <!-- Small ornament corners — Arabic-style filigree -->
-    <g fill="none" stroke="#E8C97A" stroke-width="1" opacity="0.7" stroke-linecap="round">
-      <path d="M14,18 Q14,14 18,14"/>
-      <path d="M86,18 Q86,14 82,14"/>
-      <path d="M14,138 Q14,142 18,142"/>
-      <path d="M86,138 Q86,142 82,142"/>
-    </g>
-  </g>
-
-  <!-- Centre highlight — subtle gold dot -->
-  <circle cx="128" cy="128" r="4" fill="#FFE07A" opacity="0.45"/>
 </svg>

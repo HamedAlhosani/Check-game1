@@ -8,6 +8,7 @@ import { soundService } from '../../services/sound.service';
 import { useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { ConfirmModal } from '../../components/shared/ConfirmModal';
+import { CharacterArt } from '../../components/shared/CharacterArt';
 import type { Clan, ClanSummary, ClanMember, ClanRole, UserProfile, ClanVisibility } from '@check-game/shared';
 import { CLAN_EMBLEMS, CLAN_CREATE_COST } from '@check-game/shared';
 
@@ -166,6 +167,8 @@ function BrowseTab({ list, myClanId, myCoins, lang, onRefresh }: {
   list: ClanSummary[]; myClanId?: string; myCoins: number; lang: string; onRefresh: () => void;
 }) {
   const { addToast } = useUiStore();
+  const [search, setSearch] = useState('');
+
   async function apply(c: ClanSummary) {
     soundService.playClick();
     try {
@@ -180,22 +183,53 @@ function BrowseTab({ list, myClanId, myCoins, lang, onRefresh }: {
     }
   }
 
+  // Filter the list by name + tag (case-insensitive). Empty query → show all.
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? list.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        c.tag.toLowerCase().includes(q) ||
+        (c.description || '').toLowerCase().includes(q))
+    : list;
+
   return (
     <div>
+      {/* Search bar */}
+      <div className="rounded-2xl p-2.5 mb-3 flex items-center gap-2"
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(201,168,76,0.20)' }}>
+        <span style={{ fontSize: 16, color: 'rgba(232,201,122,0.6)', paddingInlineStart: 8 }}>🔍</span>
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder={lang === 'ar' ? 'ابحث باسم القبيلة أو الرمز' : 'Search by name or tag'}
+          className="flex-1 bg-transparent outline-none font-arabic"
+          style={{ color: '#E8C97A', fontSize: 13 }}
+        />
+        {search && (
+          <button onClick={() => setSearch('')}
+            className="rounded-md w-6 h-6 flex items-center justify-center"
+            style={{ color: 'rgba(245,230,200,0.55)', background: 'rgba(255,255,255,0.05)', fontSize: 14 }}>×</button>
+        )}
+      </div>
+
       <p className="font-arabic mb-3 px-1" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.5)' }}>
-        {lang === 'ar' ? `${list.length} قبيلة على المنصة` : `${list.length} clans on the platform`}
+        {q
+          ? (lang === 'ar' ? `${filtered.length} نتيجة من ${list.length}` : `${filtered.length} of ${list.length} match`)
+          : (lang === 'ar' ? `${list.length} قبيلة على المنصة` : `${list.length} clans on the platform`)}
       </p>
-      {list.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="text-center py-12 rounded-2xl"
           style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(201,168,76,0.18)' }}>
-          <p style={{ fontSize: 32 }}>🏰</p>
+          <p style={{ fontSize: 32 }}>{q ? '🔎' : '🏰'}</p>
           <p className="font-arabic mt-2" style={{ fontSize: 13, color: 'rgba(245,230,200,0.5)' }}>
-            {lang === 'ar' ? 'لا قبائل بعد — كن أول مؤسس!' : 'No clans yet — be the first founder!'}
+            {q
+              ? (lang === 'ar' ? `لا قبيلة باسم "${search}"` : `No clans match "${search}"`)
+              : (lang === 'ar' ? 'لا قبائل بعد — كن أول مؤسس!' : 'No clans yet — be the first founder!')}
           </p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {list.map(c => (
+          {filtered.map(c => (
             <ClanCard key={c.id} c={c} isMine={c.id === myClanId} canApply={!myClanId} lang={lang} onApply={() => apply(c)}/>
           ))}
         </div>

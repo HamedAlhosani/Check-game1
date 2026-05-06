@@ -1339,8 +1339,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
         {/* ══ DESKTOP ONLY: top row of opponents — absolutely positioned at
             the very top of the screen, centered between the left badges
-            and the right النقاط button. Same vertical level as the badges
-            so the opponent sits at the highest possible spot. */}
+            and the right النقاط button. Same vertical level as the badges. */}
         {!isMobile && top.length > 0 && (
           <div className="absolute z-30 flex justify-center gap-2 pointer-events-auto"
             style={{
@@ -1353,6 +1352,13 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
             ))}
           </div>
+        )}
+
+        {/* Spacer that reserves the vertical space the absolutely-positioned
+            top opponent USED to occupy in the flex layout. Without this the
+            table slides up and sits right under the header. */}
+        {!isMobile && top.length > 0 && (
+          <div className="shrink-0" style={{ height: isTablet ? 130 : 160 }} aria-hidden="true" />
         )}
 
         {/* ══ MIDDLE ROW: [left] table [right] ══ */}

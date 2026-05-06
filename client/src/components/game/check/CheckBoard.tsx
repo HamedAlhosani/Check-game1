@@ -709,8 +709,17 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const navigate = useNavigate();
   const socket = socketService.getSocket();
 
-  const me = gameState.players.find(p => p.uid === user?.uid);
-  const others = gameState.players.filter(p => p.uid !== user?.uid);
+  // While the round is in its pre-deal phase (intro list + 2s pause + the
+  // deal cinematic), all hands are blanked out and the deck shows 0 — so
+  // the player only sees names. Cards materialise when tableReady flips
+  // to true at the end of the cinematic.
+  const dPlayers = tableReady
+    ? gameState.players
+    : gameState.players.map(p => ({ ...p, cards: [null, null, null, null], cardCount: 0 }));
+  const dDeckCount = tableReady ? gameState.deckCount : 0;
+  const dDiscardTop = tableReady ? gameState.discardTop : null;
+  const me = dPlayers.find(p => p.uid === user?.uid);
+  const others = dPlayers.filter(p => p.uid !== user?.uid);
   const isMyTurn = !!me?.isTurn;
   const canBurnAttempt = isMyTurn && !drawnCard &&
     (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') &&
@@ -836,6 +845,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   // player can't memorise them while the deal animation is playing.
   const peekDeferredRef = useRef(false);
   const pendingPeekRef  = useRef<{ position: number; card: Card }[]>([]);
+  // Hides hands + deck + discard until the cinematic finishes — so at the
+  // start of a round the table shows ONLY player names, then the deal
+  // animation populates everything.
+  const [tableReady, setTableReady] = useState(true);
   // Q peek result modal — { card, position }
   const [qPeekCard, setQPeekCard] = useState<{ card: Card; position: number } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -992,6 +1005,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     prevRoundRef.current = gameState.roundNumber;
     peekDeferredRef.current = true;
     pendingPeekRef.current = [];
+    setTableReady(false); // hide cards/deck until deal animation completes
 
     // 2-second gap after the intro list dismisses, then start dealing.
     const tCine = setTimeout(() => setShowCinematic(true), 2000);
@@ -1014,7 +1028,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   }, [showIntro, gameState.phase, gameState.players.length]);
 
   // Flush any held peek cards into knownCards + show the "احفظ أوراقك"
-  // overlay. Both were held back during the cinematic.
+  // overlay + reveal the table. All three were held back during the cinematic.
   const flushPendingPeek = useCallback(() => {
     peekDeferredRef.current = false;
     if (pendingPeekRef.current.length > 0) {
@@ -1026,9 +1040,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         return next;
       });
     }
-    // Reveal the peek overlay now (the message was held back from the
-    // PEEK_PHASE entry effect so it doesn't show during the cinematic).
     setShowPeek(true);
+    setTableReady(true);
   }, []);
 
   // Pre-warm the audio context the first time the user touches the board,
@@ -1585,12 +1598,15 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                   can't get covered by opponent cards above the table — see
                   the AnimatePresence group near the bottom of the file) */}
 
-              {/* Stacked deck + discard side by side, both large and clear */}
-              <div className="absolute inset-0 flex items-center justify-center">
+              {/* Stacked deck + discard side by side — both hidden until
+                  the deal cinematic finishes (tableReady=true), so a fresh
+                  round shows just the names + table for 2s before any
+                  cards appear. */}
+              {tableReady && <div className="absolute inset-0 flex items-center justify-center">
                 <div className="relative flex items-center justify-center" style={{ gap: isMobile ? 18 : 36 }}>
                   {/* Stacked deck (draw pile) */}
                   <StackedDeck
-                    count={gameState.deckCount}
+                    count={dDeckCount}
                     onClick={isMyTurn && !drawnCard && (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') ? onDraw : undefined}
                     disabled={!isMyTurn || !!drawnCard || (gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED')}
                     size={isMobile ? 'large' : isTablet ? 'normal' : 'normal'}
@@ -1606,7 +1622,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                   >
                     <div style={{ transform: isMobile ? 'scale(1.0)' : isTablet ? 'scale(1.25)' : 'scale(1.4)', transformOrigin: 'center' }}>
                       <PlayingCard
-                        card={gameState.discardTop ? { ...gameState.discardTop, isRevealed: true } : null}
+                        card={dDiscardTop ? { ...dDiscardTop, isRevealed: true } : null}
                         highlight={discardSelected ? 'select' : 'none'}
                         small
                       />
@@ -1621,7 +1637,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 {isSpecialJ && selectedPos !== null && (
                   <p className="absolute bottom-8 text-oasis font-arabic animate-pulse text-center" style={{ fontSize: 12 }}>اختر كرت خصمك</p>
                 )}
-              </div>
+              </div>}
 
             </div>{/* end table circle */}
 

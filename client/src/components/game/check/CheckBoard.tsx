@@ -175,10 +175,10 @@ function ChairsRing({ radius }: { radius: number }) {
 }
 
 // ─── Stacked Deck (simple pile, no rotation) ──────────────────────────────────
-function StackedDeck({ count, onClick, disabled, size = 'normal' }: { count: number; onClick?: () => void; disabled?: boolean; size?: 'normal' | 'large' }) {
+function StackedDeck({ count, onClick, disabled, size = 'normal' }: { count: number; onClick?: () => void; disabled?: boolean; size?: 'small' | 'normal' | 'large' }) {
   // Card dimensions roughly match PlayingCard small/normal so the deck visually
   // matches the discard pile beside it.
-  const CW = size === 'large' ? 92 : 72;
+  const CW = size === 'large' ? 76 : size === 'normal' ? 60 : 50;
   const CH = Math.round(CW * 1.5);
   // Cap visible "depth" cards so the stack doesn't overflow the table center
   const depth = Math.min(count, 8);
@@ -1253,12 +1253,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           </div>
         )}
 
-        {/* ══ DESKTOP ONLY: top row of opponents — lifted up via negative margin */}
+        {/* ══ DESKTOP ONLY: top row of opponents — pulled up to the top */}
         {!isMobile && top.length > 0 && (
           <div className="shrink-0 flex justify-center gap-2"
             style={{
-              marginTop: isTablet ? -8 : -4,
-              marginBottom: isTablet ? (n <= 6 ? 6 : 2) : (n <= 6 ? 18 : n <= 8 ? 12 : 8),
+              marginTop: isTablet ? -28 : -18,
+              marginBottom: isTablet ? (n <= 6 ? 4 : 0) : (n <= 6 ? 14 : n <= 8 ? 10 : 6),
             }}>
             {top.map(p => (
               <OpponentSeat key={p.uid} player={p} {...commonSeatProps} swapPos={swapHighlights[p.uid]}
@@ -1359,7 +1359,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                     count={gameState.deckCount}
                     onClick={isMyTurn && !drawnCard && (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') ? onDraw : undefined}
                     disabled={!isMyTurn || !!drawnCard || (gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED')}
-                    size={isMobile || isTablet ? 'normal' : 'large'}
+                    size={isMobile ? 'small' : isTablet ? 'small' : 'normal'}
                   />
                   {/* Discard pile — large and clearly tappable */}
                   <div
@@ -1370,7 +1370,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                     }}
                     onClick={canTakeDiscard ? () => setDiscardSelected(s => !s) : undefined}
                   >
-                    <div style={{ transform: isMobile || isTablet ? 'scale(0.95)' : 'scale(1.15)', transformOrigin: 'center' }}>
+                    <div style={{ transform: isMobile || isTablet ? 'scale(0.85)' : 'scale(1.0)', transformOrigin: 'center' }}>
                       <PlayingCard
                         card={gameState.discardTop ? { ...gameState.discardTop, isRevealed: true } : null}
                         highlight={discardSelected ? 'select' : 'none'}
@@ -1436,7 +1436,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                         faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
                         highlight={myCardHighlight(i)}
                         onClick={() => onMyCardClick(i)}
-                        small={isMobile || isTablet}
+                        small={isMobile}
+                        mini={isTablet}
                         backId={cardBackId}
                       />
                       {me && swapHighlights[me.uid] === i && <SwapArrowBadge />}

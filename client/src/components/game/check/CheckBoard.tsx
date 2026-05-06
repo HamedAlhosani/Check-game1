@@ -709,17 +709,14 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const navigate = useNavigate();
   const socket = socketService.getSocket();
 
-  // While the round is in its pre-deal phase (intro list + 2s pause + the
-  // deal cinematic), all hands are blanked out and the deck shows 0 — so
-  // the player only sees names. Cards materialise when tableReady flips
-  // to true at the end of the cinematic.
-  const dPlayers = tableReady
-    ? gameState.players
-    : gameState.players.map(p => ({ ...p, cards: [null, null, null, null], cardCount: 0 }));
-  const dDeckCount = tableReady ? gameState.deckCount : 0;
+  // Pre-deal phase (intro list + 2s pause + cinematic): keep the deck and
+  // discard pile hidden so the table shows only seats + names. Cards in
+  // hands stay visible (face-down placeholders) so seats render with full
+  // size and don't jump around when the deal animation finishes.
+  const dDeckCount  = tableReady ? gameState.deckCount  : 0;
   const dDiscardTop = tableReady ? gameState.discardTop : null;
-  const me = dPlayers.find(p => p.uid === user?.uid);
-  const others = dPlayers.filter(p => p.uid !== user?.uid);
+  const me = gameState.players.find(p => p.uid === user?.uid);
+  const others = gameState.players.filter(p => p.uid !== user?.uid);
   const isMyTurn = !!me?.isTurn;
   const canBurnAttempt = isMyTurn && !drawnCard &&
     (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') &&
@@ -1001,11 +998,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     if (gameState.phase !== 'PEEK_PHASE') return;
     if (gameState.roundNumber === prevRoundRef.current) return;
     if (showIntro) return; // wait for intro list to auto-dismiss
+    if (gameState.players.length === 0) return; // wait for player list to populate
 
     prevRoundRef.current = gameState.roundNumber;
     peekDeferredRef.current = true;
     pendingPeekRef.current = [];
-    setTableReady(false); // hide cards/deck until deal animation completes
+    setTableReady(false); // hide deck/discard until deal animation completes
 
     // 2-second gap after the intro list dismisses, then start dealing.
     const tCine = setTimeout(() => setShowCinematic(true), 2000);
@@ -1022,6 +1020,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   useEffect(() => {
     if (!showIntro) return;
     if (gameState.phase !== 'PEEK_PHASE') return;
+    if (gameState.players.length === 0) return; // don't dismiss until list populated
     const dur = gameState.players.length * 100 + 800;
     const t = setTimeout(() => setShowIntro(false), dur);
     return () => clearTimeout(t);

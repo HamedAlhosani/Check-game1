@@ -9,6 +9,7 @@ import { useTournamentStore } from '../../store/tournamentStore';
 import { useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { Confetti } from '../../components/shared/Confetti';
+import { ConfirmModal } from '../../components/shared/ConfirmModal';
 import { apiClient } from '../../services/api.service';
 import {
   SOCKET_EVENTS, ELIMINATION_SCORE,
@@ -563,14 +564,18 @@ function ActiveTournament({ tournament, myUid, lang, navigate, onClear }: {
   const isHost = tournament.hostUid === myUid;
   const me = tournament.players.find(p => p.uid === myUid);
   const eliminated = me?.isEliminated;
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   function startTournament() { soundService.playClick(); socketService.getSocket()?.emit(SOCKET_EVENTS.TOURNAMENT_START, { tournamentId: tournament.id }); }
   function fillBots()        { socketService.getSocket()?.emit(SOCKET_EVENTS.TOURNAMENT_FILL_BOTS, { tournamentId: tournament.id }); }
-  function leave() {
-    if (!confirm(lang === 'ar' ? 'متأكد تبا تغادر؟ لن تُسترد الرسوم بعد البدء.' : 'Leave the tournament? Entry fee not refunded after start.')) return;
+  function leave()           { setConfirmLeave(true); }
+  function confirmedLeave() {
+    setConfirmLeave(false);
     socketService.getSocket()?.emit(SOCKET_EVENTS.TOURNAMENT_LEAVE, { tournamentId: tournament.id });
     onClear();
   }
+  // Refund language differs by phase — use the right copy in the modal.
+  const willRefund = tournament.status === 'waiting' && tournament.entryFee > 0;
   function startNextMatch() { socketService.getSocket()?.emit(SOCKET_EVENTS.TOURNAMENT_NEXT_MATCH, { tournamentId: tournament.id }); }
   function returnToMatch() {
     const m = tournament.bracket.find(x => x.status === 'in_progress' && (x.p1Uid === myUid || x.p2Uid === myUid));
@@ -674,6 +679,28 @@ function ActiveTournament({ tournament, myUid, lang, navigate, onClear }: {
       ) : (
         <BracketView tournament={tournament} myUid={myUid} lang={lang}/>
       )}
+
+      {/* Leave-tournament confirmation — replaces window.confirm so we
+          don't drop the browser's native dialog over the game UI. */}
+      <ConfirmModal
+        open={confirmLeave}
+        title={lang === 'ar' ? 'مغادرة البطولة' : 'Leave Tournament'}
+        message={
+          willRefund
+            ? (lang === 'ar'
+                ? `سوف تسترد رسوم الدخول (${tournament.entryFee.toLocaleString()} 🪙). متأكد؟`
+                : `Your entry fee (${tournament.entryFee.toLocaleString()} 🪙) will be refunded. Continue?`)
+            : (lang === 'ar'
+                ? 'لن تسترد الرسوم بعد بدء البطولة. متأكد تبا تغادر؟'
+                : 'Entry fee not refunded once the tournament started. Leave anyway?')
+        }
+        confirmLabel={lang === 'ar' ? 'مغادرة' : 'Leave'}
+        cancelLabel={lang === 'ar' ? 'إلغاء' : 'Cancel'}
+        tone="danger"
+        lang={lang}
+        onConfirm={confirmedLeave}
+        onCancel={() => setConfirmLeave(false)}
+      />
     </div>
   );
 }

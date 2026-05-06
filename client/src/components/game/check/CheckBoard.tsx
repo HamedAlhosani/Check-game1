@@ -1358,7 +1358,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                     count={gameState.deckCount}
                     onClick={isMyTurn && !drawnCard && (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') ? onDraw : undefined}
                     disabled={!isMyTurn || !!drawnCard || (gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED')}
-                    size={isMobile ? 'normal' : 'large'}
+                    size={isMobile || isTablet ? 'normal' : 'large'}
                   />
                   {/* Discard pile — large and clearly tappable */}
                   <div
@@ -1369,7 +1369,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                     }}
                     onClick={canTakeDiscard ? () => setDiscardSelected(s => !s) : undefined}
                   >
-                    <div style={{ transform: isMobile ? 'scale(1.0)' : 'scale(1.25)', transformOrigin: 'center' }}>
+                    <div style={{ transform: isMobile || isTablet ? 'scale(0.95)' : 'scale(1.15)', transformOrigin: 'center' }}>
                       <PlayingCard
                         card={gameState.discardTop ? { ...gameState.discardTop, isRevealed: true } : null}
                         highlight={discardSelected ? 'select' : 'none'}
@@ -1435,7 +1435,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                         faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
                         highlight={myCardHighlight(i)}
                         onClick={() => onMyCardClick(i)}
-                        small={isMobile}
+                        small={isMobile || isTablet}
                         backId={cardBackId}
                       />
                       {me && swapHighlights[me.uid] === i && <SwapArrowBadge />}
@@ -1474,7 +1474,13 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                     <ChatBubble text={chatBubbleMap[me.uid]!.text} key={chatBubbleMap[me.uid]!.key} />
                   )}
                 </AnimatePresence>
-                <PlayerBox player={me} gameState={gameState} />
+                <PlayerBox
+                  player={me}
+                  gameState={gameState}
+                  avSize={isMobile ? 42 : isTablet ? 50 : 56}
+                  scoreFs={isMobile ? 26 : isTablet ? 28 : 32}
+                  nameFs={isMobile ? 11 : isTablet ? 13 : 15}
+                />
               </div>
               {!me?.isEliminated && (
                 <div className="shrink-0 flex flex-col items-center gap-1 relative">

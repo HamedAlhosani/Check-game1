@@ -1253,12 +1253,13 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           </div>
         )}
 
-        {/* ══ DESKTOP ONLY: top row of opponents — tighter spacing on tablet */}
+        {/* ══ DESKTOP ONLY: top row of opponents — lifted up via negative margin */}
         {!isMobile && top.length > 0 && (
-          <div className="shrink-0 flex justify-center gap-2 pt-0.5"
-            style={{ marginBottom: isTablet
-              ? (n <= 6 ? 18 : 12)
-              : (n <= 6 ? 32 : n <= 8 ? 22 : 16) }}>
+          <div className="shrink-0 flex justify-center gap-2"
+            style={{
+              marginTop: isTablet ? -8 : -4,
+              marginBottom: isTablet ? (n <= 6 ? 6 : 2) : (n <= 6 ? 18 : n <= 8 ? 12 : 8),
+            }}>
             {top.map(p => (
               <OpponentSeat key={p.uid} player={p} {...commonSeatProps} swapPos={swapHighlights[p.uid]}
                 emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
@@ -1281,7 +1282,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
           {/* ══ CIRCULAR TABLE ══ */}
           <div className="flex-1 flex items-center justify-center min-h-0 min-w-0 overflow-visible">
-            <div style={{ position: 'relative', marginTop: isMobile ? 0 : isTablet ? 0 : 20 }}>
+            <div style={{ position: 'relative', marginTop: isMobile ? 0 : isTablet ? -10 : 6 }}>
               {/* Wooden rim — sits behind the felt circle */}
               <div style={{
                 position: 'absolute',
@@ -1408,9 +1409,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {me && (
           <div className="shrink-0 self-center flex flex-col items-center gap-1.5 pb-1"
             style={{
-              width: isMobile ? winW - 12 : isTablet ? 200 : 220,
+              width: isMobile ? winW - 12 : isTablet ? 320 : 360,
               position: 'relative', zIndex: 5,
-              marginTop: isMobile ? 2 : isTablet ? (n <= 6 ? 30 : 20) : (n <= 6 ? 60 : n <= 8 ? 45 : 30),
+              marginTop: isMobile ? 2 : isTablet ? (n <= 6 ? 18 : 12) : (n <= 6 ? 40 : n <= 8 ? 28 : 18),
             }}>
             {/* My cards — hidden when I'm eliminated */}
             {me.isEliminated ? (

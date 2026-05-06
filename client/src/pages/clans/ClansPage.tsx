@@ -26,8 +26,10 @@ export function ClansPage() {
   const [invites, setInvites] = useState<ClanSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function refresh() {
-    setLoading(true);
+  // Quiet refresh that doesn't flash the loading state — used by the
+  // background poll. Initial load uses showLoading=true.
+  async function refresh(showLoading = false) {
+    if (showLoading) setLoading(true);
     try {
       const [l, mine] = await Promise.all([
         apiClient.get<ClanSummary[]>('/api/clans'),
@@ -36,12 +38,24 @@ export function ClansPage() {
       setList(l);
       setMyClan(mine.clan);
       setInvites(mine.invites || []);
-      if (mine.clan) setTab('mine');
     } catch { /* noop */ }
-    finally { setLoading(false); }
+    finally { if (showLoading) setLoading(false); }
   }
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    // Initial load shows the spinner; subsequent ticks happen quietly so
+    // the page doesn't flash every 4 seconds. This is what makes invite
+    // accepts / declines / kicks / role changes feel "immediate" without
+    // needing socket plumbing — the data is fresh within 4s of any action
+    // by ANY member.
+    let cancelled = false;
+    (async () => {
+      await refresh(true);
+      if (!cancelled && myClan) setTab('mine');
+    })();
+    const id = setInterval(() => { if (!cancelled) refresh(false); }, 4000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
 
   return (
     <div className="min-h-screen pb-16 sm:pb-0" style={{ background: 'linear-gradient(180deg, #14100A 0%, #0E0905 100%)', direction: dir }}>
@@ -830,8 +844,24 @@ function InviteFriendsModal({ open, clan, lang, onClose, onInvited }: {
       .then(setFriends).catch(() => setFriends([]));
   }, [open]);
 
-  const memberIds = new Set(clan.members.map(m => m.uid));
+  // Whenever the clan's invite list shrinks (friend declined or accepted),
+  // purge any locally-marked entries that aren't in the truth set anymore
+  // so the leader can re-invite them immediately without refresh. The
+  // background poll on ClansPage refreshes every 4s.
   const inviteIds = new Set(clan.invites.map(i => i.uid));
+  const memberIds = new Set(clan.members.map(m => m.uid));
+  useEffect(() => {
+    setInvitedThisSession(prev => {
+      const next = new Set<string>();
+      for (const uid of prev) {
+        // Keep only if server still has the invite. If the friend joined
+        // (now a member) or declined (gone from both), drop them.
+        if (inviteIds.has(uid)) next.add(uid);
+      }
+      return next.size === prev.size && [...next].every(u => prev.has(u)) ? prev : next;
+    });
+  }, [clan.invites.length, clan.members.length]);
+
   const filteredFriends = friends.filter(f => !memberIds.has(f.uid));
 
   async function inviteByUid(uid: string, name: string) {

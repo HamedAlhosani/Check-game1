@@ -113,6 +113,17 @@ export const SOCKET_EVENTS = {
   CHAT_SEND: 'chat:send',
   CHAT_MESSAGE: 'chat:message',
 
+  // Tournaments — Client → Server
+  TOURNAMENT_CREATE:     'tournament:create',
+  TOURNAMENT_NEXT_MATCH: 'tournament:next_match',
+  TOURNAMENT_LEAVE:      'tournament:leave',
+  TOURNAMENT_SUBSCRIBE:  'tournament:subscribe',
+  // Tournaments — Server → Client
+  TOURNAMENT_STATE:        'tournament:state',
+  TOURNAMENT_MATCH_START:  'tournament:match_start',
+  TOURNAMENT_FINISHED:     'tournament:finished',
+  TOURNAMENT_ERROR:        'tournament:error',
+
   // System
   SYSTEM_RECONNECT_STATE: 'system:reconnect_state',
 } as const;

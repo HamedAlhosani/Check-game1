@@ -320,6 +320,15 @@ export async function purchaseItem(uid: string, itemId: string): Promise<{ ok: b
   return { ok: true, coins: p.coins };
 }
 
+/** Direct coin credit (used for tournament prizes etc.). Returns the new balance. */
+export async function grantCoins(uid: string, amount: number): Promise<{ ok: boolean; coins?: number }> {
+  const p = users.get(uid);
+  if (!p) return { ok: false };
+  p.coins = (p.coins || 0) + Math.max(0, Math.floor(amount));
+  saveUsers();
+  return { ok: true, coins: p.coins };
+}
+
 export async function rechargeCoins(uid: string, packageId: string): Promise<{ ok: boolean; error?: string; coins?: number; granted?: number }> {
   const PACKAGES: Record<string, number> = {
     pkg_100:   100,

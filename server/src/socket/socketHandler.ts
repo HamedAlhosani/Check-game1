@@ -3,6 +3,7 @@ import { AuthenticatedSocket, verifySocketToken } from '../middleware/authMiddle
 import { registerLobbyEvents } from './lobbyEvents';
 import { registerGameEvents, scheduleAbandon } from './gameEvents';
 import { registerChatEvents } from './chatEvents';
+import { registerTournamentEvents } from './tournamentEvents';
 import { SOCKET_EVENTS } from '@check-game/shared';
 import { roomManager } from '../rooms/RoomManager';
 import { GameEngine } from '../game/GameEngine';
@@ -30,6 +31,7 @@ export function setupSocketHandlers(io: Server): void {
       registerLobbyEvents(io, socket);
       registerGameEvents(io, socket);
       registerChatEvents(io, socket);
+      registerTournamentEvents(io, socket);
     });
 
     socket.on('disconnect', () => {

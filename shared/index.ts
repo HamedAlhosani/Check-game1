@@ -5,3 +5,4 @@ export * from './domino.types';
 export * from './jackaro.types';
 export * from './store.types';
 export * from './progression.types';
+export * from './tournament.types';

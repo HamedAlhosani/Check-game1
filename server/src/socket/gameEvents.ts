@@ -7,6 +7,7 @@ import { LudoEngine } from '../game/ludo/LudoEngine';
 import { DominoEngine } from '../game/domino/DominoEngine';
 import { JacaroEngine } from '../game/jackaro/JacaroEngine';
 import { recordGameResult, saveMatchHistory } from '../services/firestoreService';
+import { tournamentManager } from '../rooms/TournamentManager';
 import {
   SOCKET_EVENTS,
   SwapDrawnPayload,
@@ -52,6 +53,11 @@ export function startGameSession(io: Server, roomId: string): void {
       const engine = roomManager.getGame(d.gameId) as GameEngine | undefined;
       if (!engine) return;
       const state = engine.getPublicState();
+      // Tournament hook — if this match is part of a bracket, advance it.
+      // Tournament matches always have a non-empty bot pool, so this fires
+      // before the bot-pool early-return below.
+      const winnerForBracket = [...state.players].sort((a, b) => a.cumulativeScore - b.cumulativeScore)[0]?.uid ?? null;
+      tournamentManager.onGameOver(io, d.gameId, winnerForBracket).catch(() => null);
       const bots = roomManager.getCheckBots(roomId);
       if (bots.length > 0) return; // handled in bot poll
       const result = [...state.players].sort((a, b) => a.cumulativeScore - b.cumulativeScore);
@@ -134,7 +140,7 @@ export function cancelAbandon(roomId: string, uid: string): void {
   }
 }
 
-function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): void {
+export function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): void {
   // Always start the polling loop — even all-human games may add bot stand-ins
   // later when a player disconnects, AFKs out, or hands their seat to a bot
   // via GAME_BOT_TAKEOVER. The interior already no-ops if there are 0 bots.
@@ -146,6 +152,8 @@ function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): 
       clearInterval(poll);
       const result = [...state.players].sort((a, b) => a.cumulativeScore - b.cumulativeScore);
       const winnerId = result[0]?.uid ?? null;
+      // Tournament hook — advance the bracket if this was a cup match.
+      tournamentManager.onGameOver(io, engine.gameId, winnerId).catch(() => null);
       const realPlayers = state.players.filter(p => !p.uid.startsWith('bot-') && !p.displayName.endsWith('🤖'));
       for (const p of realPlayers) {
         recordGameResult(p.uid, p.uid === winnerId, 'check').catch(() => null);

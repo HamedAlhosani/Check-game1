@@ -336,7 +336,7 @@ function FullBar({ endAt, active, maxMs = 30000 }: { endAt: number | null; activ
 }
 
 // ─── Shared player box (same design for everyone) ─────────────────────────────
-function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11 }: { player: any; gameState: any; avSize?: number; scoreFs?: number; nameFs?: number }) {
+const PlayerBox = memo(function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11 }: { player: any; gameState: any; avSize?: number; scoreFs?: number; nameFs?: number }) {
   const isTurn = player.isTurn, isElim = player.isEliminated;
   const compact = avSize <= 30;
   return (
@@ -362,7 +362,15 @@ function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11 }
       </div>
     </div>
   );
-}
+}, (prev, next) =>
+  prev.player.uid === next.player.uid &&
+  prev.player.cumulativeScore === next.player.cumulativeScore &&
+  prev.player.isTurn === next.player.isTurn &&
+  prev.player.isEliminated === next.player.isEliminated &&
+  prev.player.displayName === next.player.displayName &&
+  prev.player.avatarId === next.player.avatarId &&
+  prev.avSize === next.avSize && prev.scoreFs === next.scoreFs && prev.nameFs === next.nameFs
+);
 
 function cardGridCols(count: number) {
   if (count <= 4) return 'grid grid-cols-2 gap-1';
@@ -418,8 +426,35 @@ function CardCountDots({ count, eliminated }: { count: number; eliminated: boole
   );
 }
 
+// Comparison function shared by all 3 seat memos. Skips re-render when the
+// only thing that changed about a player is something this seat doesn't
+// actually display (e.g. another player's score updated).
+function samePlayerSeat(prev: any, next: any): boolean {
+  const a = prev.player, b = next.player;
+  if (a.uid !== b.uid) return false;
+  if (a.cumulativeScore !== b.cumulativeScore) return false;
+  if (a.isTurn !== b.isTurn) return false;
+  if (a.isEliminated !== b.isEliminated) return false;
+  if (a.cardCount !== b.cardCount) return false;
+  if (a.displayName !== b.displayName) return false;
+  if (a.avatarId !== b.avatarId) return false;
+  // Card identity (same ranks/suits/face-state in the hand)
+  for (let i = 0; i < a.cards.length; i++) {
+    const ca = a.cards[i], cb = b.cards[i];
+    if (!!ca !== !!cb) return false;
+    if (ca && cb && (ca.rank !== cb.rank || ca.suit !== cb.suit || ca.isRevealed !== cb.isRevealed)) return false;
+  }
+  // Visual props
+  if (prev.isSpecialJ !== next.isSpecialJ) return false;
+  if (prev.selectedPos !== next.selectedPos) return false;
+  if (prev.swapPos !== next.swapPos) return false;
+  if (prev.emoji !== next.emoji) return false;
+  if (prev.chatBubble?.key !== next.chatBubble?.key) return false;
+  return true;
+}
+
 // ─── Unified opponent seat (top / left / right / mobile) ─────────────────────
-function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, cfg, swapPos }: any) {
+const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, cfg, swapPos }: any) {
   const mobileCompact = cfg.w <= 120;
   return (
     <div className="relative flex flex-col items-center shrink-0" style={{ width: cfg.w, zIndex: 20, gap: mobileCompact ? 2 : 4 }}>
@@ -437,10 +472,10 @@ function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwa
       )}
     </div>
   );
-}
+}, samePlayerSeat);
 
 // ─── Compact seat for mobile strip (shows all opponents in one row) ─────────
-function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSelectForJ, swapPos }: any) {
+const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSelectForJ, swapPos }: any) {
   const isTurn = player.isTurn;
   const isElim = player.isEliminated;
   const cardCount = player.cards.filter(Boolean).length;
@@ -494,10 +529,10 @@ function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSel
       )}
     </div>
   );
-}
+}, samePlayerSeat);
 
 // ─── Mini seat for circular orbit (2×2 real cards) ───────────────────────────
-function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob, swapPos }: any) {
+const MiniSeat = memo(function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob, swapPos }: any) {
   const isTurn = player.isTurn;
   const isElim = player.isEliminated;
   const w = isMob ? 96 : 118;
@@ -559,7 +594,7 @@ function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatB
       </div>
     </div>
   );
-}
+}, samePlayerSeat);
 
 // ─── Opponents orbiting the table ─────────────────────────────────────────────
 function CircularOpponents({ opponents, tableRadius, isMobile, gameState, isSpecialJ, selectedPos, onSpecialSwap, emojiMap, chatBubbleMap, swapHighlights = {} }: any) {

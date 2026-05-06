@@ -12,6 +12,7 @@ import { soundService } from '../../services/sound.service';
 import { useT, useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { DailyRewardModal } from '../../components/shared/DailyRewardModal';
+import { RulesModal } from '../../components/shared/RulesModal';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { apiClient } from '../../services/api.service';
 
@@ -658,6 +659,7 @@ export function HomePage() {
   const [botLoading, setBotLoading] = useState(false);
   const [searchRoomId, setSearchRoomId] = useState<string | null>(null);
   const [showDaily, setShowDaily] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const pendingModeRef = useRef<GameMode>('bots');
 
   useEffect(() => {
@@ -891,16 +893,29 @@ export function HomePage() {
             {/* ── Single morphing PlayBox (tabs + visual config + CTA) ── */}
             <PlayBox mode={mode} setMode={setMode} coins={coins} onCreate={handleCreate} lang={lang} />
 
-            {/* ── Join private room link — only in private mode ── */}
-            {mode === 'private' && (
-              <div className="mt-3 text-center">
+            {/* ── Rules + Join private room actions ── */}
+            <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
+              <motion.button
+                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+                onClick={() => setShowRules(true)}
+                className="font-arabic font-bold rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(201,168,76,0.18) 0%, rgba(120,80,20,0.12) 100%)',
+                  border: '1.5px solid rgba(201,168,76,0.55)',
+                  color: '#E8C97A',
+                  fontSize: 14,
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.35), 0 0 16px rgba(201,168,76,0.2)',
+                }}>
+                📖 {lang === 'ar' ? 'القوانين' : 'Rules'}
+              </motion.button>
+              {mode === 'private' && (
                 <button onClick={() => setShowJoin(true)}
                   className="font-arabic text-sm transition-all"
-                  style={{ color: 'rgba(245,230,200,0.35)', textDecoration: 'underline', textDecorationColor: 'rgba(245,230,200,0.15)' }}>
+                  style={{ color: 'rgba(245,230,200,0.45)', textDecoration: 'underline', textDecorationColor: 'rgba(245,230,200,0.2)' }}>
                   🔑 {lang === 'ar' ? 'انضم بكود غرفة خاصة' : 'Join with room code'}
                 </button>
-              </div>
-            )}
+              )}
+            </div>
 
           </>
         )}
@@ -908,6 +923,7 @@ export function HomePage() {
 
       <JoinPrivateModal open={showJoin} onClose={() => setShowJoin(false)} onBeforeJoin={() => { pendingModeRef.current = 'private'; }}/>
       <DailyRewardModal open={showDaily} onClose={() => setShowDaily(false)}/>
+      <RulesModal open={showRules} onClose={() => setShowRules(false)}/>
 
       {searching && <SearchingModal onCancel={handleCancelSearch} lang={lang}/>}
       {botLoading && <BotLoadingOverlay lang={lang}/>}

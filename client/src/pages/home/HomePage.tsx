@@ -16,6 +16,7 @@ import { RulesModal } from '../../components/shared/RulesModal';
 import { ProgressionModal } from '../../components/shared/ProgressionModal';
 import { WheelModal } from '../../components/shared/WheelModal';
 import { ChestsModal } from '../../components/shared/ChestsModal';
+import { CharacterArt } from '../../components/shared/CharacterArt';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { deriveLevel } from '@check-game/shared';
 import type { GameMode as MatchLength, TournamentState } from '@check-game/shared';
@@ -255,14 +256,9 @@ const HOME_AVATAR_EMOJIS: Record<string, string> = {
   avatar_13: '⚔️', avatar_14: '⛵', avatar_15: '🧭', avatar_16: '🇦🇪',
 };
 function AvatarCircle({ id, name, size = 40, frameId }: { id: string; name: string; size?: number; frameId?: string }) {
-  const i = parseInt(id?.replace(/\D/g, '') || '1', 10) - 1;
-  const emoji = HOME_AVATAR_EMOJIS[id];
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <div className="rounded-full flex items-center justify-center font-bold text-white"
-        style={{ width: size, height: size, background: AV_COLORS[i % AV_COLORS.length], fontSize: emoji ? size * 0.52 : size * 0.36 }}>
-        {emoji || name?.slice(0, 2) || '?'}
-      </div>
+    <div className="relative shrink-0" style={{ width: size, height: size }} title={name}>
+      <CharacterArt id={id} size={size}/>
       <FrameRing frameId={frameId} size={size}/>
     </div>
   );

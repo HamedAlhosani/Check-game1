@@ -10,6 +10,7 @@ import { GameOverModal } from '../shared/GameOverModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { soundService } from '../../../services/sound.service';
 import { FrameRing } from '../../shared/FrameRing';
+import { CharacterArt } from '../../shared/CharacterArt';
 import { RulesModal } from '../../shared/RulesModal';
 
 interface Props { gameId: string; roomId: string; gameState: GameState; }
@@ -302,14 +303,9 @@ const AVATAR_EMOJIS: Record<string, string> = {
   avatar_13: '⚔️', avatar_14: '⛵', avatar_15: '🧭', avatar_16: '🇦🇪',
 };
 const Av = memo(function Av({ id, name, size = 32, frameId }: { id: string; name: string; size?: number; frameId?: string }) {
-  const i = parseInt(id?.replace(/\D/g, '') || '1', 10) - 1;
-  const emoji = AVATAR_EMOJIS[id];
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <div className="rounded-full flex items-center justify-center font-bold text-white"
-        style={{ width: size, height: size, background: AV_COLORS[i % AV_COLORS.length], fontSize: emoji ? Math.round(size * 0.52) : Math.round(size * .37) }}>
-        {emoji || name?.slice(0, 2) || '?'}
-      </div>
+    <div className="relative shrink-0" style={{ width: size, height: size }} title={name}>
+      <CharacterArt id={id} size={size}/>
       <FrameRing frameId={frameId} size={size}/>
     </div>
   );

@@ -9,6 +9,7 @@ import { soundService } from '../../services/sound.service';
 import { useT, useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { FrameRing } from '../../components/shared/FrameRing';
+import { CharacterArt } from '../../components/shared/CharacterArt';
 import {
   StoreItem, ItemCategory,
   CATEGORY_LABEL, RARITY_LABEL, RARITY_COLOR,
@@ -346,7 +347,6 @@ function CharacterGrid({
           const isOwned = item.price === 0 || owned.includes(item.id);
           const isActive = currentAvatarId === item.id;
           const isBusy = busy === item.id;
-          const emoji = AVATAR_EMOJIS[item.id] || '👤';
           const canAfford = coins >= item.price;
 
           return (
@@ -362,7 +362,7 @@ function CharacterGrid({
               style={isActive ? { boxShadow: '0 0 20px rgba(201,168,76,0.25)', background: 'rgba(201,168,76,0.05)' } : { background: 'rgba(10,18,32,0.7)' }}
             >
               <div className={`h-32 flex items-center justify-center relative ${item.preview.bg}`}>
-                <span className="text-5xl select-none">{emoji}</span>
+                <CharacterArt id={item.id} size={92}/>
                 {!isOwned && (
                   <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
                     <span className="text-3xl">🔒</span>
@@ -757,7 +757,6 @@ interface ModalProps {
 
 function ItemPreviewModal({ item, isOwned, isEquipped, coins, busy, onBuy, onEquip, onClose, t, lang }: ModalProps) {
   const isChar = item.category === 'character';
-  const emoji = AVATAR_EMOJIS[item.id];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -770,8 +769,8 @@ function ItemPreviewModal({ item, isOwned, isEquipped, coins, busy, onBuy, onEqu
         <button onClick={onClose} className="absolute top-3 left-3 text-sand/40 hover:text-sand text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5">×</button>
 
         <div className={`h-40 rounded-xl ${item.preview.bg} border-2 ${item.preview.border} flex items-center justify-center mb-4`}>
-          {isChar && emoji
-            ? <span className="text-6xl">{emoji}</span>
+          {isChar
+            ? <CharacterArt id={item.id} size={128}/>
             : <SkinPreviewIcon item={item} size="lg" />
           }
         </div>

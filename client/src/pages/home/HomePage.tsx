@@ -130,55 +130,87 @@ function ModeChips({ mode, onSelect, lang }: { mode: GameMode; onSelect: (m: Gam
   );
 }
 
-// ── SeatRing — visual ring of chair icons; tap to set count ──────────────────
-function SeatRing({ value, onChange, max, accent, lang }: {
-  value: number; onChange: (n: number) => void; max: number; accent: string; lang: string;
+// ── Avatar stepper: − [4 / 10  👤👤👤👤·····] + ──────────────────────────────
+const SEAT_COLORS = ['#C9A84C','#4A90D9','#50C878','#E74C3C','#9B59B6','#E67E22','#1ABC9C','#E91E63','#3DB7B7','#FF6B7A'];
+function PlayerStepper({ value, onChange, min, max, accent, lang, label }: {
+  value: number; onChange: (n: number) => void; min: number; max: number;
+  accent: string; lang: string; label: string;
 }) {
-  const seats: number[] = []; for (let i = 1; i <= max; i++) seats.push(i);
-  const radius = 78;
+  const dec = () => { if (value > min) { onChange(value - 1); soundService.playClick(); } };
+  const inc = () => { if (value < max) { onChange(value + 1); soundService.playClick(); } };
   return (
-    <div className="flex flex-col items-center gap-2">
-      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.55)' }}>
-        {lang === 'ar' ? 'عدد اللاعبين' : 'Players'}
-      </span>
-      <div className="relative" style={{ width: radius * 2 + 36, height: radius * 2 + 36 }}>
-        {/* Center: big number */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="font-bold font-mono leading-none" style={{ fontSize: 44, color: accent, textShadow: `0 0 16px ${accent}88` }}>
+    <div className="w-full flex flex-col items-center gap-3">
+      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.55)' }}>{label}</span>
+
+      {/* Stepper row */}
+      <div className="flex items-center gap-3 w-full" style={{ maxWidth: 280 }}>
+        <motion.button whileTap={{ scale: 0.88 }} onClick={dec}
+          disabled={value <= min}
+          className="rounded-2xl flex items-center justify-center font-bold shrink-0"
+          style={{
+            width: 52, height: 52,
+            background: value > min ? `${accent}26` : 'rgba(255,255,255,0.04)',
+            color: value > min ? accent : 'rgba(255,255,255,0.2)',
+            border: `2px solid ${value > min ? `${accent}66` : 'rgba(255,255,255,0.08)'}`,
+            fontSize: 28, cursor: value > min ? 'pointer' : 'not-allowed',
+            boxShadow: value > min ? `0 0 14px ${accent}33` : 'none',
+          }}>−</motion.button>
+
+        {/* Center number */}
+        <div className="flex-1 flex flex-col items-center rounded-2xl py-2"
+          style={{
+            background: `radial-gradient(ellipse at 50% 0%, ${accent}1F 0%, transparent 70%)`,
+            border: `1px solid ${accent}44`,
+          }}>
+          <motion.span key={value}
+            initial={{ scale: 0.6, opacity: 0, y: -6 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 20 }}
+            className="font-bold font-mono leading-none"
+            style={{ fontSize: 44, color: accent, textShadow: `0 0 18px ${accent}AA` }}>
             {value}
-          </span>
-          <span className="font-arabic mt-1" style={{ fontSize: 10, color: 'rgba(245,230,200,0.4)' }}>
-            {lang === 'ar' ? 'لاعبين' : 'players'}
+          </motion.span>
+          <span className="font-arabic" style={{ fontSize: 10, color: 'rgba(245,230,200,0.4)', marginTop: 2 }}>
+            {lang === 'ar' ? `من ${max}` : `of ${max}`}
           </span>
         </div>
-        {/* Faint arc */}
-        <div className="absolute pointer-events-none" style={{
-          inset: 18, borderRadius: '50%',
-          border: `1px dashed ${accent}33`,
-        }}/>
-        {/* Seat tiles around */}
-        {seats.map((n, i) => {
-          const angle = (i / seats.length) * Math.PI * 2 - Math.PI / 2;
-          const x = Math.cos(angle) * radius; const y = Math.sin(angle) * radius;
-          const filled = n <= value;
+
+        <motion.button whileTap={{ scale: 0.88 }} onClick={inc}
+          disabled={value >= max}
+          className="rounded-2xl flex items-center justify-center font-bold shrink-0"
+          style={{
+            width: 52, height: 52,
+            background: value < max ? `${accent}26` : 'rgba(255,255,255,0.04)',
+            color: value < max ? accent : 'rgba(255,255,255,0.2)',
+            border: `2px solid ${value < max ? `${accent}66` : 'rgba(255,255,255,0.08)'}`,
+            fontSize: 28, cursor: value < max ? 'pointer' : 'not-allowed',
+            boxShadow: value < max ? `0 0 14px ${accent}33` : 'none',
+          }}>+</motion.button>
+      </div>
+
+      {/* Avatar row — visual fill of the chosen player count */}
+      <div className="flex gap-1.5 justify-center flex-wrap">
+        {Array.from({ length: max }).map((_, i) => {
+          const filled = i < value;
+          const inRange = i + 1 >= min;
           return (
-            <motion.button key={n}
-              whileTap={{ scale: 0.85 }}
-              whileHover={{ scale: 1.12 }}
-              onClick={() => { onChange(n); soundService.playClick(); }}
-              className="absolute rounded-full flex items-center justify-center font-bold"
+            <motion.button key={i}
+              whileTap={inRange ? { scale: 0.85 } : {}}
+              whileHover={inRange ? { scale: 1.15, y: -2 } : {}}
+              onClick={() => { if (inRange) { onChange(i + 1); soundService.playClick(); } }}
+              disabled={!inRange}
+              className="rounded-full flex items-center justify-center font-bold"
               style={{
-                left: '50%', top: '50%',
-                width: 28, height: 28,
-                marginLeft: -14, marginTop: -14,
-                transform: `translate(${x}px, ${y}px)`,
-                background: filled ? accent : 'rgba(255,255,255,0.05)',
-                color: filled ? '#0E0905' : 'rgba(245,230,200,0.45)',
-                border: `1.5px solid ${filled ? accent : 'rgba(255,255,255,0.10)'}`,
-                boxShadow: filled ? `0 0 10px ${accent}88` : 'none',
-                fontSize: 11, cursor: 'pointer',
+                width: 26, height: 26,
+                background: filled ? SEAT_COLORS[i % SEAT_COLORS.length] : 'rgba(255,255,255,0.04)',
+                border: `1.5px solid ${filled ? '#fff5' : 'rgba(255,255,255,0.10)'}`,
+                color: '#fff', fontSize: 11,
+                opacity: filled ? 1 : 0.4,
+                cursor: inRange ? 'pointer' : 'not-allowed',
+                boxShadow: filled ? `0 2px 6px rgba(0,0,0,0.35)` : 'none',
+                transition: 'opacity .15s, background .15s',
               }}>
-              {n}
+              {filled ? '👤' : ''}
             </motion.button>
           );
         })}
@@ -187,53 +219,75 @@ function SeatRing({ value, onChange, max, accent, lang }: {
   );
 }
 
-// ── ChipPicker — poker-chip preset selector for the coin amount ──────────────
-const CHIP_COLORS = [
-  { val: 50,    bg: '#9C9C9C', text: '#fff' },
-  { val: 100,   bg: '#E04030', text: '#fff' },
-  { val: 500,   bg: '#3A6B95', text: '#fff' },
-  { val: 1000,  bg: '#3BB773', text: '#fff' },
-  { val: 5000,  bg: '#7A3DC4', text: '#fff' },
-  { val: 10000, bg: '#0E0905', text: '#E8C97A' },
-  { val: 25000, bg: '#1A1408', text: '#E8C97A' },
-  { val: 50000, bg: '#5A0808', text: '#E8C97A' },
+// ── CoinTier — wallet panel + 4 tier cards (Beginner / Pro / Elite / Legend) ──
+const COIN_TIERS = [
+  { val: 100,   ar: 'مبتدئ',  en: 'Starter',  emoji: '🪙', bg: '#3A6B95' },
+  { val: 1000,  ar: 'محترف',  en: 'Pro',      emoji: '💰', bg: '#3BB773' },
+  { val: 10000, ar: 'نخبة',  en: 'Elite',    emoji: '💎', bg: '#7A3DC4' },
+  { val: 50000, ar: 'أسطوري', en: 'Legend',   emoji: '👑', bg: '#C9A84C' },
 ];
-function ChipPicker({ value, onChange, accent, max, lang }: {
+const CHIP_COLORS = COIN_TIERS; // kept for the auto-clamp logic in PlayBox
+
+function CoinTierPicker({ value, onChange, accent, max, lang }: {
   value: number; onChange: (v: number) => void; accent: string; max: number; lang: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="flex flex-col items-center">
-        <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.55)' }}>
-          {lang === 'ar' ? 'الكوينز' : 'Coins'}
+    <div className="w-full flex flex-col items-center gap-3">
+      {/* Wallet display */}
+      <div className="rounded-2xl px-5 py-3 flex flex-col items-center"
+        style={{
+          background: `radial-gradient(ellipse at 50% 0%, ${accent}1F 0%, transparent 70%)`,
+          border: `1.5px solid ${accent}55`,
+          minWidth: 200,
+          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06)`,
+        }}>
+        <span className="font-arabic" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)', letterSpacing: 0.5 }}>
+          {lang === 'ar' ? 'الكوينز للعبة' : 'Coins for game'}
         </span>
-        <span className="font-bold font-mono flex items-baseline gap-1.5" style={{ fontSize: 24, color: accent, lineHeight: 1.2, textShadow: `0 0 14px ${accent}66` }}>
-          {value.toLocaleString()} <span style={{ fontSize: 16 }}>🪙</span>
-        </span>
+        <motion.div key={value}
+          initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 360, damping: 22 }}
+          className="font-bold font-mono flex items-baseline gap-2 mt-1"
+          style={{ fontSize: 30, color: accent, lineHeight: 1, textShadow: `0 0 16px ${accent}66` }}>
+          {value.toLocaleString()}
+          <span style={{ fontSize: 22 }}>🪙</span>
+        </motion.div>
       </div>
-      <div className="flex flex-wrap justify-center gap-2 max-w-full">
-        {CHIP_COLORS.map(chip => {
-          const sel = value === chip.val;
-          const afford = chip.val <= max;
+
+      {/* 4 tier cards */}
+      <div className="grid grid-cols-2 gap-2 w-full" style={{ maxWidth: 320 }}>
+        {COIN_TIERS.map(tier => {
+          const sel = value === tier.val;
+          const afford = tier.val <= max;
           return (
-            <motion.button key={chip.val}
-              whileTap={{ scale: 0.9 }}
-              whileHover={afford ? { y: -4, scale: 1.08 } : {}}
+            <motion.button key={tier.val}
+              whileTap={{ scale: 0.96 }}
+              whileHover={afford ? { y: -3 } : {}}
               disabled={!afford}
-              onClick={() => { onChange(chip.val); soundService.playClick(); }}
-              className="relative rounded-full flex items-center justify-center font-bold shrink-0"
+              onClick={() => { onChange(tier.val); soundService.playClick(); }}
+              className="relative rounded-2xl py-3 px-3 flex items-center gap-2 overflow-hidden"
               style={{
-                width: 50, height: 50,
-                background: `radial-gradient(circle at 32% 30%, rgba(255,255,255,0.32), transparent 50%), ${chip.bg}`,
-                color: chip.text,
-                border: sel ? `3px dashed ${accent}` : '3px dashed rgba(255,255,255,0.45)',
-                boxShadow: sel ? `0 0 18px ${accent}AA, 0 5px 9px rgba(0,0,0,0.55)` : '0 5px 9px rgba(0,0,0,0.45)',
-                fontSize: chip.val >= 1000 ? 11 : 13,
-                opacity: afford ? 1 : 0.25,
+                background: sel
+                  ? `linear-gradient(135deg, ${tier.bg}DD 0%, ${tier.bg}88 100%)`
+                  : 'rgba(255,255,255,0.04)',
+                border: `1.5px solid ${sel ? accent : afford ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)'}`,
+                boxShadow: sel ? `0 0 18px ${accent}77, 0 4px 12px rgba(0,0,0,0.5)` : 'none',
+                opacity: afford ? 1 : 0.35,
                 cursor: afford ? 'pointer' : 'not-allowed',
-              }}
-            >
-              {chip.val >= 1000 ? `${chip.val / 1000}K` : chip.val}
+                transition: 'all .2s',
+              }}>
+              <span style={{ fontSize: 22, lineHeight: 1 }}>{tier.emoji}</span>
+              <div className="flex flex-col items-start min-w-0">
+                <span className="font-bold font-mono" style={{ fontSize: 14, color: sel ? '#fff' : 'rgba(245,230,200,0.85)' }}>
+                  {tier.val >= 1000 ? `${(tier.val / 1000).toLocaleString()}K` : tier.val}
+                </span>
+                <span className="font-arabic" style={{ fontSize: 10, color: sel ? 'rgba(255,255,255,0.85)' : 'rgba(245,230,200,0.5)' }}>
+                  {lang === 'ar' ? tier.ar : tier.en}
+                </span>
+              </div>
+              {sel && (
+                <span className="absolute" style={{ top: 4, insetInlineEnd: 6, color: '#fff', fontSize: 11 }}>✓</span>
+              )}
             </motion.button>
           );
         })}
@@ -395,6 +449,9 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
 
   return (
     <div className="flex flex-col items-stretch gap-4">
+      {/* Mode switcher ABOVE the giant card */}
+      <ModeChips mode={mode} onSelect={setMode} lang={lang} />
+
       {/* The giant playing card */}
       <AnimatePresence mode="wait">
         <GiantPlayingCard mode={mode} key={mode}>
@@ -422,12 +479,13 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
           </div>
 
           {/* The configuration zone — varies by mode */}
-          <div className="flex flex-col items-center gap-5">
+          <div className="flex flex-col items-center gap-6">
             {mode !== 'bots' ? (
               <>
-                <SeatRing value={playerCount} onChange={setPlayerCount}
-                  max={10} accent={theme.accent} lang={lang} />
-                <ChipPicker value={coinAmount} onChange={setCoinAmount}
+                <PlayerStepper value={playerCount} onChange={setPlayerCount}
+                  min={2} max={10} accent={theme.accent} lang={lang}
+                  label={lang === 'ar' ? 'عدد اللاعبين' : 'Players'} />
+                <CoinTierPicker value={coinAmount} onChange={setCoinAmount}
                   accent={theme.accent} max={coins} lang={lang} />
                 {!canAfford && (
                   <p className="text-red-400 font-arabic text-xs">
@@ -437,17 +495,15 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
               </>
             ) : (
               <>
-                <SeatRing value={botCount} onChange={setBotCount}
-                  max={9} accent={theme.accent} lang={lang} />
+                <PlayerStepper value={botCount} onChange={setBotCount}
+                  min={1} max={9} accent={theme.accent} lang={lang}
+                  label={lang === 'ar' ? 'عدد البوتات' : 'Bots'} />
                 <DifficultyCards value={difficulty} onChange={setDifficulty} lang={lang} />
               </>
             )}
           </div>
         </GiantPlayingCard>
       </AnimatePresence>
-
-      {/* Mode chip switcher OUTSIDE the card — feels like turning between cards */}
-      <ModeChips mode={mode} onSelect={setMode} lang={lang} />
 
       {/* Bottom: huge play button */}
       <motion.button

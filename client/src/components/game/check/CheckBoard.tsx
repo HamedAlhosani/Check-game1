@@ -964,10 +964,14 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   // Round-start cinematic — fires once per round on entry to PEEK_PHASE.
   // The roundNumber bump is the most reliable signal (handles round 1
   // and every subsequent reset alike).
+  // Delay by 700ms so the seat fade-in animations finish first; otherwise
+  // the deal animation overlaps the players appearing on the table and
+  // the user sees both moving at once. (User-reported.)
   useEffect(() => {
     if (gameState.phase === 'PEEK_PHASE' && gameState.roundNumber !== prevRoundRef.current) {
       prevRoundRef.current = gameState.roundNumber;
-      setShowCinematic(true);
+      const t = setTimeout(() => setShowCinematic(true), 700);
+      return () => clearTimeout(t);
     }
   }, [gameState.phase, gameState.roundNumber]);
 

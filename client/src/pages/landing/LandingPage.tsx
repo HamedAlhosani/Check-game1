@@ -95,22 +95,150 @@ function ArabesqueDivider() {
 }
 
 // ── Rules data ────────────────────────────────────────────────────────────────
+// Mirror of the in-game RulesModal — keep these two in sync.
 const RULES_AR = [
-  { title: 'الهدف من اللعبة', icon: '🎯', content: 'هدفك تجمع أقل نقاط ممكنة. كل لاعب عنده 4 أوراق. الأول اللي يوصل 100 نقطة يخسر — آخر لاعب يبقى هو الفائز.' },
-  { title: 'قيم الأوراق', icon: '🃏', content: 'A = 1 نقطة • 2-9 قيمتها الرقم • 10 الأحمر (♥♦) = 0 • 10 الأسود (♠♣) = 10 • J = 11 • Q = 12 • K = 13' },
-  { title: 'الأوراق الخاصة', icon: '✨', content: 'J → يروح للمرمي فوراً ثم تبادل ورقة من يدك مع ورقة عند خصم.\nQ الحمرا (♥♦) → يروح للمرمي وتكشف ورقة من يدك.\nK → تسحب ورقتين وتختار وحدة منهم (أو تحرق الكل).' },
-  { title: 'الحرق', icon: '🔥', content: 'اذا رمى اليسار ورقة ويطابق رقمها ورقة من يدك — اضغط عليها واحرقها! إذا أخطأت تأخذ ورقة عقوبة تُضاف لإيدك.' },
-  { title: 'قول CHECK', icon: '⚡', content: 'بعد جولة كاملة لكل اللاعبين (×4)، تقدر تقول CHECK في دورك بعد ما تلعب. بعدها كل لاعب ياخذ دور أخير ثم تنكشف الأوراق.\nإذا كنت الأقل → تأخذ 0. إذا في أحد أقل منك → نقاطك تتضاعف!' },
-  { title: 'البداية', icon: '👁️', content: 'في بداية كل جولة تتلصص على ورقتيك السفليتين السريتين وتحفظهم. ورقتيك العلويتين مخفيتين أيضاً — كل اللعبة تعتمد على الحفظ والذكاء.' },
+  {
+    title: 'الهدف من اللعبة',
+    icon: '🎯',
+    content:
+      'اجمع أقل عدد ممكن من النقاط في يدك\n' +
+      'أول لاعب يوصل 100 نقطة يطلع من اللعبة\n' +
+      'آخر لاعب يبقى = الفائز 🏆',
+  },
+  {
+    title: 'قيم الأوراق',
+    icon: '🃏',
+    content:
+      '10 الأحمر (♥/♦) = 0 نقطة — أحسن ورقة في اللعبة! 🌟\n' +
+      'A (آس) = 1 نقطة\n' +
+      '2 = 2 نقطة\n3 = 3 نقاط\n4 = 4 نقاط\n5 = 5 نقاط\n6 = 6 نقاط\n7 = 7 نقاط\n8 = 8 نقاط\n9 = 9 نقاط\n' +
+      '10 الأسود (♣/♠) = 10 نقاط\n' +
+      'J (شايب) = 11 نقطة\n' +
+      'Q الأحمر (♥/♦) = 12 نقطة\n' +
+      'Q الأسود (♣/♠) = 12 نقطة\n' +
+      'K (ملك) = 13 نقطة',
+  },
+  {
+    title: 'الأوراق الخاصة',
+    icon: '✨',
+    content:
+      '🔄 J — تبادل ورقة من يدك (تختارها) مع ورقة من خصم (تختارها) — بدون ما تشوف وجه أي ورقة\n' +
+      '👁️ Q الأحمر (♥/♦) — تختار ورقة من يدك وتكشفها لك أنت فقط، بقية اللاعبين ما يشوفونها\n' +
+      '🃏 K — السيرفر يسحب لك ورقتين، تختار وحدة تستبدلها بكرت من يدك، والثانية تروح للمرمى\n' +
+      'الأوامر تشتغل فقط لو سحبت الورقة من السحب — مب من المرمى',
+  },
+  {
+    title: 'كيف تلعب دورك',
+    icon: '🔄',
+    content:
+      'في دورك عندك 3 خيارات:\n' +
+      '1️⃣ اسحب ورقة من السحب → بعدها إما تستبدلها بكرت من يدك، أو تحرقها\n' +
+      '2️⃣ خذ آخر ورقة من المرمى → تستبدلها بكرت من يدك\n' +
+      '3️⃣ احرق ورقة من يدك إذا كانت بنفس رقم آخر ورقة في المرمى\n' +
+      'الورقة المستبدَلة دائماً تروح للمرمى\n' +
+      'لو السحب خلص: المرمى يتقلب ويصير سحب جديد',
+  },
+  {
+    title: 'الحرق',
+    icon: '🔥',
+    content:
+      'إذا عندك ورقة بنفس رقم آخر ورقة في المرمى وتعرف مكانها → احرقها\n' +
+      'الحرق ينقص ورقة من يدك → تصير 3 بدل 4\n' +
+      'ممنوع الحرق إذا الورقة الأخيرة في المرمى من K (الملك)\n' +
+      '⚠️ لو حرقت غلط: ياخذ كرت المرمى ينضاف ليدك، تصير 5 بدل 4',
+  },
+  {
+    title: 'قول CHECK',
+    icon: '⚡',
+    content:
+      'بعد 4 لفات كاملة، أي لاعب في دوره يقدر يضغط CHECK\n' +
+      'بعد ضغط CHECK، يكمل كل لاعب دور واحد أخير\n' +
+      'بعدها كل اللاعبين يكشفون أوراقهم — تُحسب النقاط\n' +
+      '✅ صاحب CHECK كان وحده الأقل: ياخذ 0 نقاط، الباقي يتسجل لكل واحد قيمة يده\n' +
+      '🤝 صاحب CHECK تعادل مع غيره (نفس النقاط): الكل يتسجل قيمة يده، بدون عقوبة\n' +
+      '❌ في لاعب آخر أقل من صاحب CHECK: نقاط صاحب CHECK تتضاعف × 2 ⚠️',
+  },
+  {
+    title: 'البداية',
+    icon: '👁️',
+    content:
+      'كل لاعب يحصل على 4 أوراق مخفية\n' +
+      'تشوف الورقتين السفليتين فقط (تحت) لمدة 10 ثوانٍ — احفظهم!\n' +
+      'الورقتين العلويتين تبقى مجهولة حتى لك\n' +
+      '2-4 لاعبين: مجموعة واحدة (52 ورقة)\n' +
+      '5+ لاعبين: مجموعتين (104 ورقة)',
+  },
 ];
 
 const RULES_EN = [
-  { title: 'Goal of the Game', icon: '🎯', content: 'Your goal is to collect the fewest points. Each player has 4 cards. The first to reach 100 points loses — the last player remaining wins.' },
-  { title: 'Card Values', icon: '🃏', content: 'A = 1 point • 2-9 face value • Red 10 (♥♦) = 0 • Black 10 (♠♣) = 10 • J = 11 • Q = 12 • K = 13' },
-  { title: 'Special Cards', icon: '✨', content: 'J → Goes to discard immediately, then swap one of your cards with an opponent\'s card.\nRed Q (♥♦) → Goes to discard and you reveal one of your own cards.\nK → Draw two cards and keep one (or burn them all).' },
-  { title: 'Burning', icon: '🔥', content: 'If the player to your left discards a card that matches one in your hand — tap it and burn it! If you\'re wrong, you receive a penalty card added to your hand.' },
-  { title: 'Calling CHECK', icon: '⚡', content: 'After a full round for all players (×4), you can call CHECK on your turn after playing. Then each player takes one final turn before cards are revealed.\nIf you have the lowest score → you get 0. If someone has fewer → your points are doubled!' },
-  { title: 'The Start', icon: '👁️', content: 'At the beginning of each round, peek at your two bottom hidden cards and memorize them. Your two top cards are also hidden — the whole game relies on memory and strategy.' },
+  {
+    title: 'Goal of the Game',
+    icon: '🎯',
+    content:
+      'Collect the fewest points possible in your hand\n' +
+      'The first player to reach 100 points is eliminated\n' +
+      'The last player standing wins 🏆',
+  },
+  {
+    title: 'Card Values',
+    icon: '🃏',
+    content:
+      'Red 10 (♥/♦) = 0 points — the best card in the game! 🌟\n' +
+      'A = 1 point\n' +
+      '2 = 2 · 3 = 3 · 4 = 4 · 5 = 5 · 6 = 6 · 7 = 7 · 8 = 8 · 9 = 9\n' +
+      'Black 10 (♣/♠) = 10 points\n' +
+      'J = 11 · Q♥/♦ = 12 · Q♣/♠ = 12 · K = 13',
+  },
+  {
+    title: 'Special Cards',
+    icon: '✨',
+    content:
+      '🔄 J — Swap a card from your hand with an opponent\'s card (you pick both, no faces shown)\n' +
+      '👁️ Red Q (♥/♦) — Reveal one of your own hidden cards (only you see it)\n' +
+      '🃏 K — The server draws two cards for you; keep one (replaces a card in your hand) and discard the other\n' +
+      'Powers only trigger when drawn from the deck — not when taken from the discard',
+  },
+  {
+    title: 'How To Play Your Turn',
+    icon: '🔄',
+    content:
+      'On your turn you have 3 options:\n' +
+      '1️⃣ Draw from the deck → then swap with a hand card OR burn it\n' +
+      '2️⃣ Take the top of the discard → swap with a hand card\n' +
+      '3️⃣ Burn a card from your hand if it matches the top of the discard\n' +
+      'Replaced cards always go to the discard pile\n' +
+      'When the deck runs out, the discard pile is reshuffled into a new deck',
+  },
+  {
+    title: 'Burning',
+    icon: '🔥',
+    content:
+      'If a card in your hand matches the top of the discard, you can burn it\n' +
+      'A successful burn drops you to 3 cards instead of 4\n' +
+      'You can\'t burn when the discard top came from a King\n' +
+      '⚠️ Wrong burn: the discard top is added to your hand, you go to 5 cards',
+  },
+  {
+    title: 'Calling CHECK',
+    icon: '⚡',
+    content:
+      'After 4 full laps, any player can call CHECK on their turn\n' +
+      'After CHECK, each remaining player takes one final turn\n' +
+      'Then everyone reveals their cards and the round is scored\n' +
+      '✅ Caller alone has the lowest sum: caller scores 0, others score their hand sum\n' +
+      '🤝 Caller is tied at the lowest: nobody is penalised, everyone scores their hand\n' +
+      '❌ Someone is strictly lower: caller\'s hand sum is doubled ×2 ⚠️',
+  },
+  {
+    title: 'The Start',
+    icon: '👁️',
+    content:
+      'Each player is dealt 4 face-down cards\n' +
+      'You get to peek at your bottom two cards for 10 seconds — memorise them!\n' +
+      'Your top two cards stay hidden, even from you\n' +
+      '2-4 players use 1 deck (52 cards)\n' +
+      '5+ players use 2 decks (104 cards)',
+  },
 ];
 
 // ── Rules section ─────────────────────────────────────────────────────────────

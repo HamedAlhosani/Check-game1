@@ -1789,7 +1789,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {showScoreboard && <ScoreboardModal />}
       </AnimatePresence>
 
-      {/* ── Drawn card — centered horizontally in the upper play area ── */}
+      {/* ── Drawn card — framed panel high up, big and clear ── */}
       {/* Outer div handles positioning so motion.div's transform doesn't       */}
       {/* fight with translateX(-50%) — that's why the card looked offset right */}
       <AnimatePresence>
@@ -1798,12 +1798,13 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             key="drawn-card-anchor"
             className="fixed pointer-events-none"
             style={{
-              top: isMobile ? '26%' : '24%',
+              top: isMobile ? 80 : 100,
               left: 0,
               right: 0,
               display: 'flex',
               justifyContent: 'center',
               zIndex: 65,
+              padding: '0 8px',
             }}
           >
             <motion.div
@@ -1811,19 +1812,22 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.7, y: -16 }}
               transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+              className="rounded-3xl border-2 flex flex-col items-center pointer-events-auto"
               style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 6,
+                background: 'linear-gradient(160deg, rgba(36,24,16,0.97) 0%, rgba(20,16,10,0.97) 100%)',
+                borderColor: 'rgba(232,201,122,0.75)',
+                boxShadow: '0 12px 40px rgba(0,0,0,0.8), 0 0 28px rgba(201,168,76,0.35)',
+                padding: isMobile ? '12px 16px 14px' : '14px 22px 16px',
+                gap: 10,
+                backdropFilter: 'blur(10px)',
               }}
             >
-              <p className="font-arabic font-bold rounded-full px-3 py-1 pointer-events-none"
-                style={{ fontSize: 12, color: '#E8C97A', background: 'rgba(20,14,8,0.95)', border: '1px solid rgba(201,168,76,0.55)', whiteSpace: 'nowrap', textAlign: 'center' }}>
+              <p className="font-arabic font-bold rounded-full px-3 py-1"
+                style={{ fontSize: 13, color: '#E8C97A', background: 'rgba(20,14,8,0.95)', border: '1px solid rgba(201,168,76,0.55)', whiteSpace: 'nowrap', textAlign: 'center' }}>
                 ورقة سحبتها — اضغط ورقة من يدك للتبديل أو احرق
               </p>
-              <div style={{ filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 0 12px rgba(80,200,120,0.45))' }}>
-                <PlayingCard card={{ ...drawnCard, isRevealed: true }} highlight="select" small={isMobile} />
+              <div style={{ filter: 'drop-shadow(0 8px 22px rgba(0,0,0,0.75)) drop-shadow(0 0 14px rgba(80,200,120,0.5))' }}>
+                <PlayingCard card={{ ...drawnCard, isRevealed: true }} highlight="select" />
               </div>
               <button
                 onClick={onBurnDrawn}
@@ -1831,13 +1835,13 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 style={{
                   background: 'linear-gradient(135deg, #E04030 0%, #B02818 100%)',
                   border: '2px solid #FF6048',
-                  borderRadius: 12,
-                  padding: '8px 26px',
+                  borderRadius: 14,
+                  padding: '12px 36px',
                   color: '#fff',
-                  fontSize: 15,
+                  fontSize: 18,
                   fontFamily: 'inherit',
                   fontWeight: 900,
-                  boxShadow: '0 0 18px rgba(224,64,48,0.65)',
+                  boxShadow: '0 0 22px rgba(224,64,48,0.7)',
                   cursor: 'pointer',
                   letterSpacing: 2,
                 }}

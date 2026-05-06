@@ -54,18 +54,23 @@ function SwapArrowBadge() {
 }
 
 // ─── Mini badge (round / lap) ────────────────────────────────────────────────
-const MiniBadge = memo(function MiniBadge({ label, value, valueColor, labelColor, borderColor }: { label: string; value: number; valueColor: string; labelColor?: string; borderColor: string }) {
+const MiniBadge = memo(function MiniBadge({ label, value, valueColor, labelColor, borderColor, big }: { label: string; value: number; valueColor: string; labelColor?: string; borderColor: string; big?: boolean }) {
   return (
-    <div className="rounded-lg border flex flex-col items-center px-2 py-0.5"
-      style={{ background: 'rgba(15,10,5,.96)', minWidth: 34, borderColor }}>
-      <span className="font-arabic font-bold" style={{ fontSize: 8, lineHeight: 1, color: labelColor || 'rgba(201,168,76,0.55)' }}>{label}</span>
-      <span className="font-bold" style={{ fontSize: 13, lineHeight: 1.1, color: valueColor }}>{value}</span>
+    <div className="rounded-lg border flex flex-col items-center"
+      style={{
+        background: 'rgba(15,10,5,.96)',
+        minWidth: big ? 52 : 34,
+        padding: big ? '4px 10px' : '2px 8px',
+        borderColor,
+      }}>
+      <span className="font-arabic font-bold" style={{ fontSize: big ? 11 : 8, lineHeight: 1, color: labelColor || 'rgba(201,168,76,0.55)' }}>{label}</span>
+      <span className="font-bold" style={{ fontSize: big ? 19 : 13, lineHeight: 1.1, color: valueColor }}>{value}</span>
     </div>
   );
 });
 
 // ─── Turn Timer Badge — always-on, refreshes per turn ────────────────────────
-const TurnTimerBadge = memo(function TurnTimerBadge({ endAt, maxMs = 30000 }: { endAt: number | null; maxMs?: number }) {
+const TurnTimerBadge = memo(function TurnTimerBadge({ endAt, maxMs = 30000, big }: { endAt: number | null; maxMs?: number; big?: boolean }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     // 500ms ticks (was 200ms) — 60% fewer renders, still smooth for a 25s timer
@@ -81,18 +86,19 @@ const TurnTimerBadge = memo(function TurnTimerBadge({ endAt, maxMs = 30000 }: { 
     ? 'rgba(255,255,255,0.10)'
     : pct > 50 ? 'rgba(80,200,120,0.5)' : pct > 25 ? 'rgba(201,168,76,0.4)' : 'rgba(224,64,48,0.55)';
   return (
-    <div className="rounded-lg border flex flex-col items-center px-2 py-0.5"
+    <div className="rounded-lg border flex flex-col items-center"
       style={{
         background: 'rgba(15,10,5,.96)',
-        minWidth: 42,
+        minWidth: big ? 58 : 42,
+        padding: big ? '4px 10px' : '2px 8px',
         borderColor,
         boxShadow: active && pct <= 25 ? '0 0 10px rgba(224,64,48,0.35)' : 'none',
       }}>
-      <span className="font-arabic font-bold" style={{ fontSize: 8, lineHeight: 1, color: 'rgba(245,230,200,0.55)' }}>الوقت</span>
-      <span className="font-bold font-mono" style={{ fontSize: 13, lineHeight: 1.1, color }}>
+      <span className="font-arabic font-bold" style={{ fontSize: big ? 11 : 8, lineHeight: 1, color: 'rgba(245,230,200,0.55)' }}>الوقت</span>
+      <span className="font-bold font-mono" style={{ fontSize: big ? 19 : 13, lineHeight: 1.1, color }}>
         {active ? secs : '—'}
       </span>
-      <div className="w-full" style={{ height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.10)', marginTop: 1 }}>
+      <div className="w-full" style={{ height: big ? 3 : 2, borderRadius: 1, background: 'rgba(255,255,255,0.10)', marginTop: big ? 2 : 1 }}>
         <div style={{ width: `${pct}%`, height: '100%', borderRadius: 1, background: active ? color : 'rgba(255,255,255,0.08)', transition: 'width 0.2s linear' }}/>
       </div>
     </div>
@@ -1331,13 +1337,16 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           </div>
         )}
 
-        {/* ══ DESKTOP ONLY: top row of opponents — pulled up to be flush
-            with the page top (header is to the left/right, so center is free) */}
+        {/* ══ DESKTOP ONLY: top row of opponents — absolutely positioned at
+            the very top of the screen, centered between the left badges
+            and the right النقاط button. Same vertical level as the badges
+            so the opponent sits at the highest possible spot. */}
         {!isMobile && top.length > 0 && (
-          <div className="shrink-0 flex justify-center gap-2"
+          <div className="absolute z-30 flex justify-center gap-2 pointer-events-auto"
             style={{
-              marginTop: isTablet ? -16 : -24,
-              marginBottom: isTablet ? (n <= 6 ? 2 : 0) : (n <= 6 ? 14 : n <= 8 ? 10 : 6),
+              top: isTablet ? 6 : 10,
+              left: '50%',
+              transform: 'translateX(-50%)',
             }}>
             {top.map(p => (
               <OpponentSeat key={p.uid} player={p} {...commonSeatProps} swapPos={swapHighlights[p.uid]}
@@ -1719,27 +1728,30 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       {/* ── Top header: badges row + النقاط button (top-right) ── */}
       <div className="fixed z-40 flex items-start justify-between pointer-events-none"
         style={{ top: isMobile ? 4 : isTablet ? 6 : 10, left: 0, right: 0, padding: '0 8px' }}>
-        {/* Left: Round + Lap + Time + Turn */}
-        <div className="flex items-stretch gap-1 pointer-events-auto flex-wrap">
-          <MiniBadge label="راوند" value={gameState.roundNumber} valueColor="#E8C97A" borderColor="rgba(201,168,76,0.3)" />
-          <MiniBadge label="لفة" value={lapCount} valueColor={lapCount >= 4 ? '#7AE08A' : '#E8C97A'} borderColor={lapCount >= 4 ? 'rgba(80,200,120,0.5)' : 'rgba(201,168,76,0.3)'} labelColor={lapCount >= 4 ? 'rgba(122,224,138,0.7)' : 'rgba(201,168,76,0.55)'} />
-          <TurnTimerBadge endAt={gameState.turnEndAt} />
+        {/* Left: Round + Lap + Time + Turn — bigger on PC */}
+        <div className="flex items-stretch gap-1.5 pointer-events-auto flex-wrap">
+          <MiniBadge label="راوند" value={gameState.roundNumber} valueColor="#E8C97A" borderColor="rgba(201,168,76,0.3)" big={!isMobile && !isTablet}/>
+          <MiniBadge label="لفة" value={lapCount} valueColor={lapCount >= 4 ? '#7AE08A' : '#E8C97A'} borderColor={lapCount >= 4 ? 'rgba(80,200,120,0.5)' : 'rgba(201,168,76,0.3)'} labelColor={lapCount >= 4 ? 'rgba(122,224,138,0.7)' : 'rgba(201,168,76,0.55)'} big={!isMobile && !isTablet}/>
+          <TurnTimerBadge endAt={gameState.turnEndAt} big={!isMobile && !isTablet}/>
           {(() => {
             const turnPlayer = gameState.players.find(p => p.uid === gameState.currentTurnUid);
             if (!turnPlayer || (gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED')) return null;
             const isMine = turnPlayer.uid === user?.uid;
+            const big = !isMobile && !isTablet;
             return (
-              <div className="rounded-lg border flex items-center gap-1.5 px-2 py-1"
+              <div className="rounded-lg border flex items-center"
                 style={{
-                  background: 'rgba(20,14,8,.92)', /* backdrop-blur removed for perf */
+                  gap: big ? 8 : 6,
+                  padding: big ? '6px 12px' : '4px 8px',
+                  background: 'rgba(20,14,8,.92)',
                   borderColor: isMine ? 'rgba(80,200,120,0.55)' : 'rgba(201,168,76,0.35)',
                   boxShadow: isMine ? '0 0 10px rgba(80,200,120,0.25)' : 'none',
-                  maxWidth: isMobile ? 120 : 180,
+                  maxWidth: isMobile ? 120 : 220,
                 }}>
-                <Av id={turnPlayer.avatarId} name={turnPlayer.displayName} frameId={(turnPlayer as any).equippedFrame} size={18}/>
+                <Av id={turnPlayer.avatarId} name={turnPlayer.displayName} frameId={(turnPlayer as any).equippedFrame} size={big ? 28 : 18}/>
                 <div className="flex flex-col">
-                  <span className="font-arabic" style={{ fontSize: 8, lineHeight: 1, color: isMine ? 'rgba(122,224,138,0.85)' : 'rgba(201,168,76,0.65)' }}>دور</span>
-                  <span className="font-arabic font-bold truncate" style={{ fontSize: 11, lineHeight: 1.1, color: isMine ? '#7AE08A' : '#E8C97A', maxWidth: isMobile ? 70 : 130 }}>
+                  <span className="font-arabic" style={{ fontSize: big ? 11 : 8, lineHeight: 1, color: isMine ? 'rgba(122,224,138,0.85)' : 'rgba(201,168,76,0.65)' }}>دور</span>
+                  <span className="font-arabic font-bold truncate" style={{ fontSize: big ? 16 : 11, lineHeight: 1.15, color: isMine ? '#7AE08A' : '#E8C97A', maxWidth: isMobile ? 70 : 160 }}>
                     {isMine ? 'أنت' : turnPlayer.displayName}
                   </span>
                 </div>

@@ -379,7 +379,7 @@ function cardGridCols(count: number) {
 }
 
 // ─── Shared cards row for any seat ───────────────────────────────────────────
-function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = false, swapPos }: any) {
+function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = false, swapPos, backId }: any) {
   // Eliminated players: hide their cards entirely, show just an X panel.
   if (player.isEliminated) {
     return (
@@ -403,6 +403,7 @@ function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = fals
               className="relative"
             >
               <PlayingCard card={c} faceDown={!c?.isRevealed} small={!mini} mini={mini}
+                backId={backId}
                 highlight={isSpecialJ ? 'burn' : 'none'}
                 onClick={isSpecialJ && selectedPos !== null ? () => onSpecialSwap(player.uid, i) : undefined} />
               {swapPos === i && <SwapArrowBadge />}
@@ -468,7 +469,7 @@ const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ,
       {mobileCompact ? (
         <CardCountDots count={player.cards.filter(Boolean).length} eliminated={player.isEliminated} />
       ) : (
-        <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} mini={cfg.mini} swapPos={swapPos} />
+        <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} mini={cfg.mini} swapPos={swapPos} backId={cfg.backId} />
       )}
     </div>
   );
@@ -532,7 +533,7 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
 }, samePlayerSeat);
 
 // ─── Mini seat for circular orbit (2×2 real cards) ───────────────────────────
-const MiniSeat = memo(function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob, swapPos }: any) {
+const MiniSeat = memo(function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob, swapPos, backId }: any) {
   const isTurn = player.isTurn;
   const isElim = player.isEliminated;
   const w = isMob ? 96 : 118;
@@ -581,7 +582,7 @@ const MiniSeat = memo(function MiniSeat({ player, isSpecialJ, selectedPos, onSpe
       }}>
         {player.cards.map((c: any, i: number) => c !== null ? (
           <div key={i} className="relative">
-            <PlayingCard card={c} faceDown={!c?.isRevealed} xmini
+            <PlayingCard card={c} faceDown={!c?.isRevealed} xmini backId={backId}
               highlight={isSpecialJ && selectedPos !== null ? 'burn' : 'none'} />
             {swapPos === i && <SwapArrowBadge />}
           </div>
@@ -1052,7 +1053,11 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
   const { top, left, right } = isMobile ? { top: [] as any[], left: [] as any[], right: [] as any[] } : distribute(others);
 
-  const commonSeatProps = { gameState, isSpecialJ, selectedPos, onSpecialSwap, cfg: seatCfg };
+  // Tag the seat config with the local user's chosen card back so EVERY
+  // face-down card on screen (mine + opponents') uses the same back —
+  // a purely client-side cosmetic preference, server is untouched.
+  const seatCfgWithBack = { ...seatCfg, backId: cardBackId };
+  const commonSeatProps = { gameState, isSpecialJ, selectedPos, onSpecialSwap, cfg: seatCfgWithBack };
 
   // ── Overlays ──────────────────────────────────────────────────────────────
   const IntroOverlay = () => (
@@ -2246,7 +2251,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                       className="cursor-pointer"
                       style={{ filter: 'drop-shadow(0 4px 12px rgba(80,200,120,0.3))' }}
                     >
-                      <PlayingCard card={c} faceDown={!c?.isRevealed} small highlight="burn" />
+                      <PlayingCard card={c} faceDown={!c?.isRevealed} small highlight="burn" backId={cardBackId} />
                     </motion.div>
                   ) : null)}
                 </div>

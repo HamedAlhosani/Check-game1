@@ -1109,11 +1109,10 @@ export function HomePage() {
       {/* ── Top nav bar ── */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-4 py-2.5"
         style={{ background: 'rgba(20,16,10,0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(201,168,76,0.12)' }}>
-        <Link to="/" className="flex items-center shrink-0">
-          {/* Full logo (emblem + CHECK + شيك). The text is part of the SVG so
-              the spacing stays right; no separate <span> wordmark needed. */}
+        <Link to="/" className="flex items-center gap-2 shrink-0">
           <img src="/assets/logo.svg" alt="Check"
-            style={{ height: 56, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(232,201,122,0.45))' }}/>
+            style={{ width: 42, height: 42, objectFit: 'contain', filter: 'drop-shadow(0 0 8px rgba(232,201,122,0.5))' }}/>
+          <span className="font-display tracking-widest hidden sm:inline" style={{ fontSize: 18, color: '#C9A84C', textShadow: '0 0 16px rgba(201,168,76,0.4)' }}>CHECK</span>
         </Link>
         <div className="flex items-center gap-2">
           <LangToggle />

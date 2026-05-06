@@ -4,7 +4,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { verifyToken, signToken, hashPassword, comparePassword } from './services/localAuth';
 import { credentials, saveCredentials } from './data/store';
-import { COIN_PACKS, packById, packForVariant, createCheckoutUrl, verifyWebhookSignature, extractCustomData } from './services/lemonsqueezy';
+import { COIN_PACKS, packById, createOrder, captureOrder, verifyWebhook, customFromWebhook } from './services/paypal';
 import {
   createUserProfile,
   getUserProfile,
@@ -240,61 +240,77 @@ app.post('/api/store/recharge', requireAuth, wrap(async (req, res) => {
   res.json({ ok: true, coins: result.coins, granted: result.granted, profile });
 }));
 
-// ── Real-money coin purchases via Lemon Squeezy ─────────────────────────────
+// ── Real-money coin purchases via PayPal ────────────────────────────────────
 // Public list of packs the client can show in the store
 app.get('/api/payments/packs', (_req, res) => {
   res.json(COIN_PACKS.map(p => ({ id: p.id, coins: p.coins, priceUsd: p.priceUsd, label: p.label })));
 });
 
-// Create a Lemon Squeezy hosted checkout URL the user is redirected to.
-// Returns { url } — the client just sets window.location to it.
+// Step 1: create a PayPal order and return the approve URL. The client just
+// sets window.location to the returned url; PayPal then redirects the user
+// back to /store?paid=1&token=<ORDER_ID> after they finish paying.
 app.post('/api/payments/checkout', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const { packId } = req.body || {};
   const pack = packId ? packById(packId) : undefined;
   if (!pack) return res.status(400).json({ error: 'Unknown coin pack' });
-  const profile = await getUserProfile(uid);
   try {
-    const url = await createCheckoutUrl({ uid, email: profile?.email ?? null, pack });
+    const url = await createOrder({ uid, pack });
     res.json({ url });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || 'Checkout failed' });
   }
 }));
 
-// Webhook from Lemon Squeezy on every successful order. We verify the
-// signature, look up which pack was bought via the variant id (or our
-// custom_data), and credit the coins to the right user.
-app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), wrap(async (req, res) => {
-  const signature = req.header('X-Signature') || '';
-  const rawBody = req.body as Buffer;
-  if (!verifyWebhookSignature(rawBody, signature)) {
-    return res.status(401).json({ error: 'Invalid signature' });
+// Step 2: client calls this with the orderId from the redirect query string.
+// We capture the order on PayPal's side and credit the coins. Idempotent —
+// safe for the user to refresh /store?paid=1 multiple times.
+app.post('/api/payments/capture', requireAuth, wrap(async (req, res) => {
+  const callerUid = (req as any).uid;
+  const { orderId } = req.body || {};
+  if (!orderId) return res.status(400).json({ error: 'Missing orderId' });
+  try {
+    const cap = await captureOrder(String(orderId));
+    if (!cap.ok || !cap.uid || !cap.packId) {
+      return res.status(400).json({ error: cap.reason || 'Capture failed' });
+    }
+    // Defence in depth — only credit the user that actually started the order.
+    if (cap.uid !== callerUid) return res.status(403).json({ error: 'UID mismatch' });
+    const pack = packById(cap.packId);
+    if (!pack) return res.status(400).json({ error: 'Unknown pack in order' });
+    const result = await rechargeCoins(cap.uid, pack.id);
+    if (!result.ok) return res.status(500).json({ error: result.error });
+    const profile = await getUserProfile(cap.uid);
+    res.json({ ok: true, granted: result.granted, coins: result.coins, profile });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Capture failed' });
   }
+}));
+
+// Backup credit path. PayPal fires this on PAYMENT.CAPTURE.COMPLETED — used
+// for users who closed their browser before being redirected back from PayPal.
+// The synchronous /capture above handles the happy path; this catches stragglers.
+app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), wrap(async (req, res) => {
+  const rawBody = (req.body as Buffer).toString('utf8');
+  const verified = await verifyWebhook({ headers: req.headers as any, rawBody });
+  if (!verified) return res.status(401).json({ error: 'Invalid signature' });
+
   let payload: any;
-  try { payload = JSON.parse(rawBody.toString('utf8')); }
+  try { payload = JSON.parse(rawBody); }
   catch { return res.status(400).json({ error: 'Invalid JSON' }); }
 
-  const eventName = payload?.meta?.event_name;
-  if (eventName !== 'order_created') {
-    return res.json({ ok: true, ignored: eventName });
+  const eventType = payload?.event_type;
+  if (eventType !== 'PAYMENT.CAPTURE.COMPLETED') {
+    return res.json({ ok: true, ignored: eventType });
   }
 
-  // Try custom_data first, fall back to matching the variant id.
-  const { uid, packId } = extractCustomData(payload);
-  let pack = packId ? packById(packId) : undefined;
-  if (!pack) {
-    const variantId = payload?.data?.attributes?.first_order_item?.variant_id?.toString?.()
-                   ?? payload?.data?.attributes?.first_order_item?.variant_id;
-    if (variantId) pack = packForVariant(String(variantId));
-  }
-  if (!uid || !pack) {
-    return res.status(400).json({ error: 'Missing uid or pack' });
-  }
+  const { uid, packId } = customFromWebhook(payload);
+  if (!uid || !packId) return res.status(400).json({ error: 'Missing custom_id' });
+  const pack = packById(packId);
+  if (!pack) return res.status(400).json({ error: 'Unknown pack' });
 
   const result = await rechargeCoins(uid, pack.id);
   if (!result.ok) return res.status(500).json({ error: result.error });
-
   res.json({ ok: true, granted: result.granted, coins: result.coins });
 }));
 

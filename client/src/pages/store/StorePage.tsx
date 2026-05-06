@@ -55,6 +55,36 @@ export function StorePage() {
 
   useEffect(() => { fetchItems(); }, []);
 
+  // After PayPal redirects back as /store?paid=1&token=<ORDER_ID>, capture
+  // the order so the coins are credited. Refreshing the page is safe — the
+  // server's capture endpoint is idempotent on PayPal's side.
+  useEffect(() => {
+    const url  = new URL(window.location.href);
+    const paid = url.searchParams.get('paid');
+    const orderId = url.searchParams.get('token');
+    if (paid !== '1' || !orderId) return;
+    // Strip the query string so a refresh doesn't re-trigger this.
+    window.history.replaceState({}, '', url.pathname);
+    (async () => {
+      try {
+        const res = await apiClient.post<{ profile?: UserProfile; granted?: number; error?: string }>(
+          '/api/payments/capture', { orderId }
+        );
+        if (res?.profile) setProfile(res.profile);
+        soundService.playCoins();
+        addToast(
+          lang === 'ar'
+            ? `أُضيفت ${(res?.granted || 0).toLocaleString()} كوينز إلى رصيدك 🎉`
+            : `${(res?.granted || 0).toLocaleString()} coins added to your balance 🎉`,
+          'success'
+        );
+      } catch (e: any) {
+        soundService.playError();
+        addToast(e?.message || (lang === 'ar' ? 'فشل تأكيد الدفع' : 'Payment confirmation failed'), 'error');
+      }
+    })();
+  }, []);
+
   const owned = profile?.ownedItems || [];
   const equipped = profile?.equippedItems || {};
 
@@ -105,8 +135,8 @@ export function StorePage() {
     setBusy(packageId);
     soundService.playClick();
     try {
-      // Real money via Lemon Squeezy. Falls back to the legacy test-mode
-      // recharge if the server says payments aren't configured yet.
+      // Real money via PayPal. Falls back to the legacy test-mode recharge
+      // if the server says PayPal isn't configured yet.
       const res = await apiClient.post<{ url?: string; error?: string }>('/api/payments/checkout', { packId: packageId });
       if (res?.url) {
         window.location.href = res.url;
@@ -115,8 +145,8 @@ export function StorePage() {
       throw new Error(res?.error || 'Checkout failed');
     } catch (e: any) {
       const msg = e?.message || '';
-      // If Lemon Squeezy isn't set up yet, hit the test-mode recharge so
-      // the dev flow still works locally.
+      // If PayPal isn't set up yet, hit the test-mode recharge so the dev
+      // flow still works locally.
       if (/not configured|Unknown coin pack/i.test(msg)) {
         try {
           const res = await apiClient.post<{ profile: UserProfile; granted: number }>('/api/store/recharge', { packageId });

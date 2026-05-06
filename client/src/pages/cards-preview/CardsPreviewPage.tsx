@@ -148,27 +148,26 @@ function PeekIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
 }
 
 function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: string; accent2: string }) {
-  // HUGE unmistakable digit '0' with a halo + sparkle bursts around it.
-  // Previous version put the 0 inside a thick ring, which read as "circle"
-  // rather than "the digit zero". Now the digit IS the centerpiece.
+  // Layout: "حظك حلو" banner on top, then BIG '0' below it. Sparkle bursts
+  // and a subtle halo decorate without competing with the digit.
   return (
     <g transform="translate(50 72)">
-      {/* Subtle radial halo to make the 0 pop without competing with it */}
+      {/* Subtle radial halo around the digit */}
       {Array.from({ length: 12 }).map((_, i) => {
         const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
         const x1 = Math.cos(a) * 26;
         const y1 = Math.sin(a) * 26;
-        const x2 = Math.cos(a) * 36;
-        const y2 = Math.sin(a) * 36;
-        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={accent} strokeWidth={1.4} strokeLinecap="round" opacity={0.7}/>;
+        const x2 = Math.cos(a) * 34;
+        const y2 = Math.sin(a) * 34;
+        return <line key={i} x1={x1} y1={y1 + 8} x2={x2} y2={y2 + 8} stroke={accent} strokeWidth={1.2} strokeLinecap="round" opacity={0.5}/>;
       })}
 
-      {/* Sparkle stars around the corners */}
+      {/* Sparkle stars in the corners */}
       {[
-        [-34, -20, 3],
-        [34, -20, 3.5],
-        [-30, 24, 2.5],
-        [32, 24, 3],
+        [-34, -2, 3],
+        [34, -2, 3.5],
+        [-30, 30, 2.5],
+        [32, 30, 3],
       ].map(([cx, cy, r], i) => (
         <g key={i}>
           <line x1={cx} y1={cy - r * 1.8} x2={cx} y2={cy + r * 1.8} stroke={accent2} strokeWidth={1.2} strokeLinecap="round"/>
@@ -177,12 +176,21 @@ function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
         </g>
       ))}
 
-      {/* The big digit '0' itself — large, bold, unmistakable */}
-      {/* outer ghost stroke for extra contrast */}
-      <text y={16} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="56"
-        fill="none" stroke={accent} strokeWidth={3.5} opacity={0.4}>0</text>
+      {/* "حظك حلو" banner on top */}
+      <g transform="translate(0 -28)">
+        {/* Background pill */}
+        <rect x={-30} y={-9} width={60} height={18} rx={9} fill={accent2} opacity={0.9}/>
+        <text y={4} textAnchor="middle" fontFamily="'Tajawal', 'Cairo', sans-serif" fontWeight="900" fontSize="11" fill="#FFF" letterSpacing="0.5">
+          حظك حلو ✨
+        </text>
+      </g>
+
+      {/* The big digit '0' below the banner */}
+      {/* ghost stroke for contrast */}
+      <text y={26} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="56"
+        fill="none" stroke={accent} strokeWidth={3.5} opacity={0.45}>0</text>
       {/* main digit */}
-      <text y={16} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="56"
+      <text y={26} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="56"
         fill={ink}>0</text>
     </g>
   );
@@ -198,10 +206,11 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
   const label = labelFor(rank, suit);
   const special = specialOf(rank, suit);
 
+  // 'حظك حلو' is rendered inside LuckIllustration itself (above the 0),
+  // so we skip the external bottom-label for TEN_RED.
   const actionLabel = special === 'J' ? 'بدّل كرت'
                     : special === 'Q_RED' ? 'اكشف كرت'
                     : special === 'K' ? 'اسحب كرتين'
-                    : special === 'TEN_RED' ? 'حظك حلو'
                     : null;
 
   return (

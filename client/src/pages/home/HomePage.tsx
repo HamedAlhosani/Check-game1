@@ -48,51 +48,98 @@ function DailyRewardNavButton({ onOpen, lang }: { onOpen: () => void; lang: stri
   );
 }
 
-// Quick claim count from /api/progression so we can show a notification dot
-// when the user has unclaimed missions / achievements / level rewards.
-function ProgressNavButton({ onOpen, lang, profileXp, profileWins, profileGames, profileStreak }: {
+// Full-width strip below the XP bar — shows mission progress + claim count,
+// taps to open the ProgressionModal. Re-fetches whenever any user activity
+// (xp, wins, games, streak) changes so a finished mission lights up at once.
+function MissionsStrip({ onOpen, lang, profileXp, profileWins, profileGames, profileStreak }: {
   onOpen: () => void;
   lang: string;
-  // Re-trigger the claim count whenever any of these change (which is the
-  // signal that something the user did could have unlocked something).
   profileXp: number; profileWins: number; profileGames: number; profileStreak: number;
 }) {
-  const [count, setCount] = useState(0);
+  const [stats, setStats] = useState<{ done: number; total: number; claimable: number } | null>(null);
   useEffect(() => {
     apiClient.get<{
       missions: { items: { complete: boolean; claimed: boolean }[] };
       achievements: { complete: boolean; claimed: boolean }[];
       levelRewards: { reached: boolean; claimed: boolean }[];
     }>('/api/progression').then(r => {
-      const a = r.missions.items.filter(m => m.complete && !m.claimed).length;
-      const b = r.achievements.filter(x => x.complete && !x.claimed).length;
-      const c = r.levelRewards.filter(x => x.reached && !x.claimed).length;
-      setCount(a + b + c);
-    }).catch(() => setCount(0));
+      const total = r.missions.items.length;
+      const done = r.missions.items.filter(m => m.complete).length;
+      const claimable =
+        r.missions.items.filter(m => m.complete && !m.claimed).length +
+        r.achievements.filter(x => x.complete && !x.claimed).length +
+        r.levelRewards.filter(x => x.reached && !x.claimed).length;
+      setStats({ done, total, claimable });
+    }).catch(() => setStats({ done: 0, total: 3, claimable: 0 }));
   }, [profileXp, profileWins, profileGames, profileStreak]);
+
+  const claimable = stats?.claimable ?? 0;
+  const done = stats?.done ?? 0;
+  const total = stats?.total ?? 3;
+  const hot = claimable > 0;
+
   return (
     <motion.button
-      whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+      whileTap={{ scale: 0.985 }}
       onClick={onOpen}
-      className="relative rounded-xl flex items-center justify-center"
-      title={lang === 'ar' ? 'المهام والإنجازات' : 'Missions & Achievements'}
+      className="w-full mt-3 rounded-xl flex items-center gap-3 px-3 py-2.5 transition-all"
       style={{
-        width: 36,
-        height: 34,
-        background: count > 0 ? 'rgba(201,168,76,0.18)' : 'rgba(255,255,255,0.04)',
-        border: `1px solid ${count > 0 ? 'rgba(201,168,76,0.55)' : 'rgba(255,255,255,0.08)'}`,
-        boxShadow: count > 0 ? '0 0 14px rgba(201,168,76,0.35)' : 'none',
+        background: hot
+          ? 'linear-gradient(90deg, rgba(201,168,76,0.18) 0%, rgba(201,168,76,0.08) 100%)'
+          : 'linear-gradient(90deg, rgba(201,168,76,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+        border: `1px solid ${hot ? 'rgba(201,168,76,0.55)' : 'rgba(201,168,76,0.18)'}`,
+        boxShadow: hot ? '0 0 16px rgba(201,168,76,0.30)' : 'none',
         cursor: 'pointer',
       }}>
-      <span style={{ fontSize: 18, lineHeight: 1 }}>🎯</span>
-      {count > 0 && (
-        <span className="absolute rounded-full font-bold"
-          style={{
-            top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px',
-            background: '#E04030', color: '#fff', fontSize: 9, lineHeight: '16px',
-            border: '1.5px solid #14100A',
-          }}>{count}</span>
-      )}
+      {/* Icon */}
+      <div className="rounded-lg flex items-center justify-center shrink-0"
+        style={{
+          width: 32, height: 32,
+          background: hot ? 'rgba(201,168,76,0.25)' : 'rgba(0,0,0,0.20)',
+          border: '1px solid rgba(201,168,76,0.25)',
+          fontSize: 18,
+        }}>🎯</div>
+
+      {/* Title + progress */}
+      <div className="flex-1 min-w-0 text-start">
+        <div className="font-arabic font-bold flex items-center gap-2"
+          style={{ fontSize: 12.5, color: hot ? '#E8C97A' : 'rgba(232,201,122,0.85)' }}>
+          {lang === 'ar' ? 'المهام والإنجازات' : 'Missions & Achievements'}
+          {claimable > 0 && (
+            <motion.span
+              animate={{ scale: [1, 1.08, 1] }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+              className="rounded-full font-bold"
+              style={{
+                background: '#E04030', color: '#fff',
+                fontSize: 10, lineHeight: '16px',
+                minWidth: 18, height: 16, padding: '0 5px',
+              }}>
+              {claimable} {lang === 'ar' ? 'جاهزة' : 'ready'}
+            </motion.span>
+          )}
+        </div>
+        <div className="mt-1.5 flex items-center gap-2">
+          {/* Mini progress bar for daily missions */}
+          <div className="flex-1" style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+            <div style={{
+              width: `${(done / Math.max(1, total)) * 100}%`,
+              height: '100%',
+              background: 'linear-gradient(90deg, #8B6914, #E8C97A)',
+              transition: 'width .35s ease',
+            }}/>
+          </div>
+          <span className="font-mono shrink-0"
+            style={{ fontSize: 9.5, color: 'rgba(245,230,200,0.5)' }}>
+            {done}/{total} {lang === 'ar' ? 'مهام اليوم' : 'today'}
+          </span>
+        </div>
+      </div>
+
+      {/* Chevron */}
+      <span className="shrink-0" style={{
+        fontSize: 16, color: hot ? '#E8C97A' : 'rgba(245,230,200,0.45)',
+      }}>{lang === 'ar' ? '‹' : '›'}</span>
     </motion.button>
   );
 }
@@ -871,13 +918,6 @@ export function HomePage() {
           <LangToggle />
           {/* Daily reward — moved out of the games area into the top nav */}
           <DailyRewardNavButton onOpen={() => setShowDaily(true)} lang={lang} />
-          {/* Missions / achievements / level rewards */}
-          <ProgressNavButton
-            onOpen={() => { setProgressInitialTab('missions'); setShowProgress(true); }}
-            lang={lang}
-            profileXp={xp} profileWins={wins} profileGames={games}
-            profileStreak={profile?.stats?.currentStreak ?? 0}
-          />
           {/* Coins */}
           <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5"
             style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)' }}>
@@ -920,36 +960,46 @@ export function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl p-4 mb-5 flex items-center gap-4"
+            className="rounded-2xl p-4 mb-5"
             style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.10) 0%, rgba(16,10,30,0.95) 100%)', border: '1px solid rgba(201,168,76,0.2)', boxShadow: '0 0 24px rgba(201,168,76,0.08)' }}
           >
-            <Link to="/profile" style={{ textDecoration: 'none' }}>
-              <div className="relative">
-                <AvatarCircle id={profile.avatarId} name={profile.displayName} size={52} frameId={(profile.equippedItems as any)?.avatarFrame}/>
-                <div className="absolute -bottom-0.5 -right-0.5 rounded-full px-1.5"
-                  style={{ background: '#C9A84C', fontSize: 9, color: '#0E0905', fontWeight: 800, lineHeight: '16px' }}>
-                  {level}
+            <div className="flex items-center gap-4">
+              <Link to="/profile" style={{ textDecoration: 'none' }}>
+                <div className="relative">
+                  <AvatarCircle id={profile.avatarId} name={profile.displayName} size={52} frameId={(profile.equippedItems as any)?.avatarFrame}/>
+                  <div className="absolute -bottom-0.5 -right-0.5 rounded-full px-1.5"
+                    style={{ background: '#C9A84C', fontSize: 9, color: '#0E0905', fontWeight: 800, lineHeight: '16px' }}>
+                    {level}
+                  </div>
                 </div>
+              </Link>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <h2 className="font-arabic font-bold truncate" style={{ fontSize: 17, color: '#E8C97A' }}>{profile.displayName}</h2>
+                  <span className="font-arabic" style={{ fontSize: 11, color: 'rgba(201,168,76,0.55)' }}>{levelTitle(level, lang)}</span>
+                </div>
+                <div className="flex gap-4 my-1.5">
+                  <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>
+                    <span style={{ color: '#C9A84C', fontWeight: 700 }}>{wins}</span> {t('wins')}
+                  </span>
+                  <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>
+                    <span style={{ color: '#C9A84C', fontWeight: 700 }}>{games}</span> {t('games')}
+                  </span>
+                  <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>
+                    🔥 <span style={{ color: '#C9A84C', fontWeight: 700 }}>{profile.stats?.currentStreak ?? 0}</span>
+                  </span>
+                </div>
+                <XpBar xp={xp} lang={lang} onClick={() => { setProgressInitialTab('levels'); setShowProgress(true); }}/>
               </div>
-            </Link>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-2">
-                <h2 className="font-arabic font-bold truncate" style={{ fontSize: 17, color: '#E8C97A' }}>{profile.displayName}</h2>
-                <span className="font-arabic" style={{ fontSize: 11, color: 'rgba(201,168,76,0.55)' }}>{levelTitle(level, lang)}</span>
-              </div>
-              <div className="flex gap-4 my-1.5">
-                <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>
-                  <span style={{ color: '#C9A84C', fontWeight: 700 }}>{wins}</span> {t('wins')}
-                </span>
-                <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>
-                  <span style={{ color: '#C9A84C', fontWeight: 700 }}>{games}</span> {t('games')}
-                </span>
-                <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>
-                  🔥 <span style={{ color: '#C9A84C', fontWeight: 700 }}>{profile.stats?.currentStreak ?? 0}</span>
-                </span>
-              </div>
-              <XpBar xp={xp} lang={lang} onClick={() => { setProgressInitialTab('levels'); setShowProgress(true); }}/>
             </div>
+
+            {/* Missions strip — sits below the XP bar, full width */}
+            <MissionsStrip
+              onOpen={() => { setProgressInitialTab('missions'); setShowProgress(true); }}
+              lang={lang}
+              profileXp={xp} profileWins={wins} profileGames={games}
+              profileStreak={profile.stats?.currentStreak ?? 0}
+            />
           </motion.div>
         )}
 

@@ -11,6 +11,20 @@ export function CheckGamePage() {
   const { gameState, setGameState, addChatMessage, setLastScores, setShowScoreBoard } = useGameStore();
   const { currentRoom } = useLobbyStore();
 
+  // Lock body/html scroll while inside the game so the page-level gold
+  // scrollbar (5px sliver on the right edge) doesn't show next to the
+  // table — it was reading like an in-game UI element on iPad.
+  useEffect(() => {
+    const prevBody = document.body.style.overflow;
+    const prevHtml = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevBody;
+      document.documentElement.style.overflow = prevHtml;
+    };
+  }, []);
+
   useEffect(() => {
     const socket = socketService.getSocket();
     if (!socket) return;

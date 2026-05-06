@@ -343,8 +343,20 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     (socket.uid ? roomManager.getRoomForUid(socket.uid) : undefined);
   if (roomId) {
     roomManager.trackSocket(socket.id, roomId);
+    socket.join(roomId);
     const engine = roomManager.getGame(roomId);
-    if (engine) {
+    if (engine && socket.uid) {
+      // Auto-reclaim: if the slot is currently bot-controlled because the
+      // user disconnected (closed Safari, lost wifi, switched tabs), give
+      // it straight back. Player should resume seamlessly without seeing
+      // the reclaim modal at all.
+      const checkEngine = engine as GameEngine;
+      if (typeof checkEngine.isReplacedByBot === 'function' && checkEngine.isReplacedByBot(socket.uid)) {
+        checkEngine.reclaimSeat(socket.uid);
+        const bots = roomManager.getCheckBots(roomId);
+        const idx = bots.findIndex(b => b.uid === socket.uid);
+        if (idx !== -1) bots.splice(idx, 1);
+      }
       socket.emit(SOCKET_EVENTS.SYSTEM_RECONNECT_STATE, (engine as any).getPublicState());
     }
   }

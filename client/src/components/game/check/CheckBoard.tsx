@@ -351,9 +351,6 @@ function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11 }
         boxShadow: isTurn ? '0 0 16px rgba(201,168,76,.25), inset 0 1px 0 rgba(232,201,122,.1)' : 'none',
       }}
     >
-      <div style={{ height: compact ? 3 : 4, background: 'rgba(255,255,255,.06)', width: '100%' }}>
-        <FullBar endAt={gameState.turnEndAt} active={isTurn} />
-      </div>
       <div className={`flex items-center gap-2 ${compact ? 'px-1.5 py-1' : 'px-2.5 py-2'}`}>
         <div className="relative shrink-0">
           <Av id={player.avatarId} name={player.displayName} frameId={(player as any).equippedFrame} size={avSize} />
@@ -377,6 +374,15 @@ function cardGridCols(count: number) {
 
 // ─── Shared cards row for any seat ───────────────────────────────────────────
 function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = false, swapPos }: any) {
+  // Eliminated players: hide their cards entirely, show just an X panel.
+  if (player.isEliminated) {
+    return (
+      <div className="rounded-lg flex items-center justify-center"
+        style={{ background: 'rgba(60,15,15,0.5)', border: '1px dashed rgba(224,64,48,0.45)', minHeight: mini ? 56 : 78, padding: '6px 14px' }}>
+        <span className="font-bold" style={{ color: '#E04030', fontSize: mini ? 22 : 28 }}>✕</span>
+      </div>
+    );
+  }
   const nonNull = player.cards.filter(Boolean).length;
   return (
     <div className="relative">
@@ -398,12 +404,6 @@ function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = fals
           ) : null)}
         </AnimatePresence>
       </div>
-      {player.isEliminated && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none"
-          style={{ background: 'rgba(0,0,0,0.55)' }}>
-          <span className="text-red-400 font-bold" style={{ fontSize: 24 }}>✕</span>
-        </div>
-      )}
     </div>
   );
 }
@@ -669,6 +669,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [knownCards, setKnownCards] = useState<Map<number, Card>>(new Map());
   const [selectedPos, setSelectedPos] = useState<number | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [emojiPanelOpen, setEmojiPanelOpen] = useState(false);
   const [emojiMap, setEmojiMap] = useState<Record<string, string | null>>({});
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
@@ -1345,30 +1346,38 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {me && (
           <div className="shrink-0 self-center flex flex-col items-center gap-1.5 pb-1"
             style={{ width: isMobile ? winW - 12 : 220, position: 'relative', zIndex: 5, marginTop: isMobile ? 2 : n <= 6 ? 100 : n <= 8 ? 70 : 50 }}>
-            {/* My cards — 2×2 grid on mobile */}
-            <div className={isMobile ? 'grid grid-cols-2 gap-1' : cardGridCols(me.cards.filter(Boolean).length)}>
-              <AnimatePresence>
-                {me.cards.map((c, i) => c !== null ? (
-                  <motion.div key={`me-${i}`}
-                    initial={{ opacity: 0, y: i % 2 === 0 ? -22 : 22, scale: 0.8 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.6 }}
-                    transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                    className="relative"
-                  >
-                    <PlayingCard
-                      card={getCardForPos(me.cards, i)}
-                      faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
-                      highlight={myCardHighlight(i)}
-                      onClick={() => onMyCardClick(i)}
-                      small={isMobile}
-                      backId={cardBackId}
-                    />
-                    {me && swapHighlights[me.uid] === i && <SwapArrowBadge />}
-                  </motion.div>
-                ) : null)}
-              </AnimatePresence>
-            </div>
+            {/* My cards — hidden when I'm eliminated */}
+            {me.isEliminated ? (
+              <div className="rounded-2xl flex flex-col items-center gap-2 px-6 py-5"
+                style={{ background: 'rgba(60,15,15,0.5)', border: '1px dashed rgba(224,64,48,0.5)' }}>
+                <span className="font-bold" style={{ color: '#E04030', fontSize: 36, lineHeight: 1 }}>✕</span>
+                <span className="font-arabic font-bold" style={{ color: '#E04030', fontSize: 14 }}>خرجت من اللعبة</span>
+              </div>
+            ) : (
+              <div className={isMobile ? 'grid grid-cols-2 gap-1' : cardGridCols(me.cards.filter(Boolean).length)}>
+                <AnimatePresence>
+                  {me.cards.map((c, i) => c !== null ? (
+                    <motion.div key={`me-${i}`}
+                      initial={{ opacity: 0, y: i % 2 === 0 ? -22 : 22, scale: 0.8 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.6 }}
+                      transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                      className="relative"
+                    >
+                      <PlayingCard
+                        card={getCardForPos(me.cards, i)}
+                        faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
+                        highlight={myCardHighlight(i)}
+                        onClick={() => onMyCardClick(i)}
+                        small={isMobile}
+                        backId={cardBackId}
+                      />
+                      {me && swapHighlights[me.uid] === i && <SwapArrowBadge />}
+                    </motion.div>
+                  ) : null)}
+                </AnimatePresence>
+              </div>
+            )}
 
             {/* Burn hint */}
             <AnimatePresence>
@@ -1495,30 +1504,77 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       {/* ══ ACTION BAR ══ */}
       <div className="fixed bottom-0 left-0 right-0 flex items-center justify-between border-t border-yellow-900/30"
         style={{ background: 'rgba(3,7,18,0.98)', height: isMobile ? 46 : 52, zIndex: 40, padding: isMobile ? '0 8px' : '0 12px' }}>
-        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
-          className={`relative px-4 py-1.5 rounded-xl border font-arabic text-sm transition-all
-            ${chatOpen ? 'border-gold/60 text-gold bg-gold/12' : 'border-white/15 text-white/60 bg-white/5'}`}
-          onClick={() => { setChatOpen(s => !s); setUnreadCount(0); }}>
-          شات
-          <AnimatePresence>
-            {!chatOpen && unreadCount > 0 && (
-              <motion.span
-                key="badge"
-                initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                className="absolute flex items-center justify-center rounded-full bg-red-500 text-white font-bold"
-                style={{ top: -6, right: -6, minWidth: 17, height: 17, fontSize: 9, lineHeight: 1 }}>
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.button>
+        <div className="flex items-center gap-2">
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
+            className={`relative px-4 py-1.5 rounded-xl border font-arabic text-sm transition-all
+              ${chatOpen ? 'border-gold/60 text-gold bg-gold/12' : 'border-white/15 text-white/60 bg-white/5'}`}
+            onClick={() => { setChatOpen(s => !s); setEmojiPanelOpen(false); setUnreadCount(0); }}>
+            شات
+            <AnimatePresence>
+              {!chatOpen && unreadCount > 0 && (
+                <motion.span
+                  key="badge"
+                  initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                  className="absolute flex items-center justify-center rounded-full bg-red-500 text-white font-bold"
+                  style={{ top: -6, right: -6, minWidth: 17, height: 17, fontSize: 9, lineHeight: 1 }}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+
+          {/* Quick emoji panel toggle — sends a one-tap reaction */}
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
+            className={`px-3 py-1.5 rounded-xl border transition-all
+              ${emojiPanelOpen ? 'border-gold/60 bg-gold/12' : 'border-white/15 bg-white/5'}`}
+            style={{ fontSize: 18, lineHeight: 1 }}
+            onClick={() => { setEmojiPanelOpen(s => !s); setChatOpen(false); }}>
+            😀
+          </motion.button>
+        </div>
 
         <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: .92 }}
           className="px-4 py-1.5 rounded-xl border font-arabic text-sm transition-all"
           style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(245,230,200,0.65)' }}
           onClick={() => setShowSettings(true)}>إعدادات</motion.button>
       </div>
+
+      {/* ── Quick emoji popover — one-tap reactions sent via chat ── */}
+      <AnimatePresence>
+        {emojiPanelOpen && (
+          <motion.div
+            key="emoji-popover"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+            className="fixed rounded-2xl border flex flex-wrap gap-2"
+            style={{
+              bottom: isMobile ? 56 : 62,
+              left: isMobile ? 8 : 12,
+              background: 'rgba(20,14,8,0.97)',
+              borderColor: 'rgba(201,168,76,0.4)',
+              padding: '10px 12px',
+              boxShadow: '0 -6px 24px rgba(0,0,0,0.6)',
+              maxWidth: 320,
+              zIndex: 41,
+            }}
+          >
+            {['😂','😍','🔥','👏','😮','🤔','🥶','😴','💪','🤝','🤯','😎','🙏','💔','👀','🎉'].map(em => (
+              <motion.button key={em}
+                whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }}
+                onClick={() => {
+                  socket?.emit(SOCKET_EVENTS.CHAT_SEND, { roomId, text: em, emoji: em });
+                  setEmojiPanelOpen(false);
+                }}
+                style={{ fontSize: 26, lineHeight: 1, padding: '4px 6px', cursor: 'pointer' }}>
+                {em}
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Top header: badges row + النقاط button (top-right) ── */}
       <div className="fixed z-40 flex items-start justify-between pointer-events-none"
@@ -1749,36 +1805,59 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             className="fixed inset-0 z-50 flex items-center justify-center"
             style={{ background: 'rgba(20,14,8,.88)', backdropFilter: 'blur(8px)' }}
           >
-            <div className="rounded-2xl border border-gold/30 px-6 py-5 flex flex-col items-center gap-3"
-              style={{ background: 'rgba(20,14,8,.97)', width: 'min(96vw, 360px)', maxHeight: '88vh', overflowY: 'auto' }}>
+            <div className="rounded-2xl border border-gold/30 px-5 py-5 flex flex-col items-center gap-3"
+              style={{ background: 'rgba(20,14,8,.97)', width: 'min(96vw, 420px)', maxHeight: '88vh', overflowY: 'auto' }}>
               <p className="text-gold font-bold font-arabic text-lg">نتيجة الجولة {roundScoreData.roundNumber}</p>
               {roundScoreData.checkPenalty && (
                 <p className="text-red-300 font-arabic text-sm animate-pulse">
                   ⚠ الـ Checker ما كان الأقل — العقوبة مضاعفة!
                 </p>
               )}
+              {/* Column headers */}
+              <div className="w-full flex items-center gap-2 px-3 font-arabic"
+                style={{ fontSize: 10, color: 'rgba(245,230,200,0.45)' }}>
+                <span style={{ width: 28 }}/>
+                <span className="flex-1">اللاعب</span>
+                <span style={{ width: 38, textAlign: 'center' }}>المجموع</span>
+                <span style={{ width: 38, textAlign: 'center' }}>+ النقاط</span>
+                <span style={{ width: 42, textAlign: 'center' }}>الكلي</span>
+              </div>
               <div className="w-full space-y-1.5">
                 {gameState.players.map(p => {
                   const round = roundScoreData.scores?.[p.uid] ?? 0;
+                  const raw = roundScoreData.rawHandSums?.[p.uid] ?? round;
                   const total = roundScoreData.cumulative?.[p.uid] ?? p.cumulativeScore;
                   const isCaller = p.uid === roundScoreData.checkCallerId;
                   const isLowest = p.uid === roundScoreData.lowestUid;
+                  // Doubled: caller paid 2× because checkPenalty applied to them
+                  const wasDoubled = isCaller && roundScoreData.checkPenalty && round === raw * 2;
                   return (
                     <div key={p.uid}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2"
+                      className="flex items-center gap-2 rounded-lg px-3 py-2"
                       style={{
                         background: isCaller ? 'rgba(201,168,76,.12)' : isLowest ? 'rgba(80,200,120,.10)' : 'rgba(255,255,255,.04)',
                         border: isCaller ? '1px solid rgba(201,168,76,.3)' : isLowest ? '1px solid rgba(80,200,120,.3)' : '1px solid transparent',
                       }}
                     >
                       <Av id={p.avatarId} name={p.displayName} frameId={(p as any).equippedFrame} size={28} />
-                      <span className="flex-1 text-sand-light text-sm font-arabic truncate">{p.displayName}</span>
-                      {isCaller && <span className="text-gold text-xs font-arabic">CHECK</span>}
-                      {isLowest && !isCaller && <span className="text-green-400 text-xs font-arabic">الأقل ✓</span>}
-                      <span className="text-red-300 font-bold text-sm" style={{ minWidth: 32, textAlign: 'right' }}>
-                        {round > 0 ? `+${round}` : round === 0 ? '0' : round}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sand-light font-arabic truncate" style={{ fontSize: 12 }}>{p.displayName}</p>
+                        <div className="flex items-center gap-1.5">
+                          {isCaller && <span className="text-gold font-arabic" style={{ fontSize: 9 }}>CHECK</span>}
+                          {isLowest && !isCaller && <span className="text-green-400 font-arabic" style={{ fontSize: 9 }}>الأقل ✓</span>}
+                          {wasDoubled && <span className="text-red-400 font-arabic" style={{ fontSize: 9 }}>×2</span>}
+                        </div>
+                      </div>
+                      {/* Raw hand sum (before doubling) */}
+                      <span className="font-bold font-mono" style={{ fontSize: 13, color: 'rgba(245,230,200,0.65)', width: 38, textAlign: 'center' }}>
+                        {raw}
                       </span>
-                      <span className="text-gold/80 font-bold text-sm" style={{ minWidth: 36, textAlign: 'right' }}>
+                      {/* Round score (after doubling / 0-for-winner) */}
+                      <span className="font-bold font-mono" style={{ fontSize: 13, color: round === 0 ? '#7AE08A' : wasDoubled ? '#E04030' : '#E8C97A', width: 38, textAlign: 'center' }}>
+                        {round > 0 ? `+${round}` : '0'}
+                      </span>
+                      {/* Cumulative final */}
+                      <span className="font-bold font-mono" style={{ fontSize: 14, color: total >= 80 ? '#E04030' : '#E8C97A', width: 42, textAlign: 'center' }}>
                         {total}
                       </span>
                     </div>
@@ -1807,7 +1886,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             key="drawn-card-anchor"
             className="fixed pointer-events-none"
             style={{
-              top: isMobile ? 80 : 100,
+              top: isMobile ? 56 : 70,
               left: 0,
               right: 0,
               display: 'flex',
@@ -1823,12 +1902,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               transition={{ type: 'spring', stiffness: 320, damping: 24 }}
               className="rounded-3xl border-2 flex flex-col items-center pointer-events-auto"
               style={{
-                background: 'linear-gradient(160deg, rgba(36,24,16,0.97) 0%, rgba(20,16,10,0.97) 100%)',
-                borderColor: 'rgba(232,201,122,0.75)',
-                boxShadow: '0 12px 40px rgba(0,0,0,0.8), 0 0 28px rgba(201,168,76,0.35)',
-                padding: isMobile ? '12px 16px 14px' : '14px 22px 16px',
+                background: 'linear-gradient(160deg, rgba(36,24,16,0.55) 0%, rgba(20,16,10,0.55) 100%)',
+                borderColor: 'rgba(232,201,122,0.65)',
+                boxShadow: '0 12px 40px rgba(0,0,0,0.55), 0 0 28px rgba(201,168,76,0.3)',
+                padding: isMobile ? '10px 14px 12px' : '12px 20px 14px',
                 gap: 10,
-                backdropFilter: 'blur(10px)',
+                backdropFilter: 'blur(8px)',
               }}
             >
               <p className="font-arabic font-bold rounded-full px-3 py-1"

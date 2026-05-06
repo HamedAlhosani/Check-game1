@@ -3,6 +3,7 @@ import { getCardValue } from './Card';
 
 export interface ScoreResult {
   roundScores: { [uid: string]: number };
+  rawHandSums: { [uid: string]: number };
   lowestUid: string | null;
   checkPenalty: boolean;
 }
@@ -20,9 +21,15 @@ export function calculateRoundScores(
     }, 0);
   }
 
-  const minSum = Math.min(...Object.values(handSums));
   const callerSum = handSums[checkCallerId];
-  const checkPenalty = callerSum > minSum;
+  // Compare caller against the rest only — ties don't count as a loss.
+  const otherSums = Object.entries(handSums)
+    .filter(([uid]) => uid !== checkCallerId)
+    .map(([, s]) => s);
+  const minOther = otherSums.length ? Math.min(...otherSums) : Infinity;
+  // Penalty only if SOMEONE ELSE is strictly lower than the caller.
+  // Tie at lowest → no penalty, both pay their hand sum.
+  const checkPenalty = callerSum > minOther;
 
   const roundScores: { [uid: string]: number } = {};
 
@@ -33,13 +40,21 @@ export function calculateRoundScores(
     let score: number;
 
     if (p.uid === checkCallerId) {
-      // Caller gets 0 if they're lowest, doubled if someone else is lower
-      score = checkPenalty ? callerSum * 2 : 0;
-    } else if (checkPenalty && handSums[p.uid] === minSum) {
-      // When caller loses, the single lowest player pays 0
+      if (checkPenalty) {
+        // Someone is strictly lower → caller pays double their hand sum.
+        score = callerSum * 2;
+      } else if (callerSum < minOther) {
+        // Caller is alone-lowest → free round.
+        score = 0;
+      } else {
+        // Tie at lowest → caller pays their hand sum like everyone else.
+        score = callerSum;
+      }
+    } else if (checkPenalty && handSums[p.uid] === Math.min(...Object.values(handSums))) {
+      // When the caller is penalised, the single lowest player pays 0.
       score = 0;
     } else {
-      // Everyone else always pays their hand sum
+      // Everyone else always pays their hand sum.
       score = handSums[p.uid];
     }
 
@@ -50,5 +65,5 @@ export function calculateRoundScores(
     }
   }
 
-  return { roundScores, lowestUid, checkPenalty };
+  return { roundScores, rawHandSums: handSums, lowestUid, checkPenalty };
 }

@@ -6,7 +6,7 @@ import { canBurnCard } from './BurnValidator';
 import { calculateRoundScores, ScoreResult } from './ScoreCalculator';
 import { BotPlayer } from './BotPlayer';
 
-const PEEK_DURATION_MS = 8000;
+const PEEK_DURATION_MS = 10000;
 const TURN_DURATION_MS = 25000;
 const BURN_WINDOW_MS = 3000;
 const ROUND_OVER_DELAY_MS = 4000;
@@ -717,6 +717,7 @@ export class GameEngine {
     this.emit('game:scores', {
       roundNumber: this.roundNumber,
       scores: result.roundScores,
+      rawHandSums: result.rawHandSums,
       cumulative,
       checkPenalty: result.checkPenalty,
       checkCallerId: this.checkCallerId,
@@ -860,7 +861,8 @@ export class GameEngine {
     if (!player || player.isBot || player.isEliminated) return;
     if (!this.originalNames.has(uid)) this.originalNames.set(uid, player.displayName);
     player.isBot = true;
-    player.displayName = this.originalNames.get(uid)! + ' 🤖';
+    // Display name is NOT decorated with 🤖 anymore — user only sees the
+    // reclaim modal when they come back; opponents see the existing isBot flag.
     this.broadcastState();
     // If it's their turn, advance quickly so the game doesn't freeze
     if (this.isPlayerTurn(uid) && (this.phase === 'PLAYING' || this.phase === 'CHECK_CALLED')) {

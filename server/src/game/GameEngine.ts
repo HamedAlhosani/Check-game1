@@ -172,7 +172,16 @@ export class GameEngine {
 
     // Mid-special phases: don't draw, just resolve the pending action.
     if (this.phase === 'KING_CHOICE' && this.specialActionUid === uid) {
-      this.onKingBurn(uid); return;
+      // If one of the replacement cards is a J or red Q, the bot uses its
+      // special instead of burning — same option humans get. Picks the
+      // first matching card; the SPECIAL_J / SPECIAL_Q phase that follows
+      // is then resolved by the next bot tick (this method runs again).
+      const idx = this.kingChoiceCards.findIndex(c =>
+        c.rank === 'J' || (c.rank === 'Q' && (c.suit === 'hearts' || c.suit === 'diamonds'))
+      );
+      if (idx >= 0) this.onKingUseSpecial(uid, idx);
+      else          this.onKingBurn(uid);
+      return;
     }
     if (this.phase === 'SPECIAL_J' && this.specialActionUid === uid) {
       const tempBot = new BotPlayer(uid, 'medium');
@@ -388,6 +397,43 @@ export class GameEngine {
     this.emit('game:card_discarded', { uid, card: displaced, fromKingPenalty: true });
     this.broadcastState();
     this.advanceTurn();
+    return true;
+  }
+
+  /**
+   * After drawing K, if one of the two replacement cards is a J or red Q,
+   * the player can choose to USE its special ability instead of swapping
+   * it into their hand. The other card is discarded; the chosen card
+   * triggers the normal SPECIAL_J / SPECIAL_Q flow.
+   */
+  onKingUseSpecial(uid: string, choiceIndex: number): boolean {
+    if (this.phase !== 'KING_CHOICE' || this.specialActionUid !== uid) return false;
+    if (choiceIndex < 0 || choiceIndex >= this.kingChoiceCards.length) return false;
+
+    const chosen = this.kingChoiceCards[choiceIndex];
+    const others = this.kingChoiceCards.filter((_, i) => i !== choiceIndex);
+
+    const isJ    = chosen.rank === 'J';
+    const isRedQ = chosen.rank === 'Q' && (chosen.suit === 'hearts' || chosen.suit === 'diamonds');
+    if (!isJ && !isRedQ) return false;
+
+    this.clearTimers();
+
+    // Discard the unchosen replacement card(s) — keep them attributed to
+    // the K so the burn-from-king flag stays consistent.
+    for (const c of others) {
+      this.deck.discard(c);
+      this.emit('game:card_discarded', { uid, card: c, fromKingPenalty: true });
+    }
+    this.kingChoiceCards = [];
+    this.specialActionUid = null;     // applyJ/QSpecial will reassign
+
+    // Hand off to the regular special flow — discards the chosen card and
+    // moves into SPECIAL_J / SPECIAL_Q. The player's next action (target
+    // pick for J, position pick for Q) goes through onSpecialSwap /
+    // onSpecialPeekOwn as usual.
+    if (isJ) this.applyJSpecial(uid, chosen);
+    else     this.applyQSpecial(uid, chosen);
     return true;
   }
 

@@ -324,6 +324,12 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     engine?.onKingBurn(socket.uid);
   });
 
+  socket.on(SOCKET_EVENTS.GAME_KING_USE_SPECIAL, (payload: { gameId: string; choiceIndex: number }) => {
+    if (!socket.uid) return;
+    const engine = roomManager.getGame(payload.gameId) as GameEngine;
+    engine?.onKingUseSpecial(socket.uid, payload.choiceIndex);
+  });
+
   socket.on(SOCKET_EVENTS.GAME_BURN_ATTEMPT, (payload: BurnAttemptPayload) => {
     if (!socket.uid) return;
     const engine = roomManager.getGame(payload.gameId) as GameEngine;

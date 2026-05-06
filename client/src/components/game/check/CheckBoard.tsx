@@ -1903,22 +1903,57 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
               {kingSelectedIdx === null ? (
                 <>
-                  {/* Step 1: show choice cards (2 or more if extra Ks were drawn) */}
+                  {/* Step 1: show choice cards. Each card now exposes BOTH:
+                       — "بدّل" (swap into your hand)
+                       — "استخدم" if it's a J or red Q (trigger its special)
+                     so the player can either pocket the card or fire its
+                     ability. The unchosen card(s) get burned. */}
                   <div className="flex flex-wrap gap-3 justify-center">
-                    {kingChoiceCards.map((card, i) => (
-                      <div key={i} className="flex flex-col items-center gap-2">
-                        <motion.div
-                          whileHover={{ scale: 1.08, y: -4 }}
-                          whileTap={{ scale: .95 }}
-                          onClick={() => setKingSelectedIdx(i)}
-                          className="cursor-pointer"
-                          style={{ filter: 'drop-shadow(0 4px 12px rgba(201,168,76,.35))' }}
-                        >
-                          <PlayingCard card={{ ...card, isRevealed: true }} highlight="select" />
-                        </motion.div>
-                        <span className="text-gold/60 font-arabic text-xs">اضغط للتبديل</span>
-                      </div>
-                    ))}
+                    {kingChoiceCards.map((card, i) => {
+                      const isJ    = card.rank === 'J';
+                      const isRedQ = card.rank === 'Q' && (card.suit === 'hearts' || card.suit === 'diamonds');
+                      const useable = isJ || isRedQ;
+                      const useLabel = isJ ? '🔄 بدّل مع لاعب' : '👁️ اكشف كرت';
+                      return (
+                        <div key={i} className="flex flex-col items-center gap-2">
+                          <motion.div
+                            whileHover={{ scale: 1.06, y: -3 }}
+                            style={{ filter: 'drop-shadow(0 4px 12px rgba(201,168,76,.35))' }}
+                          >
+                            <PlayingCard card={{ ...card, isRevealed: true }} highlight="select" />
+                          </motion.div>
+                          <div className="flex flex-col gap-1.5 w-full">
+                            <motion.button
+                              whileHover={{ scale: 1.04 }} whileTap={{ scale: .94 }}
+                              onClick={() => setKingSelectedIdx(i)}
+                              className="rounded-lg font-arabic font-bold px-3 py-1.5"
+                              style={{
+                                background: 'rgba(201,168,76,0.18)',
+                                border: '1px solid rgba(201,168,76,0.45)',
+                                color: '#E8C97A', fontSize: 11,
+                              }}>
+                              ↔ بدّل
+                            </motion.button>
+                            {useable && (
+                              <motion.button
+                                whileHover={{ scale: 1.04 }} whileTap={{ scale: .94 }}
+                                onClick={() => {
+                                  socket?.emit(SOCKET_EVENTS.GAME_KING_USE_SPECIAL, { gameId, choiceIndex: i });
+                                  markActed();
+                                }}
+                                className="rounded-lg font-arabic font-bold px-3 py-1.5"
+                                style={{
+                                  background: 'linear-gradient(135deg, #C9A84C, #A07830)',
+                                  color: '#0E0905', fontSize: 11,
+                                  boxShadow: '0 0 14px rgba(201,168,76,0.40)',
+                                }}>
+                                {useLabel}
+                              </motion.button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* Burn all button */}

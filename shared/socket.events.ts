@@ -88,6 +88,7 @@ export const SOCKET_EVENTS = {
   GAME_SPECIAL_PEEK_OWN: 'game:special_peek_own',
   GAME_KING_SWAP: 'game:king_swap',
   GAME_KING_BURN: 'game:king_burn',
+  GAME_KING_USE_SPECIAL: 'game:king_use_special',
   GAME_BURN_ATTEMPT: 'game:burn_attempt',
   GAME_TAKE_DISCARD: 'game:take_discard',
 

@@ -86,38 +86,43 @@ function XpBar({ xp }: { xp: number }) {
   );
 }
 
-// ── Mode tabs (segmented pill at the top of the play box) ────────────────────
-type ModeTheme = { bg: string; accent: string; glow: string; tagline: { ar: string; en: string }; icon: string };
+// ── Mode themes (rich, card-game inspired) ───────────────────────────────────
+type ModeTheme = {
+  bg1: string; bg2: string; accent: string; glow: string; suit: string;
+  rank: string;   // big watermark "rank" letter
+  label: { ar: string; en: string };
+  tagline: { ar: string; en: string };
+  icon: string;
+};
 const MODE_THEMES: Record<GameMode, ModeTheme> = {
-  online:  { bg: '#0B2A55', accent: '#5C9CFF', glow: 'rgba(92,156,255,0.55)',  icon: '🌍', tagline: { ar: 'العب مع لاعبين حول العالم', en: 'Play with players worldwide' } },
-  private: { bg: '#4A0F3A', accent: '#E465B5', glow: 'rgba(228,101,181,0.55)', icon: '🔒', tagline: { ar: 'غرفة خاصة لك ولأصدقائك',     en: 'Private room with friends'    } },
-  bots:    { bg: '#103A28', accent: '#3BD685', glow: 'rgba(59,214,133,0.55)',  icon: '🤖', tagline: { ar: 'تدرب وحارب البوتات',        en: 'Practice against bots'       } },
+  online:  { bg1: '#1F3A8A', bg2: '#0A1442', accent: '#7CB1FF', glow: 'rgba(124,177,255,0.55)', suit: '♠', rank: 'O', icon: '🌍',
+             label: { ar: 'أونلاين',  en: 'Online'  }, tagline: { ar: 'العب مع لاعبين حول العالم', en: 'Worldwide players' } },
+  private: { bg1: '#7A1448', bg2: '#2A0820', accent: '#F58FBC', glow: 'rgba(245,143,188,0.55)', suit: '♥', rank: 'P', icon: '🔒',
+             label: { ar: 'غرفة خاصة', en: 'Private' }, tagline: { ar: 'غرفة لك ولأصدقائك',         en: 'Just you and friends' } },
+  bots:    { bg1: '#1B6B3F', bg2: '#0A2A18', accent: '#7AE0A6', glow: 'rgba(122,224,166,0.55)', suit: '♣', rank: 'B', icon: '🤖',
+             label: { ar: 'بوتات',    en: 'Bots'    }, tagline: { ar: 'تدرب أو تحدى البوتات',        en: 'Train or duel bots' } },
 };
 
-function ModeTabs({ mode, onSelect, lang }: { mode: GameMode; onSelect: (m: GameMode) => void; lang: string }) {
+// ── Tiny mode chip-switcher used INSIDE the giant card ───────────────────────
+function ModeChips({ mode, onSelect, lang }: { mode: GameMode; onSelect: (m: GameMode) => void; lang: string }) {
   const order: GameMode[] = ['online', 'private', 'bots'];
-  const labels: Record<GameMode, { ar: string; en: string }> = {
-    online: { ar: 'أونلاين', en: 'Online' },
-    private:{ ar: 'خاصة',    en: 'Private' },
-    bots:   { ar: 'بوتات',   en: 'Bots' },
-  };
   return (
-    <div className="relative flex gap-1.5 p-1 rounded-2xl" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}>
+    <div className="flex gap-2 justify-center">
       {order.map(m => {
-        const isSel = mode === m;
-        const t = MODE_THEMES[m];
+        const isSel = mode === m; const t = MODE_THEMES[m];
         return (
-          <motion.button key={m} onClick={() => { onSelect(m); soundService.playClick(); }}
-            whileTap={{ scale: 0.97 }}
-            className="flex-1 relative rounded-xl py-2.5 font-arabic font-bold text-sm transition-colors"
+          <motion.button key={m} whileTap={{ scale: 0.92 }} onClick={() => { onSelect(m); soundService.playClick(); }}
+            className="rounded-full font-arabic font-bold flex items-center gap-1.5"
             style={{
-              background: isSel ? `linear-gradient(135deg, ${t.bg} 0%, #060216 100%)` : 'transparent',
-              color: isSel ? t.accent : 'rgba(245,230,200,0.55)',
-              boxShadow: isSel ? `0 4px 14px rgba(0,0,0,0.45), 0 0 20px ${t.glow}, inset 0 0 0 1px ${t.accent}55` : 'none',
-              fontSize: 14,
+              padding: isSel ? '6px 14px' : '5px 11px',
+              background: isSel ? `${t.accent}` : 'rgba(255,255,255,0.07)',
+              color: isSel ? '#0E0905' : 'rgba(245,230,200,0.7)',
+              border: `1.5px solid ${isSel ? t.accent : 'rgba(255,255,255,0.12)'}`,
+              boxShadow: isSel ? `0 0 16px ${t.glow}` : 'none',
+              fontSize: 11, transition: 'all .2s', cursor: 'pointer',
             }}>
-            <span style={{ fontSize: 16, marginInlineEnd: 6 }}>{t.icon}</span>
-            {labels[m][lang === 'ar' ? 'ar' : 'en']}
+            <span style={{ fontSize: 13 }}>{t.icon}</span>
+            {t.label[lang === 'ar' ? 'ar' : 'en']}
           </motion.button>
         );
       })}
@@ -125,51 +130,64 @@ function ModeTabs({ mode, onSelect, lang }: { mode: GameMode; onSelect: (m: Game
   );
 }
 
-// ── NumberDots — visual chip selector for player/bot count ───────────────────
-function NumberDots({ value, onChange, min, max, accent, lang, label }: {
-  value: number; onChange: (v: number) => void; min: number; max: number;
-  accent: string; lang: string; label: string;
+// ── SeatRing — visual ring of chair icons; tap to set count ──────────────────
+function SeatRing({ value, onChange, max, accent, lang }: {
+  value: number; onChange: (n: number) => void; max: number; accent: string; lang: string;
 }) {
-  const opts: number[] = [];
-  for (let i = min; i <= max; i++) opts.push(i);
+  const seats: number[] = []; for (let i = 1; i <= max; i++) seats.push(i);
+  const radius = 78;
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between">
-        <span className="font-arabic" style={{ fontSize: 13, color: 'rgba(245,230,200,0.6)' }}>{label}</span>
-        <span className="font-bold font-mono" style={{ fontSize: 22, color: accent, lineHeight: 1 }}>{value}</span>
-      </div>
-      <div className="flex gap-1.5 flex-wrap">
-        {opts.map(n => {
-          const sel = n === value;
+    <div className="flex flex-col items-center gap-2">
+      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.55)' }}>
+        {lang === 'ar' ? 'عدد اللاعبين' : 'Players'}
+      </span>
+      <div className="relative" style={{ width: radius * 2 + 36, height: radius * 2 + 36 }}>
+        {/* Center: big number */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span className="font-bold font-mono leading-none" style={{ fontSize: 44, color: accent, textShadow: `0 0 16px ${accent}88` }}>
+            {value}
+          </span>
+          <span className="font-arabic mt-1" style={{ fontSize: 10, color: 'rgba(245,230,200,0.4)' }}>
+            {lang === 'ar' ? 'لاعبين' : 'players'}
+          </span>
+        </div>
+        {/* Faint arc */}
+        <div className="absolute pointer-events-none" style={{
+          inset: 18, borderRadius: '50%',
+          border: `1px dashed ${accent}33`,
+        }}/>
+        {/* Seat tiles around */}
+        {seats.map((n, i) => {
+          const angle = (i / seats.length) * Math.PI * 2 - Math.PI / 2;
+          const x = Math.cos(angle) * radius; const y = Math.sin(angle) * radius;
+          const filled = n <= value;
           return (
             <motion.button key={n}
-              whileTap={{ scale: 0.88 }}
+              whileTap={{ scale: 0.85 }}
+              whileHover={{ scale: 1.12 }}
               onClick={() => { onChange(n); soundService.playClick(); }}
-              className="font-bold font-mono rounded-xl flex items-center justify-center"
+              className="absolute rounded-full flex items-center justify-center font-bold"
               style={{
-                width: 36, height: 36,
-                background: sel ? accent : 'rgba(255,255,255,0.04)',
-                color: sel ? '#0E0905' : 'rgba(245,230,200,0.7)',
-                border: `1.5px solid ${sel ? accent : 'rgba(255,255,255,0.10)'}`,
-                boxShadow: sel ? `0 0 14px ${accent}88` : 'none',
-                fontSize: 14,
-                cursor: 'pointer',
-                transition: 'background .15s, box-shadow .15s',
-              }}
-            >
+                left: '50%', top: '50%',
+                width: 28, height: 28,
+                marginLeft: -14, marginTop: -14,
+                transform: `translate(${x}px, ${y}px)`,
+                background: filled ? accent : 'rgba(255,255,255,0.05)',
+                color: filled ? '#0E0905' : 'rgba(245,230,200,0.45)',
+                border: `1.5px solid ${filled ? accent : 'rgba(255,255,255,0.10)'}`,
+                boxShadow: filled ? `0 0 10px ${accent}88` : 'none',
+                fontSize: 11, cursor: 'pointer',
+              }}>
               {n}
             </motion.button>
           );
         })}
       </div>
-      <span className="font-arabic" style={{ fontSize: 10, color: 'rgba(245,230,200,0.3)' }}>
-        {lang === 'ar' ? 'اضغط الرقم' : 'Tap a number'}
-      </span>
     </div>
   );
 }
 
-// ── ChipPicker — poker-chip preset selector for the bet amount ───────────────
+// ── ChipPicker — poker-chip preset selector for the coin amount ──────────────
 const CHIP_COLORS = [
   { val: 50,    bg: '#9C9C9C', text: '#fff' },
   { val: 100,   bg: '#E04030', text: '#fff' },
@@ -184,34 +202,34 @@ function ChipPicker({ value, onChange, accent, max, lang }: {
   value: number; onChange: (v: number) => void; accent: string; max: number; lang: string;
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between">
-        <span className="font-arabic" style={{ fontSize: 13, color: 'rgba(245,230,200,0.6)' }}>
-          {lang === 'ar' ? 'الرهان' : 'Bet'}
+    <div className="flex flex-col items-center gap-2">
+      <div className="flex flex-col items-center">
+        <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.55)' }}>
+          {lang === 'ar' ? 'الكوينز' : 'Coins'}
         </span>
-        <span className="font-bold font-mono flex items-baseline gap-1.5" style={{ fontSize: 22, color: accent, lineHeight: 1 }}>
-          {value.toLocaleString()} <span style={{ fontSize: 14 }}>🪙</span>
+        <span className="font-bold font-mono flex items-baseline gap-1.5" style={{ fontSize: 24, color: accent, lineHeight: 1.2, textShadow: `0 0 14px ${accent}66` }}>
+          {value.toLocaleString()} <span style={{ fontSize: 16 }}>🪙</span>
         </span>
       </div>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-center gap-2 max-w-full">
         {CHIP_COLORS.map(chip => {
           const sel = value === chip.val;
           const afford = chip.val <= max;
           return (
             <motion.button key={chip.val}
               whileTap={{ scale: 0.9 }}
-              whileHover={afford ? { y: -3, scale: 1.05 } : {}}
+              whileHover={afford ? { y: -4, scale: 1.08 } : {}}
               disabled={!afford}
               onClick={() => { onChange(chip.val); soundService.playClick(); }}
-              className="relative rounded-full flex items-center justify-center font-bold"
+              className="relative rounded-full flex items-center justify-center font-bold shrink-0"
               style={{
-                width: 52, height: 52,
-                background: `radial-gradient(circle at 32% 30%, rgba(255,255,255,0.28), transparent 50%), ${chip.bg}`,
+                width: 50, height: 50,
+                background: `radial-gradient(circle at 32% 30%, rgba(255,255,255,0.32), transparent 50%), ${chip.bg}`,
                 color: chip.text,
                 border: sel ? `3px dashed ${accent}` : '3px dashed rgba(255,255,255,0.45)',
-                boxShadow: sel ? `0 0 16px ${accent}99, 0 4px 8px rgba(0,0,0,0.5)` : '0 4px 8px rgba(0,0,0,0.45)',
+                boxShadow: sel ? `0 0 18px ${accent}AA, 0 5px 9px rgba(0,0,0,0.55)` : '0 5px 9px rgba(0,0,0,0.45)',
                 fontSize: chip.val >= 1000 ? 11 : 13,
-                opacity: afford ? 1 : 0.3,
+                opacity: afford ? 1 : 0.25,
                 cursor: afford ? 'pointer' : 'not-allowed',
               }}
             >
@@ -220,9 +238,6 @@ function ChipPicker({ value, onChange, accent, max, lang }: {
           );
         })}
       </div>
-      <span className="font-arabic" style={{ fontSize: 10, color: 'rgba(245,230,200,0.3)' }}>
-        {lang === 'ar' ? 'اضغط الـ chip' : 'Tap a chip'}
-      </span>
     </div>
   );
 }
@@ -272,29 +287,73 @@ function DifficultyCards({ value, onChange, lang }: {
   );
 }
 
-// ── Slider ────────────────────────────────────────────────────────────────────
-function NumSlider({ label, value, min, max, step = 1, onChange, unit = '', formatValue }: {
-  label: string; value: number; min: number; max: number; step?: number; onChange: (v: number) => void; unit?: string;
-  formatValue?: (v: number) => string;
-}) {
-  const fmt = formatValue || ((v: number) => `${v}${unit}`);
+// ── Giant playing-card frame: corner ranks + suit watermark + central artwork ─
+function GiantPlayingCard({ mode, children }: { mode: GameMode; children: React.ReactNode }) {
+  const t = MODE_THEMES[mode];
+  const isRed = mode === 'private';
   return (
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-center justify-between">
-        <span className="font-arabic text-sm" style={{ color: 'rgba(245,230,200,0.6)' }}>{label}</span>
-        <span className="font-bold" style={{ color: '#E8C97A', fontSize: 15 }}>{fmt(value)}</span>
+    <motion.div
+      key={mode}
+      initial={{ opacity: 0, rotateY: -22, scale: 0.94 }}
+      animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+      exit={{ opacity: 0, rotateY: 22, scale: 0.94 }}
+      transition={{ type: 'spring', stiffness: 240, damping: 26 }}
+      className="relative rounded-[28px] overflow-hidden"
+      style={{
+        background: `
+          radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.10) 0%, transparent 55%),
+          linear-gradient(165deg, ${t.bg1} 0%, ${t.bg2} 100%)
+        `,
+        border: `3px solid ${t.accent}`,
+        boxShadow: `0 24px 60px rgba(0,0,0,0.7), 0 0 50px ${t.glow}, inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 6px ${t.bg2}`,
+        // Slight 3D tilt on hover via parent
+      }}
+    >
+      {/* Inner border (real-card 'pip line') */}
+      <div className="absolute pointer-events-none rounded-[20px]"
+        style={{ inset: 14, border: `1px solid ${t.accent}33` }} />
+
+      {/* Top-left corner mark */}
+      <div className="absolute flex flex-col items-center pointer-events-none"
+        style={{ top: 18, insetInlineStart: 18, color: isRed ? '#FFB4DC' : '#fff', textShadow: `0 0 12px ${t.glow}` }}>
+        <span className="font-bold font-display" style={{ fontSize: 30, lineHeight: 1, fontFamily: 'Georgia, serif' }}>{t.rank}</span>
+        <span style={{ fontSize: 22, lineHeight: 1, marginTop: 2 }}>{t.suit}</span>
       </div>
-      <input type="range" min={min} max={max} step={step} value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        className="w-full accent-gold" style={{ accentColor: '#C9A84C' }}/>
-      <div className="flex justify-between" style={{ fontSize: 10, color: 'rgba(245,230,200,0.25)' }}>
-        <span>{fmt(min)}</span><span>{fmt(max)}</span>
+      {/* Bottom-right corner mark (flipped 180°) */}
+      <div className="absolute flex flex-col items-center pointer-events-none"
+        style={{ bottom: 18, insetInlineEnd: 18, transform: 'rotate(180deg)', color: isRed ? '#FFB4DC' : '#fff', textShadow: `0 0 12px ${t.glow}` }}>
+        <span className="font-bold font-display" style={{ fontSize: 30, lineHeight: 1, fontFamily: 'Georgia, serif' }}>{t.rank}</span>
+        <span style={{ fontSize: 22, lineHeight: 1, marginTop: 2 }}>{t.suit}</span>
       </div>
-    </div>
+
+      {/* Big faint suit watermark BEHIND the content */}
+      <span aria-hidden="true" style={{
+        position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 280, lineHeight: 1, color: `${t.accent}10`, pointerEvents: 'none',
+        fontFamily: 'Georgia, serif',
+      }}>
+        {t.suit}
+      </span>
+
+      {/* Geometric Emirati arabesque accents — top + bottom edge ribbons */}
+      <svg style={{ position: 'absolute', top: 0, insetInlineStart: 0, insetInlineEnd: 0, width: '100%', height: 14, pointerEvents: 'none', opacity: 0.45 }} viewBox="0 0 200 14" preserveAspectRatio="none">
+        <path d="M0 7 L8 0 L16 7 L24 0 L32 7 L40 0 L48 7 L56 0 L64 7 L72 0 L80 7 L88 0 L96 7 L104 0 L112 7 L120 0 L128 7 L136 0 L144 7 L152 0 L160 7 L168 0 L176 7 L184 0 L192 7 L200 0"
+          stroke={t.accent} strokeWidth="0.5" fill="none" />
+      </svg>
+      <svg style={{ position: 'absolute', bottom: 0, insetInlineStart: 0, insetInlineEnd: 0, width: '100%', height: 14, pointerEvents: 'none', opacity: 0.45, transform: 'scaleY(-1)' }} viewBox="0 0 200 14" preserveAspectRatio="none">
+        <path d="M0 7 L8 0 L16 7 L24 0 L32 7 L40 0 L48 7 L56 0 L64 7 L72 0 L80 7 L88 0 L96 7 L104 0 L112 7 L120 0 L128 7 L136 0 L144 7 L152 0 L160 7 L168 0 L176 7 L184 0 L192 7 L200 0"
+          stroke={t.accent} strokeWidth="0.5" fill="none" />
+      </svg>
+
+      {/* Content */}
+      <div className="relative" style={{ padding: '48px 22px 48px' }}>
+        {children}
+      </div>
+    </motion.div>
   );
 }
 
-// ── PlayBox — single morphing panel that holds tabs + config + play button ──
+// ── PlayBox — the giant playing-card hero with everything inside ────────────
 function PlayBox({ mode, setMode, coins, onCreate, lang }: {
   mode: GameMode;
   setMode: (m: GameMode) => void;
@@ -308,7 +367,6 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const theme = MODE_THEMES[mode];
 
-  // Auto-clamp the bet to what the player can afford when chips refresh
   useEffect(() => {
     if (coinAmount > coins) {
       const affordable = CHIP_COLORS.filter(c => c.val <= coins).map(c => c.val);
@@ -330,88 +388,92 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
   };
 
   const ctaLabel = mode === 'online'
-    ? (lang === 'ar' ? '🔍 ابحث عن لعبة' : '🔍 Find a Game')
+    ? (lang === 'ar' ? 'ابحث عن لعبة' : 'Find a Game')
     : mode === 'private'
-      ? (lang === 'ar' ? '🔒 أنشئ غرفة خاصة' : '🔒 Create Private Room')
-      : (lang === 'ar' ? '🎮 ابدأ اللعبة' : '🎮 Start Game');
+      ? (lang === 'ar' ? 'أنشئ غرفة خاصة' : 'Create Private Room')
+      : (lang === 'ar' ? 'ابدأ اللعبة' : 'Start Game');
 
   return (
-    <div className="rounded-3xl overflow-hidden border-2 relative"
-      style={{
-        borderColor: `${theme.accent}66`,
-        background: `linear-gradient(180deg, ${theme.bg}EE 0%, #060216F2 100%)`,
-        boxShadow: `0 16px 48px rgba(0,0,0,0.6), 0 0 36px ${theme.glow}`,
-      }}>
-      {/* Subtle felt-card watermark */}
-      <span aria-hidden="true" style={{
-        position: 'absolute', bottom: -40, left: -30, fontSize: 220, lineHeight: 1,
-        color: 'rgba(255,255,255,0.025)', pointerEvents: 'none',
-        fontFamily: 'Georgia, serif', fontWeight: 700, transform: 'rotate(-12deg)',
-      }}>
-        {mode === 'online' ? '♠' : mode === 'private' ? '♥' : '♣'}
-      </span>
-
-      {/* Header strip with tabs */}
-      <div className="px-4 pt-4 pb-3 relative">
-        <ModeTabs mode={mode} onSelect={setMode} lang={lang} />
-        <p className="font-arabic text-center mt-3" style={{ fontSize: 12, color: theme.accent, opacity: 0.8 }}>
-          {theme.tagline[lang === 'ar' ? 'ar' : 'en']}
-        </p>
-      </div>
-
-      {/* Body — config morphs by mode */}
+    <div className="flex flex-col items-stretch gap-4">
+      {/* The giant playing card */}
       <AnimatePresence mode="wait">
-        <motion.div key={mode}
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -14 }}
-          transition={{ duration: 0.18 }}
-          className="px-4 pb-4 flex flex-col gap-5 relative"
-        >
-          {mode !== 'bots' ? (
-            <>
-              <NumberDots
-                value={playerCount} onChange={setPlayerCount}
-                min={2} max={10} accent={theme.accent} lang={lang}
-                label={lang === 'ar' ? 'عدد اللاعبين' : 'Players'} />
-              <ChipPicker
-                value={coinAmount} onChange={setCoinAmount}
-                accent={theme.accent} max={coins} lang={lang} />
-              {!canAfford && (
-                <p className="text-red-400 font-arabic text-xs text-center -mt-2">
-                  {lang === 'ar' ? 'كوينزك غير كافية لهذا الرهان!' : 'Not enough coins for this bet!'}
-                </p>
-              )}
-            </>
-          ) : (
-            <>
-              <NumberDots
-                value={botCount} onChange={setBotCount}
-                min={1} max={9} accent={theme.accent} lang={lang}
-                label={lang === 'ar' ? 'عدد البوتات' : 'Bots'} />
-              <DifficultyCards value={difficulty} onChange={setDifficulty} lang={lang} />
-            </>
-          )}
+        <GiantPlayingCard mode={mode} key={mode}>
+          {/* Mode badge + title */}
+          <div className="flex flex-col items-center mb-5">
+            <motion.div
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+              className="rounded-full flex items-center justify-center mb-3"
+              style={{
+                width: 78, height: 78,
+                background: `radial-gradient(circle at 32% 28%, rgba(255,255,255,0.25), transparent 55%), ${theme.bg2}`,
+                border: `2px solid ${theme.accent}`,
+                boxShadow: `0 0 26px ${theme.glow}, inset 0 -10px 22px rgba(0,0,0,0.5)`,
+                fontSize: 38, lineHeight: 1,
+              }}>
+              {theme.icon}
+            </motion.div>
+            <p className="font-arabic font-bold" style={{ fontSize: 24, color: '#fff', textShadow: `0 2px 14px ${theme.glow}` }}>
+              {theme.label[lang === 'ar' ? 'ar' : 'en']}
+            </p>
+            <p className="font-arabic mt-0.5" style={{ fontSize: 12, color: `${theme.accent}CC` }}>
+              {theme.tagline[lang === 'ar' ? 'ar' : 'en']}
+            </p>
+          </div>
 
-          <motion.button
-            whileHover={isOk ? { scale: 1.02, y: -1 } : {}}
-            whileTap={isOk ? { scale: 0.97 } : {}}
-            onClick={handleCreate}
-            disabled={!isOk}
-            className="w-full py-4 rounded-2xl font-arabic font-bold transition-all relative overflow-hidden"
-            style={{
-              background: isOk ? `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}CC 100%)` : 'rgba(255,255,255,0.06)',
-              color: isOk ? '#0E0905' : 'rgba(255,255,255,0.25)',
-              border: `2px solid ${isOk ? theme.accent : 'rgba(255,255,255,0.08)'}`,
-              boxShadow: isOk ? `0 0 24px ${theme.glow}` : 'none',
-              cursor: isOk ? 'pointer' : 'not-allowed',
-              fontSize: 17,
-              letterSpacing: 1,
-            }}>
-            {ctaLabel}
-          </motion.button>
-        </motion.div>
+          {/* The configuration zone — varies by mode */}
+          <div className="flex flex-col items-center gap-5">
+            {mode !== 'bots' ? (
+              <>
+                <SeatRing value={playerCount} onChange={setPlayerCount}
+                  max={10} accent={theme.accent} lang={lang} />
+                <ChipPicker value={coinAmount} onChange={setCoinAmount}
+                  accent={theme.accent} max={coins} lang={lang} />
+                {!canAfford && (
+                  <p className="text-red-400 font-arabic text-xs">
+                    {lang === 'ar' ? 'كوينزك غير كافية!' : 'Not enough coins!'}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <SeatRing value={botCount} onChange={setBotCount}
+                  max={9} accent={theme.accent} lang={lang} />
+                <DifficultyCards value={difficulty} onChange={setDifficulty} lang={lang} />
+              </>
+            )}
+          </div>
+        </GiantPlayingCard>
       </AnimatePresence>
+
+      {/* Mode chip switcher OUTSIDE the card — feels like turning between cards */}
+      <ModeChips mode={mode} onSelect={setMode} lang={lang} />
+
+      {/* Bottom: huge play button */}
+      <motion.button
+        whileHover={isOk ? { scale: 1.02, y: -2 } : {}}
+        whileTap={isOk ? { scale: 0.97 } : {}}
+        onClick={handleCreate}
+        disabled={!isOk}
+        className="w-full font-arabic font-bold rounded-2xl"
+        style={{
+          padding: '18px 24px',
+          fontSize: 19,
+          letterSpacing: 1.5,
+          background: isOk
+            ? `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}DD 50%, ${theme.bg1} 100%)`
+            : 'rgba(255,255,255,0.05)',
+          color: isOk ? '#0E0905' : 'rgba(255,255,255,0.25)',
+          border: `2px solid ${isOk ? theme.accent : 'rgba(255,255,255,0.08)'}`,
+          boxShadow: isOk
+            ? `0 12px 32px rgba(0,0,0,0.5), 0 0 28px ${theme.glow}`
+            : 'none',
+          cursor: isOk ? 'pointer' : 'not-allowed',
+          textShadow: isOk ? '0 1px 2px rgba(0,0,0,0.25)' : 'none',
+        }}
+      >
+        ▶ {ctaLabel}
+      </motion.button>
     </div>
   );
 }

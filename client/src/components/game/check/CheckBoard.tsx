@@ -394,7 +394,7 @@ function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = fals
               initial={{ opacity: 0, y: i % 2 === 0 ? -18 : 18, scale: 0.85 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.7 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
               className="relative"
             >
               <PlayingCard card={c} faceDown={!c?.isRevealed} small={!mini} mini={mini}
@@ -1424,7 +1424,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                       initial={{ opacity: 0, y: i % 2 === 0 ? -22 : 22, scale: 0.8 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.6 }}
-                      transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                      transition={{ duration: 0.15, ease: 'easeOut' }}
                       className="relative"
                     >
                       <PlayingCard
@@ -1997,7 +1997,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               initial={{ opacity: 0, scale: 0.7, y: -16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.7, y: -16 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
               className="rounded-3xl border-2 flex flex-col items-center pointer-events-auto"
               style={{
                 background: 'linear-gradient(160deg, rgba(36,24,16,0.55) 0%, rgba(20,16,10,0.55) 100%)',

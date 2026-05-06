@@ -647,23 +647,24 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       )
     : 0;
 
-  // Tablet: medium-tight table — caps at 540, eats at most 60% width and
-  // leaves ~340px of vertical space for top header + my-area + action bar.
+  // Tablet: tight table — top opponents need ~250px (player box + cards),
+  // my-area ~300px, top header 60, action bar 52 = ~660px reserved. Cap at
+  // 420 so iPad landscape (768 high) still has room above and below.
   const tabletTableSize = isTablet
     ? Math.min(
-        Math.floor(winW * 0.60),
-        winH - 340,
-        540
+        Math.floor(winW * 0.48),
+        winH - 470,
+        420
       )
     : 0;
 
-  // Desktop: larger but still height-aware so large player counts (which
-  // need wider opponent seats on the sides) still fit in 1080p.
+  // Desktop: cap at 600 with the same height reserve. 1080p screens were
+  // overflowing when player count pushed opponent seats outwards.
   const desktopTableSize = !isMobile && !isTablet
     ? Math.min(
-        Math.floor(winW * 0.55),
-        winH - 360,
-        720
+        Math.floor(winW * 0.50),
+        winH - 420,
+        600
       )
     : 0;
   const n = gameState.players.length;
@@ -1297,13 +1298,13 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 width: isMobile
                   ? Math.max(180, mobileTableSize)
                   : isTablet
-                    ? Math.max(280, tabletTableSize)
-                    : Math.max(360, desktopTableSize),
+                    ? Math.max(260, tabletTableSize)
+                    : Math.max(320, desktopTableSize),
                 height: isMobile
                   ? Math.max(180, mobileTableSize)
                   : isTablet
-                    ? Math.max(280, tabletTableSize)
-                    : Math.max(360, desktopTableSize),
+                    ? Math.max(260, tabletTableSize)
+                    : Math.max(320, desktopTableSize),
                 borderRadius: '50%',
                 background: `
                   radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.045) 0%, transparent 38%),

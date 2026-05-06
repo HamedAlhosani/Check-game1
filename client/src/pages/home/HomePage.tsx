@@ -17,45 +17,30 @@ import { apiClient } from '../../services/api.service';
 
 type GameMode = 'online' | 'private' | 'bots';
 
-function DailyRewardBanner({ onOpen, lang }: { onOpen: () => void; lang: string }) {
+function DailyRewardNavButton({ onOpen, lang }: { onOpen: () => void; lang: string }) {
   const [canClaim, setCanClaim] = useState<boolean | null>(null);
   useEffect(() => {
     apiClient.get<{ canClaim: boolean }>('/api/daily/status').then(r => setCanClaim(r.canClaim)).catch(() => setCanClaim(false));
   }, []);
-  const isAr = lang === 'ar';
   return (
     <motion.button
-      whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
       onClick={onOpen}
-      className="relative w-full mb-4 rounded-2xl overflow-hidden"
+      className="relative rounded-xl flex items-center justify-center"
+      title={lang === 'ar' ? 'الهدية اليومية' : 'Daily Reward'}
       style={{
-        background: canClaim
-          ? 'linear-gradient(135deg, rgba(201,168,76,0.18), rgba(160,120,48,0.10))'
-          : 'rgba(255,255,255,0.04)',
-        border: `1px solid ${canClaim ? 'rgba(201,168,76,0.45)' : 'rgba(255,255,255,0.08)'}`,
-        boxShadow: canClaim ? '0 0 24px rgba(201,168,76,0.18)' : 'none',
-        padding: '12px 16px',
+        width: 36,
+        height: 34,
+        background: canClaim ? 'rgba(201,168,76,0.18)' : 'rgba(255,255,255,0.04)',
+        border: `1px solid ${canClaim ? 'rgba(201,168,76,0.55)' : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: canClaim ? '0 0 14px rgba(201,168,76,0.35)' : 'none',
+        cursor: 'pointer',
       }}>
+      <span style={{ fontSize: 18, lineHeight: 1 }}>{canClaim ? '🎁' : '📦'}</span>
       {canClaim && (
-        <span className="absolute top-2 right-2 text-[10px] font-bold rounded-full px-1.5 py-0.5 animate-pulse"
-          style={{ background: '#E04030', color: '#fff' }}>
-          {isAr ? 'جديد' : 'NEW'}
-        </span>
+        <span className="absolute rounded-full animate-pulse"
+          style={{ top: -3, right: -3, width: 9, height: 9, background: '#E04030', border: '1.5px solid #14100A' }} />
       )}
-      <div className="flex items-center gap-3">
-        <span className="text-3xl">{canClaim ? '🎁' : '📦'}</span>
-        <div className="flex-1 text-start">
-          <p className="font-arabic font-bold" style={{ fontSize: 14, color: canClaim ? '#E8C97A' : 'rgba(245,230,200,0.7)' }}>
-            {isAr ? 'الهدية اليومية' : 'Daily Reward'}
-          </p>
-          <p className="font-arabic" style={{ fontSize: 11, color: canClaim ? 'rgba(232,201,122,0.7)' : 'rgba(245,230,200,0.4)' }}>
-            {canClaim
-              ? (isAr ? 'استلم هديتك الآن — 7 أيام' : 'Claim your reward now — 7 days')
-              : (isAr ? 'تم الاستلام · ارجع غداً' : 'Claimed · come back tomorrow')}
-          </p>
-        </div>
-        <span className="text-gold/60 text-xl">›</span>
-      </div>
     </motion.button>
   );
 }
@@ -489,6 +474,8 @@ export function HomePage() {
         </Link>
         <div className="flex items-center gap-2">
           <LangToggle />
+          {/* Daily reward — moved out of the games area into the top nav */}
+          <DailyRewardNavButton onOpen={() => setShowDaily(true)} lang={lang} />
           {/* Coins */}
           <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5"
             style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)' }}>
@@ -577,9 +564,6 @@ export function HomePage() {
               </div>
               <p className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.3)' }}>{t('home_subtitle')}</p>
             </div>
-
-            {/* ── Daily reward banner ── */}
-            <DailyRewardBanner onOpen={() => setShowDaily(true)} lang={lang}/>
 
             {/* ── Mode cards ── */}
             <div className="grid grid-cols-3 gap-3 mb-4">

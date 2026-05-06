@@ -117,26 +117,33 @@ function GlobalOverlays() {
  */
 function ResumeGameGate() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuthStore();
   const { setGameState } = useGameStore();
 
   useEffect(() => {
     if (!user) return;
     const sock = socketService.connect();
+    // Only redirect on the FIRST reconnect of this page lifecycle. Otherwise
+    // clicking Start from Home (which can momentarily reconnect the socket)
+    // would yank the user back into their old game. URL-refresh / direct URL
+    // entry triggers a fresh page load, so this ref resets to false again.
+    let used = false;
     const onResume = (state: GameState) => {
+      if (used) { setGameState(state); return; }
+      used = true;
       if (!state?.gameId) return;
       setGameState(state);
       const target = `/game/check/${state.gameId}`;
-      // Don't redirect if already on the right game page or in landing/login
-      // flows the user explicitly chose. Only auto-jump from /, /home, /lobby/*.
-      const path = location.pathname;
-      const onResumeable = path === '/' || path === '/home' || path.startsWith('/lobby');
-      if (onResumeable && path !== target) navigate(target, { replace: true });
+      // Only redirect from genuinely 'idle' pages — / or /home — never from
+      // /game/* (we're already there) or /profile etc (user is doing
+      // something else and shouldn't get yanked away).
+      const path = window.location.pathname;
+      const isIdle = path === '/' || path === '/home';
+      if (isIdle && path !== target) navigate(target, { replace: true });
     };
     sock.on(SOCKET_EVENTS.SYSTEM_RECONNECT_STATE, onResume);
     return () => { sock.off(SOCKET_EVENTS.SYSTEM_RECONNECT_STATE, onResume); };
-  }, [user, location.pathname, navigate, setGameState]);
+  }, [user, navigate, setGameState]);
 
   return null;
 }

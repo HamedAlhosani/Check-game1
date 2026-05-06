@@ -162,14 +162,14 @@ function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
       ))}
 
       {/* Empty red pill behind the banner — Arabic text is overlaid as HTML */}
-      <g transform="translate(0 -28)">
-        <rect x={-30} y={-9} width={60} height={18} rx={9} fill={accent2} opacity={0.95}/>
+      <g transform="translate(0 -30)">
+        <rect x={-22} y={-7} width={44} height={14} rx={7} fill={accent2} opacity={0.95}/>
       </g>
 
-      {/* The big digit '0' in the centre */}
-      <text y={10} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="46"
-        fill="none" stroke={accent} strokeWidth={3.5} opacity={0.45}>0</text>
-      <text y={10} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="46"
+      {/* The big digit '0' in the centre — bigger now */}
+      <text y={16} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="64"
+        fill="none" stroke={accent} strokeWidth={4} opacity={0.45}>0</text>
+      <text y={16} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="64"
         fill={ink}>0</text>
     </g>
   );
@@ -289,20 +289,20 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
     </svg>
 
     {/* ── HTML overlays for Arabic text (positioned in % of card size) ── */}
-    {/* 'حظك حلو' banner text on red 10 */}
+    {/* 'حظك حلو' banner text on red 10 — smaller pill */}
     {special === 'TEN_RED' && (
       <div dir="rtl" style={{
-        position: 'absolute', left: '20%', top: '23%', width: '60%',
+        position: 'absolute', left: '28%', top: '24%', width: '44%',
         textAlign: 'center', color: '#FFF', fontWeight: 900,
-        fontSize: w * 0.075, fontFamily: arabicFont, lineHeight: 1, pointerEvents: 'none',
+        fontSize: w * 0.062, fontFamily: arabicFont, lineHeight: 1, pointerEvents: 'none',
       }}>حظك حلو</div>
     )}
     {/* 'صفر' word under the digit on red 10 */}
     {special === 'TEN_RED' && (
       <div dir="rtl" style={{
-        position: 'absolute', left: '20%', top: '64%', width: '60%',
+        position: 'absolute', left: '20%', top: '74%', width: '60%',
         textAlign: 'center', color: accent2, fontWeight: 800,
-        fontSize: w * 0.078, fontFamily: arabicFont, letterSpacing: 1, lineHeight: 1, pointerEvents: 'none',
+        fontSize: w * 0.082, fontFamily: arabicFont, letterSpacing: 1, lineHeight: 1, pointerEvents: 'none',
       }}>صفر</div>
     )}
     {/* Action label for J / K / Q♥♦ */}

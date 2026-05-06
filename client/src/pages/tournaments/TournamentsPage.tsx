@@ -345,7 +345,15 @@ function SummaryCard({ t, lang, onJoin, myUid, coins }: { t: TournamentSummary; 
         {AVATAR_EMOJIS[t.hostAvatarId] || '👤'}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-arabic font-bold truncate" style={{ fontSize: 13, color: '#E8C97A' }}>{t.name}</p>
+        <div className="flex items-baseline gap-2 flex-wrap">
+          <p className="font-arabic font-bold truncate" style={{ fontSize: 13, color: '#E8C97A' }}>{t.name}</p>
+          {t.clanOnlyTag && (
+            <span className="font-arabic rounded px-1.5"
+              style={{ fontSize: 9.5, background: 'rgba(196,149,255,0.15)', color: '#C495FF', letterSpacing: 0.5 }}>
+              🏰 [{t.clanOnlyTag}]
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2 flex-wrap mt-0.5 font-arabic"
           style={{ fontSize: 10.5, color: 'rgba(245,230,200,0.55)' }}>
           <span>👥 {t.size}</span>
@@ -395,12 +403,15 @@ function SummaryCard({ t, lang, onJoin, myUid, coins }: { t: TournamentSummary; 
 
 // ── Create online form ──────────────────────────────────────────────────────
 function CreateOnlineForm({ lang, coins, onCreated }: { lang: string; coins: number; onCreated: () => void }) {
+  const profile = useAuthStore(s => s.profile);
+  const myClanTag = (profile as any)?.clanTag as string | null | undefined;
   const [size, setSize] = useState<TournamentSize>(4);
   const [matchLength, setMatchLength] = useState<GameMode>('standard');
   const [visibility, setVisibility] = useState<TournamentVisibility>('public');
   const [name, setName] = useState('');
   const [entryFee, setEntryFee] = useState<number>(100);
   const [prizeSplit, setPrizeSplit] = useState<PrizeSplit>('winner_takes_all');
+  const [clanOnly, setClanOnly] = useState(false);
   const cantAfford = coins < entryFee;
 
   const projectedPool = computePool(entryFee, size);
@@ -414,6 +425,7 @@ function CreateOnlineForm({ lang, coins, onCreated }: { lang: string; coins: num
       visibility, name: name.trim() || undefined,
       size, matchLength, entryFee, prizeSplit,
       difficulty: 'medium',
+      clanOnly,
     });
     onCreated();
   }
@@ -494,6 +506,35 @@ function CreateOnlineForm({ lang, coins, onCreated }: { lang: string; coins: num
             { id: 'top3',             label: lang === 'ar' ? '🥇🥈🥉 توب 3'  : '🥇🥈🥉 Top 3', sub: '60/30/10' },
           ]}
           value={prizeSplit} onChange={v => setPrizeSplit(v as PrizeSplit)}/>
+
+        {/* Clan-only toggle — only available if the player is in a clan */}
+        {myClanTag && (
+          <button onClick={() => { setClanOnly(c => !c); soundService.playClick(); }}
+            className="w-full rounded-xl py-2.5 px-3 font-arabic flex items-center justify-between"
+            style={{
+              background: clanOnly ? 'rgba(196,149,255,0.15)' : 'rgba(255,255,255,0.04)',
+              border: `1.5px solid ${clanOnly ? 'rgba(196,149,255,0.55)' : 'rgba(255,255,255,0.08)'}`,
+              color: clanOnly ? '#C495FF' : 'rgba(245,230,200,0.65)',
+            }}>
+            <span style={{ fontSize: 12.5 }}>
+              🏰 {lang === 'ar' ? `بطولة قبيلتي [${myClanTag}] فقط` : `Clan-only tournament [${myClanTag}]`}
+              <div style={{ fontSize: 9.5, opacity: 0.7, marginTop: 2 }}>
+                {lang === 'ar' ? '70% للفائز، 30% لخزنة القبيلة' : '70% to winner, 30% to clan bank'}
+              </div>
+            </span>
+            <span style={{
+              width: 36, height: 20, borderRadius: 10, position: 'relative',
+              background: clanOnly ? 'rgba(196,149,255,0.40)' : 'rgba(255,255,255,0.10)',
+              transition: 'background .2s',
+            }}>
+              <span style={{
+                position: 'absolute', top: 2, [clanOnly ? 'right' : 'left']: 2,
+                width: 16, height: 16, borderRadius: 8, background: '#fff',
+                transition: 'all .2s',
+              }}/>
+            </span>
+          </button>
+        )}
 
         {/* Live prize pool projection */}
         <div className="rounded-xl p-3"

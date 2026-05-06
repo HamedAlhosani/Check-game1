@@ -1,4 +1,5 @@
 import { FrameRing } from './FrameRing';
+import { CharacterArt } from './CharacterArt';
 
 interface Props {
   avatarId: string;
@@ -26,15 +27,17 @@ const AVATAR_EMOJIS: Record<string, string> = {
 
 export function Avatar({ avatarId, name, size = 'md', className = '', active, frameId }: Props) {
   const dim = sizes[size];
-  const emoji = AVATAR_EMOJIS[avatarId];
   return (
     <div
-      className={`relative inline-flex items-center justify-center rounded-full bg-night-accent select-none ${active ? 'animate-glow-pulse' : ''} ${className}`}
+      className={`relative inline-flex items-center justify-center rounded-full select-none ${active ? 'animate-glow-pulse' : ''} ${className}`}
       style={{ width: dim.wh, height: dim.wh, fontSize: dim.font }}
       title={name}
     >
-      <span style={{ fontSize: Math.round(dim.wh * 0.55), lineHeight: 1 }}>{emoji || '👤'}</span>
+      <CharacterArt id={avatarId} size={dim.wh}/>
       <FrameRing frameId={frameId} size={dim.wh} />
     </div>
   );
 }
+
+// Kept for legacy callers that import the emoji map directly.
+export { AVATAR_EMOJIS };

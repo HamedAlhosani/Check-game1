@@ -22,6 +22,7 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
     matchLength?: GameMode;
     entryFee?: number;
     prizeSplit?: PrizeSplit;
+    clanOnly?: boolean;
   }) => {
     if (!socket.uid) return;
     const profile = await getUserProfile(socket.uid);
@@ -40,6 +41,15 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
     const difficulty = payload.difficulty || 'medium';
     const matchLength: GameMode = payload.matchLength || (kind === 'online' ? 'standard' : 'quick');
 
+    // Clan-only tournament requires the host to be in a clan.
+    const wantClanOnly = !!payload.clanOnly && kind === 'online';
+    const hostClanId   = (profile as any).clanId  || null;
+    const hostClanTag  = (profile as any).clanTag || null;
+    if (wantClanOnly && !hostClanId) {
+      socket.emit(SOCKET_EVENTS.TOURNAMENT_ERROR, { message: 'يجب أن تكون في قبيلة لإنشاء بطولة قبلية' });
+      return;
+    }
+
     const r = await tournamentManager.create({
       io,
       hostUid:    socket.uid,
@@ -51,6 +61,9 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
       kind, size, difficulty, matchLength,
       entryFee:   kind === 'online' ? Math.max(0, Math.floor(payload.entryFee || 0)) : 0,
       prizeSplit: payload.prizeSplit,
+      clanOnlyId:   wantClanOnly ? hostClanId  : null,
+      clanOnlyTag:  wantClanOnly ? hostClanTag : null,
+      clanOnlyName: null,
     });
     if (!r.ok || !r.tournament) {
       socket.emit(SOCKET_EVENTS.TOURNAMENT_ERROR, { message: r.error || 'Could not create tournament' });

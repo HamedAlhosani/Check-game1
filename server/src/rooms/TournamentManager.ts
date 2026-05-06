@@ -16,6 +16,8 @@ import {
   grantCoins, deductCoins,
   recordTournamentResult, recordTournamentEntered,
 } from '../services/firestoreService';
+import { depositToClanBank } from '../services/clanService';
+import { users } from '../data/store';
 
 interface ActiveMatch {
   tournamentId: string;
@@ -49,6 +51,9 @@ class TournamentManager {
     matchLength: GameMode;
     entryFee?: number;
     prizeSplit?: PrizeSplit;
+    clanOnlyId?: string | null;
+    clanOnlyName?: string | null;
+    clanOnlyTag?: string | null;
   }): Promise<{ ok: boolean; error?: string; tournament?: TournamentEngine }> {
     // For online tournaments, the host pays the entry fee upfront (so they
     // count toward the pot just like every other joiner).
@@ -70,6 +75,9 @@ class TournamentManager {
       matchLength: opts.matchLength,
       entryFee: opts.entryFee,
       prizeSplit: opts.prizeSplit,
+      clanOnlyId:   opts.clanOnlyId,
+      clanOnlyName: opts.clanOnlyName,
+      clanOnlyTag:  opts.clanOnlyTag,
     });
 
     this.tournaments.set(t.state.id, t);
@@ -123,6 +131,13 @@ class TournamentManager {
   async join(io: Server, id: string, player: { uid: string; displayName: string; avatarId: string; equippedFrame?: string }): Promise<{ ok: boolean; error?: string }> {
     const t = this.tournaments.get(id);
     if (!t) return { ok: false, error: 'Tournament not found' };
+    // Clan-only filter — must be in the same clan to join
+    if (t.state.clanOnlyId) {
+      const u: any = users.get(player.uid);
+      if (!u || u.clanId !== t.state.clanOnlyId) {
+        return { ok: false, error: 'هذه البطولة مخصصة لأعضاء قبيلة معينة' };
+      }
+    }
     if (t.state.kind === 'online' && t.state.entryFee > 0) {
       const r = await deductCoins(player.uid, t.state.entryFee);
       if (!r.ok) return { ok: false, error: r.error || 'Cannot pay entry fee' };
@@ -399,17 +414,26 @@ class TournamentManager {
       return 0;
     };
 
+    // For clan-only tournaments, 70% goes to the winner, 30% goes to the
+    // clan's shared bank (regardless of split).
+    const isClanOnly = !!t.state.clanOnlyId;
+
     const awarded: { uid: string; rank: number; amount: number }[] = [];
     for (const r of ranks) {
       if (r.uid.startsWith('bot-')) continue;
-      const amount = rankToPrize(r.rank);
-      if (amount > 0) {
-        const grant = await grantCoins(r.uid, amount);
-        if (grant.ok) awarded.push({ uid: r.uid, rank: r.rank, amount });
+      const baseAmount = rankToPrize(r.rank);
+      const winnerCut  = isClanOnly && r.rank === 1 ? Math.floor(baseAmount * 0.7) : baseAmount;
+      const bankCut    = isClanOnly && r.rank === 1 ? baseAmount - winnerCut       : 0;
+      if (winnerCut > 0) {
+        const grant = await grantCoins(r.uid, winnerCut);
+        if (grant.ok) awarded.push({ uid: r.uid, rank: r.rank, amount: winnerCut });
       } else {
         awarded.push({ uid: r.uid, rank: r.rank, amount: 0 });
       }
-      recordTournamentResult(r.uid, { rank: r.rank, size: t.state.size, prize: amount }).catch(() => null);
+      if (bankCut > 0 && t.state.clanOnlyId) {
+        await depositToClanBank(t.state.clanOnlyId, bankCut);
+      }
+      recordTournamentResult(r.uid, { rank: r.rank, size: t.state.size, prize: winnerCut }).catch(() => null);
     }
     t.state.prizesAwarded = awarded;
 

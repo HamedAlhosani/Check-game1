@@ -12,6 +12,7 @@ import { useT, useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { ReferralCard } from '../../components/shared/ReferralCard';
+import { CharacterArt } from '../../components/shared/CharacterArt';
 import { UserProfile } from '@check-game/shared';
 
 const AVATAR_EMOJIS: Record<string, string> = {
@@ -298,7 +299,7 @@ export function ProfilePage() {
                       background: 'rgba(0,0,0,0.2)',
                     }}>
                     <div className="relative">
-                      <span className="text-3xl">{AVATAR_EMOJIS[char.id]}</span>
+                      <CharacterArt id={char.id} size={56}/>
                       {!isOwned && <span className="absolute -bottom-1 -right-1 text-xs">🔒</span>}
                     </div>
                     <span className="font-arabic text-center leading-tight"

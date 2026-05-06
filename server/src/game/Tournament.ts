@@ -27,6 +27,9 @@ export class TournamentEngine {
     /** Coins each player pays to enter (online only). */
     entryFee?: number;
     prizeSplit?: PrizeSplit;
+    clanOnlyId?: string | null;
+    clanOnlyName?: string | null;
+    clanOnlyTag?: string | null;
   }) {
     const id = uuidv4();
     const isSolo = opts.kind === 'solo';
@@ -66,6 +69,9 @@ export class TournamentEngine {
       createdAt: Date.now(),
       nextHostMatchNum: null,
       forfeitAt: null,
+      clanOnlyId:   opts.clanOnlyId   ?? null,
+      clanOnlyName: opts.clanOnlyName ?? null,
+      clanOnlyTag:  opts.clanOnlyTag  ?? null,
     };
 
     if (isSolo) {
@@ -386,6 +392,8 @@ export class TournamentEngine {
       prizePool: this.state.prizePool,
       prizeSplit: this.state.prizeSplit,
       createdAt: this.state.createdAt,
+      clanOnlyId:  this.state.clanOnlyId  ?? null,
+      clanOnlyTag: this.state.clanOnlyTag ?? null,
     };
   }
 }

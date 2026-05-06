@@ -81,6 +81,10 @@ export interface TournamentState {
   /** Wall-clock timestamp when the host's next match must be accepted by;
    *  if current time exceeds this, the player forfeits and the bracket advances. */
   forfeitAt?: number | null;
+  /** When set, only members of this clan can join. Prize goes 70/30 winner/clan-bank. */
+  clanOnlyId?: string | null;
+  clanOnlyName?: string | null;
+  clanOnlyTag?: string | null;
 }
 
 /** Compact view for the public tournament list. */
@@ -99,6 +103,8 @@ export interface TournamentSummary {
   prizePool: number;
   prizeSplit: PrizeSplit;
   createdAt: number;
+  clanOnlyId?: string | null;
+  clanOnlyTag?: string | null;
 }
 
 /** Number of matches in a single-elimination bracket of N players. */

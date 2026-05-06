@@ -2747,11 +2747,14 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         )}
       </AnimatePresence>
 
-      {/* Round-start cinematic — deal animation → "CHECK!" voice → peek reveal */}
+      {/* Round-start cinematic — deal animation → "CHECK!" voice → peek reveal
+          onDealComplete (1.5s): cards have landed → reveal hands + deck (BEFORE the CHECK voice)
+          onComplete (3.7s): cinematic ends → reveal the bottom-2 peek + "احفظ أوراقك" overlay */}
       <AnimatePresence>
         {showCinematic && (
           <RoundStartCinematic
             playerCount={gameState.players.length}
+            onDealComplete={() => setTableReady(true)}
             onComplete={() => { setShowCinematic(false); flushPendingPeek(); }}
           />
         )}

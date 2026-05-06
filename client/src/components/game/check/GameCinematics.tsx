@@ -10,8 +10,11 @@ import { useLang } from '../../../i18n/useT';
  * Stage 2 (2.5–3.5s): big "CHECK!" announcement with the call voice
  * After (3.5s+): onComplete fires → bottom-2 peek reveals
  */
-export function RoundStartCinematic({ playerCount, onComplete }: {
+export function RoundStartCinematic({ playerCount, onDealComplete, onComplete }: {
   playerCount: number;
+  /** Fired at end of stage 1 (1.5s) — cards have landed; reveal hands + deck. */
+  onDealComplete?: () => void;
+  /** Fired after stage 2 finishes (3.7s) — full cinematic done. */
   onComplete: () => void;
 }) {
   const lang = useLang();
@@ -19,14 +22,17 @@ export function RoundStartCinematic({ playerCount, onComplete }: {
 
   useEffect(() => {
     soundService.playCardDraw();
-    const t1 = setTimeout(() => setStage('pause'), 1500);          // dealing → quiet 1s pause
+    const t1 = setTimeout(() => {                                  // dealing → quiet 1s pause
+      setStage('pause');
+      onDealComplete?.();                                          // hands + deck appear NOW
+    }, 1500);
     const t2 = setTimeout(() => {                                  // pause → CHECK announce
       setStage('announce');
       soundService.playCheckVoice();
     }, 2500);
     const t3 = setTimeout(() => onComplete(), 3700);               // done → reveal peek
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [onComplete]);
+  }, [onDealComplete, onComplete]);
 
   // Pre-compute per-player target positions on a ring around the screen
   const targets = useMemo(() => {

@@ -709,10 +709,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const navigate = useNavigate();
   const socket = socketService.getSocket();
 
-  // Pre-deal phase (intro list + 2s pause + cinematic): keep the deck and
-  // discard pile hidden so the table shows only seats + names. Cards in
-  // hands stay visible (face-down placeholders) so seats render with full
-  // size and don't jump around when the deal animation finishes.
+  // Hides the central deck + discard until the cinematic finishes — so at
+  // the start of a round the table shows only seats + names + face-down
+  // hands, then the deal animation populates the centre.
+  const [tableReady, setTableReady] = useState(true);
   const dDeckCount  = tableReady ? gameState.deckCount  : 0;
   const dDiscardTop = tableReady ? gameState.discardTop : null;
   const me = gameState.players.find(p => p.uid === user?.uid);
@@ -842,10 +842,6 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   // player can't memorise them while the deal animation is playing.
   const peekDeferredRef = useRef(false);
   const pendingPeekRef  = useRef<{ position: number; card: Card }[]>([]);
-  // Hides hands + deck + discard until the cinematic finishes — so at the
-  // start of a round the table shows ONLY player names, then the deal
-  // animation populates everything.
-  const [tableReady, setTableReady] = useState(true);
   // Q peek result modal — { card, position }
   const [qPeekCard, setQPeekCard] = useState<{ card: Card; position: number } | null>(null);
   const [showSettings, setShowSettings] = useState(false);

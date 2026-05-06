@@ -647,21 +647,25 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       )
     : 0;
 
-  // Tablet: very tight table so the iPad layout doesn't overflow vertically.
+  // Tablet: orientation-aware. Sizing on the SHORTER viewport dimension
+  // means the table looks the same whether the iPad is held portrait or
+  // landscape. Caps are generous enough for the 12.9" iPad Pro.
+  const shortDim = Math.min(winW, winH);
   const tabletTableSize = isTablet
     ? Math.min(
-        Math.floor(winW * 0.40),
-        winH - 460,
-        340
+        Math.floor(shortDim * 0.55),
+        winH - 360,
+        520
       )
     : 0;
 
-  // Desktop: cap at 540 with similar reserve.
+  // Desktop: same idea — base size off shorter dim so very-wide windows
+  // don't blow up the felt. Cap a bit larger.
   const desktopTableSize = !isMobile && !isTablet
     ? Math.min(
-        Math.floor(winW * 0.42),
-        winH - 400,
-        520
+        Math.floor(shortDim * 0.55),
+        winH - 380,
+        620
       )
     : 0;
   const n = gameState.players.length;
@@ -1310,13 +1314,13 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 width: isMobile
                   ? Math.max(180, mobileTableSize)
                   : isTablet
-                    ? Math.max(220, tabletTableSize)
-                    : Math.max(280, desktopTableSize),
+                    ? Math.max(320, tabletTableSize)
+                    : Math.max(360, desktopTableSize),
                 height: isMobile
                   ? Math.max(180, mobileTableSize)
                   : isTablet
-                    ? Math.max(220, tabletTableSize)
-                    : Math.max(280, desktopTableSize),
+                    ? Math.max(320, tabletTableSize)
+                    : Math.max(360, desktopTableSize),
                 borderRadius: '50%',
                 background: `
                   radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.045) 0%, transparent 38%),

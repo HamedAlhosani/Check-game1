@@ -14,6 +14,7 @@ import { LangToggle } from '../../components/shared/LangToggle';
 import { DailyRewardModal } from '../../components/shared/DailyRewardModal';
 import { RulesModal } from '../../components/shared/RulesModal';
 import { ProgressionModal } from '../../components/shared/ProgressionModal';
+import { WheelModal } from '../../components/shared/WheelModal';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { deriveLevel } from '@check-game/shared';
 import type { GameMode as MatchLength, TournamentState } from '@check-game/shared';
@@ -46,6 +47,35 @@ function DailyRewardNavButton({ onOpen, lang }: { onOpen: () => void; lang: stri
       {canClaim && (
         <span className="absolute rounded-full animate-pulse"
           style={{ top: -3, right: -3, width: 9, height: 9, background: '#E04030', border: '1.5px solid #14100A' }} />
+      )}
+    </motion.button>
+  );
+}
+
+// Wheel button for the top nav — pulses gold when a spin is available.
+function WheelNavButton({ onOpen, lang }: { onOpen: () => void; lang: string }) {
+  const [canSpin, setCanSpin] = useState<boolean | null>(null);
+  useEffect(() => {
+    apiClient.get<{ canSpin: boolean }>('/api/wheel/status')
+      .then(r => setCanSpin(r.canSpin)).catch(() => setCanSpin(false));
+  }, []);
+  return (
+    <motion.button
+      whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+      onClick={onOpen}
+      className="relative rounded-xl flex items-center justify-center"
+      title={lang === 'ar' ? 'عجلة الحظ' : 'Lucky Wheel'}
+      style={{
+        width: 36, height: 34,
+        background: canSpin ? 'rgba(232,201,122,0.20)' : 'rgba(255,255,255,0.04)',
+        border: `1px solid ${canSpin ? 'rgba(232,201,122,0.55)' : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: canSpin ? '0 0 14px rgba(232,201,122,0.35)' : 'none',
+        cursor: 'pointer',
+      }}>
+      <span style={{ fontSize: 18, lineHeight: 1 }}>{canSpin ? '🎡' : '🎰'}</span>
+      {canSpin && (
+        <span className="absolute rounded-full animate-pulse"
+          style={{ top: -3, right: -3, width: 9, height: 9, background: '#FFE07A', border: '1.5px solid #14100A' }}/>
       )}
     </motion.button>
   );
@@ -900,6 +930,7 @@ export function HomePage() {
   const [showDaily, setShowDaily] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
+  const [showWheel, setShowWheel] = useState(false);
   const [progressInitialTab, setProgressInitialTab] = useState<'missions' | 'achievements' | 'levels'>('missions');
   const setTournamentState = useTournamentStore(s => s.setState);
   const setTournamentFinished = useTournamentStore(s => s.setFinished);
@@ -1086,6 +1117,7 @@ export function HomePage() {
           <LangToggle />
           {/* Daily reward — moved out of the games area into the top nav */}
           <DailyRewardNavButton onOpen={() => setShowDaily(true)} lang={lang} />
+          <WheelNavButton onOpen={() => setShowWheel(true)} lang={lang} />
           {/* Coins */}
           <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5"
             style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)' }}>
@@ -1225,6 +1257,7 @@ export function HomePage() {
       <DailyRewardModal open={showDaily} onClose={() => setShowDaily(false)}/>
       <RulesModal open={showRules} onClose={() => setShowRules(false)}/>
       <ProgressionModal open={showProgress} onClose={() => setShowProgress(false)} lang={lang} initialTab={progressInitialTab}/>
+      <WheelModal open={showWheel} onClose={() => setShowWheel(false)} lang={lang}/>
 
       {searching && <SearchingModal onCancel={handleCancelSearch} lang={lang}/>}
       {botLoading && <BotLoadingOverlay lang={lang}/>}

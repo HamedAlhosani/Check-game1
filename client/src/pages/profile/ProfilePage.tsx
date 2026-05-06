@@ -11,6 +11,7 @@ import { soundService } from '../../services/sound.service';
 import { useT, useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { FrameRing } from '../../components/shared/FrameRing';
+import { ReferralCard } from '../../components/shared/ReferralCard';
 import { UserProfile } from '@check-game/shared';
 
 const AVATAR_EMOJIS: Record<string, string> = {
@@ -247,13 +248,15 @@ export function ProfilePage() {
 
         {/* Tab: Info */}
         {tab === 'info' && (
-          <motion.div key="info" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl p-5 space-y-4 border"
-            style={{ background: 'rgba(255,255,255,0.025)', borderColor: 'rgba(255,255,255,0.07)' }}>
-            <Input label={t('display_name')} value={name} onChange={e => setName(e.target.value)} />
-            <Button onClick={saveName} loading={saving} disabled={!name.trim() || name === profile.displayName}>
-              {t('save')}
-            </Button>
+          <motion.div key="info" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+            <div className="rounded-2xl p-5 space-y-4 border"
+              style={{ background: 'rgba(255,255,255,0.025)', borderColor: 'rgba(255,255,255,0.07)' }}>
+              <Input label={t('display_name')} value={name} onChange={e => setName(e.target.value)} />
+              <Button onClick={saveName} loading={saving} disabled={!name.trim() || name === profile.displayName}>
+                {t('save')}
+              </Button>
+            </div>
+            <ReferralCard lang={lang} myUid={profile.uid}/>
           </motion.div>
         )}
 

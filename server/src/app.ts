@@ -21,6 +21,10 @@ import {
   claimMission,
   claimAchievement,
   claimLevelReward,
+  getWheelStatus,
+  spinWheel,
+  getReferralCode,
+  redeemReferral,
   sendFriendRequest,
   acceptFriendRequest,
   declineOrRemoveFriend,
@@ -354,6 +358,37 @@ app.post('/api/progression/levels/claim', requireAuth, wrap(async (req, res) => 
   if (!result.ok) return res.status(400).json({ error: result.error });
   const profile = await getUserProfile(uid);
   res.json({ ok: true, granted: result.granted, coins: result.coins, itemGranted: result.itemGranted, profile });
+}));
+
+// ── Lucky Wheel ────────────────────────────────────────────────────────────
+app.get('/api/wheel/status', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  res.json(await getWheelStatus(uid));
+}));
+
+app.post('/api/wheel/spin', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const result = await spinWheel(uid);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ...result, profile });
+}));
+
+// ── Friend Referral ────────────────────────────────────────────────────────
+app.get('/api/referral/code', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const code = await getReferralCode(uid);
+  res.json({ code });
+}));
+
+app.post('/api/referral/redeem', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const { code } = req.body || {};
+  if (!code || typeof code !== 'string') return res.status(400).json({ error: 'Missing code' });
+  const result = await redeemReferral(uid, code.trim().toUpperCase());
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, granted: result.granted, profile });
 }));
 
 // ── Daily reward ───────────────────────────────────────────────────────────────

@@ -329,6 +329,149 @@ export async function grantCoins(uid: string, amount: number): Promise<{ ok: boo
   return { ok: true, coins: p.coins };
 }
 
+// ── Daily Lucky Wheel ─────────────────────────────────────────────────────
+/**
+ * Prize segments for the daily wheel. Weights are out of 100 — must sum to
+ * 100 so the cumulative-distribution sampler below works correctly.
+ * The 'item' segment grants a random gold/legendary item the user doesn't
+ * already own; if they own everything in that tier, they get 10k coins.
+ */
+const WHEEL_PRIZES = [
+  { id: 'coin50',   weight: 28, kind: 'coins' as const, coins: 50,    labelAr: '50 كوينز',     labelEn: '50 coins',    rarity: 'common' },
+  { id: 'coin100',  weight: 22, kind: 'coins' as const, coins: 100,   labelAr: '100 كوينز',    labelEn: '100 coins',   rarity: 'common' },
+  { id: 'coin250',  weight: 16, kind: 'coins' as const, coins: 250,   labelAr: '250 كوينز',    labelEn: '250 coins',   rarity: 'uncommon' },
+  { id: 'coin500',  weight: 12, kind: 'coins' as const, coins: 500,   labelAr: '500 كوينز',    labelEn: '500 coins',   rarity: 'uncommon' },
+  { id: 'coin1000', weight: 9,  kind: 'coins' as const, coins: 1000,  labelAr: '1,000 كوينز',  labelEn: '1,000 coins', rarity: 'rare' },
+  { id: 'coin2500', weight: 6,  kind: 'coins' as const, coins: 2500,  labelAr: '2,500 كوينز',  labelEn: '2,500 coins', rarity: 'rare' },
+  { id: 'coin5000', weight: 5,  kind: 'coins' as const, coins: 5000,  labelAr: '5,000 كوينز',  labelEn: '5,000 coins', rarity: 'epic' },
+  { id: 'mystery',  weight: 2,  kind: 'item'  as const, coins: 0,     labelAr: '🎁 هدية أسطورية', labelEn: '🎁 Legendary item', rarity: 'legendary' },
+];
+
+export async function getWheelStatus(uid: string): Promise<{ canSpin: boolean; nextSpinAt: number | null; lastSpinAt: number | null; prizes: typeof WHEEL_PRIZES }> {
+  const p = users.get(uid) as any;
+  if (!p) return { canSpin: false, nextSpinAt: null, lastSpinAt: null, prizes: WHEEL_PRIZES };
+  const last = p.wheelLastSpinAt || null;
+  const cooldownMs = 24 * 60 * 60 * 1000;
+  const nextAt = last ? last + cooldownMs : null;
+  const canSpin = !last || (Date.now() >= last + cooldownMs);
+  return { canSpin, nextSpinAt: nextAt, lastSpinAt: last, prizes: WHEEL_PRIZES };
+}
+
+export async function spinWheel(uid: string): Promise<{ ok: boolean; error?: string;
+  prizeIndex?: number;
+  prizeId?: string;
+  coinsGranted?: number;
+  itemGranted?: string;
+  itemNameAr?: string;
+  newCoinBalance?: number;
+}> {
+  const p = users.get(uid) as any;
+  if (!p) return { ok: false, error: 'User not found' };
+  const last = p.wheelLastSpinAt || 0;
+  const cooldownMs = 24 * 60 * 60 * 1000;
+  if (last && Date.now() < last + cooldownMs) {
+    return { ok: false, error: 'Cooldown not finished' };
+  }
+
+  // Sample by cumulative weight
+  const total = WHEEL_PRIZES.reduce((s, x) => s + x.weight, 0);
+  let r = Math.random() * total;
+  let prizeIndex = 0;
+  for (let i = 0; i < WHEEL_PRIZES.length; i++) {
+    r -= WHEEL_PRIZES[i].weight;
+    if (r <= 0) { prizeIndex = i; break; }
+  }
+  const prize = WHEEL_PRIZES[prizeIndex];
+
+  let coinsGranted = 0;
+  let itemGranted: string | undefined;
+  let itemNameAr: string | undefined;
+
+  if (prize.kind === 'coins') {
+    coinsGranted = prize.coins;
+  } else {
+    // 'item' — pick a random gold/legendary item they don't own. Fallback
+    // to 10k coins if they own everything in that rarity.
+    const owned: string[] = p.ownedItems || [];
+    const candidates = STORE_ITEMS.filter(it =>
+      (it.rarity === 'gold' || it.rarity === 'legendary') && !owned.includes(it.id)
+    );
+    if (candidates.length > 0) {
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      itemGranted = pick.id;
+      itemNameAr = pick.nameAr;
+      p.ownedItems = [...owned, pick.id];
+    } else {
+      coinsGranted = 10000;
+    }
+  }
+
+  if (coinsGranted > 0) p.coins = (p.coins || 0) + coinsGranted;
+  p.wheelLastSpinAt = Date.now();
+  saveUsers();
+
+  return {
+    ok: true, prizeIndex, prizeId: prize.id,
+    coinsGranted, itemGranted, itemNameAr,
+    newCoinBalance: p.coins,
+  };
+}
+
+// ── Friend referral ───────────────────────────────────────────────────────
+const REFERRAL_BONUS = 1000;
+
+/** Returns the user's referral code, lazily generating one on first access. */
+export async function getReferralCode(uid: string): Promise<string | null> {
+  const p = users.get(uid) as any;
+  if (!p) return null;
+  if (!p.referralCode) {
+    // Format: first 4 letters of displayName (transliterated to ASCII-ish) +
+    // 4 random digits. Falls back to "PLAYER" if displayName is empty/Arabic.
+    const base = (p.displayName || 'PLAYER')
+      .toUpperCase()
+      .replace(/[^A-Z]/g, '')   // strip non-Latin letters (Arabic)
+      .slice(0, 4) || 'CHECK';
+    let code: string;
+    let attempts = 0;
+    do {
+      const digits = Math.floor(1000 + Math.random() * 9000);
+      code = `${base}${digits}`;
+      attempts++;
+    } while (attempts < 10 && findUserByReferralCode(code));
+    p.referralCode = code;
+    saveUsers();
+  }
+  return p.referralCode;
+}
+
+function findUserByReferralCode(code: string): any | null {
+  const want = code.toUpperCase();
+  for (const u of users.values()) {
+    if ((u as any).referralCode === want) return u;
+  }
+  return null;
+}
+
+/**
+ * Redeem a friend's referral code. Both the redeemer and the inviter get
+ * REFERRAL_BONUS coins. One-time per redeemer; cannot self-refer.
+ */
+export async function redeemReferral(redeemerUid: string, code: string): Promise<{ ok: boolean; error?: string; granted?: number; inviterUid?: string }> {
+  const redeemer = users.get(redeemerUid) as any;
+  if (!redeemer) return { ok: false, error: 'User not found' };
+  if (redeemer.referredBy) return { ok: false, error: 'Already used a referral code' };
+  const inviter = findUserByReferralCode(code.toUpperCase());
+  if (!inviter)                       return { ok: false, error: 'Invalid code' };
+  if (inviter.uid === redeemerUid)    return { ok: false, error: 'Cannot use your own code' };
+
+  redeemer.referredBy = inviter.uid;
+  redeemer.coins = (redeemer.coins || 0) + REFERRAL_BONUS;
+  inviter.coins  = (inviter.coins  || 0) + REFERRAL_BONUS;
+  inviter.referralsCount = ((inviter.referralsCount || 0) as number) + 1;
+  saveUsers();
+  return { ok: true, granted: REFERRAL_BONUS, inviterUid: inviter.uid };
+}
+
 /** Atomic coin deduction — fails (returns ok:false) if balance is insufficient. */
 export async function deductCoins(uid: string, amount: number): Promise<{ ok: boolean; error?: string; coins?: number }> {
   const p = users.get(uid);

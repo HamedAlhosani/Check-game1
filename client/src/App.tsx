@@ -95,6 +95,47 @@ function Loading() {
   );
 }
 
+/**
+ * If the URL contains ?ref=CODE and the user is logged in but hasn't already
+ * redeemed someone's code, fire the redeem call once. Strips the param after
+ * so a refresh doesn't loop. New signups land on /login first; the param
+ * survives the redirect via localStorage.
+ */
+function ReferralRedeemer() {
+  const { user, profile, setProfile } = useAuthStore();
+  const { addToast } = useUiStore();
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const ref = url.searchParams.get('ref');
+    if (ref) {
+      // Stash so the redeem fires after auth completes if the user just signed up.
+      try { localStorage.setItem('pending_referral', ref.toUpperCase()); } catch { /* noop */ }
+      url.searchParams.delete('ref');
+      window.history.replaceState({}, '', url.pathname + url.search);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user || !profile) return;
+    const stashed = (() => { try { return localStorage.getItem('pending_referral'); } catch { return null; } })();
+    if (!stashed) return;
+    if ((profile as any).referredBy) {
+      try { localStorage.removeItem('pending_referral'); } catch { /* noop */ }
+      return;
+    }
+    apiClient.post<{ profile: UserProfile; granted: number }>('/api/referral/redeem', { code: stashed })
+      .then(res => {
+        if (res?.profile) setProfile(res.profile);
+        try { localStorage.removeItem('pending_referral'); } catch { /* noop */ }
+        addToast(`+${res.granted.toLocaleString()} 🪙 (referral bonus)`, 'success');
+      })
+      .catch(() => { try { localStorage.removeItem('pending_referral'); } catch { /* noop */ } });
+  }, [user, profile?.uid]);
+
+  return null;
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthStore();
   const location = useLocation();
@@ -192,6 +233,7 @@ export function App() {
       <AuthGate>
         <GlobalOverlays />
         <ResumeGameGate />
+        <ReferralRedeemer />
         <PrefetchOnIdle />
         <Suspense fallback={<Loading />}>
           <Routes>

@@ -445,24 +445,24 @@ function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSel
   return (
     <div className="relative flex flex-col items-center"
       style={{
-        flex: 1, borderRadius: 8, padding: '3px 2px 4px',
+        flex: 1, borderRadius: 8, padding: '4px 3px 5px',
         background: isTurn ? 'rgba(201,168,76,0.16)' : 'rgba(255,255,255,0.04)',
         border: isTurn ? '1px solid rgba(201,168,76,0.65)' : '1px solid rgba(255,255,255,0.06)',
         boxShadow: isTurn ? '0 0 8px rgba(201,168,76,0.22)' : 'none',
         opacity: isElim ? 0.45 : 1, cursor: isSpecialJ && selectedPos !== null && !isElim ? 'pointer' : 'default',
-        gap: 1.5, transition: 'all 0.3s',
+        gap: 2, transition: 'all 0.3s', minWidth: 0,
       }}
       onClick={() => isSpecialJ && selectedPos !== null && !isElim && onSelectForJ(player.uid)}
     >
       <AnimatePresence>{emoji && <EmojiFloat em={emoji} />}</AnimatePresence>
       <AnimatePresence>{chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}</AnimatePresence>
       <div className="relative">
-        <Av id={player.avatarId} name={player.displayName} frameId={(player as any).equippedFrame} size={20} />
-        {isTurn && <div className="absolute animate-pulse" style={{ bottom:-1, right:-1, width:5, height:5, borderRadius:'50%', background:'#C9A84C', border:'1px solid #000' }} />}
-        {isElim && <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(0,0,0,0.65)', display:'flex', alignItems:'center', justifyContent:'center' }}><span style={{color:'#ef4444', fontSize:7, fontWeight:700}}>✕</span></div>}
+        <Av id={player.avatarId} name={player.displayName} frameId={(player as any).equippedFrame} size={26} />
+        {isTurn && <div className="absolute animate-pulse" style={{ bottom:-1, right:-1, width:7, height:7, borderRadius:'50%', background:'#C9A84C', border:'1.5px solid #000' }} />}
+        {isElim && <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(0,0,0,0.65)', display:'flex', alignItems:'center', justifyContent:'center' }}><span style={{color:'#ef4444', fontSize:8, fontWeight:700}}>✕</span></div>}
       </div>
-      <p className="font-arabic" style={{ fontSize: 5.5, color:'rgba(255,255,255,0.55)', lineHeight:1, maxWidth:'100%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{player.displayName}</p>
-      <p style={{ fontSize: 8.5, fontWeight:700, lineHeight:1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.55)' }}>{player.cumulativeScore}</p>
+      <p className="font-arabic font-bold" style={{ fontSize: 10, color: isTurn ? '#E8C97A' : 'rgba(245,230,200,0.85)', lineHeight:1.1, maxWidth:'100%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', textAlign: 'center' }}>{player.displayName}</p>
+      <p style={{ fontSize: 11, fontWeight:800, lineHeight:1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.7)' }}>{player.cumulativeScore}</p>
       {/* 2×2 card indicators */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1.5, marginTop:1, position: 'relative' }}>
         {Array.from({ length: Math.min(cardCount, 4) }).map((_, j) => {
@@ -632,12 +632,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   // Dynamic mobile sizing — everything must fit inside the fixed viewport
   const useMiniCards = isMobile && winH < 780;
   const myAreaH = useMiniCards ? 218 : 280; // mini vs small cards height estimate
-  const stripH = isMobile ? 82 : 0;
+  const stripH = isMobile ? 100 : 0;
   const mobileTableSize = isMobile
     ? Math.min(
-        Math.floor(winW * 0.86),           // most of screen width
-        winH - 100 - stripH - myAreaH - 20, // max from available height
-        380                                  // hard cap
+        Math.floor(winW * 0.86),                // most of screen width
+        winH - 160 - stripH - myAreaH - 20,     // 160 = top header (badges) + bottom action bar
+        380                                      // hard cap
       )
     : 0;
   const n = gameState.players.length;
@@ -1143,7 +1143,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0E0905' }}>
       <RoomBackground />
 
-      <div className={`flex-1 flex flex-col pt-2 pb-14 min-h-0 px-1 ${isMobile ? 'gap-1' : 'gap-2'}`} style={{ position: 'relative', zIndex: 1 }}>
+      <div className={`flex-1 flex flex-col pb-14 min-h-0 px-1 ${isMobile ? 'gap-1 pt-16' : 'gap-2 pt-16'}`} style={{ position: 'relative', zIndex: 1 }}>
 
         {/* ══ MOBILE: compact opponent strip ══ */}
         {isMobile && others.length > 0 && (
@@ -1399,7 +1399,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 <PlayerBox player={me} gameState={gameState} />
               </div>
               {!me?.isEliminated && (
-                <div className="shrink-0 flex flex-col items-center gap-1">
+                <div className="shrink-0 flex flex-col items-center gap-1 relative">
                   <motion.button
                     whileHover={canCallCheck ? { scale: 1.08 } : {}}
                     whileTap={canCallCheck ? { scale: .92 } : {}}
@@ -1429,8 +1429,38 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                       lineHeight: 1,
                       transition: 'background .25s, color .25s, border-color .25s',
                       minWidth: 110,
+                      position: 'relative',
                     }}
-                  >CHECK</motion.button>
+                  >
+                    CHECK
+                    {/* Notification badge — visible only when the player CAN call check */}
+                    {canCallCheck && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: [1, 1.25, 1] }}
+                        transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
+                        style={{
+                          position: 'absolute',
+                          top: -10,
+                          right: -10,
+                          minWidth: 26,
+                          height: 26,
+                          borderRadius: '50%',
+                          background: '#E04030',
+                          color: '#fff',
+                          fontSize: 16,
+                          fontWeight: 900,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '2px solid #14100A',
+                          boxShadow: '0 0 12px rgba(224,64,48,0.85)',
+                          padding: '0 6px',
+                          lineHeight: 1,
+                        }}
+                      >!</motion.span>
+                    )}
+                  </motion.button>
                   {lapsRemainingForCheck > 0 ? (
                     <span className="font-arabic" style={{ fontSize: 10, color: 'rgba(201,168,76,0.55)' }}>
                       بعد {lapsRemainingForCheck} {lapsRemainingForCheck === 1 ? 'لفة' : 'لفات'}

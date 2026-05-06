@@ -95,11 +95,14 @@ type ModeTheme = {
   icon: string;
 };
 const MODE_THEMES: Record<GameMode, ModeTheme> = {
-  online:  { bg1: '#1F3A8A', bg2: '#0A1442', accent: '#7CB1FF', glow: 'rgba(124,177,255,0.55)', suit: '♠', rank: 'O', icon: '🌍',
+  // Aurora teal — feels global / live / connected
+  online:  { bg1: '#0F4C5C', bg2: '#04181E', accent: '#5EEAD4', glow: 'rgba(94,234,212,0.6)',  suit: '♠', rank: 'O', icon: '🌍',
              label: { ar: 'أونلاين',  en: 'Online'  }, tagline: { ar: 'العب مع لاعبين حول العالم', en: 'Worldwide players' } },
-  private: { bg1: '#7A1448', bg2: '#2A0820', accent: '#F58FBC', glow: 'rgba(245,143,188,0.55)', suit: '♥', rank: 'P', icon: '🔒',
+  // Sunset magenta — intimate / exclusive
+  private: { bg1: '#7A1B5C', bg2: '#1F0418', accent: '#F472B6', glow: 'rgba(244,114,182,0.55)', suit: '♥', rank: 'P', icon: '🔒',
              label: { ar: 'غرفة خاصة', en: 'Private' }, tagline: { ar: 'غرفة لك ولأصدقائك',         en: 'Just you and friends' } },
-  bots:    { bg1: '#1B6B3F', bg2: '#0A2A18', accent: '#7AE0A6', glow: 'rgba(122,224,166,0.55)', suit: '♣', rank: 'B', icon: '🤖',
+  // Phoenix amber — warm / arena / training fire
+  bots:    { bg1: '#6B2D0E', bg2: '#1F0905', accent: '#FCA85B', glow: 'rgba(252,168,91,0.55)',  suit: '♣', rank: 'B', icon: '🤖',
              label: { ar: 'بوتات',    en: 'Bots'    }, tagline: { ar: 'تدرب أو تحدى البوتات',        en: 'Train or duel bots' } },
 };
 
@@ -219,78 +222,110 @@ function PlayerStepper({ value, onChange, min, max, accent, lang, label }: {
   );
 }
 
-// ── CoinTier — wallet panel + 4 tier cards (Beginner / Pro / Elite / Legend) ──
-const COIN_TIERS = [
-  { val: 100,   ar: 'مبتدئ',  en: 'Starter',  emoji: '🪙', bg: '#3A6B95' },
-  { val: 1000,  ar: 'محترف',  en: 'Pro',      emoji: '💰', bg: '#3BB773' },
-  { val: 10000, ar: 'نخبة',  en: 'Elite',    emoji: '💎', bg: '#7A3DC4' },
-  { val: 50000, ar: 'أسطوري', en: 'Legend',   emoji: '👑', bg: '#C9A84C' },
+// ── Coin steps — discrete ladder of values the player walks up/down ─────────
+const COIN_STEPS = [
+  50, 150, 500, 1000, 2000, 3500, 5000, 8000, 12000, 15000,
+  18000, 21000, 25000, 30000, 35000, 40000, 45000, 50000,
 ];
-const CHIP_COLORS = COIN_TIERS; // kept for the auto-clamp logic in PlayBox
+// Kept for backwards-compat in PlayBox useEffect (auto-clamp logic)
+const CHIP_COLORS = COIN_STEPS.map(val => ({ val }));
 
-function CoinTierPicker({ value, onChange, accent, max, lang }: {
+function nearestStepIndex(v: number): number {
+  let best = 0; let bestDiff = Infinity;
+  for (let i = 0; i < COIN_STEPS.length; i++) {
+    const d = Math.abs(COIN_STEPS[i] - v);
+    if (d < bestDiff) { bestDiff = d; best = i; }
+  }
+  return best;
+}
+
+function CoinStepper({ value, onChange, accent, max, lang }: {
   value: number; onChange: (v: number) => void; accent: string; max: number; lang: string;
 }) {
+  const idx = nearestStepIndex(value);
+  // Largest affordable step index
+  const maxIdx = (() => {
+    let m = -1;
+    for (let i = 0; i < COIN_STEPS.length; i++) if (COIN_STEPS[i] <= max) m = i;
+    return m;
+  })();
+  const dec = () => {
+    if (idx <= 0) return;
+    onChange(COIN_STEPS[idx - 1]); soundService.playClick();
+  };
+  const inc = () => {
+    if (idx >= COIN_STEPS.length - 1) return;
+    if (idx + 1 > maxIdx) return;
+    onChange(COIN_STEPS[idx + 1]); soundService.playClick();
+  };
+  const canDec = idx > 0;
+  const canInc = idx < COIN_STEPS.length - 1 && idx + 1 <= maxIdx;
+  // Progress fraction for the bottom bar
+  const pct = ((idx + 1) / COIN_STEPS.length) * 100;
+
   return (
     <div className="w-full flex flex-col items-center gap-3">
-      {/* Wallet display */}
-      <div className="rounded-2xl px-5 py-3 flex flex-col items-center"
-        style={{
-          background: `radial-gradient(ellipse at 50% 0%, ${accent}1F 0%, transparent 70%)`,
-          border: `1.5px solid ${accent}55`,
-          minWidth: 200,
-          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06)`,
-        }}>
-        <span className="font-arabic" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)', letterSpacing: 0.5 }}>
-          {lang === 'ar' ? 'الكوينز للعبة' : 'Coins for game'}
-        </span>
-        <motion.div key={value}
-          initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 360, damping: 22 }}
-          className="font-bold font-mono flex items-baseline gap-2 mt-1"
-          style={{ fontSize: 30, color: accent, lineHeight: 1, textShadow: `0 0 16px ${accent}66` }}>
-          {value.toLocaleString()}
-          <span style={{ fontSize: 22 }}>🪙</span>
-        </motion.div>
+      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.55)' }}>
+        {lang === 'ar' ? 'الكوينز للعبة' : 'Coins for game'}
+      </span>
+
+      {/* Stepper row — same look as PlayerStepper for consistency */}
+      <div className="flex items-center gap-3 w-full" style={{ maxWidth: 320 }}>
+        <motion.button whileTap={{ scale: 0.88 }} onClick={dec}
+          disabled={!canDec}
+          className="rounded-2xl flex items-center justify-center font-bold shrink-0"
+          style={{
+            width: 52, height: 52,
+            background: canDec ? `${accent}26` : 'rgba(255,255,255,0.04)',
+            color: canDec ? accent : 'rgba(255,255,255,0.2)',
+            border: `2px solid ${canDec ? `${accent}66` : 'rgba(255,255,255,0.08)'}`,
+            fontSize: 28, cursor: canDec ? 'pointer' : 'not-allowed',
+            boxShadow: canDec ? `0 0 14px ${accent}33` : 'none',
+          }}>−</motion.button>
+
+        <div className="flex-1 flex flex-col items-center rounded-2xl py-2 px-3"
+          style={{
+            background: `radial-gradient(ellipse at 50% 0%, ${accent}1F 0%, transparent 70%)`,
+            border: `1px solid ${accent}44`,
+          }}>
+          <motion.div key={value}
+            initial={{ scale: 0.7, opacity: 0, y: -6 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+            className="font-bold font-mono flex items-baseline gap-1.5"
+            style={{ fontSize: 28, color: accent, lineHeight: 1, textShadow: `0 0 14px ${accent}88` }}>
+            {value.toLocaleString()}
+            <span style={{ fontSize: 18 }}>🪙</span>
+          </motion.div>
+          <span className="font-arabic mt-1" style={{ fontSize: 10, color: 'rgba(245,230,200,0.4)' }}>
+            {lang === 'ar' ? `مستوى ${idx + 1} من ${COIN_STEPS.length}` : `step ${idx + 1} of ${COIN_STEPS.length}`}
+          </span>
+        </div>
+
+        <motion.button whileTap={{ scale: 0.88 }} onClick={inc}
+          disabled={!canInc}
+          className="rounded-2xl flex items-center justify-center font-bold shrink-0"
+          style={{
+            width: 52, height: 52,
+            background: canInc ? `${accent}26` : 'rgba(255,255,255,0.04)',
+            color: canInc ? accent : 'rgba(255,255,255,0.2)',
+            border: `2px solid ${canInc ? `${accent}66` : 'rgba(255,255,255,0.08)'}`,
+            fontSize: 28, cursor: canInc ? 'pointer' : 'not-allowed',
+            boxShadow: canInc ? `0 0 14px ${accent}33` : 'none',
+          }}>+</motion.button>
       </div>
 
-      {/* 4 tier cards */}
-      <div className="grid grid-cols-2 gap-2 w-full" style={{ maxWidth: 320 }}>
-        {COIN_TIERS.map(tier => {
-          const sel = value === tier.val;
-          const afford = tier.val <= max;
-          return (
-            <motion.button key={tier.val}
-              whileTap={{ scale: 0.96 }}
-              whileHover={afford ? { y: -3 } : {}}
-              disabled={!afford}
-              onClick={() => { onChange(tier.val); soundService.playClick(); }}
-              className="relative rounded-2xl py-3 px-3 flex items-center gap-2 overflow-hidden"
-              style={{
-                background: sel
-                  ? `linear-gradient(135deg, ${tier.bg}DD 0%, ${tier.bg}88 100%)`
-                  : 'rgba(255,255,255,0.04)',
-                border: `1.5px solid ${sel ? accent : afford ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.06)'}`,
-                boxShadow: sel ? `0 0 18px ${accent}77, 0 4px 12px rgba(0,0,0,0.5)` : 'none',
-                opacity: afford ? 1 : 0.35,
-                cursor: afford ? 'pointer' : 'not-allowed',
-                transition: 'all .2s',
-              }}>
-              <span style={{ fontSize: 22, lineHeight: 1 }}>{tier.emoji}</span>
-              <div className="flex flex-col items-start min-w-0">
-                <span className="font-bold font-mono" style={{ fontSize: 14, color: sel ? '#fff' : 'rgba(245,230,200,0.85)' }}>
-                  {tier.val >= 1000 ? `${(tier.val / 1000).toLocaleString()}K` : tier.val}
-                </span>
-                <span className="font-arabic" style={{ fontSize: 10, color: sel ? 'rgba(255,255,255,0.85)' : 'rgba(245,230,200,0.5)' }}>
-                  {lang === 'ar' ? tier.ar : tier.en}
-                </span>
-              </div>
-              {sel && (
-                <span className="absolute" style={{ top: 4, insetInlineEnd: 6, color: '#fff', fontSize: 11 }}>✓</span>
-              )}
-            </motion.button>
-          );
-        })}
+      {/* Progress bar showing where on the ladder we are */}
+      <div className="w-full" style={{ maxWidth: 320 }}>
+        <div className="rounded-full overflow-hidden"
+          style={{ height: 6, background: 'rgba(255,255,255,0.06)' }}>
+          <motion.div animate={{ width: `${pct}%` }} transition={{ type: 'spring', stiffness: 220, damping: 26 }}
+            style={{ height: '100%', background: `linear-gradient(90deg, ${accent}AA, ${accent})`,
+                     boxShadow: `0 0 10px ${accent}77` }}/>
+        </div>
+        <div className="flex justify-between font-mono mt-1" style={{ fontSize: 9, color: 'rgba(245,230,200,0.35)' }}>
+          <span>50</span><span>50K</span>
+        </div>
       </div>
     </div>
   );
@@ -485,7 +520,7 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
                 <PlayerStepper value={playerCount} onChange={setPlayerCount}
                   min={2} max={10} accent={theme.accent} lang={lang}
                   label={lang === 'ar' ? 'عدد اللاعبين' : 'Players'} />
-                <CoinTierPicker value={coinAmount} onChange={setCoinAmount}
+                <CoinStepper value={coinAmount} onChange={setCoinAmount}
                   accent={theme.accent} max={coins} lang={lang} />
                 {!canAfford && (
                   <p className="text-red-400 font-arabic text-xs">

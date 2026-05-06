@@ -948,7 +948,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     if (gameState.phase !== 'PEEK_PHASE' || gameState.roundNumber > 1) setShowIntro(false);
     if (gameState.phase === 'PEEK_PHASE') {
       if (!peekOpenedAtRef.current) peekOpenedAtRef.current = Date.now();
-      setShowPeek(true);
+      // Don't show the "احفظ أوراقك" overlay yet — it gets revealed by
+      // flushPendingPeek() at the end of the cinematic (or by the 8s
+      // safety fallback). User explicitly asked for the message to wait
+      // until after the CHECK voice plays.
       setDrawnCard(null);  // belt-and-suspenders: clear any stale drawn card
     }
     if (gameState.phase === 'PLAYING') {
@@ -1010,7 +1013,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     return () => clearTimeout(t);
   }, [showIntro, gameState.phase, gameState.players.length]);
 
-  // Flush any held peek cards into knownCards and clear the deferral lock.
+  // Flush any held peek cards into knownCards + show the "احفظ أوراقك"
+  // overlay. Both were held back during the cinematic.
   const flushPendingPeek = useCallback(() => {
     peekDeferredRef.current = false;
     if (pendingPeekRef.current.length > 0) {
@@ -1022,6 +1026,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         return next;
       });
     }
+    // Reveal the peek overlay now (the message was held back from the
+    // PEEK_PHASE entry effect so it doesn't show during the cinematic).
+    setShowPeek(true);
   }, []);
 
   // Pre-warm the audio context the first time the user touches the board,

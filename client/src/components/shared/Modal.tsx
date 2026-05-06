@@ -20,13 +20,15 @@ export function Modal({ open, onClose, title, children, size = 'md' }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            transition={{ duration: 0.12 }}
+            className="absolute inset-0 bg-black/75"
             onClick={onClose}
           />
           <motion.div
-            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 20 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
             className={`relative w-full ${sizes[size]} bg-night-mid border border-gold/30 rounded-xl shadow-2xl shadow-black/50 overflow-hidden`}
           >
             {/* Gold top line */}

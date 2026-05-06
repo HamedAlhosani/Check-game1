@@ -110,6 +110,19 @@ export function RulesModal({ open, onClose }: Props) {
         ))}
       </div>
 
+      <a href="/cards-preview" target="_blank" rel="noopener" className="block w-full mb-3">
+        <button
+          className="w-full py-3 rounded-xl font-arabic font-bold transition-all"
+          style={{
+            background: 'linear-gradient(135deg, rgba(201,168,76,0.18) 0%, rgba(120,80,20,0.15) 100%)',
+            border: '1.5px solid rgba(201,168,76,0.55)',
+            color: '#E8C97A',
+            fontSize: 14,
+          }}>
+          🃏 شاهد جميع الأوراق
+        </button>
+      </a>
+
       <Button onClick={handleDone} className="w-full">
         فهمت! ابدأ اللعب 🎮
       </Button>

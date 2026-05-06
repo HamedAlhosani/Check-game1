@@ -355,13 +355,40 @@ export function CardsPreviewPage() {
                 : 'البستوني'}
             </h2>
             <div className="flex flex-wrap gap-3 justify-center">
-              {RANKS.map(rank => (
-                <CardSVG key={`${rank}-${suit}`} rank={rank} suit={suit} w={size}/>
-              ))}
+              {RANKS.map(rank => {
+                const desc = describe(rank, suit);
+                return (
+                  <div key={`${rank}-${suit}`} className="flex flex-col items-center gap-1.5" style={{ maxWidth: size + 12 }}>
+                    <CardSVG rank={rank} suit={suit} w={size}/>
+                    <p className="font-arabic text-center" style={{ fontSize: 11, color: 'rgba(245,230,200,0.6)', lineHeight: 1.4, maxWidth: size + 8 }}>
+                      {desc}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </section>
         ))}
       </div>
     </div>
   );
+}
+
+function describe(rank: Rank, suit: Suit): string {
+  if (rank === 'A') return 'قيمتها 1 — أقل ورقة';
+  if (rank === '2') return 'قيمتها 2';
+  if (rank === '3') return 'قيمتها 3';
+  if (rank === '4') return 'قيمتها 4';
+  if (rank === '5') return 'قيمتها 5';
+  if (rank === '6') return 'قيمتها 6';
+  if (rank === '7') return 'قيمتها 7';
+  if (rank === '8') return 'قيمتها 8';
+  if (rank === '9') return 'قيمتها 9';
+  if (rank === '10' && isRed(suit)) return 'قيمتها صفر — أحسن كرت!';
+  if (rank === '10') return 'قيمتها 10';
+  if (rank === 'J') return 'قيمتها 11 — تبادل كرت من يدك مع كرت من خصم';
+  if (rank === 'Q' && isRed(suit)) return 'قيمتها 12 — اكشف كرت مخفي من يدك';
+  if (rank === 'Q') return 'قيمتها 12';
+  if (rank === 'K') return 'قيمتها 13 — اسحب كرتين واختر واحد';
+  return '';
 }

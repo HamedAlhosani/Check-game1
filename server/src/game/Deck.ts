@@ -4,19 +4,13 @@ import { createCard } from './Card';
 const RANKS: Rank[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 const SUITS: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
 
-const SINGLE_DECK_SIZE = 52;
-// Aim for at least this many cards in the draw pile right after dealing 4
-// cards per player, so deck depth feels consistent regardless of player count.
-const TARGET_POST_DEAL_DECK = 44;
-
 /**
- * For N players (each dealt 4 cards) we want ≥ TARGET_POST_DEAL_DECK left
- * in the draw pile. Use as many shuffled 52-card decks as needed to satisfy
- * 4*N + 44 ≤ 52*decks.
+ * Deck count rule (per user spec):
+ *  - 2-4 players → 1 deck (13 cards per suit, 52 total)
+ *  - 5+ players → 2 decks (26 cards per suit, 104 total — like 'baloot')
  */
 export function decksNeededFor(playerCount: number): number {
-  const cardsAfterDeal = playerCount * 4 + TARGET_POST_DEAL_DECK;
-  return Math.max(1, Math.ceil(cardsAfterDeal / SINGLE_DECK_SIZE));
+  return playerCount >= 5 ? 2 : 1;
 }
 
 export class Deck {

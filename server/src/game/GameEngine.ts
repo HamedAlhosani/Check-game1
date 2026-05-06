@@ -853,7 +853,12 @@ export class GameEngine {
   private currentAdvanceDelay(): number {
     const active = this.activePlayers();
     const cur = active[this.currentTurnIndex % active.length];
-    return cur?.isBot ? BOT_CHECK_WINDOW_MS : CHECK_WINDOW_MS;
+    if (cur?.isBot) return BOT_CHECK_WINDOW_MS;
+    // Human: if CHECK is actually available right now (lap ≥ 4 and nobody
+    // has called yet), give them a real 3-second window to react after
+    // their play. Otherwise fall through to the snappy 200ms.
+    const checkAvailable = !this.checkCallerId && this.dealTurnCount >= active.length * 4;
+    return checkAvailable ? 3000 : CHECK_WINDOW_MS;
   }
 
   // Tracks original (non-bot) display name so reclaim can restore it.

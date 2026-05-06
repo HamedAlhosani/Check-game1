@@ -337,6 +337,7 @@ function FullBar({ endAt, active, maxMs = 30000 }: { endAt: number | null; activ
 
 // ─── Shared player box (same design for everyone) ─────────────────────────────
 const PlayerBox = memo(function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11 }: { player: any; gameState: any; avSize?: number; scoreFs?: number; nameFs?: number }) {
+  const calledCheck = player.uid === gameState.checkCallerId;
   const isTurn = player.isTurn, isElim = player.isEliminated;
   const compact = avSize <= 30;
   return (
@@ -354,6 +355,18 @@ const PlayerBox = memo(function PlayerBox({ player, gameState, avSize = 42, scor
           <Av id={player.avatarId} name={player.displayName} frameId={(player as any).equippedFrame} size={avSize} />
           {isTurn && <div className="absolute -bottom-0.5 -right-0.5 rounded-full border-2 border-black animate-pulse" style={{ width: compact ? 8 : 11, height: compact ? 8 : 11, background: '#C9A84C' }} />}
           {isElim && <div className="absolute inset-0 rounded-full bg-black/70 flex items-center justify-center"><span className="text-red-400 font-bold" style={{ fontSize: compact ? 8 : 10 }}>✕</span></div>}
+          {/* CHECK caller badge — pulsing red 'CHECK' chip on the avatar */}
+          {calledCheck && (
+            <div className="absolute font-bold animate-pulse"
+              style={{
+                top: -8, insetInlineStart: -10,
+                background: '#E04030', color: '#fff',
+                fontSize: compact ? 7 : 9, padding: '2px 5px', borderRadius: 6,
+                border: '1.5px solid #FFFCE0',
+                boxShadow: '0 0 10px rgba(224,64,48,0.65)',
+                letterSpacing: 0.5,
+              }}>CHECK</div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-arabic font-bold truncate" style={{ fontSize: nameFs, color: isTurn ? '#E8C97A' : 'rgba(245,230,200,.95)' }}>{player.displayName}</p>
@@ -369,6 +382,7 @@ const PlayerBox = memo(function PlayerBox({ player, gameState, avSize = 42, scor
   prev.player.isEliminated === next.player.isEliminated &&
   prev.player.displayName === next.player.displayName &&
   prev.player.avatarId === next.player.avatarId &&
+  prev.gameState.checkCallerId === next.gameState.checkCallerId &&
   prev.avSize === next.avSize && prev.scoreFs === next.scoreFs && prev.nameFs === next.nameFs
 );
 

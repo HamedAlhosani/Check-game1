@@ -283,7 +283,7 @@ const StackedDeck = memo(function StackedDeck({ count, onClick, disabled, size =
         }}
       >
         <span className="font-display tracking-widest" style={{ fontSize: size === 'large' ? 14 : 11, opacity: 0.55, letterSpacing: '0.25em' }}>
-          DECK
+          CHECK
         </span>
         <span className="font-bold" style={{ fontSize: size === 'large' ? 28 : 22, lineHeight: 1, color: enabled ? '#E8C97A' : 'rgba(232,201,122,0.55)' }}>
           {count}
@@ -1869,12 +1869,24 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         </motion.button>
       </div>
 
-      {/* ── Bottom-left deck info panel (desktop only) ── */}
-      {!isMobile && <div className="fixed z-40 flex flex-col items-center gap-1 rounded-xl border border-gold/30 px-4 py-3"
-        style={{ bottom: 58, left: 8, background: 'rgba(20,14,8,.97)', /* backdrop-blur removed for perf */ minWidth: 72, boxShadow: '0 0 12px rgba(201,168,76,.10)' }}>
-        <span className="text-gold/40 font-arabic" style={{ fontSize: 10 }}>كروت</span>
-        <span className="text-sand/80 font-bold" style={{ fontSize: 24, lineHeight: 1 }}>{gameState.deckCount}</span>
-      </div>}
+      {/* ── Deck info panel — sized + positioned per device ──
+         Desktop / tablet: bottom-left corner like before.
+         Mobile: top-right corner, compact, so it doesn't fight with
+         the chat & emote buttons at the bottom. */}
+      <div className="fixed z-40 flex flex-col items-center gap-0.5 rounded-xl border border-gold/30"
+        style={{
+          bottom: isMobile ? undefined : 58,
+          top:    isMobile ? 56 : undefined,
+          right:  isMobile ? 6  : undefined,
+          left:   isMobile ? undefined : 8,
+          padding: isMobile ? '4px 8px' : '12px 16px',
+          background: 'rgba(20,14,8,.97)',
+          minWidth: isMobile ? 44 : 72,
+          boxShadow: '0 0 12px rgba(201,168,76,.10)',
+        }}>
+        <span className="text-gold/40 font-arabic" style={{ fontSize: isMobile ? 8.5 : 10 }}>كروت</span>
+        <span className="text-sand/80 font-bold" style={{ fontSize: isMobile ? 16 : 24, lineHeight: 1 }}>{gameState.deckCount}</span>
+      </div>
 
       <ChatPanel roomId={roomId} open={chatOpen} onToggle={() => setChatOpen(s => !s)} />
 

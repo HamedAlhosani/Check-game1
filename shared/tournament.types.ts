@@ -38,9 +38,19 @@ export interface TournamentMatch {
   isHostMatch: boolean;
 }
 
+export type TournamentVisibility = 'public' | 'private';
+/** Solo = host vs bots only. Online = real players (host can fill remaining seats with bots). */
+export type TournamentKind = 'solo' | 'online';
+
 export interface TournamentState {
   id: string;
   hostUid: string;
+  /** "بطولة أحمد" or similar — used in the public list. */
+  name: string;
+  visibility: TournamentVisibility;
+  kind: TournamentKind;
+  /** Optional join code for private tournaments. */
+  code: string | null;
   size: TournamentSize;
   difficulty: 'easy' | 'medium' | 'hard';
   matchLength: GameMode;
@@ -48,15 +58,31 @@ export interface TournamentState {
   players: TournamentPlayer[];
   bracket: TournamentMatch[];
   championUid: string | null;
-  /** Coins awarded to the champion if it's the host. */
+  /** Coins awarded to the champion. */
   prizeCoins: number;
   /** Item id awarded alongside coins (frame, card back, etc.). */
   prizeItemId?: string;
   prizeItemNameAr?: string;
   prizeItemNameEn?: string;
   createdAt: number;
-  /** UID of the next match the host should play (null when waiting/finished). */
+  /** Match number the *current viewing player* should play next (null if none). */
   nextHostMatchNum: number | null;
+}
+
+/** Compact view for the public tournament list. */
+export interface TournamentSummary {
+  id: string;
+  hostUid: string;
+  hostName: string;
+  hostAvatarId: string;
+  name: string;
+  size: TournamentSize;
+  difficulty: 'easy' | 'medium' | 'hard';
+  matchLength: GameMode;
+  status: 'waiting' | 'in_progress' | 'finished';
+  players: number;            // joined count
+  prizeCoins: number;
+  createdAt: number;
 }
 
 /** Number of matches in a single-elimination bracket of N players. */

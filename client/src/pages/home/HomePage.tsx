@@ -14,7 +14,6 @@ import { LangToggle } from '../../components/shared/LangToggle';
 import { DailyRewardModal } from '../../components/shared/DailyRewardModal';
 import { RulesModal } from '../../components/shared/RulesModal';
 import { ProgressionModal } from '../../components/shared/ProgressionModal';
-import { TournamentModal } from '../../components/tournament/TournamentModal';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { deriveLevel } from '@check-game/shared';
 import type { GameMode as MatchLength, TournamentState } from '@check-game/shared';
@@ -834,7 +833,6 @@ export function HomePage() {
   const [showRules, setShowRules] = useState(false);
   const [showProgress, setShowProgress] = useState(false);
   const [progressInitialTab, setProgressInitialTab] = useState<'missions' | 'achievements' | 'levels'>('missions');
-  const [showTournament, setShowTournament] = useState(false);
   const setTournamentState = useTournamentStore(s => s.setState);
   const setTournamentFinished = useTournamentStore(s => s.setFinished);
   const tournamentState = useTournamentStore(s => s.state);
@@ -891,24 +889,21 @@ export function HomePage() {
     });
 
     // ── Tournament socket subscriptions ───────────────────────────────────
+    // Light versions only — the dedicated /tournaments page handles
+    // STATE/FINISHED. We only listen for MATCH_START here so a player
+    // sitting on /home gets pulled into their match when it begins.
     socket.on(SOCKET_EVENTS.TOURNAMENT_STATE, (state: TournamentState) => {
       setTournamentState(state);
-      // Auto-open the modal so the player sees the bracket update.
-      setShowTournament(true);
     });
     socket.on(SOCKET_EVENTS.TOURNAMENT_MATCH_START, (data: { gameId: string }) => {
-      // Hide the modal; the game page takes over.
-      setShowTournament(false);
       navigate(`/game/check/${data.gameId}`);
     });
     socket.on(SOCKET_EVENTS.TOURNAMENT_FINISHED, (data: { isHostChampion: boolean; prizeCoins: number; championUid: string | null; tournamentId: string }) => {
       setTournamentFinished(data);
-      setShowTournament(true);
     });
     socket.on(SOCKET_EVENTS.TOURNAMENT_ERROR, (data: { message: string }) => {
       addToast(data.message || 'Tournament error', 'error');
     });
-    // Resync on mount in case the player reloaded mid-tournament.
     socket.emit(SOCKET_EVENTS.TOURNAMENT_SUBSCRIBE);
 
     return () => {
@@ -925,12 +920,17 @@ export function HomePage() {
     };
   }, []);
 
-  // Auto-open the bracket if a tournament is active and the player isn't
-  // currently in a match — covers the post-game return to /home.
+  // If a tournament is active and the player just returned to /home (e.g.
+  // after a match), gently nudge them to the dedicated tournaments page.
   useEffect(() => {
-    if (tournamentState && tournamentState.status !== 'finished' && !showTournament && !tournamentFinished) {
-      // Don't pop open if user is searching/loading something else.
-      if (!searching && !botLoading) setShowTournament(true);
+    if (tournamentState && tournamentState.status !== 'finished' && !tournamentFinished) {
+      if (!searching && !botLoading) {
+        addToast(
+          lang === 'ar' ? 'لديك بطولة جارية — افتح صفحة البطولات' : 'Tournament in progress — open the Tournaments page',
+          'info', 6000,
+          { label: lang === 'ar' ? 'افتح ←' : 'Open ←', onClick: () => navigate('/tournaments') },
+        );
+      }
     }
   }, [tournamentState?.id, tournamentState?.nextHostMatchNum]);
 
@@ -1137,7 +1137,7 @@ export function HomePage() {
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-                onClick={() => { setShowTournament(true); soundService.playClick(); }}
+                onClick={() => { soundService.playClick(); navigate('/tournaments'); }}
                 className="font-arabic font-bold rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all"
                 style={{
                   background: 'linear-gradient(135deg, rgba(232,201,122,0.22) 0%, rgba(168,124,58,0.14) 100%)',
@@ -1146,7 +1146,7 @@ export function HomePage() {
                   fontSize: 14,
                   boxShadow: '0 4px 14px rgba(0,0,0,0.35), 0 0 18px rgba(232,201,122,0.30)',
                 }}>
-                🏆 {lang === 'ar' ? 'بطولة' : 'Tournament'}
+                🏆 {lang === 'ar' ? 'البطولات' : 'Tournaments'}
               </motion.button>
               {mode === 'private' && (
                 <button onClick={() => setShowJoin(true)}
@@ -1165,7 +1165,6 @@ export function HomePage() {
       <DailyRewardModal open={showDaily} onClose={() => setShowDaily(false)}/>
       <RulesModal open={showRules} onClose={() => setShowRules(false)}/>
       <ProgressionModal open={showProgress} onClose={() => setShowProgress(false)} lang={lang} initialTab={progressInitialTab}/>
-      <TournamentModal open={showTournament} onClose={() => setShowTournament(false)} lang={lang}/>
 
       {searching && <SearchingModal onCancel={handleCancelSearch} lang={lang}/>}
       {botLoading && <BotLoadingOverlay lang={lang}/>}

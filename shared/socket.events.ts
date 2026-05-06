@@ -115,11 +115,17 @@ export const SOCKET_EVENTS = {
 
   // Tournaments — Client → Server
   TOURNAMENT_CREATE:     'tournament:create',
+  TOURNAMENT_JOIN:       'tournament:join',
+  TOURNAMENT_JOIN_CODE:  'tournament:join_code',
+  TOURNAMENT_START:      'tournament:start',
+  TOURNAMENT_FILL_BOTS:  'tournament:fill_bots',
   TOURNAMENT_NEXT_MATCH: 'tournament:next_match',
   TOURNAMENT_LEAVE:      'tournament:leave',
   TOURNAMENT_SUBSCRIBE:  'tournament:subscribe',
+  TOURNAMENT_LIST_REQUEST: 'tournament:list_request',
   // Tournaments — Server → Client
   TOURNAMENT_STATE:        'tournament:state',
+  TOURNAMENT_LIST:         'tournament:list',
   TOURNAMENT_MATCH_START:  'tournament:match_start',
   TOURNAMENT_FINISHED:     'tournament:finished',
   TOURNAMENT_ERROR:        'tournament:error',

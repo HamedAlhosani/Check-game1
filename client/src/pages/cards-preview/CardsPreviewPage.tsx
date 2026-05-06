@@ -30,48 +30,136 @@ function specialOf(rank: Rank, suit: Suit): 'K' | 'J' | 'Q_RED' | 'TEN_RED' | nu
   return null;
 }
 
-// ─── Action icons for special cards (rendered ABOVE the big number) ─────────
-function SwapIcon({ color, scale = 1 }: { color: string; scale?: number }) {
+// ─── Big illustrations for the 4 special cards ──────────────────────────────
+// All centered around (50, 70) within the 100×150 card viewBox.
+
+function SwapIllustration({ ink, accent, accent2 }: { ink: string; accent: string; accent2: string }) {
+  // Two big real-looking cards exchanging places with curved arrows.
   return (
-    <g transform={`scale(${scale})`}>
-      <path d="M -10 -2 L -2 -2 L -2 -6 L 6 0 L -2 6 L -2 2 L -10 2 Z" fill={color}/>
-      <path d="M 10 -2 L 2 -2 L 2 -6 L -6 0 L 2 6 L 2 2 L 10 2 Z" fill={color} transform="translate(0 6) rotate(180)"/>
+    <g transform="translate(50 70)">
+      {/* Curved arrow above (left → right) */}
+      <path d="M -22 -28 Q 0 -42 22 -28" stroke={accent2} strokeWidth={2.2} fill="none" strokeLinecap="round"/>
+      <polygon points="22,-28 16,-32 18,-24" fill={accent2}/>
+      {/* Curved arrow below (right → left) */}
+      <path d="M 22 28 Q 0 42 -22 28" stroke={accent} strokeWidth={2.2} fill="none" strokeLinecap="round"/>
+      <polygon points="-22,28 -16,32 -18,24" fill={accent}/>
+
+      {/* Left card (going to right) */}
+      <g transform="translate(-18 0) rotate(-12)">
+        <rect x={-10} y={-15} width={20} height={30} rx={2.5} fill="#FFF" stroke={ink} strokeWidth={1.1}/>
+        <text x={-6} y={-7} fontFamily="Georgia, serif" fontWeight="800" fontSize="8" fill={accent2}>A</text>
+        <text x={-6} y={1} fontSize="8" fill={accent2}>♥</text>
+        <text x={6} y={13} fontFamily="Georgia, serif" fontWeight="800" fontSize="8" fill={accent2} transform="rotate(180 6 13)">A</text>
+      </g>
+      {/* Right card (going to left) */}
+      <g transform="translate(18 0) rotate(12)">
+        <rect x={-10} y={-15} width={20} height={30} rx={2.5} fill="#FFF" stroke={ink} strokeWidth={1.1}/>
+        <text x={-6} y={-7} fontFamily="Georgia, serif" fontWeight="800" fontSize="8" fill={ink}>K</text>
+        <text x={-6} y={1} fontSize="8" fill={ink}>♣</text>
+        <text x={6} y={13} fontFamily="Georgia, serif" fontWeight="800" fontSize="8" fill={ink} transform="rotate(180 6 13)">K</text>
+      </g>
     </g>
   );
 }
-function EyeIcon({ color, accent }: { color: string; accent: string }) {
+
+function PullIllustration({ ink, accent, accent2 }: { ink: string; accent: string; accent2: string }) {
+  // A deck on the left and two cards being drawn out, with a "2" badge on top.
   return (
-    <g>
-      <path d="M -16 0 Q 0 -10 16 0 Q 0 10 -16 0 Z" fill="#FFF" stroke={color} strokeWidth={1.4}/>
-      <circle cx={0} cy={0} r={6} fill={color}/>
-      <circle cx={0} cy={0} r={3} fill={accent}/>
-      <circle cx={-1.5} cy={-1.5} r={1.2} fill="#FFF"/>
+    <g transform="translate(50 70)">
+      {/* Hand-drawn arrow indicating pull direction */}
+      <path d="M -28 -28 Q -8 -36 16 -22" stroke={accent2} strokeWidth={2} fill="none" strokeLinecap="round"/>
+      <polygon points="16,-22 10,-26 12,-18" fill={accent2}/>
+
+      {/* Deck stack (3 layered cards) */}
+      <g transform="translate(-22 0)">
+        {[2, 1, 0].map(i => (
+          <rect key={i} x={-9 + i * 0.6} y={-16 + i * 0.6} width={18} height={28} rx={2} fill="#080318" stroke={accent} strokeWidth={0.8}/>
+        ))}
+        {/* deck count "..." */}
+        <text x={0} y={2} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="800" fontSize="10" fill={accent}>♢</text>
+      </g>
+
+      {/* Two drawn cards — fanned out to the right of the deck */}
+      <g transform="translate(8 -2) rotate(-14)">
+        <rect x={-10} y={-16} width={20} height={32} rx={2.5} fill="#FFF" stroke={ink} strokeWidth={1.1}/>
+        <text x={-6} y={-8} fontFamily="Georgia, serif" fontWeight="800" fontSize="9" fill={accent2}>A</text>
+        <text x={-6} y={0} fontSize="8" fill={accent2}>♥</text>
+      </g>
+      <g transform="translate(22 4) rotate(14)">
+        <rect x={-10} y={-16} width={20} height={32} rx={2.5} fill="#FFF" stroke={ink} strokeWidth={1.1}/>
+        <text x={-6} y={-8} fontFamily="Georgia, serif" fontWeight="800" fontSize="9" fill={ink}>K</text>
+        <text x={-6} y={0} fontSize="8" fill={ink}>♠</text>
+      </g>
+
+      {/* Big "2" badge */}
+      <g transform="translate(28 -22)">
+        <circle r={9} fill={accent2} stroke="#FFF" strokeWidth={1.4}/>
+        <text y={3.5} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="11" fill="#FFF">2</text>
+      </g>
     </g>
   );
 }
-function PullIcon({ color }: { color: string }) {
-  // Two cards being drawn
+
+function PeekIllustration({ ink, accent, accent2 }: { ink: string; accent: string; accent2: string }) {
+  // Big almond eye with kohl wings, lashes and a "?" card peeking from the top.
   return (
-    <g>
-      <rect x={-12} y={-9} width={11} height={16} rx={1.5} fill="#FFF" stroke={color} strokeWidth={0.9} transform="rotate(-12 -7 -1)"/>
-      <rect x={1} y={-9} width={11} height={16} rx={1.5} fill="#FFF" stroke={color} strokeWidth={0.9} transform="rotate(12 7 -1)"/>
-      <circle cx={0} cy={9} r={4.5} fill={color}/>
-      <text y={11.5} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="6.5" fill="#FFF">2</text>
+    <g transform="translate(50 72)">
+      {/* Card with "?" tilted behind the eye */}
+      <g transform="translate(0 -22) rotate(-8)">
+        <rect x={-12} y={-9} width={24} height={18} rx={2} fill="#FFF" stroke={accent} strokeWidth={0.9}/>
+        <text x={0} y={4} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="11" fill={accent2}>?</text>
+      </g>
+
+      {/* Eye outline */}
+      <path d="M -28 0 Q 0 -16 28 0 Q 0 16 -28 0 Z" fill="#FFFCF2" stroke={ink} strokeWidth={1.8}/>
+
+      {/* Kohl wings */}
+      <path d="M -28 0 Q -34 -3 -38 -8" stroke={ink} strokeWidth={2.2} fill="none" strokeLinecap="round"/>
+      <path d="M 28 0 Q 34 -3 38 -8" stroke={ink} strokeWidth={2.2} fill="none" strokeLinecap="round"/>
+
+      {/* Lashes */}
+      {[-18, -12, -6, 0, 6, 12, 18].map((x, i) => (
+        <line key={i} x1={x * 0.95} y1={-13} x2={x * 1.06} y2={-17} stroke={ink} strokeWidth={1} strokeLinecap="round"/>
+      ))}
+
+      {/* Iris + pupil */}
+      <circle cx={0} cy={0} r={11} fill={accent2}/>
+      <circle cx={0} cy={0} r={6} fill={ink}/>
+      <circle cx={-2} cy={-2} r={2.2} fill="#FFF"/>
+      <circle cx={3} cy={3} r={1} fill="#FFF" opacity={0.7}/>
     </g>
   );
 }
-function StarBurstIcon({ color, accent }: { color: string; accent: string }) {
-  // Lucky shooting star burst
+
+function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: string; accent2: string }) {
+  // A central radiant burst with sparkles around a hollow "0" ring.
   return (
-    <g>
-      {Array.from({ length: 8 }).map((_, i) => {
-        const a = (i / 8) * Math.PI * 2;
-        const x = Math.cos(a) * 12;
-        const y = Math.sin(a) * 12;
-        return <line key={i} x1={0} y1={0} x2={x} y2={y} stroke={accent} strokeWidth={1.4} strokeLinecap="round"/>;
+    <g transform="translate(50 72)">
+      {/* Radiant rays — 12 evenly-spaced */}
+      {Array.from({ length: 12 }).map((_, i) => {
+        const a = (i / 12) * Math.PI * 2 - Math.PI / 2;
+        const x1 = Math.cos(a) * 18;
+        const y1 = Math.sin(a) * 18;
+        const x2 = Math.cos(a) * 30;
+        const y2 = Math.sin(a) * 30;
+        return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={accent} strokeWidth={1.6} strokeLinecap="round" opacity={0.85}/>;
       })}
-      <circle r={6} fill={color}/>
-      <circle r={3} fill={accent}/>
+      {/* Sparkle stars in the corners */}
+      {[
+        [-32, -22, 3],
+        [32, -22, 3.5],
+        [-32, 22, 3],
+        [32, 22, 3.5],
+      ].map(([cx, cy, r], i) => (
+        <g key={i}>
+          <line x1={cx} y1={cy - r * 1.6} x2={cx} y2={cy + r * 1.6} stroke={accent2} strokeWidth={1} strokeLinecap="round"/>
+          <line x1={cx - r * 1.6} y1={cy} x2={cx + r * 1.6} y2={cy} stroke={accent2} strokeWidth={1} strokeLinecap="round"/>
+          <circle cx={cx} cy={cy} r={r * 0.5} fill={accent2}/>
+        </g>
+      ))}
+      {/* Center: hollow ring with 0 inside */}
+      <circle r={16} fill="#FFFCF2" stroke={ink} strokeWidth={3.5}/>
+      <text y={6} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="22" fill={ink}>0</text>
     </g>
   );
 }
@@ -86,15 +174,11 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
   const label = labelFor(rank, suit);
   const special = specialOf(rank, suit);
 
-  // Special-card action label below the big number
   const actionLabel = special === 'J' ? 'بدّل كرت'
                     : special === 'Q_RED' ? 'اكشف كرت'
                     : special === 'K' ? 'اسحب كرتين'
                     : special === 'TEN_RED' ? 'حظك حلو'
                     : null;
-
-  // Big-number font size — shrinks for 2-digit labels
-  const bigSize = label.length === 1 ? 56 : label.length === 2 ? 42 : 28;
 
   return (
     <svg width={w} height={h} viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg"
@@ -104,7 +188,6 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
           <stop offset="0%" stopColor="#FFFCF2"/>
           <stop offset="100%" stopColor="#F2E4BE"/>
         </linearGradient>
-        {/* Center-of-card glow tinted by suit */}
         <radialGradient id={`glow-${rank}-${suit}`} cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor={red ? '#FFD8D8' : '#D8E8FF'} stopOpacity="0.55"/>
           <stop offset="100%" stopColor="transparent"/>
@@ -113,24 +196,20 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
 
       {/* Card body */}
       <rect x="0" y="0" width="100" height="150" rx="8" fill={`url(#bg-${rank}-${suit})`} stroke={accent} strokeWidth="1"/>
-      {/* Inner gold frame */}
       <rect x="3.5" y="3.5" width="93" height="143" rx="6" fill="none" stroke={accent} strokeWidth="0.6" opacity="0.6"/>
 
-      {/* ─── ORNAMENTAL FRAME inside the card body ─── */}
-      {/* Decorative ribbon at the top edge (geometric chevron) */}
-      <g opacity="0.65" stroke={accent} strokeWidth="0.5" fill="none">
+      {/* Decorative chevron ribbons (top + bottom edges) */}
+      <g opacity="0.6" stroke={accent} strokeWidth="0.5" fill="none">
         <path d="M 16 14 L 24 18 L 32 14 L 40 18 L 48 14 L 56 18 L 64 14 L 72 18 L 80 14 L 84 14"/>
       </g>
-      {/* Decorative ribbon at the bottom edge */}
-      <g opacity="0.65" stroke={accent} strokeWidth="0.5" fill="none" transform="rotate(180 50 75)">
+      <g opacity="0.6" stroke={accent} strokeWidth="0.5" fill="none" transform="rotate(180 50 75)">
         <path d="M 16 14 L 24 18 L 32 14 L 40 18 L 48 14 L 56 18 L 64 14 L 72 18 L 80 14 L 84 14"/>
       </g>
 
-      {/* Tall vertical filigree lines flanking the centre */}
+      {/* Side filigree */}
       <g opacity="0.4" stroke={accent} strokeWidth="0.45" fill="none">
         <line x1="16" y1="40" x2="16" y2="110"/>
         <line x1="84" y1="40" x2="84" y2="110"/>
-        {/* small dots along the line */}
         {[50, 60, 70, 80, 90, 100].map(y => (
           <g key={y}>
             <circle cx="16" cy={y} r="0.8" fill={accent}/>
@@ -139,7 +218,7 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
         ))}
       </g>
 
-      {/* 4 small flower-like ornaments at frame corners (replacing plain diamonds) */}
+      {/* Corner ornaments — 4-petal flower */}
       {[[12, 12], [88, 12], [12, 138], [88, 138]].map(([cx, cy], i) => (
         <g key={i}>
           {Array.from({ length: 4 }).map((_, j) => {
@@ -150,7 +229,7 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
         </g>
       ))}
 
-      {/* ─── CORNER MARKS (rank + suit) ─── */}
+      {/* Corner rank+suit (always shown — small, in the corners only) */}
       <g>
         <text x="14" y="22" fontFamily="Georgia, serif" fontWeight="800"
           fontSize={label.length > 1 ? 12 : 16} fill={ink} textAnchor="middle">{label}</text>
@@ -162,76 +241,52 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
         <text x="14" y="34" fontSize="12" fill={ink} textAnchor="middle">{SUIT_GLYPH[suit]}</text>
       </g>
 
-      {/* ─── CENTER: big number (always) + optional action icon/label ─── */}
-
-      {/* Center halo — soft tinted glow behind the number */}
+      {/* Soft halo behind the centre */}
       <circle cx={50} cy={75} r={32} fill={`url(#glow-${rank}-${suit})`}/>
-
-      {/* Decorative ring around the centre */}
       <circle cx={50} cy={75} r={26} fill="none" stroke={accent} strokeWidth="0.7" opacity="0.4" strokeDasharray="2 2"/>
 
-      {/* For special cards: small action icon ABOVE the number */}
-      {special === 'J' && (
-        <g transform="translate(50 50)"><SwapIcon color={accent2}/></g>
-      )}
-      {special === 'Q_RED' && (
-        <g transform="translate(50 52)"><EyeIcon color={ink} accent={accent2}/></g>
-      )}
-      {special === 'K' && (
-        <g transform="translate(50 50)"><PullIcon color={accent2}/></g>
-      )}
-      {special === 'TEN_RED' && (
-        <g transform="translate(50 50)"><StarBurstIcon color={accent} accent={accent2}/></g>
+      {/* ─── CENTRE CONTENT ─── */}
+      {!special && (
+        // Numeric / black-Q / A — JUST the big number, no suit below.
+        <text
+          x={50}
+          y={92}
+          textAnchor="middle"
+          fontFamily="Georgia, serif"
+          fontWeight="800"
+          fontSize={label.length === 1 ? 64 : 50}
+          fill={ink}
+          style={{ letterSpacing: -1 }}
+        >
+          {label}
+        </text>
       )}
 
-      {/* THE BIG NUMBER — always centered, this is the heart of the design */}
-      <text
-        x={50}
-        y={special ? 96 : 86}
-        textAnchor="middle"
-        fontFamily="Georgia, serif"
-        fontWeight="800"
-        fontSize={special ? bigSize - 8 : bigSize}
-        fill={ink}
-        style={{ letterSpacing: -1 }}
-      >
-        {label}
-      </text>
+      {special === 'J' && <SwapIllustration ink={ink} accent={accent} accent2={accent2}/>}
+      {special === 'K' && <PullIllustration ink={ink} accent={accent} accent2={accent2}/>}
+      {special === 'Q_RED' && <PeekIllustration ink={ink} accent={accent} accent2={accent2}/>}
+      {special === 'TEN_RED' && <LuckIllustration ink={ink} accent={accent} accent2={accent2}/>}
 
-      {/* Suit glyph below number — bold and big */}
-      <text
-        x={50}
-        y={special ? 116 : 110}
-        textAnchor="middle"
-        fontSize={special ? 14 : 20}
-        fill={ink}
-        opacity="0.9"
-      >
-        {SUIT_GLYPH[suit]}
-      </text>
-
-      {/* Optional action label for special cards */}
+      {/* Action label for special cards */}
       {actionLabel && (
         <text
           x={50}
-          y={130}
+          y={120}
           textAnchor="middle"
           fontFamily="'Tajawal', 'Cairo', sans-serif"
           fontWeight="800"
-          fontSize="10"
+          fontSize="11"
           fill={accent2}
         >
           {actionLabel}
         </text>
       )}
 
-      {/* CHECK brand wordmark — tiny, bottom-center */}
-      {!actionLabel && (
-        <g>
-          <rect x="36" y="129" width="28" height="8" rx="4" fill={ink} opacity="0.85"/>
-          <text x="50" y="135" textAnchor="middle" fontFamily="Georgia, serif" fontWeight="800" fontSize="5.5" letterSpacing="2" fill={accent}>CHECK</text>
-        </g>
-      )}
+      {/* CHECK brand — bottom centre */}
+      <g>
+        <rect x="36" y="135" width="28" height="8" rx="4" fill={ink} opacity="0.85"/>
+        <text x="50" y="141" textAnchor="middle" fontFamily="Georgia, serif" fontWeight="800" fontSize="5.5" letterSpacing="2" fill={accent}>CHECK</text>
+      </g>
     </svg>
   );
 }
@@ -245,7 +300,7 @@ export function CardsPreviewPage() {
           🃏 معاينة أوراق Check
         </h1>
         <p className="font-arabic text-center mb-6" style={{ fontSize: 13, color: 'rgba(245,230,200,0.55)' }}>
-          الإصدار الثالث — الرقم كبير في النص + إطار زخرفي إماراتي
+          الإصدار الرابع — رقم كبير بدون شكل تحته للأوراق العادية، ورسوم كبيرة للأوراق الخاصة
         </p>
 
         <div className="flex items-center justify-center gap-3 mb-8">

@@ -1270,11 +1270,20 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               {/* Inner ring */}
               <div className="absolute pointer-events-none" style={{ inset: '5%', borderRadius: '50%', border: '1px dashed rgba(201,168,76,.13)' }} />
 
-              {/* Check called indicator — only when called */}
+              {/* Check called indicator — sits just above the deck + discard pile */}
               {gameState.checkCallerId && (
-                <div className="absolute top-2 left-0 right-0 flex justify-center pointer-events-none" style={{ zIndex: 22 }}>
-                  <p className="text-gold font-arabic font-bold animate-pulse rounded-full px-3 py-0.5"
-                    style={{ fontSize: 11, background: 'rgba(20,14,8,0.85)', border: '1px solid rgba(201,168,76,0.5)' }}>⚠ Check!</p>
+                <div className="absolute left-0 right-0 flex justify-center pointer-events-none"
+                  style={{ top: `calc(50% - ${isMobile ? 90 : 115}px)`, zIndex: 22 }}>
+                  <p className="font-arabic font-bold animate-pulse rounded-full"
+                    style={{
+                      fontSize: isMobile ? 14 : 16,
+                      padding: '6px 16px',
+                      background: 'linear-gradient(135deg, rgba(224,64,48,0.95) 0%, rgba(176,40,24,0.95) 100%)',
+                      color: '#fff',
+                      border: '2px solid #FF6048',
+                      boxShadow: '0 0 18px rgba(224,64,48,0.6)',
+                      letterSpacing: 1,
+                    }}>⚠ CHECK!</p>
                 </div>
               )}
 

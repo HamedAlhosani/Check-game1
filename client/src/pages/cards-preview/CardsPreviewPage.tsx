@@ -162,8 +162,8 @@ function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
       ))}
 
       {/* Empty red pill behind the banner — Arabic text is overlaid as HTML */}
-      <g transform="translate(0 -32)">
-        <rect x={-17} y={-5.5} width={34} height={11} rx={5.5} fill={accent2} opacity={0.95}/>
+      <g transform="translate(0 -30)">
+        <rect x={-22} y={-7.5} width={44} height={15} rx={7.5} fill={accent2} opacity={0.95}/>
       </g>
 
       {/* The big digit '0' in the centre — bigger now */}
@@ -289,12 +289,15 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
     </svg>
 
     {/* ── HTML overlays for Arabic text (positioned in % of card size) ── */}
-    {/* 'حظك حلو' banner text on red 10 — small pill */}
+    {/* 'حظك حلو' banner text — fills the red pill, centered both ways */}
     {special === 'TEN_RED' && (
       <div dir="rtl" style={{
-        position: 'absolute', left: '33%', top: '23.5%', width: '34%',
-        textAlign: 'center', color: '#FFF', fontWeight: 900,
-        fontSize: w * 0.05, fontFamily: arabicFont, lineHeight: 1, pointerEvents: 'none',
+        position: 'absolute',
+        left: '28%', top: '15%',
+        width: '44%', height: '10%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#FFF', fontWeight: 900,
+        fontSize: w * 0.082, fontFamily: arabicFont, lineHeight: 1, pointerEvents: 'none',
       }}>حظك حلو</div>
     )}
     {/* 'صفر' word under the digit on red 10 */}

@@ -15,7 +15,6 @@ export type BotAction =
 export class BotPlayer {
   readonly uid: string;
   private difficulty: 'easy' | 'medium' | 'hard';
-  // Full card knowledge — updated each turn by the scheduler using getBotCards()
   private myCards: Map<number, Card> = new Map();
 
   constructor(uid: string, difficulty: 'easy' | 'medium' | 'hard' = 'medium') {
@@ -23,7 +22,6 @@ export class BotPlayer {
     this.difficulty = difficulty;
   }
 
-  /** Called by the scheduler before each decision with the server's actual card data. */
   updateCards(cards: (Card | null)[]): void {
     this.myCards.clear();
     for (let i = 0; i < cards.length; i++) {
@@ -48,51 +46,91 @@ export class BotPlayer {
 
     const discardTop = state.discardTop;
 
-    // 1. Try burning a card from hand that matches discard rank
+    // ─── EASY: training-level bot ───────────────────────────────────────────
+    // Doesn't burn from discard, doesn't take from discard, rarely calls check.
+    // Just draws and either swaps a high card or burns the drawn one.
+    if (this.difficulty === 'easy') {
+      // Easy almost never calls check — only when hand is obviously tiny
+      const activePlayers = state.players.filter(p => !p.isEliminated).length;
+      const checkUnlocked = state.dealTurnCount >= activePlayers * 4;
+      if (checkUnlocked && !state.checkCallerId && Math.random() < 0.05) {
+        const estimate = this.estimateHandValue();
+        if (estimate <= 6) return { type: 'CALL_CHECK' };
+      }
+      return { type: 'DRAW' };
+    }
+
+    // ─── MEDIUM: normal play ────────────────────────────────────────────────
+    // Burns from discard rarely (~25%), takes from discard rarely (~15%),
+    // calls check at a reasonable threshold.
+    if (this.difficulty === 'medium') {
+      if (discardTop && !state.lastDiscardFromKing && Math.random() < 0.25) {
+        const burnPos = this.findRankMatch(discardTop.rank);
+        if (burnPos !== -1) return { type: 'BURN_DISCARD', position: burnPos };
+      }
+
+      if (discardTop && !state.lastDiscardFromKing && Math.random() < 0.15) {
+        const discardVal = getCardValue(discardTop);
+        const worstPos = this.findWorstPosition();
+        if (worstPos !== -1) {
+          const worstVal = this.getCardVal(worstPos);
+          if (discardVal < worstVal - 3 && discardVal <= 4) {
+            return { type: 'TAKE_DISCARD', position: worstPos };
+          }
+        }
+      }
+
+      const activePlayers = state.players.filter(p => !p.isEliminated).length;
+      const checkUnlocked = state.dealTurnCount >= activePlayers * 4;
+      if (checkUnlocked && !state.checkCallerId) {
+        const estimate = this.estimateHandValue();
+        if (estimate <= 14 && Math.random() > 0.3) return { type: 'CALL_CHECK' };
+      }
+
+      return { type: 'DRAW' };
+    }
+
+    // ─── HARD: pro bot ──────────────────────────────────────────────────────
+    // Always burns matching discard rank, eagerly takes from discard if it
+    // beats worst card, calls check aggressively when hand is low.
     if (discardTop && !state.lastDiscardFromKing) {
       const burnPos = this.findRankMatch(discardTop.rank);
       if (burnPos !== -1) return { type: 'BURN_DISCARD', position: burnPos };
     }
 
-    // 2. Try taking the discard pile top if it's significantly better than worst card
-    if (discardTop && !state.lastDiscardFromKing && this.difficulty !== 'easy') {
+    if (discardTop && !state.lastDiscardFromKing) {
       const discardVal = getCardValue(discardTop);
       const worstPos = this.findWorstPosition();
       if (worstPos !== -1) {
         const worstVal = this.getCardVal(worstPos);
-        if (discardVal < worstVal - 2 && discardVal <= 5) {
+        if (discardVal < worstVal - 1 && discardVal <= 6) {
           return { type: 'TAKE_DISCARD', position: worstPos };
         }
       }
     }
 
-    // 3. Call check if hand is good enough
     const activePlayers = state.players.filter(p => !p.isEliminated).length;
     const checkUnlocked = state.dealTurnCount >= activePlayers * 4;
     if (checkUnlocked && !state.checkCallerId) {
       const estimate = this.estimateHandValue();
-      if (this.shouldCallCheck(estimate)) return { type: 'CALL_CHECK' };
+      if (estimate <= 10 && Math.random() > 0.15) return { type: 'CALL_CHECK' };
     }
 
     return { type: 'DRAW' };
   }
 
   decideKingSwap(kingCards: Card[]): BotAction {
-    // Pick the lowest-value king choice
     let bestIdx = 0, bestVal = Infinity;
     for (let i = 0; i < kingCards.length; i++) {
       const v = getCardValue(kingCards[i]);
       if (v < bestVal) { bestVal = v; bestIdx = i; }
     }
-    // Replace the worst card in hand, or first position if no info
     const worstPos = this.findWorstPosition();
     const handPos = worstPos !== -1 ? worstPos : 0;
-    // Only swap if king choice is better than worst card
     const worstVal = handPos !== -1 ? this.getCardVal(handPos) : 13;
     if (bestVal < worstVal) {
       return { type: 'KING_SWAP', choiceIndex: bestIdx, handPosition: handPos };
     }
-    // Burn all king cards (return first choice, engine handles burn via onKingBurn)
     return { type: 'KING_SWAP', choiceIndex: -1, handPosition: -1 };
   }
 
@@ -101,17 +139,21 @@ export class BotPlayer {
     const worstPos = this.findWorstPosition();
 
     if (this.difficulty === 'easy') {
-      if (worstPos !== -1 && drawnValue < this.getCardVal(worstPos)) {
+      // Easy makes random-ish choices — sometimes swaps a low drawn card with
+      // a low hand card (suboptimal) and burns even okay cards.
+      if (Math.random() < 0.4) return { type: 'BURN_DRAWN' };
+      if (worstPos !== -1 && drawnValue < this.getCardVal(worstPos) - 1) {
         return { type: 'SWAP_DRAWN', position: worstPos };
       }
-      return drawnValue <= 5 ? { type: 'SWAP_DRAWN', position: worstPos !== -1 ? worstPos : 0 } : { type: 'BURN_DRAWN' };
+      return drawnValue <= 4
+        ? { type: 'SWAP_DRAWN', position: worstPos !== -1 ? worstPos : 0 }
+        : { type: 'BURN_DRAWN' };
     }
 
     if (worstPos !== -1 && drawnValue < this.getCardVal(worstPos)) {
       return { type: 'SWAP_DRAWN', position: worstPos };
     }
 
-    // Hard: gamble on unknown slots if drawn card is very low
     if (this.difficulty === 'hard' && drawnValue <= 2) {
       const unknownPos = this.findUnknownPosition();
       if (unknownPos !== -1) return { type: 'SWAP_DRAWN', position: unknownPos };
@@ -123,7 +165,6 @@ export class BotPlayer {
   private decideSpecialSwap(state: GameState): BotAction {
     const opponents = state.players.filter(p => p.uid !== this.uid && !p.isEliminated);
     if (!opponents.length) return { type: 'DRAW' };
-    // Target the opponent with the most cards (likely higher score)
     const target = opponents.reduce((best, p) => p.cardCount > best.cardCount ? p : best, opponents[0]);
     const validCards = target.cards.map((c, i) => ({ c, i })).filter(x => x.c !== null);
     const targetPos = validCards[Math.floor(Math.random() * validCards.length)]?.i ?? 0;
@@ -137,7 +178,6 @@ export class BotPlayer {
   }
 
   private decideSpecialPeek(): BotAction {
-    // Peek at the highest-value card we don't know well
     const worstPos = this.findWorstPosition();
     if (worstPos !== -1) return { type: 'SPECIAL_PEEK_OWN', position: worstPos };
     return { type: 'SPECIAL_PEEK_OWN', position: 0 };
@@ -160,7 +200,6 @@ export class BotPlayer {
   }
 
   private findUnknownPosition(): number {
-    // In practice we know all cards now, but find lowest-known as fallback
     const allPos = Array.from(this.myCards.keys());
     return allPos.length > 0 ? allPos[allPos.length - 1] : -1;
   }
@@ -176,10 +215,5 @@ export class BotPlayer {
       total += getCardValue(card);
     }
     return total;
-  }
-
-  private shouldCallCheck(estimate: number): boolean {
-    const threshold = this.difficulty === 'hard' ? 10 : this.difficulty === 'medium' ? 14 : 18;
-    return estimate <= threshold && Math.random() > 0.25;
   }
 }

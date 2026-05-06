@@ -170,44 +170,72 @@ function ChairsRing({ radius }: { radius: number }) {
   );
 }
 
-// ─── Circular Deck Ring ────────────────────────────────────────────────────────
-function CircleDeck({ count, onClick, disabled }: { count: number; onClick?: () => void; disabled?: boolean }) {
-  const MAX = 52;
-  const CW = 18, CH = 27, R = 85;
+// ─── Stacked Deck (simple pile, no rotation) ──────────────────────────────────
+function StackedDeck({ count, onClick, disabled, size = 'normal' }: { count: number; onClick?: () => void; disabled?: boolean; size?: 'normal' | 'large' }) {
+  // Card dimensions roughly match PlayingCard small/normal so the deck visually
+  // matches the discard pile beside it.
+  const CW = size === 'large' ? 92 : 72;
+  const CH = Math.round(CW * 1.5);
+  // Cap visible "depth" cards so the stack doesn't overflow the table center
+  const depth = Math.min(count, 8);
+  const offset = 2; // px per card depth shadow
+  const enabled = count > 0 && !disabled;
   return (
-    <div className="relative" style={{ width: R * 2 + CW, height: R * 2 + CH }}>
-      {Array.from({ length: MAX }).map((_, i) => {
-        const angle = (i / MAX) * 2 * Math.PI - Math.PI / 2;
-        const cx = (R + CW / 2) + Math.cos(angle) * R - CW / 2;
-        const cy = (R + CH / 2) + Math.sin(angle) * R - CH / 2;
-        const rot = (i / MAX) * 360;
-        const isTop = i === 0;
-        const exists = i < count;
-        return (
-          <div
-            key={i}
-            onClick={isTop && exists && !disabled ? onClick : undefined}
-            style={{
-              position: 'absolute', left: cx, top: cy,
-              width: CW, height: CH,
-              transform: `rotate(${rot}deg)`,
-              transformOrigin: 'center center',
-              borderRadius: 4,
-              background: exists ? '#080318' : 'rgba(255,255,255,0.01)',
-              border: exists
-                ? (isTop && !disabled ? '1.5px solid rgba(232,201,122,0.9)' : '1px solid rgba(232,201,122,0.25)')
-                : '1px solid rgba(232,201,122,0.06)',
-              boxShadow: isTop && exists && !disabled ? '0 0 8px rgba(201,168,76,0.5)' : 'none',
-              cursor: isTop && exists && !disabled ? 'pointer' : 'default',
-              zIndex: isTop && exists ? 10 : 1,
-              opacity: exists ? 1 : 0.18,
-              transition: 'opacity 0.5s',
-            }}
-          />
-        );
-      })}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <span className="text-gold/60 font-bold" style={{ fontSize: 12, textShadow: '0 1px 4px #000' }}>{count}</span>
+    <div
+      onClick={enabled ? onClick : undefined}
+      className="relative shrink-0"
+      style={{
+        width: CW + depth * offset,
+        height: CH + depth * offset,
+        cursor: enabled ? 'pointer' : 'default',
+      }}
+    >
+      {/* Depth shadow cards behind */}
+      {Array.from({ length: depth }).map((_, i) => (
+        <div
+          key={i}
+          style={{
+            position: 'absolute',
+            left: (depth - i) * offset,
+            top: (depth - i) * offset,
+            width: CW,
+            height: CH,
+            borderRadius: 8,
+            background: '#080318',
+            border: '1px solid rgba(232,201,122,0.18)',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.45)',
+          }}
+        />
+      ))}
+      {/* Top card (interactive) */}
+      <div
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: CW,
+          height: CH,
+          borderRadius: 8,
+          background: 'linear-gradient(145deg, #0E0830 0%, #050218 100%)',
+          border: enabled ? '2px solid rgba(232,201,122,0.85)' : '1.5px solid rgba(232,201,122,0.35)',
+          boxShadow: enabled
+            ? '0 0 18px rgba(201,168,76,0.55), 0 4px 10px rgba(0,0,0,0.6)'
+            : '0 4px 10px rgba(0,0,0,0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          color: 'rgba(232,201,122,0.85)',
+          gap: 4,
+          transition: 'box-shadow .2s, border-color .2s',
+        }}
+      >
+        <span className="font-display tracking-widest" style={{ fontSize: size === 'large' ? 14 : 11, opacity: 0.55, letterSpacing: '0.25em' }}>
+          DECK
+        </span>
+        <span className="font-bold" style={{ fontSize: size === 'large' ? 28 : 22, lineHeight: 1, color: enabled ? '#E8C97A' : 'rgba(232,201,122,0.55)' }}>
+          {count}
+        </span>
       </div>
     </div>
   );
@@ -607,9 +635,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const stripH = isMobile ? 82 : 0;
   const mobileTableSize = isMobile
     ? Math.min(
-        Math.floor(winW * 0.72),           // max 72% of screen width
+        Math.floor(winW * 0.86),           // most of screen width
         winH - 100 - stripH - myAreaH - 20, // max from available height
-        290                                  // hard cap
+        380                                  // hard cap
       )
     : 0;
   const n = gameState.players.length;
@@ -654,6 +682,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [qPeekCard, setQPeekCard] = useState<{ card: Card; position: number } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [showScoreboard, setShowScoreboard] = useState(false);
   const [soundOn, setSoundOn] = useState(soundService.isEnabled());
   const [volume, setVolumeState] = useState(soundService.getVolume());
 
@@ -1001,49 +1030,111 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     </div>
   );
 
-  // ── Score Bar ──────────────────────────────────────────────────────────────
-  const ScoreBar = () => {
-    const barAv = n <= 6 ? 22 : n <= 8 ? 18 : 15;
-    const barScore = n <= 6 ? 11 : n <= 8 ? 10 : 9;
-    const showName = n <= 8;
+  // ── Scoreboard Modal — opened via the top-right "النقاط" button ───────────
+  const ScoreboardModal = () => {
+    const sorted = [...gameState.players].sort((a, b) => a.cumulativeScore - b.cumulativeScore);
     return (
-      <div className="fixed top-0 left-0 right-0 z-40"
-        style={{ background: 'rgba(3,7,18,0.98)', borderBottom: '1px solid rgba(201,168,76,.22)', height: 44 }}>
-        <div className="h-full flex items-center gap-1.5 px-2 overflow-x-auto"
-          style={{ scrollbarWidth: 'none' }}>
-          {gameState.players.map(p => {
-            const isMe = p.uid === user?.uid;
-            const isTurn = p.isTurn;
-            return (
-              <div key={p.uid} className="shrink-0 flex flex-col items-center gap-0.5"
-                style={{ opacity: p.isEliminated ? 0.4 : 1, transition: 'opacity .3s' }}>
-                <div className="relative">
-                  <div style={{
-                    padding: isTurn ? 2 : 1, borderRadius: '50%',
-                    background: isTurn ? 'rgba(201,168,76,0.35)' : 'transparent',
-                    border: isTurn ? '1.5px solid #C9A84C' : `1.5px solid ${isMe ? 'rgba(201,168,76,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                    boxShadow: isTurn ? '0 0 8px rgba(201,168,76,0.5)' : 'none',
-                  }}>
-                    <Av id={p.avatarId} name={p.displayName} frameId={(p as any).equippedFrame} size={barAv} />
-                  </div>
-                  {isTurn && <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-black animate-pulse" style={{ background: '#C9A84C' }}/>}
-                  {p.isEliminated && <div className="absolute inset-0 rounded-full bg-black/70 flex items-center justify-center"><span className="text-red-400 font-bold" style={{ fontSize: 8 }}>✕</span></div>}
-                </div>
-                <div className="flex flex-col items-center" style={{ lineHeight: 1 }}>
-                  {showName && (
-                    <span className="font-arabic truncate" style={{ fontSize: 6, color: isMe ? '#E8C97A' : 'rgba(255,255,255,0.5)', maxWidth: barAv + 10 }}>
-                      {p.displayName}
-                    </span>
-                  )}
-                  <span className="font-bold" style={{ fontSize: barScore, color: isTurn ? '#E8C97A' : isMe ? '#C9A84C' : 'rgba(255,255,255,0.7)' }}>
-                    {p.cumulativeScore}
+      <motion.div
+        key="scoreboard-bg"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style={{ background: 'rgba(8,4,0,0.86)', backdropFilter: 'blur(10px)' }}
+        onClick={() => setShowScoreboard(false)}
+      >
+        <motion.div
+          initial={{ scale: 0.85, y: 20 }}
+          animate={{ scale: 1, y: 0 }}
+          exit={{ scale: 0.85, y: 20 }}
+          transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+          onClick={e => e.stopPropagation()}
+          className="rounded-3xl border w-full flex flex-col"
+          style={{
+            background: 'linear-gradient(160deg, #241810 0%, #14100A 100%)',
+            borderColor: 'rgba(201,168,76,0.45)',
+            maxWidth: 480,
+            maxHeight: '88vh',
+            boxShadow: '0 20px 80px rgba(0,0,0,0.85), 0 0 50px rgba(201,168,76,0.18)',
+            padding: '22px 22px 20px',
+          }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="font-arabic font-bold" style={{ fontSize: 22, color: '#E8C97A' }}>النقاط</h2>
+              <p className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.45)' }}>
+                اللاعب الأقل نقاطاً يفوز · يخرج عند 100
+              </p>
+            </div>
+            <button
+              onClick={() => setShowScoreboard(false)}
+              className="rounded-lg w-9 h-9 flex items-center justify-center hover:bg-white/5"
+              style={{ color: 'rgba(245,230,200,0.5)', fontSize: 22, lineHeight: 1 }}>×</button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto flex flex-col gap-2.5">
+            {sorted.map((p, i) => {
+              const isMe = p.uid === user?.uid;
+              const score = p.cumulativeScore;
+              const pct = Math.min(100, (score / 100) * 100);
+              const danger = score >= 80;
+              const warn = score >= 60 && score < 80;
+              const barColor = danger ? '#E04030' : warn ? '#E8C97A' : '#7AE08A';
+              return (
+                <div
+                  key={p.uid}
+                  className="rounded-2xl border flex items-center gap-3"
+                  style={{
+                    background: isMe ? 'rgba(80,200,120,0.08)' : 'rgba(255,255,255,0.035)',
+                    borderColor: isMe ? 'rgba(122,224,138,0.45)' : p.isEliminated ? 'rgba(224,64,48,0.4)' : 'rgba(255,255,255,0.07)',
+                    padding: '10px 12px',
+                    opacity: p.isEliminated ? 0.55 : 1,
+                  }}
+                >
+                  {/* Rank */}
+                  <span className="font-bold w-7 text-center"
+                    style={{ fontSize: 16, color: i === 0 ? '#E8C97A' : 'rgba(245,230,200,0.4)' }}>
+                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}
                   </span>
+
+                  <Av id={p.avatarId} name={p.displayName} frameId={(p as any).equippedFrame} size={48} />
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 mb-0.5">
+                      <p className="font-arabic font-bold truncate"
+                        style={{ fontSize: 15, color: isMe ? '#7AE08A' : '#E8C97A' }}>
+                        {isMe ? 'أنت' : p.displayName}
+                      </p>
+                      {p.uid === gameState.checkCallerId && (
+                        <span className="font-arabic font-bold rounded px-1.5 py-0.5"
+                          style={{ fontSize: 9, background: 'rgba(232,201,122,0.18)', color: '#E8C97A' }}>CHECK</span>
+                      )}
+                      {p.isEliminated && (
+                        <span className="font-arabic font-bold rounded px-1.5 py-0.5"
+                          style={{ fontSize: 9, background: 'rgba(224,64,48,0.18)', color: '#E04030' }}>خرج</span>
+                      )}
+                    </div>
+                    {/* Score progress bar — fills toward 100 */}
+                    <div style={{ height: 6, borderRadius: 3, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', background: barColor, borderRadius: 3, transition: 'width .35s' }}/>
+                    </div>
+                  </div>
+
+                  {/* Score / 100 */}
+                  <div className="text-end shrink-0" style={{ minWidth: 56 }}>
+                    <div className="font-bold font-mono leading-none"
+                      style={{ fontSize: 22, color: barColor }}>
+                      {score}
+                    </div>
+                    <div className="font-arabic" style={{ fontSize: 10, color: 'rgba(245,230,200,0.4)', marginTop: 2 }}>
+                      من 100
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      </motion.div>
     );
   };
 
@@ -1051,9 +1142,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   return (
     <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0E0905' }}>
       <RoomBackground />
-      <ScoreBar />
 
-      <div className={`flex-1 flex flex-col pt-11 pb-14 min-h-0 px-1 ${isMobile ? 'gap-1' : 'gap-2'}`} style={{ position: 'relative', zIndex: 1 }}>
+      <div className={`flex-1 flex flex-col pt-2 pb-14 min-h-0 px-1 ${isMobile ? 'gap-1' : 'gap-2'}`} style={{ position: 'relative', zIndex: 1 }}>
 
         {/* ══ MOBILE: compact opponent strip ══ */}
         {isMobile && others.length > 0 && (
@@ -1119,8 +1209,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               ref={tableRef}
               className="relative"
               style={{
-                width: isMobile ? Math.max(120, mobileTableSize) : 'min(650px, max(200px, 55vw))',
-                height: isMobile ? Math.max(120, mobileTableSize) : 'min(650px, max(200px, 55vw))',
+                width: isMobile ? Math.max(160, mobileTableSize) : 'min(820px, max(280px, 65vw))',
+                height: isMobile ? Math.max(160, mobileTableSize) : 'min(820px, max(280px, 65vw))',
                 borderRadius: '50%',
                 background: `
                   radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.045) 0%, transparent 38%),
@@ -1146,35 +1236,41 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 </div>
               )}
 
-              {/* Circular deck + discard in center */}
+              {/* Stacked deck + discard side by side, both large and clear */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative flex items-center justify-center">
-                  {/* Circular deck ring */}
-                  <CircleDeck
+                <div className="relative flex items-center justify-center" style={{ gap: isMobile ? 18 : 36 }}>
+                  {/* Stacked deck (draw pile) */}
+                  <StackedDeck
                     count={gameState.deckCount}
                     onClick={isMyTurn && !drawnCard && (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') ? onDraw : undefined}
                     disabled={!isMyTurn || !!drawnCard || (gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED')}
+                    size={isMobile ? 'normal' : 'large'}
                   />
-                  {/* Discard pile — absolute center */}
+                  {/* Discard pile — large and clearly tappable */}
                   <div
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-1"
-                    style={{ pointerEvents: canTakeDiscard ? 'auto' : 'none', cursor: canTakeDiscard ? 'pointer' : 'default' }}
+                    className="flex flex-col items-center gap-1 shrink-0"
+                    style={{
+                      pointerEvents: canTakeDiscard ? 'auto' : 'none',
+                      cursor: canTakeDiscard ? 'pointer' : 'default',
+                    }}
                     onClick={canTakeDiscard ? () => setDiscardSelected(s => !s) : undefined}
                   >
-                    <PlayingCard
-                      card={gameState.discardTop ? { ...gameState.discardTop, isRevealed: true } : null}
-                      highlight={discardSelected ? 'select' : 'none'}
-                      mini
-                    />
+                    <div style={{ transform: isMobile ? 'scale(1.0)' : 'scale(1.25)', transformOrigin: 'center' }}>
+                      <PlayingCard
+                        card={gameState.discardTop ? { ...gameState.discardTop, isRevealed: true } : null}
+                        highlight={discardSelected ? 'select' : 'none'}
+                        small
+                      />
+                    </div>
                     {discardSelected && (
-                      <p className="text-oasis font-arabic animate-pulse" style={{ fontSize: 9 }}>اختر كرت</p>
+                      <p className="text-oasis font-arabic animate-pulse" style={{ fontSize: 11 }}>اختر كرت</p>
                     )}
                   </div>
                 </div>
 
                 {/* Special J step hint on table */}
                 {isSpecialJ && selectedPos !== null && (
-                  <p className="absolute bottom-8 text-oasis font-arabic animate-pulse text-center" style={{ fontSize: 10 }}>اختر كرت خصمك</p>
+                  <p className="absolute bottom-8 text-oasis font-arabic animate-pulse text-center" style={{ fontSize: 12 }}>اختر كرت خصمك</p>
                 )}
               </div>
 
@@ -1303,24 +1399,51 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 <PlayerBox player={me} gameState={gameState} />
               </div>
               {!me?.isEliminated && (
-                <div className="shrink-0 flex flex-col items-center gap-0.5">
+                <div className="shrink-0 flex flex-col items-center gap-1">
                   <motion.button
                     whileHover={canCallCheck ? { scale: 1.08 } : {}}
                     whileTap={canCallCheck ? { scale: .92 } : {}}
                     disabled={!canCallCheck}
                     onClick={canCallCheck ? onCallCheck : undefined}
-                    className={`px-3 py-2 rounded-xl border-2 font-bold transition-all ${
-                      canCallCheck
-                        ? 'border-gold text-gold bg-gold/15 hover:bg-gold/30 cursor-pointer'
-                        : 'border-white/10 text-white/20 bg-transparent cursor-not-allowed'
-                    }`}
-                    style={{ fontSize: 12 }}
+                    animate={canCallCheck ? {
+                      boxShadow: [
+                        '0 0 16px rgba(201,168,76,0.45)',
+                        '0 0 32px rgba(201,168,76,0.85)',
+                        '0 0 16px rgba(201,168,76,0.45)',
+                      ],
+                    } : { boxShadow: 'none' }}
+                    transition={canCallCheck ? { duration: 1.4, repeat: Infinity, ease: 'easeInOut' } : { duration: 0 }}
+                    style={{
+                      padding: '14px 24px',
+                      borderRadius: 16,
+                      fontSize: 22,
+                      fontWeight: 900,
+                      letterSpacing: 2,
+                      border: canCallCheck ? '3px solid #E8C97A' : '2px solid rgba(255,255,255,0.10)',
+                      background: canCallCheck
+                        ? 'linear-gradient(135deg, #C9A84C 0%, #8B6914 100%)'
+                        : 'rgba(20,14,8,0.6)',
+                      color: canCallCheck ? '#0E0905' : 'rgba(255,255,255,0.25)',
+                      cursor: canCallCheck ? 'pointer' : 'not-allowed',
+                      textShadow: canCallCheck ? '0 1px 2px rgba(0,0,0,0.3)' : 'none',
+                      lineHeight: 1,
+                      transition: 'background .25s, color .25s, border-color .25s',
+                      minWidth: 110,
+                    }}
                   >CHECK</motion.button>
-                  {lapsRemainingForCheck > 0 && (
-                    <span className="font-arabic" style={{ fontSize: 9, color: 'rgba(201,168,76,0.55)' }}>
+                  {lapsRemainingForCheck > 0 ? (
+                    <span className="font-arabic" style={{ fontSize: 10, color: 'rgba(201,168,76,0.55)' }}>
                       بعد {lapsRemainingForCheck} {lapsRemainingForCheck === 1 ? 'لفة' : 'لفات'}
                     </span>
-                  )}
+                  ) : !canCallCheck && !gameState.checkCallerId ? (
+                    <span className="font-arabic" style={{ fontSize: 10, color: 'rgba(245,230,200,0.35)' }}>
+                      العب دورك أولاً
+                    </span>
+                  ) : canCallCheck ? (
+                    <span className="font-arabic font-bold animate-pulse" style={{ fontSize: 11, color: '#E8C97A' }}>
+                      اضغط للجك!
+                    </span>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -1364,11 +1487,11 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           onClick={() => setShowSettings(true)}>إعدادات</motion.button>
       </div>
 
-      {/* ── Top header: small badges row + player strip ── */}
-      <div className="fixed z-40 flex flex-col items-center gap-1 pointer-events-none"
-        style={{ top: isMobile ? 4 : 8, left: 0, right: 0, padding: '0 6px' }}>
-        {/* Row 1: Round + Lap + Time + Turn (compact) */}
-        <div className="flex items-stretch gap-1 pointer-events-auto">
+      {/* ── Top header: badges row + النقاط button (top-right) ── */}
+      <div className="fixed z-40 flex items-start justify-between pointer-events-none"
+        style={{ top: isMobile ? 4 : 8, left: 0, right: 0, padding: '0 8px' }}>
+        {/* Left: Round + Lap + Time + Turn */}
+        <div className="flex items-stretch gap-1 pointer-events-auto flex-wrap">
           <MiniBadge label="راوند" value={gameState.roundNumber} valueColor="#E8C97A" borderColor="rgba(201,168,76,0.3)" />
           <MiniBadge label="لفة" value={lapCount} valueColor={lapCount >= 4 ? '#7AE08A' : '#E8C97A'} borderColor={lapCount >= 4 ? 'rgba(80,200,120,0.5)' : 'rgba(201,168,76,0.3)'} labelColor={lapCount >= 4 ? 'rgba(122,224,138,0.7)' : 'rgba(201,168,76,0.55)'} />
           <TurnTimerBadge endAt={gameState.turnEndAt} />
@@ -1396,31 +1519,34 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           })()}
         </div>
 
-        {/* Row 2: Player chip strip — all characters in the game */}
-        <div className="flex items-center gap-0.5 overflow-x-auto pointer-events-auto rounded-xl px-1.5 py-1"
-          style={{ background: 'rgba(20,14,8,.78)', backdropFilter: 'blur(8px)', border: '1px solid rgba(201,168,76,0.18)', maxWidth: '96vw' }}>
-          {gameState.players.map(p => {
-            const isTurn = p.uid === gameState.currentTurnUid;
-            const isMine = p.uid === user?.uid;
-            const isElim = p.isEliminated;
-            return (
-              <div key={p.uid} className="relative flex flex-col items-center shrink-0" style={{ width: 30, opacity: isElim ? 0.4 : 1 }}>
-                <Av id={p.avatarId} name={p.displayName} frameId={(p as any).equippedFrame} size={26}/>
-                {isTurn && !isElim && (
-                  <div className="absolute -bottom-0.5 -right-0.5 rounded-full animate-pulse"
-                    style={{ width: 7, height: 7, background: isMine ? '#7AE08A' : '#C9A84C', border: '1.5px solid #14100A' }}/>
-                )}
-                {p.uid === gameState.checkCallerId && (
-                  <div className="absolute -top-1 -left-1 rounded-full font-bold"
-                    style={{ fontSize: 7, background: '#E04030', color: '#fff', padding: '0 3px', border: '1px solid #14100A' }}>!</div>
-                )}
-                {isElim && (
-                  <span className="absolute" style={{ color: '#E04030', fontWeight: 800, fontSize: 13 }}>✕</span>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        {/* Right: النقاط button — opens scoreboard modal */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowScoreboard(true)}
+          className="pointer-events-auto rounded-xl border flex items-center gap-2 shrink-0"
+          style={{
+            background: 'linear-gradient(135deg, rgba(201,168,76,0.18) 0%, rgba(20,14,8,0.95) 100%)',
+            borderColor: 'rgba(201,168,76,0.55)',
+            padding: isMobile ? '8px 12px' : '10px 16px',
+            boxShadow: '0 0 14px rgba(201,168,76,0.18)',
+          }}
+        >
+          <span style={{ fontSize: isMobile ? 16 : 18 }}>🏆</span>
+          <span className="font-arabic font-bold" style={{ fontSize: isMobile ? 13 : 15, color: '#E8C97A' }}>
+            النقاط
+          </span>
+          <span className="font-bold rounded-md px-1.5 py-0.5"
+            style={{
+              fontSize: isMobile ? 10 : 11,
+              background: 'rgba(201,168,76,0.20)',
+              color: '#E8C97A',
+              border: '1px solid rgba(201,168,76,0.4)',
+              minWidth: 22, textAlign: 'center',
+            }}>
+            {gameState.players.length}
+          </span>
+        </motion.button>
       </div>
 
       {/* ── Bottom-left deck info panel (desktop only) ── */}
@@ -1637,6 +1763,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {showPeek && !showIntro && <PeekOverlay />}
         {showAfk && <AfkOverlay />}
         {showExitConfirm && <ExitOverlay />}
+        {showScoreboard && <ScoreboardModal />}
       </AnimatePresence>
 
       {/* ── J action: Step 1 — select opponent ── */}

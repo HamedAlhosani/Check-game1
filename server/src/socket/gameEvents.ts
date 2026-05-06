@@ -2,6 +2,7 @@ import { Server } from 'socket.io';
 import { AuthenticatedSocket } from '../middleware/authMiddleware';
 import { roomManager } from '../rooms/RoomManager';
 import { GameEngine, GameEventEmitter } from '../game/GameEngine';
+import { BotPlayer } from '../game/BotPlayer';
 import { LudoEngine } from '../game/ludo/LudoEngine';
 import { DominoEngine } from '../game/domino/DominoEngine';
 import { JacaroEngine } from '../game/jackaro/JacaroEngine';
@@ -68,7 +69,7 @@ export function startGameSession(io: Server, roomId: string): void {
   if (!engine) return;
 
   const gameId = (engine as any).gameId;
-  io.to(roomId).emit(SOCKET_EVENTS.LOBBY_GAME_STARTING, { gameId, countdown: 3, gameType });
+  io.to(roomId).emit(SOCKET_EVENTS.LOBBY_GAME_STARTING, { gameId, countdown: 0, gameType });
 
   setTimeout(() => {
     (engine as any).start();
@@ -87,7 +88,7 @@ export function startGameSession(io: Server, roomId: string): void {
         scheduleCheckBotTurns(io, roomId, engine as GameEngine);
         break;
     }
-  }, 3000);
+  }, 400);
 }
 
 function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): void {
@@ -288,6 +289,13 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     const bot = new BotPlayer(socket.uid, 'medium');
     roomManager.addBotPlayer(engine.roomId, bot);
     const roomId = engine.roomId;
+    // Also flag the player as a bot in the Room.players list so getRoomForUid
+    // doesn't pull this user back into the abandoned game on next socket event.
+    const room = roomManager.getRoom(roomId);
+    if (room) {
+      const rp = room.players.find(p => p.uid === socket.uid);
+      if (rp) rp.isBot = true;
+    }
     roomManager.removeSocket(socket.id);
     socket.leave(roomId);
   });

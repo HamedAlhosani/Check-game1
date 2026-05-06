@@ -20,15 +20,19 @@ const EMOJI: Record<string, string> = {
   avatar_13: '⚔️', avatar_14: '⛵', avatar_15: '🧭', avatar_16: '🇦🇪',
   avatar_17: '👸', avatar_18: '🧕', avatar_19: '🤵', avatar_20: '👳',
   avatar_21: '👩', avatar_22: '🧓',
+  avatar_23: '👩‍🎓', avatar_24: '👵', avatar_25: '👩‍🏫',
+  avatar_26: '🧕', avatar_27: '👩‍⚕️', avatar_28: '👑',
 };
 
 const NAMES_AR: Record<string, string> = {
   avatar_1: 'الصقر', avatar_2: 'ابن الصحراء', avatar_3: 'شيخ النخيل', avatar_4: 'محارب الصحراء',
   avatar_5: 'صياد الليل', avatar_6: 'نجم الخليج', avatar_7: 'أمير البر', avatar_8: 'جدّة',
   avatar_9: 'المسجد', avatar_10: 'المدينة', avatar_11: 'أمير الماس', avatar_12: 'سلطان الرياح',
-  avatar_13: 'عنترة بن شداد', avatar_14: 'السندباد', avatar_15: 'ابن بطوطة', avatar_16: 'الشيخ زايد',
+  avatar_13: 'عنترة بن شداد', avatar_14: 'السندباد', avatar_15: 'ابن بطوطة', avatar_16: 'الوالد',
   avatar_17: 'الأميرة', avatar_18: 'الست', avatar_19: 'الفارس النجدي', avatar_20: 'التاجر',
   avatar_21: 'الشاعرة', avatar_22: 'الحكيم',
+  avatar_23: 'الطالبة', avatar_24: 'الجدة', avatar_25: 'المعلمة',
+  avatar_26: 'البدوية', avatar_27: 'الطبيبة', avatar_28: 'ملكة الذهب',
 };
 
 // Module-level probe cache: avatarId → 'real' | 'fallback' (or undefined while pending)
@@ -81,7 +85,7 @@ export function CharacterArt({ id, size = 64, ring }: { id: string; size?: numbe
 // a distinctive silhouette (headwear, beard, accent colour) so they read
 // as different at a glance, even before custom art is dropped in.
 
-type HeadwearKind = 'ghutra' | 'red-ghutra' | 'gold-ghutra' | 'turban' | 'crown' | 'helmet' | 'sailor' | 'scholar' | 'shayla' | 'niqab' | 'none';
+type HeadwearKind = 'ghutra' | 'red-ghutra' | 'gold-ghutra' | 'turban' | 'crown' | 'helmet' | 'sailor' | 'scholar' | 'shayla' | 'niqab' | 'tiara' | 'none';
 type BeardKind = 'short' | 'long' | 'none';
 type GenderHint = 'male' | 'female';
 
@@ -110,6 +114,13 @@ const PORTRAITS: Record<string, { skin: string; hair: string; accent: string; he
   avatar_20: { skin: '#E8C098', hair: '#2A1A0E', accent: '#FFB840', headwear: 'gold-ghutra', beard: 'short' },                 // Trader (gold ghutra)
   avatar_21: { skin: '#F4D8B8', hair: '#3B2516', accent: '#FF6B95', headwear: 'shayla',     gender: 'female', lashes: true },  // Poetess (warm pink)
   avatar_22: { skin: '#F0D0A0', hair: '#9A9A9A', accent: '#F5F0E5', headwear: 'ghutra',     beard: 'long' },                   // Wise elder (white ghutra)
+  // More women — distinct shayla colours + ages
+  avatar_23: { skin: '#F8DCBC', hair: '#3B2516', accent: '#7A8FE8', headwear: 'shayla', gender: 'female', lashes: true },        // Student — soft blue
+  avatar_24: { skin: '#E8C8A0', hair: '#C8C8C8', accent: '#F5F0E5', headwear: 'shayla', gender: 'female', lashes: true },        // Grandmother — white shayla, grey hair peek
+  avatar_25: { skin: '#F0D0A8', hair: '#3B2516', accent: '#3A8B7A', headwear: 'shayla', gender: 'female', lashes: true },        // Teacher — teal
+  avatar_26: { skin: '#D8A878', hair: '#1F1108', accent: '#C09060', headwear: 'shayla', gender: 'female', lashes: true },        // Bedouin — earthy / amber
+  avatar_27: { skin: '#F4D8B8', hair: '#2A1A0E', accent: '#7AC4FF', headwear: 'shayla', gender: 'female', lashes: true },        // Doctor — light blue
+  avatar_28: { skin: '#F8DCBC', hair: '#2A1A0E', accent: '#FFE07A', headwear: 'tiara',  gender: 'female', lashes: true },        // Gold queen — tiara
 };
 
 /** Lighten or darken a hex colour by a 0..1 factor (negative = darker). */
@@ -358,6 +369,37 @@ function Headwear({ kind, accent, hair }: { kind: string; accent: string; hair?:
         <path d="M 32 39 Q 50 35 68 39" stroke={shade(fabric, +0.30)} strokeWidth="0.6" fill="none" opacity="0.8"/>
         {/* Small jewel at temple */}
         <circle cx="68" cy="36" r="1.4" fill="#FFE07A" stroke="#0E0905" strokeWidth="0.3"/>
+      </g>
+    );
+  }
+  if (kind === 'tiara') {
+    // Female crown — tiara with hair flowing back
+    const trim = shade(accent, -0.20);
+    return (
+      <g>
+        {/* Hair (long, dark, flows around shoulders) */}
+        <path d="M 18 50 Q 18 18 50 14 Q 82 18 82 50 L 82 88 Q 75 84 70 70 L 70 40 Q 50 32 30 40 L 30 70 Q 25 84 18 88 Z"
+          fill="#1A1408"/>
+        {/* Hair highlights */}
+        <path d="M 26 30 Q 50 22 74 30" stroke="#3A2A18" strokeWidth="0.8" fill="none" opacity="0.7"/>
+        <path d="M 24 50 Q 28 38 32 50" stroke="#3A2A18" strokeWidth="0.5" fill="none" opacity="0.6"/>
+        <path d="M 76 50 Q 72 38 68 50" stroke="#3A2A18" strokeWidth="0.5" fill="none" opacity="0.6"/>
+        {/* Front hair fringe peek above the brow */}
+        <path d="M 32 38 Q 50 30 68 38 Q 50 34 32 38 Z" fill="#0E0905"/>
+        {/* Tiara band */}
+        <path d="M 30 32 Q 50 22 70 32 L 70 36 Q 50 28 30 36 Z" fill={accent} stroke={trim} strokeWidth="0.5"/>
+        {/* Tiara peaks */}
+        <path d="M 36 30 L 38 22 L 40 30 Z" fill={accent} stroke={trim} strokeWidth="0.4"/>
+        <path d="M 46 26 L 50 14 L 54 26 Z" fill={accent} stroke={trim} strokeWidth="0.5"/>
+        <path d="M 60 30 L 62 22 L 64 30 Z" fill={accent} stroke={trim} strokeWidth="0.4"/>
+        {/* Jewels */}
+        <circle cx="38" cy="26" r="1.2" fill="#7AC4FF" stroke="#0E0905" strokeWidth="0.3"/>
+        <circle cx="50" cy="20" r="2" fill="#FF6B95" stroke="#0E0905" strokeWidth="0.4"/>
+        <circle cx="50" cy="20" r="0.7" fill="#FFFFFF" opacity="0.85"/>
+        <circle cx="62" cy="26" r="1.2" fill="#7AC4FF" stroke="#0E0905" strokeWidth="0.3"/>
+        {/* Tiny earring */}
+        <circle cx="22" cy="60" r="1" fill={accent}/>
+        <circle cx="78" cy="60" r="1" fill={accent}/>
       </g>
     );
   }

@@ -302,6 +302,7 @@ const AVATAR_EMOJIS: Record<string, string> = {
   avatar_9: '🕌', avatar_10: '🏙️', avatar_11: '💎', avatar_12: '🌟',
   avatar_13: '⚔️', avatar_14: '⛵', avatar_15: '🧭', avatar_16: '🇦🇪',
   avatar_17: '👸', avatar_18: '🧕', avatar_19: '🤵', avatar_20: '👳', avatar_21: '👩', avatar_22: '🧓',
+  avatar_23: '👩‍🎓', avatar_24: '👵', avatar_25: '👩‍🏫', avatar_26: '🧕', avatar_27: '👩‍⚕️', avatar_28: '👑',
 };
 const Av = memo(function Av({ id, name, size = 32, frameId }: { id: string; name: string; size?: number; frameId?: string }) {
   return (
@@ -866,9 +867,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     });
     socket.on(SOCKET_EVENTS.GAME_BURN_INVALID, () => { soundService.playError(); });
     socket.on(SOCKET_EVENTS.GAME_EPIC_MOMENT, (data: any) => {
-      setEpicMoment({ kind: data.kind, uid: data.uid, key: Date.now() });
-      // Auto-clear after the banner has played its animation
-      setTimeout(() => setEpicMoment(prev => prev?.key === Date.now() ? null : prev), 3500);
+      // Capture key OUTSIDE the timeout — Date.now() inside the callback would
+      // run at fire time, never matching the original key, so the banner never
+      // cleared. That's the bug the user hit ("الرسايل ما تروح").
+      const key = Date.now();
+      setEpicMoment({ kind: data.kind, uid: data.uid, key });
+      setTimeout(() => setEpicMoment(prev => prev?.key === key ? null : prev), 3500);
     });
     socket.on(SOCKET_EVENTS.GAME_SCORES, (data: any) => {
       setRoundScoreData(data);

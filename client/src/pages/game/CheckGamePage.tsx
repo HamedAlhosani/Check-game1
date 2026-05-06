@@ -11,17 +11,23 @@ export function CheckGamePage() {
   const { gameState, setGameState, addChatMessage, setLastScores, setShowScoreBoard } = useGameStore();
   const { currentRoom } = useLobbyStore();
 
-  // Lock body/html scroll while inside the game so the page-level gold
-  // scrollbar (5px sliver on the right edge) doesn't show next to the
-  // table — it was reading like an in-game UI element on iPad.
+  // Lock the document while in-game. The .game-locked class (defined in
+  // index.css) sets position:fixed + touch-action:none + overscroll-
+  // behavior:none on <html> and <body>, which kills the iOS rubber-band
+  // drag that was popping the URL bar in/out and resizing the viewport
+  // — that resize was forcing the layout to recompute table sizes mid-game.
   useEffect(() => {
-    const prevBody = document.body.style.overflow;
-    const prevHtml = document.documentElement.style.overflow;
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
+    document.documentElement.classList.add('game-locked');
+    const prevent = (e: TouchEvent) => {
+      // Only block multi-touch / vertical drags on the bare page; let
+      // touches inside scrollable children (chat, modals) work normally.
+      if ((e.target as HTMLElement | null)?.closest('[data-allow-touch]')) return;
+      if (e.touches.length > 1) e.preventDefault();
+    };
+    document.addEventListener('touchmove', prevent, { passive: false });
     return () => {
-      document.body.style.overflow = prevBody;
-      document.documentElement.style.overflow = prevHtml;
+      document.documentElement.classList.remove('game-locked');
+      document.removeEventListener('touchmove', prevent);
     };
   }, []);
 

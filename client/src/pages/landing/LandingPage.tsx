@@ -293,8 +293,10 @@ function RulesSection({ lang }: { lang: string }) {
                     transition={{ duration: 0.2 }}
                     style={{ overflow: 'hidden' }}
                   >
-                    <div className="px-5 py-3 font-arabic" style={{ fontSize: 14, color: 'rgba(245,230,200,0.6)', lineHeight: 1.8, whiteSpace: 'pre-line', borderInlineStart: '2px solid rgba(201,168,76,0.25)', marginInlineStart: 6 }}>
-                      {rule.content}
+                    <div className="px-5 py-3 font-arabic flex flex-col gap-2.5" style={{ fontSize: 14, color: 'rgba(245,230,200,0.65)', lineHeight: 1.7, borderInlineStart: '2px solid rgba(201,168,76,0.25)', marginInlineStart: 6 }}>
+                      {rule.content.split('\n').map((line, idx) => (
+                        <p key={idx} style={{ margin: 0 }}>{line}</p>
+                      ))}
                     </div>
                   </motion.div>
                 )}

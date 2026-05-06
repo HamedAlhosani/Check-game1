@@ -154,6 +154,30 @@ export class GameEngine {
   smartAutoPlay(uid: string): void {
     const player = this.getPlayer(uid);
     if (!player || player.isEliminated) return;
+
+    // Mid-special phases: don't draw, just resolve the pending action.
+    if (this.phase === 'KING_CHOICE' && this.specialActionUid === uid) {
+      this.onKingBurn(uid); return;
+    }
+    if (this.phase === 'SPECIAL_J' && this.specialActionUid === uid) {
+      const tempBot = new BotPlayer(uid, 'medium');
+      tempBot.updateCards(player.cards);
+      const action = tempBot.decideTurn(this.getPublicState());
+      if (action.type === 'SPECIAL_SWAP') {
+        this.onSpecialSwap(uid, action.myPosition, action.targetUid, action.targetPosition);
+      }
+      return;
+    }
+    if (this.phase === 'SPECIAL_Q' && this.specialActionUid === uid) {
+      const tempBot = new BotPlayer(uid, 'medium');
+      tempBot.updateCards(player.cards);
+      const action = tempBot.decideTurn(this.getPublicState());
+      if (action.type === 'SPECIAL_PEEK_OWN') {
+        this.onSpecialPeekOwn(uid, action.position);
+      }
+      return;
+    }
+
     if (this.phase !== 'PLAYING' && this.phase !== 'CHECK_CALLED') return;
     if (!this.isPlayerTurn(uid)) return;
 
@@ -180,6 +204,14 @@ export class GameEngine {
     // DRAW path: pull from deck, then a moment later decide swap or burn
     if (!this.onDrawDeck(uid)) return;
     setTimeout(() => {
+      // King draw triggers KING_CHOICE — let the bot just burn the picks.
+      if (this.phase === 'KING_CHOICE' && this.specialActionUid === uid) {
+        this.onKingBurn(uid); return;
+      }
+      // J / Red-Q draw triggers SPECIAL_J/Q — bot picks a swap/peek.
+      if ((this.phase === 'SPECIAL_J' || this.phase === 'SPECIAL_Q') && this.specialActionUid === uid) {
+        this.smartAutoPlay(uid); return;
+      }
       const drawn = this.drawnCards.get(uid);
       const me = this.getPlayer(uid);
       if (!drawn || !me || !this.isPlayerTurn(uid)) return;

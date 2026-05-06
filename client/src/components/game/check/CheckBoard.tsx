@@ -769,13 +769,16 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   }, [socket]);
 
   useEffect(() => {
+    // Refresh / reconnect mid-game must NEVER show the lobby intro overlay —
+    // only show it during the very first PEEK_PHASE on round 1.
+    if (gameState.phase !== 'PEEK_PHASE' || gameState.roundNumber > 1) setShowIntro(false);
     if (gameState.phase === 'PEEK_PHASE') {
-      setShowIntro(false); setShowPeek(true);
+      setShowPeek(true);
       setDrawnCard(null);  // belt-and-suspenders: clear any stale drawn card
     }
     if (gameState.phase === 'PLAYING') { setShowPeek(false); setKnownCards(new Map()); }
     if (gameState.phase !== 'KING_CHOICE') { setKingChoiceCards(null); setKingSelectedIdx(null); }
-  }, [gameState.phase]);
+  }, [gameState.phase, gameState.roundNumber]);
 
   useEffect(() => {
     if (gameState.phase !== 'SPECIAL_J') { setJTargetUid(null); }
@@ -786,7 +789,11 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     if (cur !== prevTurnRef.current) {
       if (prevTurnRef.current === user?.uid && !actedRef.current) {
         afkCountRef.current++;
-        if (afkCountRef.current >= 2) setShowAfk(true);
+        // After 2 missed turns, hand the seat to a server-side bot. The
+        // reclaim modal then auto-appears via gameState.players[me].isBot.
+        if (afkCountRef.current >= 2) {
+          socket?.emit(SOCKET_EVENTS.GAME_BOT_TAKEOVER, { gameId });
+        }
       }
       if (cur === user?.uid) { actedRef.current = false; drawingRef.current = false; soundService.playTurnStart(); }
       prevTurnRef.current = cur;
@@ -823,18 +830,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     return () => window.clearTimeout(id);
   }, [gameState.turnEndAt, isMyTurn, gameState.phase]);
 
-  // AFK fast-play: once AFK overlay is up, auto-play within 1.5s of each
-  // turn so the game doesn't drag on at 25s/turn for the rest of the room.
-  useEffect(() => {
-    if (!showAfk || !isMyTurn || (gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED')) return;
-    const id = window.setTimeout(() => {
-      if (actedRef.current) return;
-      socket?.emit(SOCKET_EVENTS.GAME_AUTOPLAY, { gameId });
-      setDrawnCard(null);
-      actedRef.current = true;
-    }, 1500);
-    return () => window.clearTimeout(id);
-  }, [showAfk, isMyTurn, gameState.phase]);
+  // (AFK fast-play removed — once the player is auto-botted via
+  // GAME_BOT_TAKEOVER the server-side bot polling loop plays for them.)
 
   // Clear stale drawn card (e.g. K choice cards left after opponent takes turn)
   useEffect(() => {
@@ -1788,60 +1785,67 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       <AnimatePresence>
         {showIntro && <IntroOverlay />}
         {showPeek && !showIntro && <PeekOverlay />}
-        {showAfk && <AfkOverlay />}
         {showExitConfirm && <ExitOverlay />}
         {showScoreboard && <ScoreboardModal />}
       </AnimatePresence>
 
-      {/* ── Drawn card — floats just above my hand, centered horizontally ── */}
+      {/* ── Drawn card — centered horizontally in the upper play area ── */}
+      {/* Outer div handles positioning so motion.div's transform doesn't       */}
+      {/* fight with translateX(-50%) — that's why the card looked offset right */}
       <AnimatePresence>
         {drawnCard && isMyTurn && (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') && (
-          <motion.div
-            key="drawn-card-floating"
-            initial={{ opacity: 0, scale: 0.7, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.7, y: 20 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+          <div
+            key="drawn-card-anchor"
             className="fixed pointer-events-none"
             style={{
-              // Sit just above my-area (cards + player box + check button)
-              bottom: isMobile ? 280 : 310,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 65,
+              top: isMobile ? '26%' : '24%',
+              left: 0,
+              right: 0,
               display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 6,
+              justifyContent: 'center',
+              zIndex: 65,
             }}
           >
-            <p className="font-arabic font-bold rounded-full px-3 py-1 pointer-events-none"
-              style={{ fontSize: 12, color: '#E8C97A', background: 'rgba(20,14,8,0.95)', border: '1px solid rgba(201,168,76,0.55)', whiteSpace: 'nowrap', textAlign: 'center' }}>
-              ورقة سحبتها — اضغط ورقة من يدك للتبديل أو احرق
-            </p>
-            <div style={{ filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 0 12px rgba(80,200,120,0.45))' }}>
-              <PlayingCard card={{ ...drawnCard, isRevealed: true }} highlight="select" small={isMobile} />
-            </div>
-            <button
-              onClick={onBurnDrawn}
-              className="pointer-events-auto"
+            <motion.div
+              initial={{ opacity: 0, scale: 0.7, y: -16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.7, y: -16 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 24 }}
               style={{
-                background: 'linear-gradient(135deg, #E04030 0%, #B02818 100%)',
-                border: '2px solid #FF6048',
-                borderRadius: 12,
-                padding: '8px 26px',
-                color: '#fff',
-                fontSize: 15,
-                fontFamily: 'inherit',
-                fontWeight: 900,
-                boxShadow: '0 0 18px rgba(224,64,48,0.65)',
-                cursor: 'pointer',
-                letterSpacing: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 6,
               }}
             >
-              🔥 احرق
-            </button>
-          </motion.div>
+              <p className="font-arabic font-bold rounded-full px-3 py-1 pointer-events-none"
+                style={{ fontSize: 12, color: '#E8C97A', background: 'rgba(20,14,8,0.95)', border: '1px solid rgba(201,168,76,0.55)', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                ورقة سحبتها — اضغط ورقة من يدك للتبديل أو احرق
+              </p>
+              <div style={{ filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 0 12px rgba(80,200,120,0.45))' }}>
+                <PlayingCard card={{ ...drawnCard, isRevealed: true }} highlight="select" small={isMobile} />
+              </div>
+              <button
+                onClick={onBurnDrawn}
+                className="pointer-events-auto"
+                style={{
+                  background: 'linear-gradient(135deg, #E04030 0%, #B02818 100%)',
+                  border: '2px solid #FF6048',
+                  borderRadius: 12,
+                  padding: '8px 26px',
+                  color: '#fff',
+                  fontSize: 15,
+                  fontFamily: 'inherit',
+                  fontWeight: 900,
+                  boxShadow: '0 0 18px rgba(224,64,48,0.65)',
+                  cursor: 'pointer',
+                  letterSpacing: 2,
+                }}
+              >
+                🔥 احرق
+              </button>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 

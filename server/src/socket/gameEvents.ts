@@ -92,10 +92,9 @@ export function startGameSession(io: Server, roomId: string): void {
 }
 
 function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): void {
-  // Initial bots — but we re-fetch on every tick to pick up bots added after disconnect
-  const initialBots = roomManager.getCheckBots(roomId);
-  if (!initialBots.length) return;
-
+  // Always start the polling loop — even all-human games may add bot stand-ins
+  // later when a player disconnects, AFKs out, or hands their seat to a bot
+  // via GAME_BOT_TAKEOVER. The interior already no-ops if there are 0 bots.
   const poll = setInterval(() => {
     const bots = roomManager.getCheckBots(roomId); // re-fetch to include disconnect-added bots
     const state = engine.getPublicState();
@@ -300,6 +299,20 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     if (!socket.uid) return;
     const engine = roomManager.getGame(payload.gameId) as GameEngine | undefined;
     engine?.smartAutoPlay(socket.uid);
+  });
+
+  // Player has been AFK for 2 turns → convert their slot to bot. They stay
+  // in the room and see the reclaim modal so they can come back when ready.
+  socket.on(SOCKET_EVENTS.GAME_BOT_TAKEOVER, (payload: { gameId: string }) => {
+    if (!socket.uid) return;
+    const engine = roomManager.getGame(payload.gameId) as GameEngine | undefined;
+    if (!engine) return;
+    if (engine.isReplacedByBot(socket.uid)) return; // already a bot
+    engine.replaceWithBot(socket.uid);
+    if (!roomManager.getCheckBots(engine.roomId).find(b => b.uid === socket.uid)) {
+      const bot = new BotPlayer(socket.uid, 'medium');
+      roomManager.addBotPlayer(engine.roomId, bot);
+    }
   });
 
   // Player came back to find a bot in their seat — give it back to them.

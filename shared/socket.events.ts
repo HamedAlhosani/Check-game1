@@ -63,6 +63,7 @@ export const SOCKET_EVENTS = {
   GAME_PLAYER_LEAVE: 'game:player_leave',
   GAME_RECLAIM_SEAT: 'game:reclaim_seat',
   GAME_AUTOPLAY: 'game:autoplay',
+  GAME_BOT_TAKEOVER: 'game:bot_takeover',
 
   // Lobby - Server → Client
   LOBBY_ROOM_LIST: 'lobby:room_list',

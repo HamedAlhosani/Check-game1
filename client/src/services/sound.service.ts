@@ -10,6 +10,16 @@ class SoundService {
     return this.ctx;
   }
 
+  /** Pre-warm the AudioContext on the user's first interaction so the
+   *  very first sound doesn't suffer the 50-200ms init lag. Mobile
+   *  browsers also require an explicit user gesture to unlock audio. */
+  warm(): void {
+    try {
+      const ctx = this.audioCtx;
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    } catch {}
+  }
+
   setEnabled(v: boolean) { this.enabled = v; }
   isEnabled() { return this.enabled; }
   getVolume() { return this.vol; }

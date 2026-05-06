@@ -57,7 +57,7 @@ function SwapArrowBadge() {
 const MiniBadge = memo(function MiniBadge({ label, value, valueColor, labelColor, borderColor }: { label: string; value: number; valueColor: string; labelColor?: string; borderColor: string }) {
   return (
     <div className="rounded-lg border flex flex-col items-center px-2 py-0.5"
-      style={{ background: 'rgba(20,14,8,.92)', backdropFilter: 'blur(8px)', minWidth: 34, borderColor }}>
+      style={{ background: 'rgba(15,10,5,.96)', minWidth: 34, borderColor }}>
       <span className="font-arabic font-bold" style={{ fontSize: 8, lineHeight: 1, color: labelColor || 'rgba(201,168,76,0.55)' }}>{label}</span>
       <span className="font-bold" style={{ fontSize: 13, lineHeight: 1.1, color: valueColor }}>{value}</span>
     </div>
@@ -83,8 +83,7 @@ const TurnTimerBadge = memo(function TurnTimerBadge({ endAt, maxMs = 30000 }: { 
   return (
     <div className="rounded-lg border flex flex-col items-center px-2 py-0.5"
       style={{
-        background: 'rgba(20,14,8,.92)',
-        backdropFilter: 'blur(8px)',
+        background: 'rgba(15,10,5,.96)',
         minWidth: 42,
         borderColor,
         boxShadow: active && pct <= 25 ? '0 0 10px rgba(224,64,48,0.35)' : 'none',
@@ -165,7 +164,6 @@ const ChairsRing = memo(function ChairsRing({ radius }: { radius: number }) {
           <div key={i} style={{
             position: 'absolute', left: '50%', top: '50%', zIndex: -1, pointerEvents: 'none',
             transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) rotate(${rotDeg}deg)`,
-            filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.7))',
           }}>
             <ChairTopDown />
           </div>
@@ -347,8 +345,7 @@ function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11 }
       style={{
         background: isTurn
           ? 'linear-gradient(135deg,rgba(201,168,76,.18) 0%,rgba(20,8,0,.94) 100%)'
-          : 'linear-gradient(135deg,rgba(100,50,10,.14) 0%,rgba(20,14,8,.94) 100%)',
-        backdropFilter: 'blur(12px)',
+          : 'linear-gradient(135deg,rgba(100,50,10,.14) 0%,rgba(20,14,8,.96) 100%)',
         boxShadow: isTurn ? '0 0 16px rgba(201,168,76,.25), inset 0 1px 0 rgba(232,201,122,.1)' : 'none',
       }}
     >
@@ -524,7 +521,7 @@ function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatB
 
       {/* Header: avatar + name + score */}
       <div style={{
-        width: '100%', borderRadius: '8px 8px 0 0', backdropFilter: 'blur(10px)',
+        width: '100%', borderRadius: '8px 8px 0 0',
         background: bg, border: `1.5px solid ${borderColor}`, borderBottom: 'none',
         boxShadow: isTurn ? '0 0 10px rgba(201,168,76,0.3)' : 'none',
         padding: '3px 4px 2px', display: 'flex', alignItems: 'center', gap: 3,
@@ -839,6 +836,22 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   useEffect(() => {
     if (gameState.phase !== 'SPECIAL_J') { setJTargetUid(null); }
   }, [gameState.phase]);
+
+  // Pre-warm the audio context the first time the user touches the board,
+  // so the first card-draw sound doesn't take 100-200ms to initialise.
+  useEffect(() => {
+    const warm = () => {
+      soundService.warm();
+      window.removeEventListener('pointerdown', warm);
+      window.removeEventListener('touchstart', warm);
+    };
+    window.addEventListener('pointerdown', warm, { once: true });
+    window.addEventListener('touchstart', warm, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', warm);
+      window.removeEventListener('touchstart', warm);
+    };
+  }, []);
 
   useEffect(() => {
     const cur = gameState.currentTurnUid;
@@ -1238,7 +1251,13 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
   // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0E0905' }}>
+    <div style={{
+      position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
+      overflow: 'hidden', background: '#0E0905',
+      // GPU promote + paint isolation so timer/animation re-renders inside
+      // the board don't repaint surrounding elements
+      contain: 'layout paint style',
+    }}>
       <RoomBackground />
 
       <div className={`flex-1 flex flex-col pb-14 min-h-0 px-1 ${

@@ -1354,11 +1354,11 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           </div>
         )}
 
-        {/* Spacer that reserves the vertical space the absolutely-positioned
-            top opponent USED to occupy in the flex layout. Without this the
-            table slides up and sits right under the header. */}
+        {/* Spacer that pushes the table down below the absolutely-positioned
+            top opponent. Sized larger than the opponent itself so there's
+            comfortable breathing room between the opponent and the felt. */}
         {!isMobile && top.length > 0 && (
-          <div className="shrink-0" style={{ height: isTablet ? 130 : 160 }} aria-hidden="true" />
+          <div className="shrink-0" style={{ height: isTablet ? 200 : 240 }} aria-hidden="true" />
         )}
 
         {/* ══ MIDDLE ROW: [left] table [right] ══ */}

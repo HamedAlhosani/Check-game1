@@ -475,13 +475,11 @@ app.post('/api/clans/:id/reject/:targetUid', requireAuth, wrap(async (req, res) 
   res.json({ ok: true });
 }));
 
-// Invites
-app.post('/api/clans/:id/invite/:targetUid', requireAuth, wrap(async (req, res) => {
-  const r = await inviteToClan((req as any).uid, req.params.id, req.params.targetUid);
-  if (!r.ok) return res.status(400).json({ error: r.error });
-  res.json({ ok: true });
-}));
-
+// Invites — order matters: specific paths must come BEFORE the parameterized
+// /invite/:targetUid route, otherwise Express matches "accept"/"decline" as
+// a target uid and routes them to inviteToClan (which then 400s with
+// "only officers can invite"). That was the real cause of the user's
+// "I can't accept or decline my invites" bug.
 app.post('/api/clans/:id/invite/accept', requireAuth, wrap(async (req, res) => {
   const r = await acceptInvite((req as any).uid, req.params.id);
   if (!r.ok) return res.status(400).json({ error: r.error });
@@ -491,6 +489,12 @@ app.post('/api/clans/:id/invite/accept', requireAuth, wrap(async (req, res) => {
 
 app.post('/api/clans/:id/invite/decline', requireAuth, wrap(async (req, res) => {
   await declineInvite((req as any).uid, req.params.id);
+  res.json({ ok: true });
+}));
+
+app.post('/api/clans/:id/invite/:targetUid', requireAuth, wrap(async (req, res) => {
+  const r = await inviteToClan((req as any).uid, req.params.id, req.params.targetUid);
+  if (!r.ok) return res.status(400).json({ error: r.error });
   res.json({ ok: true });
 }));
 

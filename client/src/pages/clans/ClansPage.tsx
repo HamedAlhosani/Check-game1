@@ -283,7 +283,10 @@ function MineTab({ clan, myUid, lang, onChanged, onLeft }: {
 }) {
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmKick, setConfirmKick] = useState<{ uid: string; name: string } | null>(null);
+  const [confirmTransfer, setConfirmTransfer] = useState<{ uid: string; name: string } | null>(null);
   const [editing, setEditing] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const { setProfile } = useAuthStore();
   const { addToast } = useUiStore();
 
@@ -327,13 +330,19 @@ function MineTab({ clan, myUid, lang, onChanged, onLeft }: {
     try { await apiClient.post(`/api/clans/${clan!.id}/role/${targetUid}`, { role }); onChanged(); }
     catch (e: any) { addToast(e?.message || 'Failed', 'error'); }
   }
-  async function kick(targetUid: string) {
-    if (!confirm(lang === 'ar' ? 'طرد هذا العضو؟' : 'Kick this member?')) return;
+  function askKick(targetUid: string, name: string) { setConfirmKick({ uid: targetUid, name }); }
+  function askTransfer(targetUid: string, name: string) { setConfirmTransfer({ uid: targetUid, name }); }
+  async function doKick() {
+    if (!confirmKick) return;
+    const targetUid = confirmKick.uid;
+    setConfirmKick(null);
     try { await apiClient.post(`/api/clans/${clan!.id}/kick/${targetUid}`, {}); onChanged(); }
     catch (e: any) { addToast(e?.message || 'Failed', 'error'); }
   }
-  async function transfer(targetUid: string) {
-    if (!confirm(lang === 'ar' ? 'نقل القيادة لهذا العضو؟' : 'Transfer leadership to this member?')) return;
+  async function doTransfer() {
+    if (!confirmTransfer) return;
+    const targetUid = confirmTransfer.uid;
+    setConfirmTransfer(null);
     try { await apiClient.post(`/api/clans/${clan!.id}/transfer/${targetUid}`, {}); onChanged(); addToast('👑', 'success'); }
     catch (e: any) { addToast(e?.message || 'Failed', 'error'); }
   }
@@ -430,11 +439,26 @@ function MineTab({ clan, myUid, lang, onChanged, onLeft }: {
           <MemberRow key={m.uid} m={m} isMe={m.uid === myUid} isLeader={isLeader} amOfficer={isOfficer}
             onPromote={() => setRole(m.uid, 'officer')}
             onDemote={() => setRole(m.uid, 'member')}
-            onKick={() => kick(m.uid)}
-            onTransfer={() => transfer(m.uid)}
+            onKick={() => askKick(m.uid, m.displayName)}
+            onTransfer={() => askTransfer(m.uid, m.displayName)}
             lang={lang}/>
         ))}
       </div>
+
+      {/* Invite friends — visible to officers + leader. Indispensable for
+          private clans since they can ONLY be joined via direct invite. */}
+      {isOfficer && (
+        <button onClick={() => setShowInvite(true)}
+          className="w-full mb-2 rounded-xl py-2.5 font-arabic font-bold flex items-center justify-center gap-2"
+          style={{
+            background: 'linear-gradient(135deg, rgba(196,149,255,0.20), rgba(120,80,168,0.10))',
+            border: '1.5px solid rgba(196,149,255,0.55)',
+            color: '#C495FF', fontSize: 13,
+            boxShadow: '0 0 14px rgba(196,149,255,0.25)',
+          }}>
+          💌 {lang === 'ar' ? 'دعوة الأصدقاء للقبيلة' : 'Invite friends to clan'}
+        </button>
+      )}
 
       {!isLeader && (
         <button onClick={() => setConfirmLeave(true)}
@@ -466,6 +490,23 @@ function MineTab({ clan, myUid, lang, onChanged, onLeft }: {
         message={lang === 'ar' ? 'سيتم طرد جميع الأعضاء وحذف القبيلة نهائياً. متأكد؟' : 'All members will be removed and the clan deleted permanently.'}
         confirmLabel={lang === 'ar' ? 'حذف' : 'Delete'} cancelLabel={lang === 'ar' ? 'إلغاء' : 'Cancel'}
         tone="danger" lang={lang} onConfirm={deleteIt} onCancel={() => setConfirmDelete(false)}/>
+
+      <ConfirmModal open={!!confirmKick}
+        title={lang === 'ar' ? 'طرد عضو' : 'Kick Member'}
+        message={lang === 'ar' ? `هل تريد طرد "${confirmKick?.name}" من القبيلة؟` : `Kick "${confirmKick?.name}" from the clan?`}
+        confirmLabel={lang === 'ar' ? 'طرد' : 'Kick'} cancelLabel={lang === 'ar' ? 'إلغاء' : 'Cancel'}
+        tone="danger" lang={lang} onConfirm={doKick} onCancel={() => setConfirmKick(null)}/>
+
+      <ConfirmModal open={!!confirmTransfer}
+        title={lang === 'ar' ? 'نقل القيادة' : 'Transfer Leadership'}
+        message={lang === 'ar'
+          ? `سوف ينتقل دور القيادة إلى "${confirmTransfer?.name}". أنت ستصبح عضواً عادياً. متأكد؟`
+          : `Leadership will pass to "${confirmTransfer?.name}". You'll become a regular member. Continue?`}
+        confirmLabel={lang === 'ar' ? 'نقل' : 'Transfer'} cancelLabel={lang === 'ar' ? 'إلغاء' : 'Cancel'}
+        tone="gold" lang={lang} onConfirm={doTransfer} onCancel={() => setConfirmTransfer(null)}/>
+
+      <InviteFriendsModal open={showInvite} clan={clan} lang={lang}
+        onClose={() => setShowInvite(false)} onInvited={onChanged}/>
     </div>
   );
 }
@@ -729,6 +770,172 @@ function CreateTab({ lang, myCoins, onCreated }: { lang: string; myCoins: number
           : (lang === 'ar' ? `🏰 أنشئ القبيلة (${CLAN_CREATE_COST.toLocaleString()} 🪙)` : `🏰 Found Clan (${CLAN_CREATE_COST.toLocaleString()} 🪙)`)}
       </motion.button>
     </div>
+  );
+}
+
+// ─── Invite friends modal ─────────────────────────────────────────────────
+// Officers + leader use this to send direct invites — the only way to get
+// into a private clan. Loads the inviter's friends list, filters out anyone
+// already in the clan / already invited, and lets them invite with one tap.
+function InviteFriendsModal({ open, clan, lang, onClose, onInvited }: {
+  open: boolean;
+  clan: Clan;
+  lang: string;
+  onClose: () => void;
+  onInvited: () => void;
+}) {
+  const [friends, setFriends] = useState<{ uid: string; displayName: string; avatarId: string; level: number }[]>([]);
+  const [searchUsername, setSearchUsername] = useState('');
+  const [busyUid, setBusyUid] = useState<string | null>(null);
+  const [invitedThisSession, setInvitedThisSession] = useState<Set<string>>(new Set());
+  const { addToast } = useUiStore();
+
+  useEffect(() => {
+    if (!open) return;
+    apiClient.get<typeof friends>('/api/friends')
+      .then(setFriends).catch(() => setFriends([]));
+  }, [open]);
+
+  const memberIds = new Set(clan.members.map(m => m.uid));
+  const inviteIds = new Set(clan.invites.map(i => i.uid));
+  const filteredFriends = friends.filter(f => !memberIds.has(f.uid));
+
+  async function inviteByUid(uid: string, name: string) {
+    if (busyUid) return;
+    setBusyUid(uid);
+    soundService.playClick();
+    try {
+      await apiClient.post(`/api/clans/${clan.id}/invite/${uid}`, {});
+      setInvitedThisSession(s => new Set([...s, uid]));
+      addToast(lang === 'ar' ? `💌 تمت دعوة ${name}` : `💌 Invited ${name}`, 'success');
+      onInvited();
+    } catch (e: any) {
+      soundService.playError();
+      addToast(e?.message || 'Failed', 'error');
+    } finally {
+      setBusyUid(null);
+    }
+  }
+
+  async function inviteByUsername() {
+    const q = searchUsername.trim();
+    if (!q) return;
+    soundService.playClick();
+    try {
+      // Server has no by-username invite endpoint — but the friends search does.
+      // Easiest: use friends/request flow as a soft search? Simpler: tell user
+      // to add the player as friend first if they aren't already.
+      addToast(lang === 'ar'
+        ? 'لإضافة لاعب ليس صديقك، أرسل له طلب صداقة أولاً ثم ادعه من هنا'
+        : 'Add the player as a friend first, then invite them from here',
+        'info');
+    } catch (e: any) { addToast(e?.message || 'Failed', 'error'); }
+  }
+
+  if (!open) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        transition={{ duration: 0.12 }}
+        className="fixed inset-0 z-[70] flex items-center justify-center p-3"
+        style={{ background: 'rgba(0,0,0,0.78)' }}
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.94, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.94, opacity: 0 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+          onClick={e => e.stopPropagation()}
+          className="relative w-full max-w-md rounded-3xl flex flex-col overflow-hidden"
+          style={{
+            maxHeight: '88vh',
+            background: 'linear-gradient(180deg, #1A1408 0%, #0E0905 100%)',
+            border: '1px solid rgba(196,149,255,0.40)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(196,149,255,0.20)',
+            direction: lang === 'ar' ? 'rtl' : 'ltr',
+          }}
+        >
+          {/* Header */}
+          <div className="px-5 pt-5 pb-3 border-b" style={{ borderColor: 'rgba(196,149,255,0.18)' }}>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-arabic font-bold flex items-center gap-2"
+                style={{ fontSize: 18, color: '#C495FF' }}>
+                💌 {lang === 'ar' ? 'دعوة الأصدقاء' : 'Invite Friends'}
+              </h2>
+              <button onClick={onClose}
+                className="rounded-lg w-8 h-8 flex items-center justify-center text-xl"
+                style={{ color: 'rgba(245,230,200,0.5)', background: 'rgba(255,255,255,0.04)' }}>×</button>
+            </div>
+            <p className="font-arabic" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.55)' }}>
+              {lang === 'ar'
+                ? 'اختر أصدقاءك من القائمة لإرسال دعوة. تظهر لهم في صفحة القبائل.'
+                : 'Pick friends to send an invite. They\'ll see it on their Clans page.'}
+            </p>
+          </div>
+
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto px-3 py-3">
+            {filteredFriends.length === 0 ? (
+              <div className="text-center py-8 font-arabic"
+                style={{ fontSize: 12.5, color: 'rgba(245,230,200,0.5)' }}>
+                <p style={{ fontSize: 32, marginBottom: 6 }}>👥</p>
+                {friends.length === 0
+                  ? (lang === 'ar' ? 'لا أصدقاء بعد — أضف أصدقاء من صفحة الأصدقاء' : 'No friends yet — add some from the Friends page')
+                  : (lang === 'ar' ? 'كل أصدقائك في القبيلة بالفعل' : 'All your friends are already in the clan')}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                {filteredFriends.map(f => {
+                  const alreadyInvited = inviteIds.has(f.uid) || invitedThisSession.has(f.uid);
+                  return (
+                    <div key={f.uid} className="flex items-center gap-2 rounded-xl px-3 py-2"
+                      style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ width: 32, height: 32 }}>
+                        <CharacterArt id={f.avatarId} size={32}/>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-arabic font-bold truncate" style={{ fontSize: 13, color: '#E8C97A' }}>
+                          {f.displayName}
+                        </p>
+                        <p className="font-arabic" style={{ fontSize: 10, color: 'rgba(245,230,200,0.5)' }}>
+                          ⚡ Lvl {f.level}
+                        </p>
+                      </div>
+                      {alreadyInvited ? (
+                        <span className="rounded-lg px-2.5 py-1 font-arabic"
+                          style={{ background: 'rgba(196,149,255,0.15)', color: '#C495FF', fontSize: 10.5 }}>
+                          ✓ {lang === 'ar' ? 'مدعو' : 'Invited'}
+                        </span>
+                      ) : (
+                        <motion.button whileTap={{ scale: 0.94 }}
+                          onClick={() => inviteByUid(f.uid, f.displayName)}
+                          disabled={busyUid === f.uid}
+                          className="rounded-lg px-3 py-1.5 font-arabic font-bold disabled:opacity-50"
+                          style={{
+                            background: 'linear-gradient(135deg, #C495FF, #8856CC)',
+                            color: '#fff', fontSize: 11,
+                          }}>
+                          {busyUid === f.uid ? '...' : (lang === 'ar' ? 'دعوة' : 'Invite')}
+                        </motion.button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Footer hint */}
+          <div className="px-4 py-3 border-t font-arabic text-center"
+            style={{ borderColor: 'rgba(196,149,255,0.15)', fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
+            💡 {lang === 'ar'
+              ? 'الكود يُشاركه القائد كذلك — الأصدقاء يدخلون من تبويب التصفّح'
+              : 'Or share your code — friends can join from the Browse tab'}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }
 

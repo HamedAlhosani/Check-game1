@@ -154,10 +154,7 @@ export function ProfilePage() {
           style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(20,16,10,0.95) 100%)', borderColor: 'rgba(201,168,76,0.22)', boxShadow: '0 4px 40px rgba(0,0,0,0.5)' }}>
 
           <div className="relative shrink-0" style={{ width: 96, height: 96 }}>
-            <div className="w-24 h-24 rounded-full flex items-center justify-center text-5xl"
-              style={{ background: 'rgba(201,168,76,0.10)' }}>
-              {AVATAR_EMOJIS[profile.avatarId] || '👤'}
-            </div>
+            <CharacterArt id={profile.avatarId} size={96}/>
             <FrameRing size={96} frameId={(profile.equippedItems as any)?.avatarFrame} />
             <div className="absolute -bottom-1 -right-1 rounded-full w-6 h-6 flex items-center justify-center z-10"
               style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', fontSize: 10, color: '#04080F', fontWeight: 800 }}>

@@ -86,26 +86,128 @@ function XpBar({ xp }: { xp: number }) {
   );
 }
 
-// ── Mode card ─────────────────────────────────────────────────────────────────
-function ModeCard({ icon, title, sub, selected, onClick, color }: {
-  icon: string; title: string; sub: string; selected: boolean; onClick: () => void; color: string;
+// ── Mode card — playing-card style with animated theme per mode ──────────────
+type ModeTheme = {
+  bg: string;          // base background gradient
+  border: string;      // border color (rgba)
+  borderActive: string;
+  glow: string;        // accent glow color
+  pattern: string;     // suit/icon decoration color
+  text: string;        // accent text color
+  accent: string;      // accent solid color
+};
+const MODE_THEMES: Record<GameMode, ModeTheme> = {
+  online: {
+    bg: 'linear-gradient(160deg, #0B2A55 0%, #051434 55%, #02081C 100%)',
+    border: 'rgba(120,170,255,0.20)',
+    borderActive: 'rgba(120,170,255,0.85)',
+    glow: 'rgba(80,140,255,0.45)',
+    pattern: 'rgba(160,200,255,0.13)',
+    text: '#9FC2FF',
+    accent: '#5C9CFF',
+  },
+  private: {
+    bg: 'linear-gradient(160deg, #4A0F3A 0%, #2A0820 55%, #14040E 100%)',
+    border: 'rgba(255,140,210,0.20)',
+    borderActive: 'rgba(255,140,210,0.85)',
+    glow: 'rgba(220,90,180,0.45)',
+    pattern: 'rgba(255,180,225,0.13)',
+    text: '#FFB4DC',
+    accent: '#E465B5',
+  },
+  bots: {
+    bg: 'linear-gradient(160deg, #103A28 0%, #07221A 55%, #03100C 100%)',
+    border: 'rgba(110,235,165,0.20)',
+    borderActive: 'rgba(110,235,165,0.85)',
+    glow: 'rgba(80,200,120,0.45)',
+    pattern: 'rgba(170,255,200,0.13)',
+    text: '#A6F0C7',
+    accent: '#3BD685',
+  },
+};
+
+function ModeCard({ mode, icon, title, tagline, selected, onClick, lang }: {
+  mode: GameMode; icon: string; title: string; tagline: string;
+  selected: boolean; onClick: () => void; lang: string;
 }) {
+  const t = MODE_THEMES[mode];
   return (
     <motion.button
-      whileHover={{ scale: 1.03, y: -2 }}
-      whileTap={{ scale: 0.97 }}
+      whileHover={{ y: -6 }}
+      whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="flex flex-col items-center gap-2 rounded-2xl px-4 py-5 transition-all"
+      animate={{
+        scale: selected ? 1.04 : 1,
+        boxShadow: selected
+          ? `0 14px 40px rgba(0,0,0,0.55), 0 0 32px ${t.glow}, inset 0 1px 0 rgba(255,255,255,0.08)`
+          : '0 6px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)',
+      }}
+      transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+      className="relative overflow-hidden rounded-3xl border-2 flex flex-col items-center"
       style={{
-        background: selected ? `rgba(${color},0.12)` : 'rgba(255,255,255,0.04)',
-        border: `1.5px solid ${selected ? `rgba(${color},0.55)` : 'rgba(255,255,255,0.07)'}`,
-        boxShadow: selected ? `0 0 24px rgba(${color},0.18)` : 'none',
+        background: t.bg,
+        borderColor: selected ? t.borderActive : t.border,
         cursor: 'pointer',
+        padding: '20px 14px 18px',
+        minHeight: 200,
       }}
     >
-      <span style={{ fontSize: 36 }}>{icon}</span>
-      <p className="font-arabic font-bold" style={{ fontSize: 15, color: selected ? `rgb(${color})` : 'rgba(245,230,200,0.8)' }}>{title}</p>
-      <p className="font-arabic" style={{ fontSize: 11, color: 'rgba(245,230,200,0.4)', textAlign: 'center' }}>{sub}</p>
+      {/* Pattern decoration: large faint suit in the corner */}
+      <span
+        aria-hidden="true"
+        style={{
+          position: 'absolute', top: -22, right: -22,
+          fontSize: 130, lineHeight: 1, color: t.pattern,
+          transform: 'rotate(-18deg)', pointerEvents: 'none',
+          fontFamily: 'Georgia, serif', fontWeight: 700,
+        }}
+      >
+        {mode === 'online' ? '♠' : mode === 'private' ? '♥' : '♣'}
+      </span>
+      {/* Soft inner glow ring when selected */}
+      {selected && (
+        <div className="absolute inset-2 rounded-2xl pointer-events-none"
+          style={{ border: `1px solid ${t.borderActive}`, opacity: 0.4 }} />
+      )}
+
+      {/* Icon medallion */}
+      <motion.div
+        animate={{ y: selected ? -2 : 0 }}
+        className="rounded-full flex items-center justify-center mb-3"
+        style={{
+          width: 64, height: 64,
+          background: `radial-gradient(circle at 32% 28%, rgba(255,255,255,0.18), transparent 60%), ${t.bg}`,
+          border: `1.5px solid ${t.borderActive}`,
+          boxShadow: `0 0 22px ${t.glow}, inset 0 -8px 18px rgba(0,0,0,0.5)`,
+          fontSize: 32, lineHeight: 1,
+        }}
+      >
+        <span>{icon}</span>
+      </motion.div>
+
+      {/* Title + tagline */}
+      <p className="font-arabic font-bold mb-1" style={{ fontSize: 18, color: t.text, textShadow: `0 0 12px ${t.glow}` }}>
+        {title}
+      </p>
+      <p className="font-arabic text-center mb-3" style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', minHeight: 28, lineHeight: 1.4 }}>
+        {tagline}
+      </p>
+
+      {/* Bottom action chip */}
+      <div
+        className="rounded-full font-arabic font-bold flex items-center gap-1.5"
+        style={{
+          background: selected ? t.accent : 'rgba(255,255,255,0.08)',
+          color: selected ? '#0E0905' : t.text,
+          padding: '6px 14px',
+          fontSize: 12,
+          border: `1px solid ${selected ? t.accent : t.border}`,
+          letterSpacing: 0.5,
+        }}
+      >
+        {selected ? (lang === 'ar' ? 'مختار' : 'Selected') : (lang === 'ar' ? 'اضغط' : 'Pick')}
+        <span style={{ fontSize: 13 }}>{selected ? '✓' : '›'}</span>
+      </div>
     </motion.button>
   );
 }
@@ -565,16 +667,19 @@ export function HomePage() {
               <p className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.3)' }}>{t('home_subtitle')}</p>
             </div>
 
-            {/* ── Mode cards ── */}
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <ModeCard icon="🌍" title={t('mode_online')} sub={t('mode_online_desc')}
-                selected={mode === 'online'} color="80,160,220"
+            {/* ── Mode cards (legendary playing-card style) ── */}
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              <ModeCard mode="online" icon="🌍" title={t('mode_online')}
+                tagline={lang === 'ar' ? 'العب مع لاعبين حول العالم' : 'Play with players worldwide'}
+                selected={mode === 'online'} lang={lang}
                 onClick={() => { setMode('online'); soundService.playClick(); }}/>
-              <ModeCard icon="🔒" title={t('mode_private')} sub={t('mode_private_desc')}
-                selected={mode === 'private'} color="232,144,58"
+              <ModeCard mode="private" icon="🔒" title={t('mode_private')}
+                tagline={lang === 'ar' ? 'غرفة خاصة لك ولأصدقائك' : 'Private room with your friends'}
+                selected={mode === 'private'} lang={lang}
                 onClick={() => { setMode('private'); soundService.playClick(); }}/>
-              <ModeCard icon="🤖" title={t('mode_bot')} sub={t('mode_bot_desc')}
-                selected={mode === 'bots'} color="80,200,120"
+              <ModeCard mode="bots" icon="🤖" title={t('mode_bot')}
+                tagline={lang === 'ar' ? 'تدرب وحارب البوتات' : 'Practice against bots'}
+                selected={mode === 'bots'} lang={lang}
                 onClick={() => { setMode('bots'); soundService.playClick(); }}/>
             </div>
 

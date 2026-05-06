@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
 import { AuthenticatedSocket, verifySocketToken } from '../middleware/authMiddleware';
 import { registerLobbyEvents } from './lobbyEvents';
-import { registerGameEvents } from './gameEvents';
+import { registerGameEvents, scheduleAbandon } from './gameEvents';
 import { registerChatEvents } from './chatEvents';
 import { SOCKET_EVENTS } from '@check-game/shared';
 import { roomManager } from '../rooms/RoomManager';
@@ -51,6 +51,9 @@ export function setupSocketHandlers(io: Server): void {
       engine.replaceWithBot(socket.uid);
       const bot = new BotPlayer(socket.uid, 'medium');
       roomManager.addBotPlayer(roomId, bot);
+      // 60s grace: if they don't reconnect by then, the seat is fully
+      // abandoned and they won't be auto-resumed on the next page load.
+      scheduleAbandon(roomId, socket.uid);
     });
   });
 }

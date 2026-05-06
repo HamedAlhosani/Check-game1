@@ -100,6 +100,40 @@ export function startGameSession(io: Server, roomId: string): void {
   }, 400);
 }
 
+// ─── Abandon timers ─────────────────────────────────────────────────────────
+// When a player is replaced by a bot (explicit Exit or disconnect), they have
+// 60 seconds to come back. After that, mark them as bot in Room.players so
+// getRoomForUid stops auto-resuming them — the game keeps running with the
+// bot, and they get a fresh /home next time they open the site.
+const ABANDON_GRACE_MS = 60_000;
+const abandonTimers = new Map<string, NodeJS.Timeout>();
+
+function abandonKey(roomId: string, uid: string): string {
+  return `${roomId}|${uid}`;
+}
+
+export function scheduleAbandon(roomId: string, uid: string): void {
+  const key = abandonKey(roomId, uid);
+  cancelAbandon(roomId, uid);
+  const t = setTimeout(() => {
+    const room = roomManager.getRoom(roomId);
+    abandonTimers.delete(key);
+    if (!room) return;
+    const rp = room.players.find(p => p.uid === uid);
+    if (rp) rp.isBot = true;
+  }, ABANDON_GRACE_MS);
+  abandonTimers.set(key, t);
+}
+
+export function cancelAbandon(roomId: string, uid: string): void {
+  const key = abandonKey(roomId, uid);
+  const existing = abandonTimers.get(key);
+  if (existing) {
+    clearTimeout(existing);
+    abandonTimers.delete(key);
+  }
+}
+
 function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): void {
   // Always start the polling loop — even all-human games may add bot stand-ins
   // later when a player disconnects, AFKs out, or hands their seat to a bot
@@ -287,8 +321,8 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
   });
 
   // Player explicitly leaves mid-game → replace immediately with bot.
-  // The Room.players entry stays as a human so the user can come back and
-  // press the reclaim button to retake their seat from the bot.
+  // The Room.players entry stays as a human for 60s so the user can come
+  // back and reclaim their seat. After 60s the seat is fully abandoned.
   socket.on(SOCKET_EVENTS.GAME_PLAYER_LEAVE, (payload: { gameId: string }) => {
     if (!socket.uid) return;
     const engine = roomManager.getGame(payload.gameId) as GameEngine | undefined;
@@ -301,6 +335,7 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     const roomId = engine.roomId;
     roomManager.removeSocket(socket.id);
     socket.leave(roomId);
+    scheduleAbandon(roomId, socket.uid);
   });
 
   // Client-requested smart auto-play (used when AFK fast-play kicks in)
@@ -322,6 +357,7 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
       const bot = new BotPlayer(socket.uid, 'medium');
       roomManager.addBotPlayer(engine.roomId, bot);
     }
+    scheduleAbandon(engine.roomId, socket.uid);
   });
 
   // Player came back to find a bot in their seat — give it back to them.
@@ -347,15 +383,13 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
   // Reconnect: find room by socket ID (normal) or by UID (after page refresh)
   const roomId = roomManager.getRoomForSocket(socket.id) ??
     (socket.uid ? roomManager.getRoomForUid(socket.uid) : undefined);
-  if (roomId) {
+  if (roomId && socket.uid) {
+    // Within the 60s grace window — cancel the pending abandonment.
+    cancelAbandon(roomId, socket.uid);
     roomManager.trackSocket(socket.id, roomId);
     socket.join(roomId);
     const engine = roomManager.getGame(roomId);
-    if (engine && socket.uid) {
-      // Auto-reclaim: if the slot is currently bot-controlled because the
-      // user disconnected (closed Safari, lost wifi, switched tabs), give
-      // it straight back. Player should resume seamlessly without seeing
-      // the reclaim modal at all.
+    if (engine) {
       const checkEngine = engine as GameEngine;
       if (typeof checkEngine.isReplacedByBot === 'function' && checkEngine.isReplacedByBot(socket.uid)) {
         checkEngine.reclaimSeat(socket.uid);

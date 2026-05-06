@@ -709,10 +709,13 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const navigate = useNavigate();
   const socket = socketService.getSocket();
 
-  // Hides the central deck + discard until the cinematic finishes — so at
-  // the start of a round the table shows only seats + names + face-down
-  // hands, then the deal animation populates the centre.
-  const [tableReady, setTableReady] = useState(true);
+  // Hides hand cards + central deck + discard until the cinematic finishes
+  // — so at the start of a round the table shows ONLY seats + names. The
+  // initial value is computed from gameState so cards stay hidden from the
+  // very first paint (otherwise they'd flash visible during the intro list).
+  const [tableReady, setTableReady] = useState(
+    gameState.phase !== 'PEEK_PHASE' || gameState.roundNumber > 1 ? true : false
+  );
   const dDeckCount  = tableReady ? gameState.deckCount  : 0;
   const dDiscardTop = tableReady ? gameState.discardTop : null;
   const me = gameState.players.find(p => p.uid === user?.uid);
@@ -1007,6 +1010,15 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     const tFallback = setTimeout(() => flushPendingPeek(), 8000);
     return () => { clearTimeout(tCine); clearTimeout(tFallback); };
   }, [gameState.phase, gameState.roundNumber, showIntro]);
+
+  // Safety: if phase moves OUT of PEEK_PHASE for any reason (reconnect,
+  // edge-case race), make sure cards become visible — otherwise they'd
+  // stay hidden forever.
+  useEffect(() => {
+    if (gameState.phase !== 'PEEK_PHASE' && !tableReady) {
+      setTableReady(true);
+    }
+  }, [gameState.phase, tableReady]);
 
   // Auto-dismiss the round-1 IntroOverlay once the player list animation
   // has finished playing (each player fades in at i × 100ms + ~300ms

@@ -141,6 +141,9 @@ export function cancelAbandon(roomId: string, uid: string): void {
 }
 
 export function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEngine): void {
+  // Track bots that already have a queued special-phase autoPlay timeout
+  // so the 350ms poll doesn't pile up a dozen pending actions.
+  const specialActionPending = new Set<string>();
   // Always start the polling loop — even all-human games may add bot stand-ins
   // later when a player disconnects, AFKs out, or hands their seat to a bot
   // via GAME_BOT_TAKEOVER. The interior already no-ops if there are 0 bots.
@@ -199,6 +202,22 @@ export function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEn
     for (const bot of bots) {
       const me = state.players.find(p => p.uid === bot.uid);
       if (!me || me.isEliminated) continue;
+
+      // Mid-special phases (KING_CHOICE / SPECIAL_J / SPECIAL_Q): drive
+      // the bot via smartAutoPlay so it doesn't sit waiting for the full
+      // 15–20s special-action timeout. The Set guards against scheduling
+      // multiple timeouts per bot per phase entry.
+      if ((state.phase === 'KING_CHOICE' || state.phase === 'SPECIAL_J' || state.phase === 'SPECIAL_Q')
+          && state.specialActionUid === bot.uid
+          && !specialActionPending.has(bot.uid)) {
+        specialActionPending.add(bot.uid);
+        bot.updateCards(engine.getBotCards(bot.uid));
+        setTimeout(() => {
+          try { engine.smartAutoPlay(bot.uid); }
+          finally { specialActionPending.delete(bot.uid); }
+        }, 600 + Math.random() * 400);
+        continue;
+      }
 
       if ((state.phase === 'PLAYING' || state.phase === 'CHECK_CALLED') && me.isTurn) {
         // Update bot's card knowledge from server-side actual cards

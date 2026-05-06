@@ -4,6 +4,7 @@ import { Deck, decksNeededFor } from './Deck';
 import { getCardValue, isSpecialCard } from './Card';
 import { canBurnCard } from './BurnValidator';
 import { calculateRoundScores, ScoreResult } from './ScoreCalculator';
+import { BotPlayer } from './BotPlayer';
 
 const PEEK_DURATION_MS = 8000;
 const TURN_DURATION_MS = 25000;
@@ -136,13 +137,60 @@ export class GameEngine {
     this.emit('game:turn_start', { uid: player.uid, timeoutMs: TURN_DURATION_MS });
 
     const timer = setTimeout(() => {
-      if (this.drawnCards.has(player.uid)) {
-        this.performBurnDrawn(player.uid);
-      } else {
-        this.performDrawAndBurn(player.uid);
-      }
+      // Smart auto-play instead of dumb draw-and-burn — uses bot logic so
+      // AFK humans still play sensibly (burn matching from discard, take a
+      // good card from the ground, swap drawn for worst hand card, etc.).
+      this.smartAutoPlay(player.uid);
     }, TURN_DURATION_MS);
     this.timers.push(timer);
+  }
+
+  /**
+   * Plays one turn for `uid` using bot-grade decision logic. Safe to call
+   * mid-turn; if the player has already drawn, decides swap vs burn for the
+   * drawn card. Otherwise picks burn-from-discard / take-from-discard /
+   * call-check / draw + post-draw choice.
+   */
+  smartAutoPlay(uid: string): void {
+    const player = this.getPlayer(uid);
+    if (!player || player.isEliminated) return;
+    if (this.phase !== 'PLAYING' && this.phase !== 'CHECK_CALLED') return;
+    if (!this.isPlayerTurn(uid)) return;
+
+    const tempBot = new BotPlayer(uid, 'medium');
+    tempBot.updateCards(player.cards);
+    const state = this.getPublicState();
+
+    if (this.drawnCards.has(uid)) {
+      const drawnCard = this.drawnCards.get(uid)!;
+      const action = tempBot.decideTurn(state, drawnCard);
+      if (action.type === 'SWAP_DRAWN') {
+        this.onSwapDrawn(uid, action.position);
+      } else {
+        this.onBurnDrawn(uid);
+      }
+      return;
+    }
+
+    const action = tempBot.decideTurn(state);
+    if (action.type === 'CALL_CHECK') { this.onCallCheck(uid); return; }
+    if (action.type === 'BURN_DISCARD') { this.onBurnAttempt(uid, action.position); return; }
+    if (action.type === 'TAKE_DISCARD') { this.onTakeDiscard(uid, action.position); return; }
+
+    // DRAW path: pull from deck, then a moment later decide swap or burn
+    if (!this.onDrawDeck(uid)) return;
+    setTimeout(() => {
+      const drawn = this.drawnCards.get(uid);
+      const me = this.getPlayer(uid);
+      if (!drawn || !me || !this.isPlayerTurn(uid)) return;
+      tempBot.updateCards(me.cards);
+      const post = tempBot.decideTurn(this.getPublicState(), drawn);
+      if (post.type === 'SWAP_DRAWN') {
+        this.onSwapDrawn(uid, post.position);
+      } else {
+        this.onBurnDrawn(uid);
+      }
+    }, 350);
   }
 
   private performDrawAndBurn(uid: string): void {
@@ -712,6 +760,7 @@ export class GameEngine {
         isEliminated: p.isEliminated,
         cumulativeScore: p.cumulativeScore,
         seatIndex: p.seatIndex,
+        isBot: p.isBot,
       })),
       deckCount: this.deck.drawCount,
       discardTop: this.deck.peekDiscard(),

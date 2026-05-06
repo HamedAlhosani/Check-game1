@@ -295,6 +295,13 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     socket.leave(roomId);
   });
 
+  // Client-requested smart auto-play (used when AFK fast-play kicks in)
+  socket.on(SOCKET_EVENTS.GAME_AUTOPLAY, (payload: { gameId: string }) => {
+    if (!socket.uid) return;
+    const engine = roomManager.getGame(payload.gameId) as GameEngine | undefined;
+    engine?.smartAutoPlay(socket.uid);
+  });
+
   // Player came back to find a bot in their seat — give it back to them.
   socket.on(SOCKET_EVENTS.GAME_RECLAIM_SEAT, (payload: { gameId: string }) => {
     if (!socket.uid) return;

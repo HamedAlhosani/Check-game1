@@ -808,34 +808,29 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     return () => window.clearTimeout(id);
   }, [gameState.phase, gameState.specialActionUid]);
 
-  // Auto-play on turn timeout so game continues for everyone
+  // Auto-play on turn timeout — server has its own 25s timeout that runs
+  // smartAutoPlay; this is just a tiny safety-net buffer in case the server
+  // emit got delayed. Asks the server to play smart on our behalf.
   useEffect(() => {
     if (!isMyTurn || !gameState.turnEndAt || (gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED')) return;
-    const delay = gameState.turnEndAt - Date.now();
+    const delay = (gameState.turnEndAt - Date.now()) + 1500; // 1.5s after server timeout
     if (delay <= 0) return;
     const id = window.setTimeout(() => {
       if (actedRef.current) return;
-      if (!drawnCard) {
-        socket?.emit(SOCKET_EVENTS.GAME_DRAW_DECK, { gameId });
-        window.setTimeout(() => { socket?.emit(SOCKET_EVENTS.GAME_BURN_DRAWN, { gameId }); setDrawnCard(null); }, 900);
-      } else {
-        socket?.emit(SOCKET_EVENTS.GAME_BURN_DRAWN, { gameId }); setDrawnCard(null);
-      }
+      socket?.emit(SOCKET_EVENTS.GAME_AUTOPLAY, { gameId });
+      setDrawnCard(null);
     }, delay);
     return () => window.clearTimeout(id);
   }, [gameState.turnEndAt, isMyTurn, gameState.phase]);
 
-  // AFK: play quickly (1.5s) instead of waiting full turn timeout
+  // AFK fast-play: once AFK overlay is up, auto-play within 1.5s of each
+  // turn so the game doesn't drag on at 25s/turn for the rest of the room.
   useEffect(() => {
     if (!showAfk || !isMyTurn || (gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED')) return;
     const id = window.setTimeout(() => {
       if (actedRef.current) return;
-      if (!drawnCard) {
-        socket?.emit(SOCKET_EVENTS.GAME_DRAW_DECK, { gameId });
-        window.setTimeout(() => { socket?.emit(SOCKET_EVENTS.GAME_BURN_DRAWN, { gameId }); setDrawnCard(null); }, 700);
-      } else {
-        socket?.emit(SOCKET_EVENTS.GAME_BURN_DRAWN, { gameId }); setDrawnCard(null);
-      }
+      socket?.emit(SOCKET_EVENTS.GAME_AUTOPLAY, { gameId });
+      setDrawnCard(null);
       actedRef.current = true;
     }, 1500);
     return () => window.clearTimeout(id);
@@ -1798,7 +1793,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {showScoreboard && <ScoreboardModal />}
       </AnimatePresence>
 
-      {/* ── Drawn card — floats above the table center, doesn't block hand ── */}
+      {/* ── Drawn card — floats just above my hand, centered horizontally ── */}
       <AnimatePresence>
         {drawnCard && isMyTurn && (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') && (
           <motion.div
@@ -1809,18 +1804,19 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             transition={{ type: 'spring', stiffness: 320, damping: 24 }}
             className="fixed pointer-events-none"
             style={{
-              top: isMobile ? 80 : 110,
+              // Sit just above my-area (cards + player box + check button)
+              bottom: isMobile ? 280 : 310,
               left: '50%',
               transform: 'translateX(-50%)',
               zIndex: 65,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 8,
+              gap: 6,
             }}
           >
             <p className="font-arabic font-bold rounded-full px-3 py-1 pointer-events-none"
-              style={{ fontSize: 12, color: '#E8C97A', background: 'rgba(20,14,8,0.95)', border: '1px solid rgba(201,168,76,0.55)', whiteSpace: 'nowrap' }}>
+              style={{ fontSize: 12, color: '#E8C97A', background: 'rgba(20,14,8,0.95)', border: '1px solid rgba(201,168,76,0.55)', whiteSpace: 'nowrap', textAlign: 'center' }}>
               ورقة سحبتها — اضغط ورقة من يدك للتبديل أو احرق
             </p>
             <div style={{ filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 0 12px rgba(80,200,120,0.45))' }}>
@@ -1832,10 +1828,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               style={{
                 background: 'linear-gradient(135deg, #E04030 0%, #B02818 100%)',
                 border: '2px solid #FF6048',
-                borderRadius: 14,
-                padding: '10px 30px',
+                borderRadius: 12,
+                padding: '8px 26px',
                 color: '#fff',
-                fontSize: 16,
+                fontSize: 15,
                 fontFamily: 'inherit',
                 fontWeight: 900,
                 boxShadow: '0 0 18px rgba(224,64,48,0.65)',

@@ -25,6 +25,7 @@ export interface PlayerGameState {
   seatIndex: number;
   level?: number;
   equippedFrame?: string;
+  isBot?: boolean;
 }
 
 export type GamePhase =

@@ -342,7 +342,7 @@ function FullBar({ endAt, active, maxMs = 30000 }: { endAt: number | null; activ
 }
 
 // ─── Shared player box (same design for everyone) ─────────────────────────────
-const PlayerBox = memo(function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11 }: { player: any; gameState: any; avSize?: number; scoreFs?: number; nameFs?: number }) {
+const PlayerBox = memo(function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11, opaque = false }: { player: any; gameState: any; avSize?: number; scoreFs?: number; nameFs?: number; opaque?: boolean }) {
   const calledCheck = player.uid === gameState.checkCallerId;
   const isTurn = player.isTurn, isElim = player.isEliminated;
   const compact = avSize <= 30;
@@ -350,9 +350,13 @@ const PlayerBox = memo(function PlayerBox({ player, gameState, avSize = 42, scor
     <div
       className={`w-full rounded-xl border overflow-hidden ${isTurn ? 'border-gold/70' : 'border-yellow-900/30'}`}
       style={{
-        background: isTurn
-          ? 'linear-gradient(135deg,rgba(201,168,76,.18) 0%,rgba(20,8,0,.94) 100%)'
-          : 'linear-gradient(135deg,rgba(100,50,10,.14) 0%,rgba(20,14,8,.96) 100%)',
+        background: opaque
+          ? (isTurn
+              ? 'linear-gradient(135deg,#3A2A10 0%,#0E0905 100%)'
+              : 'linear-gradient(135deg,#1F1408 0%,#0E0905 100%)')
+          : (isTurn
+              ? 'linear-gradient(135deg,rgba(201,168,76,.18) 0%,rgba(20,8,0,.94) 100%)'
+              : 'linear-gradient(135deg,rgba(100,50,10,.14) 0%,rgba(20,14,8,.96) 100%)'),
         boxShadow: isTurn ? '0 0 16px rgba(201,168,76,.25), inset 0 1px 0 rgba(232,201,122,.1)' : 'none',
       }}
     >
@@ -389,7 +393,8 @@ const PlayerBox = memo(function PlayerBox({ player, gameState, avSize = 42, scor
   prev.player.displayName === next.player.displayName &&
   prev.player.avatarId === next.player.avatarId &&
   prev.gameState.checkCallerId === next.gameState.checkCallerId &&
-  prev.avSize === next.avSize && prev.scoreFs === next.scoreFs && prev.nameFs === next.nameFs
+  prev.avSize === next.avSize && prev.scoreFs === next.scoreFs && prev.nameFs === next.nameFs &&
+  prev.opaque === next.opaque
 );
 
 function cardGridCols(count: number) {
@@ -484,7 +489,7 @@ const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ,
         <AnimatePresence>
           {chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}
         </AnimatePresence>
-        <PlayerBox player={player} gameState={gameState} avSize={cfg.avSize} scoreFs={cfg.scoreFs} nameFs={cfg.nameFs} />
+        <PlayerBox player={player} gameState={gameState} avSize={cfg.avSize} scoreFs={cfg.scoreFs} nameFs={cfg.nameFs} opaque={cfg.opaque} />
       </div>
       {mobileCompact ? (
         <CardCountDots count={player.cards.filter(Boolean).length} eliminated={player.isEliminated} />
@@ -1076,7 +1081,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   // Tag the seat config with the local user's chosen card back so EVERY
   // face-down card on screen (mine + opponents') uses the same back —
   // a purely client-side cosmetic preference, server is untouched.
-  const seatCfgWithBack = { ...seatCfg, backId: cardBackId };
+  // 'opaque' makes the player-box backgrounds solid (no see-through)
+  // on tablet/desktop where transparency was visually noisy on the felt.
+  const seatCfgWithBack = { ...seatCfg, backId: cardBackId, opaque: !isMobile };
   const commonSeatProps = { gameState, isSpecialJ, selectedPos, onSpecialSwap, cfg: seatCfgWithBack };
 
   // ── Overlays ──────────────────────────────────────────────────────────────
@@ -1563,6 +1570,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                   avSize={isMobile ? 42 : isTablet ? 50 : 56}
                   scoreFs={isMobile ? 26 : isTablet ? 28 : 32}
                   nameFs={isMobile ? 11 : isTablet ? 13 : 15}
+                  opaque={!isMobile}
                 />
               </div>
               {!me?.isEliminated && (

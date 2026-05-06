@@ -647,24 +647,21 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       )
     : 0;
 
-  // Tablet: tight table — top opponents need ~250px (player box + cards),
-  // my-area ~300px, top header 60, action bar 52 = ~660px reserved. Cap at
-  // 420 so iPad landscape (768 high) still has room above and below.
+  // Tablet: very tight table so the iPad layout doesn't overflow vertically.
   const tabletTableSize = isTablet
     ? Math.min(
-        Math.floor(winW * 0.48),
-        winH - 470,
-        420
+        Math.floor(winW * 0.40),
+        winH - 460,
+        340
       )
     : 0;
 
-  // Desktop: cap at 600 with the same height reserve. 1080p screens were
-  // overflowing when player count pushed opponent seats outwards.
+  // Desktop: cap at 540 with similar reserve.
   const desktopTableSize = !isMobile && !isTablet
     ? Math.min(
-        Math.floor(winW * 0.50),
-        winH - 420,
-        600
+        Math.floor(winW * 0.42),
+        winH - 400,
+        520
       )
     : 0;
   const n = gameState.players.length;
@@ -1244,10 +1241,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           </div>
         )}
 
-        {/* ══ DESKTOP ONLY: top row of opponents ══ */}
+        {/* ══ DESKTOP ONLY: top row of opponents — tighter spacing on tablet */}
         {!isMobile && top.length > 0 && (
           <div className="shrink-0 flex justify-center gap-2 pt-0.5"
-            style={{ marginBottom: n <= 6 ? 52 : n <= 8 ? 36 : 24 }}>
+            style={{ marginBottom: isTablet
+              ? (n <= 6 ? 18 : 12)
+              : (n <= 6 ? 32 : n <= 8 ? 22 : 16) }}>
             {top.map(p => (
               <OpponentSeat key={p.uid} player={p} {...commonSeatProps} swapPos={swapHighlights[p.uid]}
                 emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} />
@@ -1270,7 +1269,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
           {/* ══ CIRCULAR TABLE ══ */}
           <div className="flex-1 flex items-center justify-center min-h-0 min-w-0 overflow-visible">
-            <div style={{ position: 'relative', marginTop: isMobile ? 0 : 60 }}>
+            <div style={{ position: 'relative', marginTop: isMobile ? 0 : isTablet ? 0 : 20 }}>
               {/* Wooden rim — sits behind the felt circle */}
               <div style={{
                 position: 'absolute',
@@ -1298,13 +1297,13 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 width: isMobile
                   ? Math.max(180, mobileTableSize)
                   : isTablet
-                    ? Math.max(260, tabletTableSize)
-                    : Math.max(320, desktopTableSize),
+                    ? Math.max(220, tabletTableSize)
+                    : Math.max(280, desktopTableSize),
                 height: isMobile
                   ? Math.max(180, mobileTableSize)
                   : isTablet
-                    ? Math.max(260, tabletTableSize)
-                    : Math.max(320, desktopTableSize),
+                    ? Math.max(220, tabletTableSize)
+                    : Math.max(280, desktopTableSize),
                 borderRadius: '50%',
                 background: `
                   radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.045) 0%, transparent 38%),
@@ -1396,7 +1395,11 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {/* ══ MY AREA: cards above, big box below ══ */}
         {me && (
           <div className="shrink-0 self-center flex flex-col items-center gap-1.5 pb-1"
-            style={{ width: isMobile ? winW - 12 : 220, position: 'relative', zIndex: 5, marginTop: isMobile ? 2 : n <= 6 ? 100 : n <= 8 ? 70 : 50 }}>
+            style={{
+              width: isMobile ? winW - 12 : isTablet ? 200 : 220,
+              position: 'relative', zIndex: 5,
+              marginTop: isMobile ? 2 : isTablet ? (n <= 6 ? 30 : 20) : (n <= 6 ? 60 : n <= 8 ? 45 : 30),
+            }}>
             {/* My cards — hidden when I'm eliminated */}
             {me.isEliminated ? (
               <div className="rounded-2xl flex flex-col items-center gap-2 px-6 py-5"

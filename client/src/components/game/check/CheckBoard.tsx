@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GameState, Card, SOCKET_EVENTS } from '@check-game/shared';
 import { socketService } from '../../../services/socket.service';
@@ -54,7 +54,7 @@ function SwapArrowBadge() {
 }
 
 // ─── Mini badge (round / lap) ────────────────────────────────────────────────
-function MiniBadge({ label, value, valueColor, labelColor, borderColor }: { label: string; value: number; valueColor: string; labelColor?: string; borderColor: string }) {
+const MiniBadge = memo(function MiniBadge({ label, value, valueColor, labelColor, borderColor }: { label: string; value: number; valueColor: string; labelColor?: string; borderColor: string }) {
   return (
     <div className="rounded-lg border flex flex-col items-center px-2 py-0.5"
       style={{ background: 'rgba(20,14,8,.92)', backdropFilter: 'blur(8px)', minWidth: 34, borderColor }}>
@@ -62,13 +62,14 @@ function MiniBadge({ label, value, valueColor, labelColor, borderColor }: { labe
       <span className="font-bold" style={{ fontSize: 13, lineHeight: 1.1, color: valueColor }}>{value}</span>
     </div>
   );
-}
+});
 
 // ─── Turn Timer Badge — always-on, refreshes per turn ────────────────────────
-function TurnTimerBadge({ endAt, maxMs = 30000 }: { endAt: number | null; maxMs?: number }) {
+const TurnTimerBadge = memo(function TurnTimerBadge({ endAt, maxMs = 30000 }: { endAt: number | null; maxMs?: number }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 200);
+    // 500ms ticks (was 200ms) — 60% fewer renders, still smooth for a 25s timer
+    const id = setInterval(() => setNow(Date.now()), 500);
     return () => clearInterval(id);
   }, []);
   const active = endAt !== null;
@@ -97,12 +98,12 @@ function TurnTimerBadge({ endAt, maxMs = 30000 }: { endAt: number | null; maxMs?
       </div>
     </div>
   );
-}
+});
 
 const CARD_BACK = '/card-back.png';
 
 // ─── Room background (midnight blue luxury) ───────────────────────────────────
-function RoomBackground() {
+const RoomBackground = memo(function RoomBackground() {
   return (
     <>
       <div style={{
@@ -123,10 +124,10 @@ function RoomBackground() {
       }}/>
     </>
   );
-}
+});
 
 // ─── Chair top-down view ──────────────────────────────────────────────────────
-function ChairTopDown() {
+const ChairTopDown = memo(function ChairTopDown() {
   return (
     <svg width="48" height="56" viewBox="0 0 48 56" fill="none">
       {/* Back rail */}
@@ -147,10 +148,10 @@ function ChairTopDown() {
       <rect x="36" y="48" width="9" height="6" rx="2" fill="#1A0803"/>
     </svg>
   );
-}
+});
 
 // ─── 10 chairs around the table ──────────────────────────────────────────────
-function ChairsRing({ radius }: { radius: number }) {
+const ChairsRing = memo(function ChairsRing({ radius }: { radius: number }) {
   const count = 10;
   const dist = radius + 52;
   return (
@@ -172,10 +173,10 @@ function ChairsRing({ radius }: { radius: number }) {
       })}
     </>
   );
-}
+});
 
 // ─── Stacked Deck (simple pile, no rotation) ──────────────────────────────────
-function StackedDeck({ count, onClick, disabled, size = 'normal' }: { count: number; onClick?: () => void; disabled?: boolean; size?: 'small' | 'normal' | 'large' }) {
+const StackedDeck = memo(function StackedDeck({ count, onClick, disabled, size = 'normal' }: { count: number; onClick?: () => void; disabled?: boolean; size?: 'small' | 'normal' | 'large' }) {
   // Card dimensions roughly match PlayingCard small/normal so the deck visually
   // matches the discard pile beside it.
   const CW = size === 'large' ? 76 : size === 'normal' ? 60 : 50;
@@ -243,7 +244,7 @@ function StackedDeck({ count, onClick, disabled, size = 'normal' }: { count: num
       </div>
     </div>
   );
-}
+});
 
 // ─── Avatar Circle ────────────────────────────────────────────────────────────
 const AV = ['#C9A84C','#4A90D9','#50C878','#E74C3C','#9B59B6','#E67E22','#1ABC9C','#E91E63'];
@@ -253,7 +254,7 @@ const AVATAR_EMOJIS: Record<string, string> = {
   avatar_5: '👩', avatar_6: '👨', avatar_7: '🧑', avatar_8: '👵',
   avatar_9: '🕌', avatar_10: '🏙️', avatar_11: '💎', avatar_12: '🌟',
 };
-function Av({ id, name, size = 32, frameId }: { id: string; name: string; size?: number; frameId?: string }) {
+const Av = memo(function Av({ id, name, size = 32, frameId }: { id: string; name: string; size?: number; frameId?: string }) {
   const i = parseInt(id?.replace(/\D/g, '') || '1', 10) - 1;
   const emoji = AVATAR_EMOJIS[id];
   return (
@@ -265,7 +266,7 @@ function Av({ id, name, size = 32, frameId }: { id: string; name: string; size?:
       <FrameRing frameId={frameId} size={size}/>
     </div>
   );
-}
+});
 
 // ─── Emoji float ──────────────────────────────────────────────────────────────
 function EmojiFloat({ em }: { em: string }) {

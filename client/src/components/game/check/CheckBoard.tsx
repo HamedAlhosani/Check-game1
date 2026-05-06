@@ -448,7 +448,7 @@ function cardGridCols(count: number) {
 }
 
 // ─── Shared cards row for any seat ───────────────────────────────────────────
-function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = false, swapPos, backId }: any) {
+function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = false, swapPos, backId, hideCards = false }: any) {
   // Eliminated players: hide their cards entirely, show just an X panel.
   if (player.isEliminated) {
     return (
@@ -460,7 +460,7 @@ function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = fals
   }
   const nonNull = player.cards.filter(Boolean).length;
   return (
-    <div className="relative">
+    <div className="relative" style={{ visibility: hideCards ? 'hidden' : 'visible' }}>
       <div className={cardGridCols(nonNull)}>
         <AnimatePresence>
           {player.cards.map((c: any, i: number) => c !== null ? (
@@ -524,7 +524,7 @@ function samePlayerSeat(prev: any, next: any): boolean {
 }
 
 // ─── Unified opponent seat (top / left / right / mobile) ─────────────────────
-const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, cfg, swapPos }: any) {
+const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, cfg, swapPos, hideCards }: any) {
   const mobileCompact = cfg.w <= 120;
   return (
     <div className="relative flex flex-col items-center shrink-0" style={{ width: cfg.w, zIndex: 20, gap: mobileCompact ? 2 : 4 }}>
@@ -538,14 +538,14 @@ const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ,
       {mobileCompact ? (
         <CardCountDots count={player.cards.filter(Boolean).length} eliminated={player.isEliminated} />
       ) : (
-        <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} mini={cfg.mini} swapPos={swapPos} backId={cfg.backId} />
+        <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} mini={cfg.mini} swapPos={swapPos} backId={cfg.backId} hideCards={hideCards} />
       )}
     </div>
   );
 }, samePlayerSeat);
 
 // ─── Compact seat for mobile strip (shows all opponents in one row) ─────────
-const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSelectForJ, swapPos }: any) {
+const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSelectForJ, swapPos, hideCards }: any) {
   const isTurn = player.isTurn;
   const isElim = player.isEliminated;
   const cardCount = player.cards.filter(Boolean).length;
@@ -571,7 +571,7 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
       <p className="font-arabic font-bold" style={{ fontSize: 11, color: isTurn ? '#E8C97A' : 'rgba(245,230,200,0.95)', lineHeight:1.1, maxWidth:'100%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', textAlign: 'center', marginTop: 2 }}>{player.displayName}</p>
       <p style={{ fontSize: 12, fontWeight:800, lineHeight:1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.8)' }}>{player.cumulativeScore}</p>
       {/* 2×2 card indicators */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1.5, marginTop:1, position: 'relative' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1.5, marginTop:1, position: 'relative', visibility: hideCards ? 'hidden' : 'visible' }}>
         {Array.from({ length: Math.min(cardCount, 4) }).map((_, j) => {
           const isSwap = swapPos === j;
           return (
@@ -1225,7 +1225,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   // 'opaque' makes the player-box backgrounds solid (no see-through)
   // on tablet/desktop where transparency was visually noisy on the felt.
   const seatCfgWithBack = { ...seatCfg, backId: cardBackId, opaque: !isMobile };
-  const commonSeatProps = { gameState, isSpecialJ, selectedPos, onSpecialSwap, cfg: seatCfgWithBack };
+  const commonSeatProps = { gameState, isSpecialJ, selectedPos, onSpecialSwap, cfg: seatCfgWithBack, hideCards: !tableReady };
 
   // ── Overlays ──────────────────────────────────────────────────────────────
   const IntroOverlay = () => (
@@ -1493,7 +1493,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null}
                 isSpecialJ={isSpecialJ} selectedPos={selectedPos}
                 onSelectForJ={(uid: string) => setJTargetUid(uid)}
-                swapPos={swapHighlights[p.uid]} />
+                swapPos={swapHighlights[p.uid]} hideCards={!tableReady} />
             ))}
           </div>
         )}
@@ -1666,7 +1666,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 <span className="font-arabic font-bold" style={{ color: '#E04030', fontSize: 14 }}>خرجت من اللعبة</span>
               </div>
             ) : (
-              <div className={isMobile ? 'grid grid-cols-2 gap-1' : cardGridCols(me.cards.filter(Boolean).length)}>
+              <div className={isMobile ? 'grid grid-cols-2 gap-1' : cardGridCols(me.cards.filter(Boolean).length)}
+                style={{ visibility: tableReady ? 'visible' : 'hidden' }}>
                 <AnimatePresence>
                   {me.cards.map((c, i) => c !== null ? (
                     <motion.div key={`me-${i}`}

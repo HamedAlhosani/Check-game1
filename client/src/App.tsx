@@ -18,6 +18,7 @@ import { LeaderboardPage } from './pages/leaderboard/LeaderboardPage';
 import { StorePage } from './pages/store/StorePage';
 import { FriendsPage } from './pages/friends/FriendsPage';
 import { HistoryPage } from './pages/history/HistoryPage';
+import { CardsPreviewPage } from './pages/cards-preview/CardsPreviewPage';
 import { ToastContainer } from './components/shared/ToastContainer';
 import { RulesModal } from './components/shared/RulesModal';
 
@@ -166,6 +167,7 @@ export function App() {
           <Route path="/store" element={<ProtectedRoute><StorePage /></ProtectedRoute>} />
           <Route path="/friends" element={<ProtectedRoute><FriendsPage /></ProtectedRoute>} />
           <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+          <Route path="/cards-preview" element={<CardsPreviewPage />} />
           <Route path="*" element={<FallbackRoute />} />
         </Routes>
       </AuthGate>

@@ -35,7 +35,13 @@ import {
   getUserHistory,
 } from './services/firestoreService';
 import { STORE_ITEMS, SOCKET_EVENTS } from '@check-game/shared';
-import { listClans, getClan, getMyClan, createClan, joinClan, leaveClan } from './services/clanService';
+import {
+  listClans, getClan, getMyClan, getMyInvites,
+  createClan, editClan, deleteClan, leaveClan,
+  applyToClan, acceptApplication, rejectApplication,
+  inviteToClan, declineInvite, acceptInvite,
+  kickMember, setRole, transferLeader,
+} from './services/clanService';
 import { notifyUser } from './socket/notifications';
 
 const app = express();
@@ -411,14 +417,13 @@ app.post('/api/chests/open', requireAuth, wrap(async (req, res) => {
 }));
 
 // ── Clans ──────────────────────────────────────────────────────────────────
-app.get('/api/clans', requireAuth, wrap(async (_req, res) => {
-  res.json(listClans());
+app.get('/api/clans', requireAuth, wrap(async (req, res) => {
+  res.json(listClans((req as any).uid));
 }));
 
 app.get('/api/clans/me', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
-  const clan = getMyClan(uid);
-  res.json({ clan });
+  res.json({ clan: getMyClan(uid), invites: getMyInvites(uid) });
 }));
 
 app.get('/api/clans/:id', requireAuth, wrap(async (req, res) => {
@@ -429,20 +434,84 @@ app.get('/api/clans/:id', requireAuth, wrap(async (req, res) => {
 
 app.post('/api/clans', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
-  const { name, tag, emblem, description } = req.body || {};
+  const { name, tag, emblem, description, visibility } = req.body || {};
   if (!name || !tag) return res.status(400).json({ error: 'Missing name or tag' });
-  const r = await createClan({ founderUid: uid, name, tag, emblem, description });
+  const r = await createClan({ founderUid: uid, name, tag, emblem, description, visibility });
   if (!r.ok) return res.status(400).json({ error: r.error });
   const profile = await getUserProfile(uid);
   res.json({ ok: true, clan: r.clan, profile });
 }));
 
-app.post('/api/clans/:id/join', requireAuth, wrap(async (req, res) => {
+app.patch('/api/clans/:id', requireAuth, wrap(async (req, res) => {
+  const r = await editClan((req as any).uid, req.params.id, req.body || {});
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  res.json({ ok: true, clan: r.clan });
+}));
+
+app.delete('/api/clans/:id', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
-  const r = await joinClan(uid, req.params.id);
+  const r = await deleteClan(uid, req.params.id);
   if (!r.ok) return res.status(400).json({ error: r.error });
   const profile = await getUserProfile(uid);
-  res.json({ ok: true, clan: r.clan, profile });
+  res.json({ ok: true, profile });
+}));
+
+// Apply / withdraw / accept / reject
+app.post('/api/clans/:id/apply', requireAuth, wrap(async (req, res) => {
+  const r = await applyToClan((req as any).uid, req.params.id, (req.body || {}).message);
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  res.json({ ok: true, autoAccepted: r.autoAccepted });
+}));
+
+app.post('/api/clans/:id/accept/:targetUid', requireAuth, wrap(async (req, res) => {
+  const r = await acceptApplication((req as any).uid, req.params.id, req.params.targetUid);
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  res.json({ ok: true });
+}));
+
+app.post('/api/clans/:id/reject/:targetUid', requireAuth, wrap(async (req, res) => {
+  const r = await rejectApplication((req as any).uid, req.params.id, req.params.targetUid);
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  res.json({ ok: true });
+}));
+
+// Invites
+app.post('/api/clans/:id/invite/:targetUid', requireAuth, wrap(async (req, res) => {
+  const r = await inviteToClan((req as any).uid, req.params.id, req.params.targetUid);
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  res.json({ ok: true });
+}));
+
+app.post('/api/clans/:id/invite/accept', requireAuth, wrap(async (req, res) => {
+  const r = await acceptInvite((req as any).uid, req.params.id);
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  const profile = await getUserProfile((req as any).uid);
+  res.json({ ok: true, profile });
+}));
+
+app.post('/api/clans/:id/invite/decline', requireAuth, wrap(async (req, res) => {
+  await declineInvite((req as any).uid, req.params.id);
+  res.json({ ok: true });
+}));
+
+// Member management
+app.post('/api/clans/:id/kick/:targetUid', requireAuth, wrap(async (req, res) => {
+  const r = await kickMember((req as any).uid, req.params.id, req.params.targetUid);
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  res.json({ ok: true });
+}));
+
+app.post('/api/clans/:id/role/:targetUid', requireAuth, wrap(async (req, res) => {
+  const { role } = req.body || {};
+  const r = await setRole((req as any).uid, req.params.id, req.params.targetUid, role);
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  res.json({ ok: true });
+}));
+
+app.post('/api/clans/:id/transfer/:targetUid', requireAuth, wrap(async (req, res) => {
+  const r = await transferLeader((req as any).uid, req.params.id, req.params.targetUid);
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  res.json({ ok: true });
 }));
 
 app.post('/api/clans/leave', requireAuth, wrap(async (req, res) => {

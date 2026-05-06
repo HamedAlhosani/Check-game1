@@ -1,9 +1,8 @@
 // ── Clans (Guilds) ───────────────────────────────────────────────────────────
-// V1 scope: create / join / leave / list. Each clan has a name + 3-5 char tag
-// shown next to player names. No clan-vs-clan tournaments or clan chat yet —
-// those layer on top of this data model later.
+// V2: visibility-aware (open/private), application/invite flow, officer role.
 
-export type ClanRole = 'leader' | 'member';
+export type ClanRole = 'leader' | 'officer' | 'member';
+export type ClanVisibility = 'open' | 'private';
 
 export interface ClanMember {
   uid: string;
@@ -15,23 +14,42 @@ export interface ClanMember {
   winsContributed: number;
 }
 
+export interface ClanApplication {
+  uid: string;
+  displayName: string;
+  avatarId: string;
+  message: string;       // optional pitch from the applicant
+  appliedAt: number;
+}
+
+export interface ClanInvite {
+  /** UID of the player invited. */
+  uid: string;
+  invitedBy: string;     // officer/leader who sent the invite
+  invitedAt: number;
+}
+
 export interface Clan {
   id: string;
   name: string;
-  /** 3-5 letter tag rendered next to player names, like [FALC]. */
+  /** 2-5 letter tag rendered next to player names, like [FALC]. */
   tag: string;
-  emblem: string;          // single emoji
+  emblem: string;            // emoji or 'image:<url>' for custom uploads
   description: string;
+  visibility: ClanVisibility; // open = anyone can apply | private = invite-only
   founderUid: string;
   leaderUid: string;
   members: ClanMember[];
-  /** Sum of wins contributed by current members. */
+  applications: ClanApplication[];
+  invites: ClanInvite[];
+  /** Sum of wins / games contributed by current members (recomputed on read). */
   totalWins: number;
-  /** Total games played by current members. */
   totalGames: number;
   createdAt: number;
   /** Soft cap; manager enforces. */
   memberLimit: number;
+  /** Coins shared by the clan — funded by clan tournament prizes. */
+  bank: number;
 }
 
 export interface ClanSummary {
@@ -40,12 +58,19 @@ export interface ClanSummary {
   tag: string;
   emblem: string;
   description: string;
+  visibility: ClanVisibility;
   memberCount: number;
   memberLimit: number;
   totalWins: number;
+  bank: number;
   createdAt: number;
+  /** Whether the viewer has a pending application to this clan. */
+  appliedByMe?: boolean;
+  /** Whether the viewer was invited to this clan. */
+  invitedByMe?: boolean;
 }
 
 export const DEFAULT_CLAN_LIMIT = 30;
+export const CLAN_CREATE_COST = 5000;
 
-export const CLAN_EMBLEMS = ['🦅', '🐪', '🌴', '⚔️', '🌙', '⭐', '🦁', '🔥', '💎', '🏛️', '🌊', '🏆'];
+export const CLAN_EMBLEMS = ['🦅', '🐪', '🌴', '⚔️', '🌙', '⭐', '🦁', '🔥', '💎', '🏛️', '🌊', '🏆', '☄️', '🛡️', '👑', '⚡'];

@@ -1234,6 +1234,39 @@ export function HomePage() {
           <TournamentStrip lang={lang} onOpen={() => { soundService.playClick(); navigate('/tournaments'); }}/>
         )}
 
+        {/* Rules + Clans — moved here so they sit right under Tournaments,
+            grouped as the "stuff" band of the home page. */}
+        {profile && !currentRoom && (
+          <div className="mb-5 flex items-center justify-center gap-2.5 flex-wrap">
+            <motion.button
+              whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+              onClick={() => setShowRules(true)}
+              className="font-arabic font-bold rounded-xl px-4 py-2 flex items-center gap-2"
+              style={{
+                background: 'linear-gradient(135deg, rgba(201,168,76,0.18) 0%, rgba(120,80,20,0.12) 100%)',
+                border: '1.5px solid rgba(201,168,76,0.55)',
+                color: '#E8C97A', fontSize: 13,
+                boxShadow: '0 4px 14px rgba(0,0,0,0.35), 0 0 16px rgba(201,168,76,0.2)',
+              }}>
+              📖 {lang === 'ar' ? 'القوانين' : 'Rules'}
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+              onClick={() => { soundService.playClick(); navigate('/clans'); }}
+              className="font-arabic font-bold rounded-xl px-4 py-2 flex items-center gap-2"
+              style={{
+                background: 'linear-gradient(135deg, rgba(196,149,255,0.18) 0%, rgba(120,80,168,0.10) 100%)',
+                border: '1.5px solid rgba(196,149,255,0.55)',
+                color: '#C495FF', fontSize: 13,
+                boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
+              }}>
+              🏰 {lang === 'ar'
+                ? (profile?.clanTag ? `قبيلتي [${profile.clanTag}]` : 'القبائل')
+                : (profile?.clanTag ? `My Clan [${profile.clanTag}]` : 'Clans')}
+            </motion.button>
+          </div>
+        )}
+
         {currentRoom ? (
           <WaitingRoom room={currentRoom} onLeave={() => setCurrentRoom(null)} />
         ) : (
@@ -1253,34 +1286,6 @@ export function HomePage() {
 
             {/* ── Rules + Tournament + Join private room actions ── */}
             <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">
-              <motion.button
-                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-                onClick={() => setShowRules(true)}
-                className="font-arabic font-bold rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(201,168,76,0.18) 0%, rgba(120,80,20,0.12) 100%)',
-                  border: '1.5px solid rgba(201,168,76,0.55)',
-                  color: '#E8C97A',
-                  fontSize: 14,
-                  boxShadow: '0 4px 14px rgba(0,0,0,0.35), 0 0 16px rgba(201,168,76,0.2)',
-                }}>
-                📖 {lang === 'ar' ? 'القوانين' : 'Rules'}
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-                onClick={() => { soundService.playClick(); navigate('/clans'); }}
-                className="font-arabic font-bold rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(196,149,255,0.18) 0%, rgba(120,80,168,0.10) 100%)',
-                  border: '1.5px solid rgba(196,149,255,0.55)',
-                  color: '#C495FF',
-                  fontSize: 14,
-                  boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
-                }}>
-                🏰 {lang === 'ar'
-                  ? (profile?.clanTag ? `قبيلتي [${profile.clanTag}]` : 'القبائل')
-                  : (profile?.clanTag ? `My Clan [${profile.clanTag}]` : 'Clans')}
-              </motion.button>
               {mode === 'private' && (
                 <button onClick={() => setShowJoin(true)}
                   className="font-arabic text-sm transition-all"

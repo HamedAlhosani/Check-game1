@@ -64,19 +64,21 @@ function MiniBadge({ label, value, valueColor, labelColor, borderColor }: { labe
   );
 }
 
-// ─── Turn Timer Badge — compact, with seconds + bar ──────────────────────────
+// ─── Turn Timer Badge — always-on, refreshes per turn ────────────────────────
 function TurnTimerBadge({ endAt, maxMs = 30000 }: { endAt: number | null; maxMs?: number }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 200);
     return () => clearInterval(id);
   }, []);
-  if (!endAt) return null;
-  const remaining = Math.max(0, endAt - now);
-  const secs = Math.ceil(remaining / 1000);
-  const pct = Math.max(0, Math.min(100, (remaining / maxMs) * 100));
-  const color = pct > 50 ? '#7AE08A' : pct > 25 ? '#E8C97A' : '#E04030';
-  const borderColor = pct > 50 ? 'rgba(80,200,120,0.5)' : pct > 25 ? 'rgba(201,168,76,0.4)' : 'rgba(224,64,48,0.55)';
+  const active = endAt !== null;
+  const remaining = active ? Math.max(0, endAt - now) : 0;
+  const secs = active ? Math.ceil(remaining / 1000) : 0;
+  const pct = active ? Math.max(0, Math.min(100, (remaining / maxMs) * 100)) : 100;
+  const color = !active ? 'rgba(245,230,200,0.45)' : pct > 50 ? '#7AE08A' : pct > 25 ? '#E8C97A' : '#E04030';
+  const borderColor = !active
+    ? 'rgba(255,255,255,0.10)'
+    : pct > 50 ? 'rgba(80,200,120,0.5)' : pct > 25 ? 'rgba(201,168,76,0.4)' : 'rgba(224,64,48,0.55)';
   return (
     <div className="rounded-lg border flex flex-col items-center px-2 py-0.5"
       style={{
@@ -84,12 +86,14 @@ function TurnTimerBadge({ endAt, maxMs = 30000 }: { endAt: number | null; maxMs?
         backdropFilter: 'blur(8px)',
         minWidth: 42,
         borderColor,
-        boxShadow: pct <= 25 ? '0 0 10px rgba(224,64,48,0.35)' : 'none',
+        boxShadow: active && pct <= 25 ? '0 0 10px rgba(224,64,48,0.35)' : 'none',
       }}>
       <span className="font-arabic font-bold" style={{ fontSize: 8, lineHeight: 1, color: 'rgba(245,230,200,0.55)' }}>الوقت</span>
-      <span className="font-bold font-mono" style={{ fontSize: 13, lineHeight: 1.1, color }}>{secs}</span>
+      <span className="font-bold font-mono" style={{ fontSize: 13, lineHeight: 1.1, color }}>
+        {active ? secs : '—'}
+      </span>
       <div className="w-full" style={{ height: 2, borderRadius: 1, background: 'rgba(255,255,255,0.10)', marginTop: 1 }}>
-        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 1, background: color, transition: 'width 0.2s linear' }}/>
+        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 1, background: active ? color : 'rgba(255,255,255,0.08)', transition: 'width 0.2s linear' }}/>
       </div>
     </div>
   );
@@ -498,8 +502,8 @@ function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSel
 function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob, swapPos }: any) {
   const isTurn = player.isTurn;
   const isElim = player.isEliminated;
-  const w = isMob ? 82 : 104;
-  const avSz = isMob ? 18 : 24;
+  const w = isMob ? 96 : 118;
+  const avSz = isMob ? 24 : 28;
 
   const handleClick = () => {
     if (isSpecialJ && selectedPos !== null && !isElim) {
@@ -530,8 +534,8 @@ function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatB
           {isElim && <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#ef4444', fontSize: 7, fontWeight: 700 }}>✕</span></div>}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-arabic truncate" style={{ fontSize: 6.5, color: 'rgba(255,255,255,0.65)', lineHeight: 1.1 }}>{player.displayName}</p>
-          <p style={{ fontSize: 10, fontWeight: 700, lineHeight: 1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.65)' }}>{player.cumulativeScore}</p>
+          <p className="font-arabic font-bold truncate" style={{ fontSize: 11, color: isTurn ? '#E8C97A' : 'rgba(245,230,200,0.85)', lineHeight: 1.15 }}>{player.displayName}</p>
+          <p style={{ fontSize: 12, fontWeight: 800, lineHeight: 1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.75)' }}>{player.cumulativeScore}</p>
         </div>
       </div>
 
@@ -630,14 +634,16 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const isMobile = winW < 768;
 
   // Dynamic mobile sizing — everything must fit inside the fixed viewport
-  const useMiniCards = isMobile && winH < 780;
-  const myAreaH = useMiniCards ? 218 : 280; // mini vs small cards height estimate
+  // User asked for big cards even if they overlap the table edge — we keep
+  // the table generously sized and let absolute-positioned my-cards float
+  // over the bottom of the table circle.
+  const myAreaH = 300; // small cards (72w → 108h) 2×2 + box + CHECK button
   const stripH = isMobile ? 100 : 0;
   const mobileTableSize = isMobile
     ? Math.min(
-        Math.floor(winW * 0.86),                // most of screen width
-        winH - 160 - stripH - myAreaH - 20,     // 160 = top header (badges) + bottom action bar
-        380                                      // hard cap
+        Math.floor(winW * 0.92),                // most of screen width
+        winH - 130 - stripH - 100,              // leave ~100 for my-cards overlap zone
+        460                                      // hard cap
       )
     : 0;
   const n = gameState.players.length;
@@ -1209,8 +1215,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               ref={tableRef}
               className="relative"
               style={{
-                width: isMobile ? Math.max(160, mobileTableSize) : 'min(820px, max(280px, 65vw))',
-                height: isMobile ? Math.max(160, mobileTableSize) : 'min(820px, max(280px, 65vw))',
+                width: isMobile ? Math.max(180, mobileTableSize) : 'min(960px, max(320px, 75vw))',
+                height: isMobile ? Math.max(180, mobileTableSize) : 'min(960px, max(320px, 75vw))',
                 borderRadius: '50%',
                 background: `
                   radial-gradient(ellipse at 44% 30%, rgba(255,255,255,0.045) 0%, transparent 38%),
@@ -1357,8 +1363,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                       faceDown={!me.cards[i]?.isRevealed && !knownCards.has(i)}
                       highlight={myCardHighlight(i)}
                       onClick={() => onMyCardClick(i)}
-                      small={!isMobile || !useMiniCards}
-                      mini={isMobile && useMiniCards}
+                      small={isMobile}
                       backId={cardBackId}
                     />
                     {me && swapHighlights[me.uid] === i && <SwapArrowBadge />}

@@ -4,6 +4,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { verifyToken, signToken, hashPassword, comparePassword } from './services/localAuth';
 import { credentials, saveCredentials } from './data/store';
+import { COIN_PACKS, packById, packForVariant, createCheckoutUrl, verifyWebhookSignature, extractCustomData } from './services/lemonsqueezy';
 import {
   createUserProfile,
   getUserProfile,
@@ -237,6 +238,64 @@ app.post('/api/store/recharge', requireAuth, wrap(async (req, res) => {
   if (!result.ok) return res.status(400).json({ error: result.error });
   const profile = await getUserProfile(uid);
   res.json({ ok: true, coins: result.coins, granted: result.granted, profile });
+}));
+
+// ── Real-money coin purchases via Lemon Squeezy ─────────────────────────────
+// Public list of packs the client can show in the store
+app.get('/api/payments/packs', (_req, res) => {
+  res.json(COIN_PACKS.map(p => ({ id: p.id, coins: p.coins, priceUsd: p.priceUsd, label: p.label })));
+});
+
+// Create a Lemon Squeezy hosted checkout URL the user is redirected to.
+// Returns { url } — the client just sets window.location to it.
+app.post('/api/payments/checkout', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const { packId } = req.body || {};
+  const pack = packId ? packById(packId) : undefined;
+  if (!pack) return res.status(400).json({ error: 'Unknown coin pack' });
+  const profile = await getUserProfile(uid);
+  try {
+    const url = await createCheckoutUrl({ uid, email: profile?.email ?? null, pack });
+    res.json({ url });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'Checkout failed' });
+  }
+}));
+
+// Webhook from Lemon Squeezy on every successful order. We verify the
+// signature, look up which pack was bought via the variant id (or our
+// custom_data), and credit the coins to the right user.
+app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), wrap(async (req, res) => {
+  const signature = req.header('X-Signature') || '';
+  const rawBody = req.body as Buffer;
+  if (!verifyWebhookSignature(rawBody, signature)) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+  let payload: any;
+  try { payload = JSON.parse(rawBody.toString('utf8')); }
+  catch { return res.status(400).json({ error: 'Invalid JSON' }); }
+
+  const eventName = payload?.meta?.event_name;
+  if (eventName !== 'order_created') {
+    return res.json({ ok: true, ignored: eventName });
+  }
+
+  // Try custom_data first, fall back to matching the variant id.
+  const { uid, packId } = extractCustomData(payload);
+  let pack = packId ? packById(packId) : undefined;
+  if (!pack) {
+    const variantId = payload?.data?.attributes?.first_order_item?.variant_id?.toString?.()
+                   ?? payload?.data?.attributes?.first_order_item?.variant_id;
+    if (variantId) pack = packForVariant(String(variantId));
+  }
+  if (!uid || !pack) {
+    return res.status(400).json({ error: 'Missing uid or pack' });
+  }
+
+  const result = await rechargeCoins(uid, pack.id);
+  if (!result.ok) return res.status(500).json({ error: result.error });
+
+  res.json({ ok: true, granted: result.granted, coins: result.coins });
 }));
 
 // ── Daily reward ───────────────────────────────────────────────────────────────

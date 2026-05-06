@@ -105,16 +105,35 @@ export function StorePage() {
     setBusy(packageId);
     soundService.playClick();
     try {
-      const res = await apiClient.post<{ profile: UserProfile; granted: number }>('/api/store/recharge', { packageId });
-      if (res.profile) setProfile(res.profile);
-      soundService.playCoins();
-      addToast(
-        lang === 'ar' ? `أُضيفت ${res.granted.toLocaleString()} كوينز (وضع تجريبي)` : `Added ${res.granted.toLocaleString()} coins (test mode)`,
-        'success'
-      );
+      // Real money via Lemon Squeezy. Falls back to the legacy test-mode
+      // recharge if the server says payments aren't configured yet.
+      const res = await apiClient.post<{ url?: string; error?: string }>('/api/payments/checkout', { packId: packageId });
+      if (res?.url) {
+        window.location.href = res.url;
+        return;
+      }
+      throw new Error(res?.error || 'Checkout failed');
     } catch (e: any) {
-      soundService.playError();
-      addToast(e?.message || 'error', 'error');
+      const msg = e?.message || '';
+      // If Lemon Squeezy isn't set up yet, hit the test-mode recharge so
+      // the dev flow still works locally.
+      if (/not configured|Unknown coin pack/i.test(msg)) {
+        try {
+          const res = await apiClient.post<{ profile: UserProfile; granted: number }>('/api/store/recharge', { packageId });
+          if (res.profile) setProfile(res.profile);
+          soundService.playCoins();
+          addToast(
+            lang === 'ar' ? `أُضيفت ${res.granted.toLocaleString()} كوينز (وضع تجريبي)` : `Added ${res.granted.toLocaleString()} coins (test mode)`,
+            'success'
+          );
+        } catch (e2: any) {
+          soundService.playError();
+          addToast(e2?.message || 'error', 'error');
+        }
+      } else {
+        soundService.playError();
+        addToast(msg || 'Payment error', 'error');
+      }
     } finally {
       setBusy(null);
     }

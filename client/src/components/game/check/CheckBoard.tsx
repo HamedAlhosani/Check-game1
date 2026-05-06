@@ -524,8 +524,8 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
         {isTurn && <div className="absolute animate-pulse" style={{ bottom:-1, right:-1, width:7, height:7, borderRadius:'50%', background:'#C9A84C', border:'1.5px solid #000' }} />}
         {isElim && <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(0,0,0,0.65)', display:'flex', alignItems:'center', justifyContent:'center' }}><span style={{color:'#ef4444', fontSize:8, fontWeight:700}}>✕</span></div>}
       </div>
-      <p className="font-arabic font-bold" style={{ fontSize: 10, color: isTurn ? '#E8C97A' : 'rgba(245,230,200,0.85)', lineHeight:1.1, maxWidth:'100%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', textAlign: 'center' }}>{player.displayName}</p>
-      <p style={{ fontSize: 11, fontWeight:800, lineHeight:1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.7)' }}>{player.cumulativeScore}</p>
+      <p className="font-arabic font-bold" style={{ fontSize: 11, color: isTurn ? '#E8C97A' : 'rgba(245,230,200,0.95)', lineHeight:1.1, maxWidth:'100%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', textAlign: 'center', marginTop: 2 }}>{player.displayName}</p>
+      <p style={{ fontSize: 12, fontWeight:800, lineHeight:1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.8)' }}>{player.cumulativeScore}</p>
       {/* 2×2 card indicators */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1.5, marginTop:1, position: 'relative' }}>
         {Array.from({ length: Math.min(cardCount, 4) }).map((_, j) => {

@@ -2214,15 +2214,16 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
             className="fixed inset-0 z-50 flex flex-col justify-end"
-            style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }}
+            style={{ background: 'rgba(0,0,0,0.78)' /* solid bg, no backdrop-blur — was killing iPad GPU */ }}
             onClick={() => setShowSettings(false)}
           >
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
               className="rounded-t-3xl flex flex-col gap-4"
               style={{ background: 'rgba(20,14,8,0.98)', border: '1px solid rgba(201,168,76,0.2)', padding: '20px 20px 32px', boxShadow: '0 -8px 40px rgba(0,0,0,0.8)' }}
               onClick={e => e.stopPropagation()}

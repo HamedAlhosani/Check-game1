@@ -1266,6 +1266,21 @@ export function HomePage() {
                 }}>
                 📖 {lang === 'ar' ? 'القوانين' : 'Rules'}
               </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+                onClick={() => { soundService.playClick(); navigate('/clans'); }}
+                className="font-arabic font-bold rounded-xl px-4 py-2.5 flex items-center gap-2 transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(196,149,255,0.18) 0%, rgba(120,80,168,0.10) 100%)',
+                  border: '1.5px solid rgba(196,149,255,0.55)',
+                  color: '#C495FF',
+                  fontSize: 14,
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
+                }}>
+                🏰 {lang === 'ar'
+                  ? (profile?.clanTag ? `قبيلتي [${profile.clanTag}]` : 'القبائل')
+                  : (profile?.clanTag ? `My Clan [${profile.clanTag}]` : 'Clans')}
+              </motion.button>
               {mode === 'private' && (
                 <button onClick={() => setShowJoin(true)}
                   className="font-arabic text-sm transition-all"

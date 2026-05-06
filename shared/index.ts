@@ -6,3 +6,4 @@ export * from './jackaro.types';
 export * from './store.types';
 export * from './progression.types';
 export * from './tournament.types';
+export * from './clan.types';

@@ -155,6 +155,9 @@ export interface UserProfile {
   keys?: number;
   /** Premium currency earned from rare achievements only — not buyable. */
   gems?: number;
+  /** Clan the user belongs to (null if none). */
+  clanId?: string | null;
+  clanTag?: string | null;
 }
 
 export interface MatchPlayer {

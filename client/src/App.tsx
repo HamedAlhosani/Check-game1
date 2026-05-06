@@ -27,6 +27,7 @@ const loadFriends       = () => import('./pages/friends/FriendsPage');
 const loadHistory       = () => import('./pages/history/HistoryPage');
 const loadCardsPreview  = () => import('./pages/cards-preview/CardsPreviewPage');
 const loadTournaments   = () => import('./pages/tournaments/TournamentsPage');
+const loadClans         = () => import('./pages/clans/ClansPage');
 
 const RegisterPage      = lazy(() => loadRegister().then(m => ({ default: m.RegisterPage })));
 const ProfilePage       = lazy(() => loadProfile().then(m => ({ default: m.ProfilePage })));
@@ -37,6 +38,7 @@ const FriendsPage       = lazy(() => loadFriends().then(m => ({ default: m.Frien
 const HistoryPage       = lazy(() => loadHistory().then(m => ({ default: m.HistoryPage })));
 const CardsPreviewPage  = lazy(() => loadCardsPreview().then(m => ({ default: m.CardsPreviewPage })));
 const TournamentsPage   = lazy(() => loadTournaments().then(m => ({ default: m.TournamentsPage })));
+const ClansPage         = lazy(() => loadClans().then(m => ({ default: m.ClansPage })));
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { setUser, setProfile, setLoading } = useAuthStore();
@@ -182,7 +184,7 @@ function PrefetchOnIdle() {
     idle(() => {
       loadProfile(); loadStore(); loadLeaderboard();
       loadFriends(); loadHistory(); loadCardsPreview();
-      loadUserProfile(); loadRegister(); loadTournaments();
+      loadUserProfile(); loadRegister(); loadTournaments(); loadClans();
     });
   }, []);
   return null;
@@ -249,6 +251,7 @@ export function App() {
             <Route path="/friends" element={<ProtectedRoute><FriendsPage /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
             <Route path="/tournaments" element={<ProtectedRoute><TournamentsPage /></ProtectedRoute>} />
+            <Route path="/clans" element={<ProtectedRoute><ClansPage /></ProtectedRoute>} />
             <Route path="/cards-preview" element={<CardsPreviewPage />} />
             <Route path="*" element={<FallbackRoute />} />
           </Routes>

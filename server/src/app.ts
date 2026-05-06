@@ -35,6 +35,7 @@ import {
   getUserHistory,
 } from './services/firestoreService';
 import { STORE_ITEMS, SOCKET_EVENTS } from '@check-game/shared';
+import { listClans, getClan, getMyClan, createClan, joinClan, leaveClan } from './services/clanService';
 import { notifyUser } from './socket/notifications';
 
 const app = express();
@@ -407,6 +408,49 @@ app.post('/api/chests/open', requireAuth, wrap(async (req, res) => {
   if (!result.ok) return res.status(400).json({ error: result.error });
   const profile = await getUserProfile(uid);
   res.json({ ...result, profile });
+}));
+
+// ── Clans ──────────────────────────────────────────────────────────────────
+app.get('/api/clans', requireAuth, wrap(async (_req, res) => {
+  res.json(listClans());
+}));
+
+app.get('/api/clans/me', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const clan = getMyClan(uid);
+  res.json({ clan });
+}));
+
+app.get('/api/clans/:id', requireAuth, wrap(async (req, res) => {
+  const c = getClan(req.params.id);
+  if (!c) return res.status(404).json({ error: 'Not found' });
+  res.json(c);
+}));
+
+app.post('/api/clans', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const { name, tag, emblem, description } = req.body || {};
+  if (!name || !tag) return res.status(400).json({ error: 'Missing name or tag' });
+  const r = await createClan({ founderUid: uid, name, tag, emblem, description });
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, clan: r.clan, profile });
+}));
+
+app.post('/api/clans/:id/join', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const r = await joinClan(uid, req.params.id);
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, clan: r.clan, profile });
+}));
+
+app.post('/api/clans/leave', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const r = await leaveClan(uid);
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, disbanded: r.disbanded, profile });
 }));
 
 // ── Daily reward ───────────────────────────────────────────────────────────────

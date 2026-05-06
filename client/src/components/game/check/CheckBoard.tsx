@@ -1317,15 +1317,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           </div>
         )}
 
-        {/* ══ DESKTOP ONLY: top row of opponents */}
+        {/* ══ DESKTOP ONLY: top row of opponents — pulled up to be flush
+            with the page top (header is to the left/right, so center is free) */}
         {!isMobile && top.length > 0 && (
           <div className="shrink-0 flex justify-center gap-2"
             style={{
-              // Tablet: opponent's box hugs right under the badges header.
-              // The badges sit on the left/right of the row leaving the
-              // center empty for the opponent — so a small positive margin
-              // is enough to clear the header without leaving dead space.
-              marginTop: isTablet ? 4 : -18,
+              marginTop: isTablet ? -16 : -24,
               marginBottom: isTablet ? (n <= 6 ? 2 : 0) : (n <= 6 ? 14 : n <= 8 ? 10 : 6),
             }}>
             {top.map(p => (
@@ -1425,7 +1422,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                     }}
                     onClick={canTakeDiscard ? () => setDiscardSelected(s => !s) : undefined}
                   >
-                    <div style={{ transform: isMobile || isTablet ? 'scale(0.85)' : 'scale(1.0)', transformOrigin: 'center' }}>
+                    <div style={{ transform: isMobile ? 'scale(1.0)' : isTablet ? 'scale(1.25)' : 'scale(1.4)', transformOrigin: 'center' }}>
                       <PlayingCard
                         card={gameState.discardTop ? { ...gameState.discardTop, isRevealed: true } : null}
                         highlight={discardSelected ? 'select' : 'none'}

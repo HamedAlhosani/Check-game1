@@ -248,15 +248,8 @@ function CardBack({ backId = 'card_classic' }: { backId?: string }) {
       <rect width="100" height="150" fill="url(#cb2-grid)"/>
       <rect x="3" y="3" width="94" height="144" rx="4" fill="none" stroke={t.accent} strokeWidth="0.9" opacity="0.75"/>
       <rect x="6" y="6" width="88" height="138" rx="2.5" fill="none" stroke={t.accent} strokeWidth="0.4" opacity="0.3"/>
-      <path d="M9,9 L18,9 M9,9 L9,18" stroke={t.accent} strokeWidth="0.8" opacity="0.55" strokeLinecap="round"/>
-      <path d="M91,9 L82,9 M91,9 L91,18" stroke={t.accent} strokeWidth="0.8" opacity="0.55" strokeLinecap="round"/>
-      <path d="M9,141 L18,141 M9,141 L9,132" stroke={t.accent} strokeWidth="0.8" opacity="0.55" strokeLinecap="round"/>
-      <path d="M91,141 L82,141 M91,141 L91,132" stroke={t.accent} strokeWidth="0.8" opacity="0.55" strokeLinecap="round"/>
-      <polygon points="9,9 11,11 9,13 7,11" fill={t.accent} opacity="0.4"/>
-      <polygon points="91,9 93,11 91,13 89,11" fill={t.accent} opacity="0.4"/>
-      <polygon points="9,141 11,139 9,137 7,139" fill={t.accent} opacity="0.4"/>
-      <polygon points="91,141 93,139 91,137 89,139" fill={t.accent} opacity="0.4"/>
-      <path d="M50,17 A7,7 0 1,1 56.5,21.5 A5.5,5.5 0 1,0 50,17 Z" fill={t.accent} opacity="0.35"/>
+      {/* (Removed corner brackets, corner diamonds and the top-center moon —
+          they were reading like dents at small sizes.) */}
       <g transform="translate(50,72)">
         <circle r="20" fill="none" stroke={t.accent} strokeWidth="0.4" opacity="0.12"/>
         <circle r="14" fill="none" stroke={t.accent} strokeWidth="0.35" opacity="0.15"/>

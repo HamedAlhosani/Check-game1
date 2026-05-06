@@ -349,10 +349,10 @@ export function CardsPreviewPage() {
               borderInlineStart: `4px solid ${isRed(suit) ? '#B91C1C' : '#C9A84C'}`,
               paddingInlineStart: 10,
             }}>
-              {SUIT_GLYPH[suit]} {suit === 'hearts' ? 'القلوب'
-                : suit === 'diamonds' ? 'الديناري'
-                : suit === 'clubs' ? 'السباتي'
-                : 'البستوني'}
+              {SUIT_GLYPH[suit]} {suit === 'hearts' ? 'Hearts — هارتس'
+                : suit === 'diamonds' ? 'Diamonds — دايمنز'
+                : suit === 'clubs' ? 'Clubs — كلَبز'
+                : 'Spades — سبيدز'}
             </h2>
             <div className="flex flex-wrap gap-3 justify-center">
               {RANKS.map(rank => {

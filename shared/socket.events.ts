@@ -61,6 +61,7 @@ export const SOCKET_EVENTS = {
   LOBBY_KICK_PLAYER: 'lobby:kick_player',
   LOBBY_INVITE_FRIEND: 'lobby:invite_friend',
   GAME_PLAYER_LEAVE: 'game:player_leave',
+  GAME_RECLAIM_SEAT: 'game:reclaim_seat',
 
   // Lobby - Server → Client
   LOBBY_ROOM_LIST: 'lobby:room_list',

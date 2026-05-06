@@ -85,7 +85,7 @@ export class GameEngine {
 
     // Send each player their two bottom cards privately (all cards are face-down now)
     for (const p of this.players) {
-      this.emit('game:peek_own', { cards: [{ card: p.cards[2], position: 2 }, { card: p.cards[3], position: 3 }] }, undefined, p.uid);
+      this.emitToHuman('game:peek_own', { cards: [{ card: p.cards[2], position: 2 }, { card: p.cards[3], position: 3 }] }, p.uid);
     }
 
     const timer = setTimeout(() => this.endPeekPhase(), PEEK_DURATION_MS);
@@ -182,7 +182,7 @@ export class GameEngine {
     }
 
     this.drawnCards.set(uid, card);
-    this.emit('game:card_drawn', { card }, undefined, uid);
+    this.emitToHuman('game:card_drawn', { card }, uid);
     this.broadcastState();
     return true;
   }
@@ -210,7 +210,7 @@ export class GameEngine {
     this.drawnCards.delete(uid);
     this.phase = 'KING_CHOICE';
 
-    this.emit('game:king_choice', { cards: this.kingChoiceCards }, undefined, uid);
+    this.emitToHuman('game:king_choice', { cards: this.kingChoiceCards }, uid);
     this.broadcastState();
 
     const timer = setTimeout(() => {
@@ -281,7 +281,7 @@ export class GameEngine {
     const displaced = player.cards[handPosition]!;
 
     player.cards[handPosition] = { ...chosen, isRevealed: false };
-    this.emit('game:peek_own', { card: chosen, position: handPosition }, undefined, uid);
+    this.emitToHuman('game:peek_own', { card: chosen, position: handPosition }, uid);
 
     this.deck.discard(displaced);
     for (const c of others) this.deck.discard(c);
@@ -470,7 +470,7 @@ export class GameEngine {
     const card = player.cards[position];
     if (!card) return false;
 
-    this.emit('game:peek_own', { card, position, source: 'q_peek' }, undefined, uid);
+    this.emitToHuman('game:peek_own', { card, position, source: 'q_peek' }, uid);
 
     this.specialActionUid = null;
     this.specialActionType = null;
@@ -508,7 +508,7 @@ export class GameEngine {
     this.deck.discard(displaced);
     this.lastDiscardFromKing = false;
 
-    this.emit('game:peek_own', { card: takenCard, position: handPosition }, undefined, uid);
+    this.emitToHuman('game:peek_own', { card: takenCard, position: handPosition }, uid);
     this.emit('game:card_discarded', { uid, card: displaced, fromKingPenalty: false });
 
     const special = isSpecialCard(takenCard);
@@ -570,7 +570,7 @@ export class GameEngine {
       if (penaltyCard) {
         player.cards.push({ ...penaltyCard, isRevealed: false });
         const newPos = player.cards.length - 1;
-        this.emit('game:peek_own', { card: penaltyCard, position: newPos }, undefined, uid);
+        this.emitToHuman('game:peek_own', { card: penaltyCard, position: newPos }, uid);
       }
       this.lastDiscardFromKing = false;
       this.emit('game:burn_invalid', { uid, penaltyCard });
@@ -673,7 +673,7 @@ export class GameEngine {
     this.broadcastState();
 
     for (const p of this.players.filter(p2 => !p2.isEliminated)) {
-      this.emit('game:peek_own', { cards: [{ card: p.cards[2], position: 2 }, { card: p.cards[3], position: 3 }] }, undefined, p.uid);
+      this.emitToHuman('game:peek_own', { cards: [{ card: p.cards[2], position: 2 }, { card: p.cards[3], position: 3 }] }, p.uid);
     }
 
     const timer = setTimeout(() => this.endPeekPhase(), PEEK_DURATION_MS);
@@ -732,6 +732,19 @@ export class GameEngine {
     this.emit('game:state', this.getPublicState());
   }
 
+  /**
+   * Targeted emit for events that should ONLY reach the actual player
+   * (drawn cards, peeks, K choice). When a player has been replaced by a
+   * bot the bot uses getBotCards() directly — emitting to that uid would
+   * spam the disconnected user's reconnected socket with phantom events
+   * (drawn cards, K choice modals) for moves they never made.
+   */
+  private emitToHuman(event: string, data: unknown, uid: string): void {
+    const player = this.getPlayer(uid);
+    if (!player || player.isBot) return;
+    this.emit(event, data, undefined, uid);
+  }
+
   private isPlayerTurn(uid: string): boolean {
     const active = this.activePlayers();
     return active[this.currentTurnIndex % active.length]?.uid === uid;
@@ -757,18 +770,40 @@ export class GameEngine {
     return cur?.isBot ? BOT_CHECK_WINDOW_MS : CHECK_WINDOW_MS;
   }
 
+  // Tracks original (non-bot) display name so reclaim can restore it.
+  private originalNames: Map<string, string> = new Map();
+
   /** Called when a connected player disconnects mid-game — makes a bot play for them. */
   replaceWithBot(uid: string): void {
     const player = this.getPlayer(uid);
     if (!player || player.isBot || player.isEliminated) return;
+    if (!this.originalNames.has(uid)) this.originalNames.set(uid, player.displayName);
     player.isBot = true;
-    player.displayName = player.displayName + ' 🤖';
+    player.displayName = this.originalNames.get(uid)! + ' 🤖';
     this.broadcastState();
     // If it's their turn, advance quickly so the game doesn't freeze
     if (this.isPlayerTurn(uid) && (this.phase === 'PLAYING' || this.phase === 'CHECK_CALLED')) {
       this.clearTimers();
       setTimeout(() => this.performDrawAndBurn(uid), 800);
     }
+  }
+
+  /** Player came back and wants to take their seat back from the bot. */
+  reclaimSeat(uid: string): boolean {
+    const player = this.getPlayer(uid);
+    if (!player || player.isEliminated) return false;
+    if (!player.isBot) return false; // already them
+    player.isBot = false;
+    const original = this.originalNames.get(uid);
+    if (original) player.displayName = original;
+    this.broadcastState();
+    return true;
+  }
+
+  /** True when the slot for this uid is currently bot-controlled (replaced). */
+  isReplacedByBot(uid: string): boolean {
+    const player = this.getPlayer(uid);
+    return !!player && player.isBot && this.originalNames.has(uid);
   }
 
   /** Returns the actual (server-side) cards for a bot to make decisions. */

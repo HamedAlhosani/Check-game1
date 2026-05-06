@@ -278,7 +278,9 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     engine?.onTakeDiscard(socket.uid, payload.handPosition);
   });
 
-  // Player explicitly leaves mid-game → replace immediately with bot
+  // Player explicitly leaves mid-game → replace immediately with bot.
+  // The Room.players entry stays as a human so the user can come back and
+  // press the reclaim button to retake their seat from the bot.
   socket.on(SOCKET_EVENTS.GAME_PLAYER_LEAVE, (payload: { gameId: string }) => {
     if (!socket.uid) return;
     const engine = roomManager.getGame(payload.gameId) as GameEngine | undefined;
@@ -289,15 +291,22 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     const bot = new BotPlayer(socket.uid, 'medium');
     roomManager.addBotPlayer(engine.roomId, bot);
     const roomId = engine.roomId;
-    // Also flag the player as a bot in the Room.players list so getRoomForUid
-    // doesn't pull this user back into the abandoned game on next socket event.
-    const room = roomManager.getRoom(roomId);
-    if (room) {
-      const rp = room.players.find(p => p.uid === socket.uid);
-      if (rp) rp.isBot = true;
-    }
     roomManager.removeSocket(socket.id);
     socket.leave(roomId);
+  });
+
+  // Player came back to find a bot in their seat — give it back to them.
+  socket.on(SOCKET_EVENTS.GAME_RECLAIM_SEAT, (payload: { gameId: string }) => {
+    if (!socket.uid) return;
+    const engine = roomManager.getGame(payload.gameId) as GameEngine | undefined;
+    if (!engine) return;
+    if (!engine.reclaimSeat(socket.uid)) return;
+    // Drop the bot stand-in so it stops auto-playing for this slot.
+    const bots = roomManager.getCheckBots(engine.roomId);
+    const idx = bots.findIndex(b => b.uid === socket.uid);
+    if (idx !== -1) bots.splice(idx, 1);
+    socket.join(engine.roomId);
+    roomManager.trackSocket(socket.id, engine.roomId);
   });
 
   // Reconnect: find room by socket ID (normal) or by UID (after page refresh)

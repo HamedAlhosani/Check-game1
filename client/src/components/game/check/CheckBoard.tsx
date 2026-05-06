@@ -1798,50 +1798,115 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {showScoreboard && <ScoreboardModal />}
       </AnimatePresence>
 
-      {/* ── Drawn card overlay — full-screen on top so nothing covers it ── */}
+      {/* ── Drawn card — floats above the table center, doesn't block hand ── */}
       <AnimatePresence>
         {drawnCard && isMyTurn && (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') && (
           <motion.div
-            key="drawn-card-overlay"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 flex items-center justify-center pointer-events-none"
-            style={{ zIndex: 70, background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0) 100%)' }}
+            key="drawn-card-floating"
+            initial={{ opacity: 0, scale: 0.7, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.7, y: 20 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+            className="fixed pointer-events-none"
+            style={{
+              top: isMobile ? 80 : 110,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 65,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 8,
+            }}
           >
-            <motion.div
-              initial={{ scale: 0.6, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.6, y: 20 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 24 }}
-              className="flex flex-col items-center gap-3 pointer-events-auto"
+            <p className="font-arabic font-bold rounded-full px-3 py-1 pointer-events-none"
+              style={{ fontSize: 12, color: '#E8C97A', background: 'rgba(20,14,8,0.95)', border: '1px solid rgba(201,168,76,0.55)', whiteSpace: 'nowrap' }}>
+              ورقة سحبتها — اضغط ورقة من يدك للتبديل أو احرق
+            </p>
+            <div style={{ filter: 'drop-shadow(0 6px 20px rgba(0,0,0,0.75)) drop-shadow(0 0 12px rgba(80,200,120,0.45))' }}>
+              <PlayingCard card={{ ...drawnCard, isRevealed: true }} highlight="select" small={isMobile} />
+            </div>
+            <button
+              onClick={onBurnDrawn}
+              className="pointer-events-auto"
+              style={{
+                background: 'linear-gradient(135deg, #E04030 0%, #B02818 100%)',
+                border: '2px solid #FF6048',
+                borderRadius: 14,
+                padding: '10px 30px',
+                color: '#fff',
+                fontSize: 16,
+                fontFamily: 'inherit',
+                fontWeight: 900,
+                boxShadow: '0 0 18px rgba(224,64,48,0.65)',
+                cursor: 'pointer',
+                letterSpacing: 2,
+              }}
             >
-              <p className="font-arabic font-bold rounded-full px-4 py-1"
-                style={{ fontSize: 13, color: '#E8C97A', background: 'rgba(20,14,8,0.92)', border: '1px solid rgba(201,168,76,0.5)' }}>
-                ورقة سحبتها — اختر أحد كروتك للتبديل أو احرقها
-              </p>
-              <div style={{ transform: isMobile ? 'scale(1.0)' : 'scale(1.15)', transformOrigin: 'center', filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.7))' }}>
-                <PlayingCard card={{ ...drawnCard, isRevealed: true }} highlight="select" />
-              </div>
-              <button
-                onClick={onBurnDrawn}
-                style={{
-                  background: 'linear-gradient(135deg, #E04030 0%, #B02818 100%)',
-                  border: '2px solid #FF6048',
-                  borderRadius: 14,
-                  padding: '12px 36px',
-                  color: '#fff',
-                  fontSize: 18,
-                  fontFamily: 'inherit',
-                  fontWeight: 900,
-                  boxShadow: '0 0 18px rgba(224,64,48,0.6)',
-                  cursor: 'pointer',
-                  letterSpacing: 2,
-                }}
-              >
-                🔥 احرق
-              </button>
-            </motion.div>
+              🔥 احرق
+            </button>
           </motion.div>
         )}
+      </AnimatePresence>
+
+      {/* ── Reclaim seat — shown when the player sees their own slot as bot ── */}
+      <AnimatePresence>
+        {(() => {
+          const meSlot = gameState.players.find(p => p.uid === user?.uid);
+          if (!meSlot || !meSlot.isBot || meSlot.isEliminated) return null;
+          if (gameState.phase === 'GAME_OVER') return null;
+          return (
+            <motion.div
+              key="reclaim-overlay"
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+              style={{ background: 'rgba(8,4,0,0.86)', backdropFilter: 'blur(8px)' }}
+            >
+              <motion.div
+                initial={{ scale: 0.85, y: 16 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.85, y: 16 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+                className="rounded-3xl border w-full flex flex-col items-center gap-5"
+                style={{
+                  background: 'linear-gradient(160deg, #241810 0%, #14100A 100%)',
+                  borderColor: 'rgba(201,168,76,0.5)',
+                  maxWidth: 380,
+                  padding: '32px 26px 28px',
+                  boxShadow: '0 20px 80px rgba(0,0,0,0.85), 0 0 50px rgba(201,168,76,0.18)',
+                }}
+              >
+                <div style={{ fontSize: 56, lineHeight: 1 }}>🤖</div>
+                <div className="text-center">
+                  <p className="font-arabic font-bold mb-1" style={{ fontSize: 22, color: '#E8C97A' }}>
+                    البوت أخذ مكانك
+                  </p>
+                  <p className="font-arabic" style={{ fontSize: 14, color: 'rgba(245,230,200,0.55)', lineHeight: 1.6 }}>
+                    اضغط العودة عشان ترجع تلعب بنفسك،<br/>أو اطلع من اللعبة من الإعدادات
+                  </p>
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={() => { socket?.emit(SOCKET_EVENTS.GAME_RECLAIM_SEAT, { gameId }); markActed(); }}
+                  className="w-full font-arabic font-bold"
+                  style={{
+                    padding: '14px 24px',
+                    borderRadius: 16,
+                    fontSize: 18,
+                    background: 'linear-gradient(135deg, #C9A84C 0%, #8B6914 100%)',
+                    color: '#0E0905',
+                    border: '2px solid #E8C97A',
+                    boxShadow: '0 0 18px rgba(201,168,76,0.4)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ▶ العودة للعب
+                </motion.button>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
 
       {/* ── J action: Step 1 — select opponent ── */}

@@ -831,6 +831,11 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [showCinematic, setShowCinematic] = useState(false);
   const [showReshuffle, setShowReshuffle] = useState(false);
   const prevRoundRef = useRef<number>(-1);
+  // The bottom-2 peek arrives from the server immediately on PEEK_PHASE
+  // entry. We hold it in a buffer until the cinematic finishes, so the
+  // player can't memorise them while the deal animation is playing.
+  const peekDeferredRef = useRef(false);
+  const pendingPeekRef  = useRef<{ position: number; card: Card }[]>([]);
   // Q peek result modal — { card, position }
   const [qPeekCard, setQPeekCard] = useState<{ card: Card; position: number } | null>(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -849,6 +854,15 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   useEffect(() => {
     if (!socket) return;
     socket.on(SOCKET_EVENTS.GAME_PEEK_OWN, (data: any) => {
+      // Round-start initial peek (multiple cards, no source tag) gets
+      // deferred until the cinematic finishes — otherwise the player
+      // could read & memorise the cards while the deal animation is
+      // still flying. Q-peek and K-swap peeks always go through.
+      const isInitialPeek = !data.source && Array.isArray(data.cards);
+      if (isInitialPeek && peekDeferredRef.current) {
+        pendingPeekRef.current = data.cards;
+        return;
+      }
       setKnownCards(prev => {
         const next = new Map(prev);
         if (data.cards) data.cards.forEach((item: any) => next.set(item.position, item.card));
@@ -961,19 +975,54 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     if (gameState.phase !== 'SPECIAL_J') { setJTargetUid(null); }
   }, [gameState.phase]);
 
-  // Round-start cinematic — fires once per round on entry to PEEK_PHASE.
-  // The roundNumber bump is the most reliable signal (handles round 1
-  // and every subsequent reset alike).
-  // Delay by 700ms so the seat fade-in animations finish first; otherwise
-  // the deal animation overlaps the players appearing on the table and
-  // the user sees both moving at once. (User-reported.)
+  // Round-start cinematic — fires once per round on entry to PEEK_PHASE,
+  // but ONLY after the IntroOverlay (round-1 player list) has finished.
+  //   • Round 1: showIntro=true initially → wait for it to dismiss → cinematic
+  //   • Round 2+: no intro → cinematic kicks in directly with a 300ms breath
+  // The peek-reveal stays gated until the cinematic completes so the
+  // player can't memorise the bottom 2 while cards are still flying.
   useEffect(() => {
-    if (gameState.phase === 'PEEK_PHASE' && gameState.roundNumber !== prevRoundRef.current) {
-      prevRoundRef.current = gameState.roundNumber;
-      const t = setTimeout(() => setShowCinematic(true), 700);
-      return () => clearTimeout(t);
+    if (gameState.phase !== 'PEEK_PHASE') return;
+    if (gameState.roundNumber === prevRoundRef.current) return;
+    if (showIntro) return; // wait for intro list to auto-dismiss
+
+    prevRoundRef.current = gameState.roundNumber;
+    peekDeferredRef.current = true;
+    pendingPeekRef.current = [];
+
+    const tCine = setTimeout(() => setShowCinematic(true), 300);
+    // Safety: if the cinematic somehow never completes, reveal the peek
+    // after 5.5s so the player isn't permanently blind to their own cards.
+    const tFallback = setTimeout(() => flushPendingPeek(), 5500);
+    return () => { clearTimeout(tCine); clearTimeout(tFallback); };
+  }, [gameState.phase, gameState.roundNumber, showIntro]);
+
+  // Auto-dismiss the round-1 IntroOverlay once the player list animation
+  // has finished playing (each player fades in at i × 100ms + ~300ms
+  // transition; we add 500ms breath after). Skip button still works —
+  // tapping it just sets showIntro=false, which the cinematic effect
+  // above picks up via its dependency on showIntro.
+  useEffect(() => {
+    if (!showIntro) return;
+    if (gameState.phase !== 'PEEK_PHASE') return;
+    const dur = gameState.players.length * 100 + 800;
+    const t = setTimeout(() => setShowIntro(false), dur);
+    return () => clearTimeout(t);
+  }, [showIntro, gameState.phase, gameState.players.length]);
+
+  // Flush any held peek cards into knownCards and clear the deferral lock.
+  const flushPendingPeek = useCallback(() => {
+    peekDeferredRef.current = false;
+    if (pendingPeekRef.current.length > 0) {
+      const items = pendingPeekRef.current;
+      pendingPeekRef.current = [];
+      setKnownCards(prev => {
+        const next = new Map(prev);
+        items.forEach(it => next.set(it.position, it.card));
+        return next;
+      });
     }
-  }, [gameState.phase, gameState.roundNumber]);
+  }, []);
 
   // Pre-warm the audio context the first time the user touches the board,
   // so the first card-draw sound doesn't take 100-200ms to initialise.
@@ -2664,12 +2713,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         )}
       </AnimatePresence>
 
-      {/* Round-start cinematic — deal animation → "CHECK!" voice */}
+      {/* Round-start cinematic — deal animation → "CHECK!" voice → peek reveal */}
       <AnimatePresence>
         {showCinematic && (
           <RoundStartCinematic
             playerCount={gameState.players.length}
-            onComplete={() => setShowCinematic(false)}
+            onComplete={() => { setShowCinematic(false); flushPendingPeek(); }}
           />
         )}
       </AnimatePresence>

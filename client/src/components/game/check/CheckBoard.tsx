@@ -665,12 +665,22 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       )
     : 0;
   const n = gameState.players.length;
+  // Per-device seat sizing — mobile is unchanged. Tablet seats are
+  // noticeably smaller than desktop so iPad's narrower viewport doesn't
+  // run out of horizontal/vertical room.
   const seatCfg = (() => {
     if (isMobile) return { w: 114, avSize: 24, scoreFs: 14, nameFs: 11, mini: true };
-    if (n <= 4)   return { w: 210, avSize: 44, scoreFs: 26, nameFs: 14, mini: false };
-    if (n <= 6)   return { w: 185, avSize: 40, scoreFs: 22, nameFs: 13, mini: false };
-    if (n <= 8)   return { w: 165, avSize: 36, scoreFs: 18, nameFs: 12, mini: true };
-                  return { w: 150, avSize: 32, scoreFs: 16, nameFs: 11, mini: true };
+    if (isTablet) {
+      if (n <= 4) return { w: 150, avSize: 30, scoreFs: 18, nameFs: 12, mini: true };
+      if (n <= 6) return { w: 138, avSize: 28, scoreFs: 16, nameFs: 11, mini: true };
+      if (n <= 8) return { w: 126, avSize: 26, scoreFs: 14, nameFs: 10, mini: true };
+                  return { w: 116, avSize: 24, scoreFs: 13, nameFs: 10, mini: true };
+    }
+    // Desktop
+    if (n <= 4)   return { w: 200, avSize: 42, scoreFs: 24, nameFs: 14, mini: false };
+    if (n <= 6)   return { w: 175, avSize: 38, scoreFs: 20, nameFs: 13, mini: false };
+    if (n <= 8)   return { w: 158, avSize: 34, scoreFs: 18, nameFs: 12, mini: true };
+                  return { w: 144, avSize: 30, scoreFs: 16, nameFs: 11, mini: true };
   })();
 
   const tableRef = useRef<HTMLDivElement>(null);
@@ -1226,7 +1236,9 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#0E0905' }}>
       <RoomBackground />
 
-      <div className={`flex-1 flex flex-col pb-14 min-h-0 px-1 ${isMobile ? 'gap-1 pt-16' : 'gap-2 pt-16'}`} style={{ position: 'relative', zIndex: 1 }}>
+      <div className={`flex-1 flex flex-col pb-14 min-h-0 px-1 ${
+        isMobile ? 'gap-1 pt-16' : isTablet ? 'gap-1 pt-12' : 'gap-2 pt-14'
+      }`} style={{ position: 'relative', zIndex: 1 }}>
 
         {/* ══ MOBILE: compact opponent strip ══ */}
         {isMobile && others.length > 0 && (
@@ -1557,7 +1569,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
       {/* ══ ACTION BAR ══ */}
       <div className="fixed bottom-0 left-0 right-0 flex items-center justify-between border-t border-yellow-900/30"
-        style={{ background: 'rgba(3,7,18,0.98)', height: isMobile ? 46 : 52, zIndex: 40, padding: isMobile ? '0 8px' : '0 12px' }}>
+        style={{ background: 'rgba(3,7,18,0.98)', height: isMobile ? 46 : isTablet ? 44 : 50, zIndex: 40, padding: isMobile ? '0 8px' : '0 12px' }}>
         <div className="flex items-center gap-2">
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
             className={`relative px-4 py-1.5 rounded-xl border font-arabic text-sm transition-all
@@ -1632,7 +1644,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
       {/* ── Top header: badges row + النقاط button (top-right) ── */}
       <div className="fixed z-40 flex items-start justify-between pointer-events-none"
-        style={{ top: isMobile ? 4 : 8, left: 0, right: 0, padding: '0 8px' }}>
+        style={{ top: isMobile ? 4 : isTablet ? 6 : 10, left: 0, right: 0, padding: '0 8px' }}>
         {/* Left: Round + Lap + Time + Turn */}
         <div className="flex items-stretch gap-1 pointer-events-auto flex-wrap">
           <MiniBadge label="راوند" value={gameState.roundNumber} valueColor="#E8C97A" borderColor="rgba(201,168,76,0.3)" />

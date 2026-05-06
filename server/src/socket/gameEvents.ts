@@ -329,13 +329,19 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     if (!socket.uid) return;
     const engine = roomManager.getGame(payload.gameId) as GameEngine | undefined;
     if (!engine) return;
-    if (!engine.reclaimSeat(socket.uid)) return;
+    // Join the room FIRST so we receive the broadcast that reclaimSeat emits.
+    socket.join(engine.roomId);
+    roomManager.trackSocket(socket.id, engine.roomId);
+    if (!engine.reclaimSeat(socket.uid)) {
+      // Even if reclaim is a no-op (already a human), push a fresh state so
+      // the client clears any stale reclaim modal.
+      socket.emit(SOCKET_EVENTS.SYSTEM_RECONNECT_STATE, (engine as any).getPublicState());
+      return;
+    }
     // Drop the bot stand-in so it stops auto-playing for this slot.
     const bots = roomManager.getCheckBots(engine.roomId);
     const idx = bots.findIndex(b => b.uid === socket.uid);
     if (idx !== -1) bots.splice(idx, 1);
-    socket.join(engine.roomId);
-    roomManager.trackSocket(socket.id, engine.roomId);
   });
 
   // Reconnect: find room by socket ID (normal) or by UID (after page refresh)

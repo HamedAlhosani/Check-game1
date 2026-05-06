@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { apiClient } from './services/api.service';
 import { socketService } from './services/socket.service';
 import { useAuthStore } from './store/authStore';
 import { useUiStore } from './store/uiStore';
-import { UserProfile } from '@check-game/shared';
+import { useGameStore } from './store/gameStore';
+import { UserProfile, SOCKET_EVENTS, GameState } from '@check-game/shared';
 
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
@@ -108,11 +109,44 @@ function GlobalOverlays() {
   );
 }
 
+/**
+ * Listens for SYSTEM_RECONNECT_STATE on the global socket. If the server
+ * reports the user is in an active in-progress game and we're not already
+ * on the matching /game/check/:id URL, navigate there. This is what makes
+ * "open the site URL again and you're back in the game" work.
+ */
+function ResumeGameGate() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuthStore();
+  const { setGameState } = useGameStore();
+
+  useEffect(() => {
+    if (!user) return;
+    const sock = socketService.connect();
+    const onResume = (state: GameState) => {
+      if (!state?.gameId) return;
+      setGameState(state);
+      const target = `/game/check/${state.gameId}`;
+      // Don't redirect if already on the right game page or in landing/login
+      // flows the user explicitly chose. Only auto-jump from /, /home, /lobby/*.
+      const path = location.pathname;
+      const onResumeable = path === '/' || path === '/home' || path.startsWith('/lobby');
+      if (onResumeable && path !== target) navigate(target, { replace: true });
+    };
+    sock.on(SOCKET_EVENTS.SYSTEM_RECONNECT_STATE, onResume);
+    return () => { sock.off(SOCKET_EVENTS.SYSTEM_RECONNECT_STATE, onResume); };
+  }, [user, location.pathname, navigate, setGameState]);
+
+  return null;
+}
+
 export function App() {
   return (
     <BrowserRouter>
       <AuthGate>
         <GlobalOverlays />
+        <ResumeGameGate />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<PublicOnly><LoginPage /></PublicOnly>} />

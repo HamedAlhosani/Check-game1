@@ -657,10 +657,10 @@ function MatchLengthPicker({ value, onChange, accent, lang }: {
   accent: string;
   lang: string;
 }) {
-  const opts: { id: MatchLength; emoji: string; ar: string; en: string }[] = [
-    { id: 'quick',    emoji: '⚡', ar: 'سريع', en: 'Quick' },
-    { id: 'standard', emoji: '📊', ar: 'عادي', en: 'Standard' },
-    { id: 'long',     emoji: '🏛️', ar: 'طويل', en: 'Long' },
+  const opts: { id: MatchLength; ar: string; en: string }[] = [
+    { id: 'quick',    ar: 'سريع', en: 'Quick' },
+    { id: 'standard', ar: 'عادي', en: 'Standard' },
+    { id: 'long',     ar: 'طويل', en: 'Long' },
   ];
   return (
     <div className="w-full flex flex-col items-center gap-2">
@@ -677,17 +677,16 @@ function MatchLengthPicker({ value, onChange, accent, lang }: {
               onClick={() => { onChange(o.id); soundService.playClick(); }}
               className="flex-1 rounded-xl font-arabic font-bold transition-all"
               style={{
-                padding: '8px 4px',
+                padding: '10px 6px',
                 background: sel ? `${accent}26` : 'rgba(255,255,255,0.04)',
                 color: sel ? accent : 'rgba(245,230,200,0.55)',
                 border: `1.5px solid ${sel ? `${accent}99` : 'rgba(255,255,255,0.08)'}`,
                 boxShadow: sel ? `0 0 14px ${accent}55` : 'none',
-                fontSize: 11.5, lineHeight: 1.25,
+                fontSize: 13, lineHeight: 1.25,
                 cursor: 'pointer',
               }}>
-              <div style={{ fontSize: 16, marginBottom: 2 }}>{o.emoji}</div>
-              {lang === 'ar' ? o.ar : o.en}
-              <div style={{ fontSize: 9, opacity: 0.75, marginTop: 1 }}>
+              <div>{lang === 'ar' ? o.ar : o.en}</div>
+              <div style={{ fontSize: 9.5, opacity: 0.75, marginTop: 2 }}>
                 {ELIMINATION_SCORE[o.id]} {lang === 'ar' ? 'نقطة' : 'pts'}
               </div>
             </motion.button>

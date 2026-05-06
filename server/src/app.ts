@@ -17,6 +17,10 @@ import {
   rechargeCoins,
   getDailyReward,
   claimDailyReward,
+  getProgression,
+  claimMission,
+  claimAchievement,
+  claimLevelReward,
   sendFriendRequest,
   acceptFriendRequest,
   declineOrRemoveFriend,
@@ -312,6 +316,44 @@ app.post('/api/payments/webhook', express.raw({ type: 'application/json' }), wra
   const result = await rechargeCoins(uid, pack.id);
   if (!result.ok) return res.status(500).json({ error: result.error });
   res.json({ ok: true, granted: result.granted, coins: result.coins });
+}));
+
+// ── Progression: missions / achievements / level rewards ──────────────────
+app.get('/api/progression', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const data = await getProgression(uid);
+  if (!data) return res.status(404).json({ error: 'Not found' });
+  res.json(data);
+}));
+
+app.post('/api/progression/missions/claim', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const { id } = req.body || {};
+  if (!id) return res.status(400).json({ error: 'Missing id' });
+  const result = await claimMission(uid, id);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, granted: result.granted, coins: result.coins, profile });
+}));
+
+app.post('/api/progression/achievements/claim', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const { id } = req.body || {};
+  if (!id) return res.status(400).json({ error: 'Missing id' });
+  const result = await claimAchievement(uid, id);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, granted: result.granted, coins: result.coins, profile });
+}));
+
+app.post('/api/progression/levels/claim', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const { level } = req.body || {};
+  if (typeof level !== 'number') return res.status(400).json({ error: 'Missing level' });
+  const result = await claimLevelReward(uid, level);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, granted: result.granted, coins: result.coins, itemGranted: result.itemGranted, profile });
 }));
 
 // ── Daily reward ───────────────────────────────────────────────────────────────

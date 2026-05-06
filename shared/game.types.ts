@@ -125,6 +125,10 @@ export interface UserProfile {
   };
   friends?: string[];
   friendRequests?: string[];
+  // Progression — daily missions / achievements / level rewards
+  dailyMissions?: { date: string; missions: { id: string; progress: number; claimed: boolean }[] };
+  claimedAchievements?: string[];
+  claimedLevelRewards?: number[];
 }
 
 export interface MatchPlayer {

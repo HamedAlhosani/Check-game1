@@ -13,6 +13,8 @@ import { useT, useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { DailyRewardModal } from '../../components/shared/DailyRewardModal';
 import { RulesModal } from '../../components/shared/RulesModal';
+import { ProgressionModal } from '../../components/shared/ProgressionModal';
+import { deriveLevel } from '@check-game/shared';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { apiClient } from '../../services/api.service';
 
@@ -41,6 +43,55 @@ function DailyRewardNavButton({ onOpen, lang }: { onOpen: () => void; lang: stri
       {canClaim && (
         <span className="absolute rounded-full animate-pulse"
           style={{ top: -3, right: -3, width: 9, height: 9, background: '#E04030', border: '1.5px solid #14100A' }} />
+      )}
+    </motion.button>
+  );
+}
+
+// Quick claim count from /api/progression so we can show a notification dot
+// when the user has unclaimed missions / achievements / level rewards.
+function ProgressNavButton({ onOpen, lang, profileXp, profileWins, profileGames, profileStreak }: {
+  onOpen: () => void;
+  lang: string;
+  // Re-trigger the claim count whenever any of these change (which is the
+  // signal that something the user did could have unlocked something).
+  profileXp: number; profileWins: number; profileGames: number; profileStreak: number;
+}) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    apiClient.get<{
+      missions: { items: { complete: boolean; claimed: boolean }[] };
+      achievements: { complete: boolean; claimed: boolean }[];
+      levelRewards: { reached: boolean; claimed: boolean }[];
+    }>('/api/progression').then(r => {
+      const a = r.missions.items.filter(m => m.complete && !m.claimed).length;
+      const b = r.achievements.filter(x => x.complete && !x.claimed).length;
+      const c = r.levelRewards.filter(x => x.reached && !x.claimed).length;
+      setCount(a + b + c);
+    }).catch(() => setCount(0));
+  }, [profileXp, profileWins, profileGames, profileStreak]);
+  return (
+    <motion.button
+      whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
+      onClick={onOpen}
+      className="relative rounded-xl flex items-center justify-center"
+      title={lang === 'ar' ? 'المهام والإنجازات' : 'Missions & Achievements'}
+      style={{
+        width: 36,
+        height: 34,
+        background: count > 0 ? 'rgba(201,168,76,0.18)' : 'rgba(255,255,255,0.04)',
+        border: `1px solid ${count > 0 ? 'rgba(201,168,76,0.55)' : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: count > 0 ? '0 0 14px rgba(201,168,76,0.35)' : 'none',
+        cursor: 'pointer',
+      }}>
+      <span style={{ fontSize: 18, lineHeight: 1 }}>🎯</span>
+      {count > 0 && (
+        <span className="absolute rounded-full font-bold"
+          style={{
+            top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px',
+            background: '#E04030', color: '#fff', fontSize: 9, lineHeight: '16px',
+            border: '1.5px solid #14100A',
+          }}>{count}</span>
       )}
     </motion.button>
   );
@@ -78,11 +129,28 @@ function levelTitle(level: number, lang: string) {
 }
 
 // ── XP bar ────────────────────────────────────────────────────────────────────
-function XpBar({ xp }: { xp: number }) {
-  const pct = Math.min(100, (xp % 200) / 2);
+function XpBar({ xp, lang, onClick }: { xp: number; lang?: string; onClick?: () => void }) {
+  const { xpInLevel, xpForNextLevel } = deriveLevel(xp);
+  const pct = Math.min(100, (xpInLevel / Math.max(1, xpForNextLevel)) * 100);
   return (
-    <div style={{ height: 5, borderRadius: 3, background: 'rgba(201,168,76,0.12)', overflow: 'hidden', width: '100%' }}>
-      <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg, #8B6914, #E8C97A)', borderRadius: 3, transition: 'width .6s ease', boxShadow: '0 0 6px rgba(201,168,76,0.4)' }}/>
+    <div onClick={onClick}
+      style={{
+        cursor: onClick ? 'pointer' : 'default',
+        position: 'relative',
+      }}>
+      <div style={{ height: 6, borderRadius: 4, background: 'rgba(201,168,76,0.12)', overflow: 'hidden', width: '100%', border: '1px solid rgba(201,168,76,0.15)' }}>
+        <div style={{ width: `${Math.max(2, pct)}%`, height: '100%', background: 'linear-gradient(90deg, #8B6914, #E8C97A, #FFE07A)', borderRadius: 4, transition: 'width .5s ease', boxShadow: '0 0 8px rgba(232,201,122,0.5)' }}/>
+      </div>
+      <span className="font-mono"
+        style={{
+          fontSize: 9, color: 'rgba(245,230,200,0.5)',
+          marginTop: 2, display: 'block',
+        }}>
+        {xpInLevel.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP
+        {onClick && <span style={{ marginInlineStart: 6, color: 'rgba(201,168,76,0.6)' }}>
+          · {lang === 'ar' ? 'اضغط للتقدم' : 'tap for progress'}
+        </span>}
+      </span>
     </div>
   );
 }
@@ -660,6 +728,8 @@ export function HomePage() {
   const [searchRoomId, setSearchRoomId] = useState<string | null>(null);
   const [showDaily, setShowDaily] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [showProgress, setShowProgress] = useState(false);
+  const [progressInitialTab, setProgressInitialTab] = useState<'missions' | 'achievements' | 'levels'>('missions');
   const pendingModeRef = useRef<GameMode>('bots');
 
   useEffect(() => {
@@ -801,6 +871,13 @@ export function HomePage() {
           <LangToggle />
           {/* Daily reward — moved out of the games area into the top nav */}
           <DailyRewardNavButton onOpen={() => setShowDaily(true)} lang={lang} />
+          {/* Missions / achievements / level rewards */}
+          <ProgressNavButton
+            onOpen={() => { setProgressInitialTab('missions'); setShowProgress(true); }}
+            lang={lang}
+            profileXp={xp} profileWins={wins} profileGames={games}
+            profileStreak={profile?.stats?.currentStreak ?? 0}
+          />
           {/* Coins */}
           <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5"
             style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)' }}>
@@ -871,7 +948,7 @@ export function HomePage() {
                   🔥 <span style={{ color: '#C9A84C', fontWeight: 700 }}>{profile.stats?.currentStreak ?? 0}</span>
                 </span>
               </div>
-              <XpBar xp={xp}/>
+              <XpBar xp={xp} lang={lang} onClick={() => { setProgressInitialTab('levels'); setShowProgress(true); }}/>
             </div>
           </motion.div>
         )}
@@ -924,6 +1001,7 @@ export function HomePage() {
       <JoinPrivateModal open={showJoin} onClose={() => setShowJoin(false)} onBeforeJoin={() => { pendingModeRef.current = 'private'; }}/>
       <DailyRewardModal open={showDaily} onClose={() => setShowDaily(false)}/>
       <RulesModal open={showRules} onClose={() => setShowRules(false)}/>
+      <ProgressionModal open={showProgress} onClose={() => setShowProgress(false)} lang={lang} initialTab={progressInitialTab}/>
 
       {searching && <SearchingModal onCancel={handleCancelSearch} lang={lang}/>}
       {botLoading && <BotLoadingOverlay lang={lang}/>}

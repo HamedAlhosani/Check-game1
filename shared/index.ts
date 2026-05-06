@@ -4,3 +4,4 @@ export * from './ludo.types';
 export * from './domino.types';
 export * from './jackaro.types';
 export * from './store.types';
+export * from './progression.types';

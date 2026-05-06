@@ -506,42 +506,64 @@ function ItemCard({
 
 // ── Recharge Tab ───────────────────────────────────────────────────────────────
 
-function RechargeTab({ onRecharge, busy, t, lang }: { onRecharge: (packageId: string) => void; busy: string | null; t: (k: any) => string; lang: string }) {
+function RechargeTab({ t, lang }: { onRecharge: (packageId: string) => void; busy: string | null; t: (k: any) => string; lang: string }) {
   return (
     <div>
-      <div className="text-center mb-8">
+      <div className="text-center mb-6">
         <p className="text-4xl mb-3">🪙</p>
         <h2 className="font-arabic text-2xl font-bold text-gold mb-2">{t('store_recharge_title')}</h2>
-        <p className="text-sand/45 text-sm font-arabic">{t('store_recharge_desc')}</p>
+        <p className="text-sand/45 text-sm font-arabic">
+          {lang === 'ar'
+            ? 'اربح كوينز من المباريات والمكافآت اليومية والمهام والإنجازات'
+            : 'Earn coins from matches, daily rewards, missions, and achievements'}
+        </p>
+      </div>
+
+      {/* Coming-soon banner — explains the real-money store is in development. */}
+      <div className="rounded-2xl p-5 mb-6 border text-center"
+        style={{
+          background: 'linear-gradient(135deg, rgba(201,168,76,0.10) 0%, rgba(120,80,20,0.06) 100%)',
+          borderColor: 'rgba(201,168,76,0.40)',
+          boxShadow: '0 0 24px rgba(201,168,76,0.10)',
+        }}>
+        <div className="text-3xl mb-2">🚧</div>
+        <p className="font-arabic font-bold text-base mb-1.5" style={{ color: '#E8C97A' }}>
+          {lang === 'ar' ? 'متجر الكوينز الحقيقي قريباً' : 'Real coin store coming soon'}
+        </p>
+        <p className="font-arabic" style={{ fontSize: 12, color: 'rgba(245,230,200,0.55)', lineHeight: 1.7 }}>
+          {lang === 'ar'
+            ? 'نشتغل على فتح الدفع الحقيقي قريباً. حالياً تقدر تكسب الكوينز من اللعب والمكافآت اليومية والمهام بدون أي فلوس.'
+            : 'We\'re working on enabling real payments. For now, earn coins by playing, daily rewards, and completing missions — no money needed.'}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {COIN_PACKAGES.map(pkg => (
           <div
             key={pkg.id}
-            className={`relative rounded-2xl p-5 border transition-all hover:scale-[1.02]
-              ${pkg.popular ? 'border-gold' : 'border-gold/20 hover:border-gold/40'}`}
+            className={`relative rounded-2xl p-5 border
+              ${pkg.popular ? 'border-gold/35' : 'border-gold/15'}`}
             style={pkg.popular
-              ? { background: 'rgba(201,168,76,0.08)', boxShadow: '0 0 24px rgba(201,168,76,0.12)' }
-              : { background: 'rgba(10,18,32,0.7)' }}
+              ? { background: 'rgba(201,168,76,0.05)' }
+              : { background: 'rgba(10,18,32,0.55)' }}
           >
             {pkg.popular && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold text-night text-xs font-bold px-3 py-1 rounded-full font-arabic whitespace-nowrap">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gold/70 text-night text-xs font-bold px-3 py-1 rounded-full font-arabic whitespace-nowrap">
                 {lang === 'ar' ? 'الأكثر قيمة 🔥' : 'Best Value 🔥'}
               </div>
             )}
 
             <div className="text-center mb-4">
               <div className="flex items-center justify-center gap-2 mb-1">
-                <span className="text-2xl">🪙</span>
-                <span className="text-2xl font-bold text-gold font-mono">
+                <span className="text-2xl opacity-70">🪙</span>
+                <span className="text-2xl font-bold font-mono" style={{ color: 'rgba(232,201,122,0.7)' }}>
                   {(pkg.coins + pkg.bonus).toLocaleString()}
                 </span>
               </div>
               <p className="text-sand/40 text-xs font-arabic">
                 {pkg.coins.toLocaleString()} {t('coins')}
                 {pkg.bonus > 0 && (
-                  <span className="text-emerald-400 font-bold">
+                  <span className="text-emerald-400/70 font-bold">
                     {lang === 'ar' ? ` + ${pkg.bonus.toLocaleString()} مجاناً` : ` + ${pkg.bonus.toLocaleString()} free`}
                   </span>
                 )}
@@ -549,30 +571,21 @@ function RechargeTab({ onRecharge, busy, t, lang }: { onRecharge: (packageId: st
             </div>
 
             <button
-              onClick={() => onRecharge(pkg.id)}
-              disabled={!!busy}
-              className="w-full py-2.5 rounded-xl font-arabic font-bold text-sm transition-all disabled:opacity-50"
-              style={pkg.popular
-                ? { background: 'linear-gradient(135deg, #C9A84C, #A07830)', color: '#04080F' }
-                : { background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.35)', color: '#C9A84C' }}
+              disabled
+              className="w-full py-2.5 rounded-xl font-arabic font-bold text-sm cursor-not-allowed"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px dashed rgba(201,168,76,0.30)',
+                color: 'rgba(232,201,122,0.55)',
+              }}
             >
-              {busy === pkg.id
-                ? (lang === 'ar' ? '...' : '...')
-                : (lang === 'ar' ? `شراء (تجريبي)` : `Buy (Test)`)}
+              🔜 {lang === 'ar' ? 'قريباً' : 'Coming soon'}
             </button>
-            <p className="text-center text-sand/30 text-[10px] font-arabic mt-1">
-              {lang === 'ar' ? `${pkg.price} درهم · بدون دفع حقيقي` : `${pkg.price} AED · no real payment`}
+            <p className="text-center text-sand/35 text-[10px] font-arabic mt-1.5">
+              {lang === 'ar' ? `${pkg.price} درهم` : `${pkg.price} AED`}
             </p>
           </div>
         ))}
-      </div>
-
-      <div className="rounded-2xl p-4 border border-gold/15 text-center" style={{ background: 'rgba(201,168,76,0.04)' }}>
-        <p className="text-gold/80 text-xs font-arabic leading-relaxed font-bold">
-          {lang === 'ar'
-            ? 'وضع تجريبي · الكوينز تُضاف بدون دفع حقيقي'
-            : 'Test mode · Coins added without real payment'}
-        </p>
       </div>
     </div>
   );

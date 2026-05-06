@@ -1,5 +1,9 @@
 import { UserProfile, LeaderboardEntry, GameType, MatchRecord } from '@check-game/shared';
 import { STORE_ITEMS, FREE_ITEMS, DEFAULT_EQUIPPED } from '@check-game/shared';
+import {
+  deriveLevel, rollDailyMissions,
+  MISSION_POOL, ACHIEVEMENT_DEFS, LEVEL_REWARDS, AchievementStat,
+} from '@check-game/shared';
 import { users, leaderboard, history, saveUsers, saveLeaderboard, saveHistory } from '../data/store';
 
 const XP_PER_WIN = 100;
@@ -13,9 +17,14 @@ const LEVEL_TITLES = [
   'أمير الدهناء', 'سلطان الرياح', 'حكيم الصحراء',
 ];
 
+function titleForLevel(level: number): string {
+  return LEVEL_TITLES[Math.min(level - 1, LEVEL_TITLES.length - 1)] || LEVEL_TITLES[0];
+}
+
+/** @deprecated kept for callers that still want the old flat-curve label only. */
 export function getLevelFromXp(xp: number): { level: number; title: string } {
-  const level = Math.min(Math.floor(xp / 200) + 1, LEVEL_TITLES.length);
-  return { level, title: LEVEL_TITLES[level - 1] };
+  const { level } = deriveLevel(xp);
+  return { level, title: titleForLevel(level) };
 }
 
 const defaultStats = {
@@ -116,7 +125,8 @@ export async function recordGameResult(uid: string, isWinner: boolean, gameType:
   const xpGain = isWinner ? XP_PER_WIN : XP_PER_GAME;
   const coinsGain = isWinner ? COINS_PER_WIN : COINS_PER_GAME;
   const newXp = p.ranking.xp + xpGain;
-  const { level, title } = getLevelFromXp(newXp);
+  const { level } = deriveLevel(newXp);
+  const title = titleForLevel(level);
 
   stats.totalGames += 1;
   stats.totalWins += isWinner ? 1 : 0;
@@ -126,9 +136,168 @@ export async function recordGameResult(uid: string, isWinner: boolean, gameType:
   p.stats = stats;
   p.ranking = { level, xp: newXp, title };
   p.coins = (p.coins || 0) + coinsGain;
-  saveUsers();
 
+  // ── Daily mission progress ────────────────────────────────────────────────
+  const today = todayKey();
+  const dm = ensureDailyMissions(p, uid, today);
+  for (const m of dm.missions) {
+    const def = MISSION_POOL.find(d => d.id === m.id);
+    if (!def || m.claimed) continue;
+    if (def.type === 'play') {
+      m.progress = Math.min(def.target, m.progress + 1);
+    } else if (def.type === 'win' && isWinner) {
+      m.progress = Math.min(def.target, m.progress + 1);
+    } else if (def.type === 'streak') {
+      // Snapshot the (possibly newly bumped) streak so a single win can
+      // satisfy a streak mission if it puts the player at >= target.
+      m.progress = Math.min(def.target, Math.max(m.progress, stats.currentStreak));
+    }
+  }
+
+  saveUsers();
   updateLeaderboard(uid, p as UserProfile);
+}
+
+// ── Daily missions ───────────────────────────────────────────────────────────
+function todayKey(): string {
+  const d = new Date();
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/** Returns today's daily-mission state, rolling a fresh set on date change. */
+function ensureDailyMissions(p: any, uid: string, today: string) {
+  if (!p.dailyMissions || p.dailyMissions.date !== today) {
+    p.dailyMissions = { date: today, missions: rollDailyMissions(uid, today) };
+  }
+  return p.dailyMissions;
+}
+
+export async function getProgression(uid: string): Promise<{
+  missions: any;
+  achievements: any[];
+  levelRewards: any[];
+  level: number;
+  xp: number;
+  xpInLevel: number;
+  xpForNextLevel: number;
+} | null> {
+  const p = users.get(uid) as any;
+  if (!p) return null;
+  const today = todayKey();
+  const dm = ensureDailyMissions(p, uid, today);
+
+  // Mission view enriched with their definition
+  const missions = {
+    date: dm.date,
+    items: dm.missions.map((m: any) => {
+      const def = MISSION_POOL.find(d => d.id === m.id)!;
+      return {
+        id: m.id,
+        emoji: def.emoji, labelAr: def.labelAr, labelEn: def.labelEn,
+        target: def.target, rewardCoins: def.rewardCoins,
+        progress: m.progress, claimed: m.claimed,
+        complete: m.progress >= def.target,
+      };
+    }),
+  };
+
+  const xp = p.ranking?.xp ?? 0;
+  const lvl = deriveLevel(xp);
+
+  // Achievements: compute current value for each, mark complete/claimed
+  const claimedAch: string[] = p.claimedAchievements || [];
+  const achievements = ACHIEVEMENT_DEFS.map(def => {
+    const cur = readStat(p, def.stat, lvl.level);
+    return {
+      id: def.id,
+      emoji: def.emoji, labelAr: def.labelAr, labelEn: def.labelEn,
+      descAr: def.descAr, descEn: def.descEn,
+      target: def.target, rewardCoins: def.rewardCoins,
+      progress: Math.min(cur, def.target),
+      complete: cur >= def.target,
+      claimed: claimedAch.includes(def.id),
+    };
+  });
+
+  // Level rewards: claimable if level reached & not yet claimed
+  const claimedLvl: number[] = p.claimedLevelRewards || [];
+  const levelRewards = LEVEL_REWARDS.map(r => ({
+    ...r,
+    reached: lvl.level >= r.level,
+    claimed: claimedLvl.includes(r.level),
+  }));
+
+  return {
+    missions, achievements, levelRewards,
+    level: lvl.level, xp,
+    xpInLevel: lvl.xpInLevel, xpForNextLevel: lvl.xpForNextLevel,
+  };
+}
+
+function readStat(p: any, stat: AchievementStat, level: number): number {
+  if (stat === 'level') return level;
+  return Number(p.stats?.[stat] ?? 0);
+}
+
+export async function claimMission(uid: string, missionId: string): Promise<{ ok: boolean; error?: string; coins?: number; granted?: number }> {
+  const p = users.get(uid) as any;
+  if (!p) return { ok: false, error: 'User not found' };
+  const today = todayKey();
+  const dm = ensureDailyMissions(p, uid, today);
+  const m = dm.missions.find((x: any) => x.id === missionId);
+  if (!m) return { ok: false, error: 'Mission not in today\'s set' };
+  const def = MISSION_POOL.find(d => d.id === missionId);
+  if (!def) return { ok: false, error: 'Unknown mission' };
+  if (m.claimed) return { ok: false, error: 'Already claimed' };
+  if (m.progress < def.target) return { ok: false, error: 'Mission not complete' };
+  m.claimed = true;
+  p.coins = (p.coins || 0) + def.rewardCoins;
+  saveUsers();
+  return { ok: true, coins: p.coins, granted: def.rewardCoins };
+}
+
+export async function claimAchievement(uid: string, achievementId: string): Promise<{ ok: boolean; error?: string; coins?: number; granted?: number }> {
+  const p = users.get(uid) as any;
+  if (!p) return { ok: false, error: 'User not found' };
+  const def = ACHIEVEMENT_DEFS.find(d => d.id === achievementId);
+  if (!def) return { ok: false, error: 'Unknown achievement' };
+  const claimed: string[] = p.claimedAchievements || [];
+  if (claimed.includes(achievementId)) return { ok: false, error: 'Already claimed' };
+  const xp = p.ranking?.xp ?? 0;
+  const lvl = deriveLevel(xp).level;
+  const cur = readStat(p, def.stat, lvl);
+  if (cur < def.target) return { ok: false, error: 'Not yet completed' };
+  p.claimedAchievements = [...claimed, achievementId];
+  p.coins = (p.coins || 0) + def.rewardCoins;
+  saveUsers();
+  return { ok: true, coins: p.coins, granted: def.rewardCoins };
+}
+
+export async function claimLevelReward(uid: string, level: number): Promise<{ ok: boolean; error?: string; coins?: number; granted?: number; itemGranted?: string }> {
+  const p = users.get(uid) as any;
+  if (!p) return { ok: false, error: 'User not found' };
+  const reward = LEVEL_REWARDS.find(r => r.level === level);
+  if (!reward) return { ok: false, error: 'No reward at that level' };
+  const claimed: number[] = p.claimedLevelRewards || [];
+  if (claimed.includes(level)) return { ok: false, error: 'Already claimed' };
+  const xp = p.ranking?.xp ?? 0;
+  const cur = deriveLevel(xp).level;
+  if (cur < level) return { ok: false, error: 'Level not yet reached' };
+  p.claimedLevelRewards = [...claimed, level];
+  p.coins = (p.coins || 0) + reward.rewardCoins;
+  let itemGranted: string | undefined;
+  if (reward.rewardItemId) {
+    const owned: string[] = p.ownedItems || [];
+    if (!owned.includes(reward.rewardItemId)) {
+      p.ownedItems = [...owned, reward.rewardItemId];
+      itemGranted = reward.rewardItemId;
+    }
+  }
+  saveUsers();
+  return { ok: true, coins: p.coins, granted: reward.rewardCoins, itemGranted };
 }
 
 export async function purchaseItem(uid: string, itemId: string): Promise<{ ok: boolean; error?: string; coins?: number }> {

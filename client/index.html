@@ -29,6 +29,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Scheherazade+New:wght@400;700&family=Cinzel:wght@400;600;700&family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Warm up the socket.io endpoint while the JS is parsing — first
+         WebSocket handshake completes ~200ms sooner. -->
+    <link rel="preconnect" href="https://check-web.fly.dev" crossorigin />
   </head>
   <body>
     <div id="root"></div>

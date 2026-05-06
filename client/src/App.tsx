@@ -16,14 +16,25 @@ import { ToastContainer } from './components/shared/ToastContainer';
 import { RulesModal } from './components/shared/RulesModal';
 
 // Secondary pages — code-split. Loaded on first navigation.
-const RegisterPage      = lazy(() => import('./pages/auth/RegisterPage').then(m => ({ default: m.RegisterPage })));
-const ProfilePage       = lazy(() => import('./pages/profile/ProfilePage').then(m => ({ default: m.ProfilePage })));
-const UserProfilePage   = lazy(() => import('./pages/profile/UserProfilePage').then(m => ({ default: m.UserProfilePage })));
-const LeaderboardPage   = lazy(() => import('./pages/leaderboard/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })));
-const StorePage         = lazy(() => import('./pages/store/StorePage').then(m => ({ default: m.StorePage })));
-const FriendsPage       = lazy(() => import('./pages/friends/FriendsPage').then(m => ({ default: m.FriendsPage })));
-const HistoryPage       = lazy(() => import('./pages/history/HistoryPage').then(m => ({ default: m.HistoryPage })));
-const CardsPreviewPage  = lazy(() => import('./pages/cards-preview/CardsPreviewPage').then(m => ({ default: m.CardsPreviewPage })));
+// We also keep references to the dynamic-import factories so we can prefetch
+// them silently during browser idle time (see PrefetchOnIdle below).
+const loadRegister      = () => import('./pages/auth/RegisterPage');
+const loadProfile       = () => import('./pages/profile/ProfilePage');
+const loadUserProfile   = () => import('./pages/profile/UserProfilePage');
+const loadLeaderboard   = () => import('./pages/leaderboard/LeaderboardPage');
+const loadStore         = () => import('./pages/store/StorePage');
+const loadFriends       = () => import('./pages/friends/FriendsPage');
+const loadHistory       = () => import('./pages/history/HistoryPage');
+const loadCardsPreview  = () => import('./pages/cards-preview/CardsPreviewPage');
+
+const RegisterPage      = lazy(() => loadRegister().then(m => ({ default: m.RegisterPage })));
+const ProfilePage       = lazy(() => loadProfile().then(m => ({ default: m.ProfilePage })));
+const UserProfilePage   = lazy(() => loadUserProfile().then(m => ({ default: m.UserProfilePage })));
+const LeaderboardPage   = lazy(() => loadLeaderboard().then(m => ({ default: m.LeaderboardPage })));
+const StorePage         = lazy(() => loadStore().then(m => ({ default: m.StorePage })));
+const FriendsPage       = lazy(() => loadFriends().then(m => ({ default: m.FriendsPage })));
+const HistoryPage       = lazy(() => loadHistory().then(m => ({ default: m.HistoryPage })));
+const CardsPreviewPage  = lazy(() => loadCardsPreview().then(m => ({ default: m.CardsPreviewPage })));
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { setUser, setProfile, setLoading } = useAuthStore();
@@ -114,6 +125,27 @@ function GlobalOverlays() {
 }
 
 /**
+ * After the app is interactive, silently prefetch every lazy route chunk
+ * during browser idle time. By the time the user clicks 'Profile' or
+ * 'Store' those chunks are already in the HTTP cache → instant navigation.
+ */
+function PrefetchOnIdle() {
+  useEffect(() => {
+    const idle = (cb: () => void) => {
+      const ric = (window as any).requestIdleCallback;
+      if (ric) ric(cb, { timeout: 4000 });
+      else setTimeout(cb, 1500);
+    };
+    idle(() => {
+      loadProfile(); loadStore(); loadLeaderboard();
+      loadFriends(); loadHistory(); loadCardsPreview();
+      loadUserProfile(); loadRegister();
+    });
+  }, []);
+  return null;
+}
+
+/**
  * Listens for SYSTEM_RECONNECT_STATE on the global socket. If the server
  * reports the user is in an active in-progress game and we're not already
  * on the matching /game/check/:id URL, navigate there. This is what makes
@@ -158,6 +190,7 @@ export function App() {
       <AuthGate>
         <GlobalOverlays />
         <ResumeGameGate />
+        <PrefetchOnIdle />
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />

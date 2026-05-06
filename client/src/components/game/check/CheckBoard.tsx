@@ -1022,7 +1022,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   // ── Overlays ──────────────────────────────────────────────────────────────
   const IntroOverlay = () => (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-      style={{ background: 'rgba(20,14,8,0.93)', backdropFilter: 'blur(8px)' }}>
+      style={{ background: 'rgba(20,14,8,0.93)', /* backdrop-blur removed for perf */ }}>
       <p className="font-display text-4xl tracking-widest text-gold mb-1" style={{ textShadow: '0 0 30px rgba(201,168,76,.5)' }}>CHECK</p>
       <p className="text-sand/50 font-arabic text-sm mb-6">اللاعبون</p>
       <div className="flex flex-wrap justify-center gap-3 mb-8 px-4 overflow-y-auto" style={{ maxHeight: '42vh' }}>
@@ -1044,7 +1044,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
   const PeekOverlay = () => (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-      style={{ background: 'rgba(20,14,8,0.91)', backdropFilter: 'blur(8px)' }}>
+      style={{ background: 'rgba(20,14,8,0.91)', /* backdrop-blur removed for perf */ }}>
       <p className="text-gold font-arabic font-bold text-xl mb-1">احفظ أوراقك!</p>
       <p className="text-sand/50 font-arabic text-sm mb-4">الورقتان السفليتان</p>
       {me && (
@@ -1066,7 +1066,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(8,4,0,0.86)', backdropFilter: 'blur(8px)' }}
+      style={{ background: 'rgba(8,4,0,0.86)', /* backdrop-blur removed for perf */ }}
     >
       <motion.div
         initial={{ scale: 0.85, y: 16 }}
@@ -1125,7 +1125,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
   const ExitOverlay = () => (
     <div className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: 'rgba(20,14,8,0.84)', backdropFilter: 'blur(8px)' }}>
+      style={{ background: 'rgba(20,14,8,0.84)', /* backdrop-blur removed for perf */ }}>
       <div className="rounded-2xl border border-white/10 bg-night-mid/95 px-8 py-6 flex flex-col items-center gap-4">
         <p className="text-white font-arabic text-lg">هل أنت متأكد تريد الخروج؟</p>
         <p className="text-sand/50 font-arabic text-sm text-center">سيحل بوت مكانك مع اللاعبين الحقيقيين</p>
@@ -1149,7 +1149,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         key="scoreboard-bg"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        style={{ background: 'rgba(8,4,0,0.86)', backdropFilter: 'blur(10px)' }}
+        style={{ background: 'rgba(8,4,0,0.86)', /* backdrop-blur removed for perf */ }}
         onClick={() => setShowScoreboard(false)}
       >
         <motion.div
@@ -1471,7 +1471,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 4 }}
                   className="flex items-center gap-2 rounded-xl border border-red-500/50 px-3 py-1.5"
-                  style={{ background: 'rgba(80,10,5,.95)', backdropFilter: 'blur(8px)' }}
+                  style={{ background: 'rgba(80,10,5,.95)', /* backdrop-blur removed for perf */ }}
                 >
                   <span className="text-red-300 font-arabic text-xs">🔥 اضغط مجدداً للحرق</span>
                   <button
@@ -1680,7 +1680,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             return (
               <div className="rounded-lg border flex items-center gap-1.5 px-2 py-1"
                 style={{
-                  background: 'rgba(20,14,8,.92)', backdropFilter: 'blur(8px)',
+                  background: 'rgba(20,14,8,.92)', /* backdrop-blur removed for perf */
                   borderColor: isMine ? 'rgba(80,200,120,0.55)' : 'rgba(201,168,76,0.35)',
                   boxShadow: isMine ? '0 0 10px rgba(80,200,120,0.25)' : 'none',
                   maxWidth: isMobile ? 120 : 180,
@@ -1729,7 +1729,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
       {/* ── Bottom-left deck info panel (desktop only) ── */}
       {!isMobile && <div className="fixed z-40 flex flex-col items-center gap-1 rounded-xl border border-gold/30 px-4 py-3"
-        style={{ bottom: 58, left: 8, background: 'rgba(20,14,8,.97)', backdropFilter: 'blur(10px)', minWidth: 72, boxShadow: '0 0 12px rgba(201,168,76,.10)' }}>
+        style={{ bottom: 58, left: 8, background: 'rgba(20,14,8,.97)', /* backdrop-blur removed for perf */ minWidth: 72, boxShadow: '0 0 12px rgba(201,168,76,.10)' }}>
         <span className="text-gold/40 font-arabic" style={{ fontSize: 10 }}>كروت</span>
         <span className="text-sand/80 font-bold" style={{ fontSize: 24, lineHeight: 1 }}>{gameState.deckCount}</span>
       </div>}
@@ -1745,7 +1745,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: .9 }}
             className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ background: 'rgba(20,14,8,.92)', backdropFilter: 'blur(10px)' }}
+            style={{ background: 'rgba(20,14,8,.92)', /* backdrop-blur removed for perf */ }}
           >
             <div className="rounded-2xl border border-gold/40 flex flex-col items-center gap-4"
               style={{ background: 'rgba(10,4,0,.98)', boxShadow: '0 0 40px rgba(201,168,76,.15)', width: 'min(92vw, 380px)', maxHeight: '88vh', overflowY: 'auto', padding: '20px 20px' }}>
@@ -1892,7 +1892,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: .92 }}
             className="fixed inset-0 z-50 flex items-center justify-center"
-            style={{ background: 'rgba(20,14,8,.88)', backdropFilter: 'blur(8px)' }}
+            style={{ background: 'rgba(20,14,8,.88)', /* backdrop-blur removed for perf */ }}
           >
             <div className="rounded-2xl border border-gold/30 px-5 py-5 flex flex-col items-center gap-3"
               style={{ background: 'rgba(20,14,8,.97)', width: 'min(96vw, 420px)', maxHeight: '88vh', overflowY: 'auto' }}>
@@ -2024,7 +2024,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 boxShadow: '0 12px 40px rgba(0,0,0,0.55), 0 0 28px rgba(201,168,76,0.3)',
                 padding: isMobile ? '10px 14px 12px' : '12px 20px 14px',
                 gap: 10,
-                backdropFilter: 'blur(8px)',
+                /* backdrop-blur removed for perf */
               }}
             >
               <p className="font-arabic font-bold rounded-full px-3 py-1"
@@ -2069,7 +2069,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               key="reclaim-overlay"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
-              style={{ background: 'rgba(8,4,0,0.86)', backdropFilter: 'blur(8px)' }}
+              style={{ background: 'rgba(8,4,0,0.86)', /* backdrop-blur removed for perf */ }}
             >
               <motion.div
                 initial={{ scale: 0.85, y: 16 }}
@@ -2127,7 +2127,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex flex-col justify-end"
-            style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}
+            style={{ background: 'rgba(0,0,0,0.72)', /* backdrop-blur removed for perf */ }}
           >
             <motion.div
               initial={{ y: '100%' }}
@@ -2181,7 +2181,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 flex flex-col justify-end"
-              style={{ background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)' }}
+              style={{ background: 'rgba(0,0,0,0.72)', /* backdrop-blur removed for perf */ }}
             >
               <motion.div
                 initial={{ y: '100%' }}
@@ -2320,15 +2320,16 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
           <motion.div
             key="q-peek-bg"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.12 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(8,4,0,0.88)', backdropFilter: 'blur(10px)' }}
+            style={{ background: 'rgba(8,4,0,0.92)' }}
             onClick={() => setQPeekCard(null)}
           >
             <motion.div
-              initial={{ scale: 0.7, y: 20, rotateY: -90 }}
-              animate={{ scale: 1, y: 0, rotateY: 0 }}
-              exit={{ scale: 0.7, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 220, damping: 20 }}
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.92 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
               onClick={e => e.stopPropagation()}
               className="relative rounded-3xl border flex flex-col items-center"
               style={{
@@ -2374,7 +2375,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
             key="reveal-bg"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-3"
-            style={{ background: 'rgba(8,4,0,0.90)', backdropFilter: 'blur(10px)' }}>
+            style={{ background: 'rgba(8,4,0,0.90)', /* backdrop-blur removed for perf */ }}>
             <motion.div
               initial={{ scale: 0.85, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.85, y: 20 }}
               className="relative rounded-3xl border border-gold/35 w-full"

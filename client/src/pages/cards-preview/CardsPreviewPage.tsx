@@ -142,9 +142,9 @@ function PeekIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
 }
 
 function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: string; accent2: string }) {
-  // Layout INSIDE the card: red 'حظك حلو' pill at top, BIG '0' in middle,
-  // 'صفر' word below. All as plain SVG (foreignObject was rendering outside
-  // the card on iOS Safari).
+  // SVG-only graphics here. Arabic words ('حظك حلو' banner + 'صفر') are
+  // rendered as HTML overlays in the parent CardSVG wrapper to guarantee
+  // correct RTL shaping on iOS Safari.
   return (
     <g transform="translate(50 72)">
       {/* Sparkle stars in the corners */}
@@ -161,12 +161,9 @@ function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
         </g>
       ))}
 
-      {/* 'حظك حلو' red pill banner */}
+      {/* Empty red pill behind the banner — Arabic text is overlaid as HTML */}
       <g transform="translate(0 -28)">
         <rect x={-30} y={-9} width={60} height={18} rx={9} fill={accent2} opacity={0.95}/>
-        <text x={0} y={4} textAnchor="middle" direction="rtl" xmlLang="ar"
-          fontFamily="'Tajawal','Cairo','Noto Sans Arabic','Arial',sans-serif"
-          fontWeight="900" fontSize="11" fill="#FFF">حظك حلو ✨</text>
       </g>
 
       {/* The big digit '0' in the centre */}
@@ -174,11 +171,6 @@ function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
         fill="none" stroke={accent} strokeWidth={3.5} opacity={0.45}>0</text>
       <text y={10} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="46"
         fill={ink}>0</text>
-
-      {/* 'صفر' word — directly under the digit */}
-      <text x={0} y={26} textAnchor="middle" direction="rtl" xmlLang="ar"
-        fontFamily="'Tajawal','Cairo','Noto Sans Arabic','Arial',sans-serif"
-        fontWeight="800" fontSize="11" fill={accent2} letterSpacing="1">صفر</text>
     </g>
   );
 }
@@ -193,16 +185,18 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
   const label = labelFor(rank, suit);
   const special = specialOf(rank, suit);
 
-  // 'حظك حلو' is rendered inside LuckIllustration itself (above the 0),
-  // so we skip the external bottom-label for TEN_RED.
+  // Action label rendered as HTML overlay (works around iOS Safari SVG
+  // text bidi bugs that left 'صفر' / 'بدّل كرت' visually reversed).
   const actionLabel = special === 'J' ? 'بدّل كرت'
                     : special === 'Q_RED' ? 'اكشف كرت'
                     : special === 'K' ? 'اسحب كرتين'
                     : null;
+  const arabicFont = "'Tajawal','Cairo','Noto Sans Arabic','SF Arabic','Arial',sans-serif";
 
   return (
-    <svg width={w} height={h} viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg"
-      style={{ filter: 'drop-shadow(0 5px 14px rgba(0,0,0,0.55))', borderRadius: 9 }}>
+    <div style={{ position: 'relative', width: w, height: h, display: 'inline-block' }}>
+      <svg width={w} height={h} viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg"
+      style={{ filter: 'drop-shadow(0 5px 14px rgba(0,0,0,0.55))', borderRadius: 9, display: 'block' }}>
       <defs>
         <linearGradient id={`bg-${rank}-${suit}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#FFFCF2"/>
@@ -287,22 +281,39 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
       {special === 'Q_RED' && <PeekIllustration ink={ink} accent={accent} accent2={accent2}/>}
       {special === 'TEN_RED' && <LuckIllustration ink={ink} accent={accent} accent2={accent2}/>}
 
-      {/* Action label for special cards (plain SVG text, not foreignObject:
-          foreignObject renders outside the card frame on iOS Safari) */}
-      {actionLabel && (
-        <text x={50} y={122} textAnchor="middle" direction="rtl" xmlLang="ar"
-          fontFamily="'Tajawal','Cairo','Noto Sans Arabic','Arial',sans-serif"
-          fontWeight="800" fontSize="11" fill={accent2}>
-          {actionLabel}
-        </text>
-      )}
-
       {/* CHECK brand — bottom centre, modest pill */}
       <g>
         <rect x="32" y="135" width="36" height="9" rx="4.5" fill={ink} opacity="0.88"/>
         <text x="50" y="141.5" textAnchor="middle" fontFamily="Georgia, serif" fontWeight="800" fontSize="6" letterSpacing="2" fill={accent}>CHECK</text>
       </g>
     </svg>
+
+    {/* ── HTML overlays for Arabic text (positioned in % of card size) ── */}
+    {/* 'حظك حلو' banner text on red 10 */}
+    {special === 'TEN_RED' && (
+      <div dir="rtl" style={{
+        position: 'absolute', left: '20%', top: '23%', width: '60%',
+        textAlign: 'center', color: '#FFF', fontWeight: 900,
+        fontSize: w * 0.075, fontFamily: arabicFont, lineHeight: 1, pointerEvents: 'none',
+      }}>حظك حلو</div>
+    )}
+    {/* 'صفر' word under the digit on red 10 */}
+    {special === 'TEN_RED' && (
+      <div dir="rtl" style={{
+        position: 'absolute', left: '20%', top: '64%', width: '60%',
+        textAlign: 'center', color: accent2, fontWeight: 800,
+        fontSize: w * 0.078, fontFamily: arabicFont, letterSpacing: 1, lineHeight: 1, pointerEvents: 'none',
+      }}>صفر</div>
+    )}
+    {/* Action label for J / K / Q♥♦ */}
+    {actionLabel && (
+      <div dir="rtl" style={{
+        position: 'absolute', left: '15%', top: '78%', width: '70%',
+        textAlign: 'center', color: accent2, fontWeight: 800,
+        fontSize: w * 0.075, fontFamily: arabicFont, lineHeight: 1, pointerEvents: 'none',
+      }}>{actionLabel}</div>
+    )}
+    </div>
   );
 }
 

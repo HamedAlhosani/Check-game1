@@ -11,8 +11,12 @@ const TURN_DURATION_MS = 25000;
 const BURN_WINDOW_MS = 3000;
 const ROUND_OVER_DELAY_MS = 4000;
 const SPECIAL_ACTION_TIMEOUT_MS = 15000;
-const CHECK_WINDOW_MS = 1000;     // window after playing to call CHECK (human)
-const BOT_CHECK_WINDOW_MS = 300;  // much shorter for bot turns
+// Short pause after a play before the turn advances. Was 1000ms (humans) /
+// 300ms (bots) — felt like a 1-second hang to the player. Cut down so the
+// next player picks up almost immediately while still leaving enough beat
+// to read the discard animation.
+const CHECK_WINDOW_MS = 200;
+const BOT_CHECK_WINDOW_MS = 80;
 
 interface InternalPlayer {
   uid: string;

@@ -353,8 +353,8 @@ export function HomePage() {
   const pendingModeRef = useRef<GameMode>('bots');
 
   useEffect(() => {
-    const socket = socketService.getSocket();
-    if (!socket) return;
+    // Always ensure a socket instance exists — connect() is idempotent
+    const socket = socketService.connect();
     socket.on(SOCKET_EVENTS.LOBBY_ROOM_LIST, (data: RoomState[]) => setRooms(data));
     socket.on(SOCKET_EVENTS.LOBBY_ROOM_UPDATED, (room: RoomState) => {
       if (pendingModeRef.current === 'bots') {
@@ -419,14 +419,26 @@ export function HomePage() {
     setSearchRoomId(null);
   }
 
-  const handleCreate = (cfg: any) => {
-    const socket = socketService.getSocket();
-    if (!socket?.connected) {
-      addToast(lang === 'ar' ? 'غير متصل بالخادم، حاول مرة أخرى' : 'Not connected to server, please retry', 'error');
-      socketService.connect();
+  const handleCreate = async (cfg: any) => {
+    pendingModeRef.current = cfg.type === 'bots' ? 'bots' : cfg.type === 'private' ? 'private' : 'online';
+
+    // Show a quick spinner if we have to wait for the socket to reconnect
+    // (e.g. user clicked Start right after leaving a previous game).
+    if (!socketService.isReady()) {
+      if (cfg.type === 'bots') setBotLoading(true);
+      else if (cfg.type === 'online') setSearching(true);
+    }
+
+    let socket;
+    try {
+      socket = await socketService.ensureReady(5000);
+    } catch {
+      setBotLoading(false);
+      setSearching(false);
+      addToast(lang === 'ar' ? 'تعذّر الاتصال بالخادم — حاول مرة أخرى' : 'Could not reach server — please retry', 'error');
       return;
     }
-    pendingModeRef.current = cfg.type === 'bots' ? 'bots' : cfg.type === 'private' ? 'private' : 'online';
+
     if (cfg.type === 'bots') {
       socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, {
         name: `لعبة بوتات`,

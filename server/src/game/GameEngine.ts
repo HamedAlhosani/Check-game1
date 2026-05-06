@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Card, GamePhase, GameState, PlayerGameState } from '@check-game/shared';
-import { Deck } from './Deck';
+import { Deck, decksNeededFor } from './Deck';
 import { getCardValue, isSpecialCard } from './Card';
 import { canBurnCard } from './BurnValidator';
 import { calculateRoundScores, ScoreResult } from './ScoreCalculator';
@@ -63,7 +63,7 @@ export class GameEngine {
   ) {
     this.gameId = uuidv4();
     this.roomId = roomId;
-    this.deck = new Deck();
+    this.deck = new Deck(decksNeededFor(players.length));
     this.emit = emit;
 
     this.players = players.map((p, i) => ({

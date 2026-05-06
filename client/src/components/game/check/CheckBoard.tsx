@@ -361,8 +361,8 @@ function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11 }
           {isElim && <div className="absolute inset-0 rounded-full bg-black/70 flex items-center justify-center"><span className="text-red-400 font-bold" style={{ fontSize: compact ? 8 : 10 }}>✕</span></div>}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-arabic truncate" style={{ fontSize: nameFs, color: 'rgba(255,255,255,.75)' }}>{player.displayName}</p>
-          <p className="font-bold leading-none mt-0.5" style={{ fontSize: scoreFs, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,.65)' }}>{player.cumulativeScore}</p>
+          <p className="font-arabic font-bold truncate" style={{ fontSize: nameFs, color: isTurn ? '#E8C97A' : 'rgba(245,230,200,.95)' }}>{player.displayName}</p>
+          <p className="font-bold leading-none mt-0.5" style={{ fontSize: scoreFs, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,.75)' }}>{player.cumulativeScore}</p>
         </div>
       </div>
     </div>
@@ -648,11 +648,11 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     : 0;
   const n = gameState.players.length;
   const seatCfg = (() => {
-    if (isMobile) return { w: 114, avSize: 24, scoreFs: 14, nameFs: 7, mini: true };
-    if (n <= 4)   return { w: 200, avSize: 42, scoreFs: 26, nameFs: 11, mini: false };
-    if (n <= 6)   return { w: 175, avSize: 38, scoreFs: 22, nameFs: 10, mini: false };
-    if (n <= 8)   return { w: 155, avSize: 34, scoreFs: 18, nameFs: 9,  mini: true };
-                  return { w: 138, avSize: 28, scoreFs: 15, nameFs: 8,  mini: true };
+    if (isMobile) return { w: 114, avSize: 24, scoreFs: 14, nameFs: 11, mini: true };
+    if (n <= 4)   return { w: 210, avSize: 44, scoreFs: 26, nameFs: 14, mini: false };
+    if (n <= 6)   return { w: 185, avSize: 40, scoreFs: 22, nameFs: 13, mini: false };
+    if (n <= 8)   return { w: 165, avSize: 36, scoreFs: 18, nameFs: 12, mini: true };
+                  return { w: 150, avSize: 32, scoreFs: 16, nameFs: 11, mini: true };
   })();
 
   const tableRef = useRef<HTMLDivElement>(null);
@@ -769,7 +769,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   }, [socket]);
 
   useEffect(() => {
-    if (gameState.phase === 'PEEK_PHASE') { setShowIntro(false); setShowPeek(true); }
+    if (gameState.phase === 'PEEK_PHASE') {
+      setShowIntro(false); setShowPeek(true);
+      setDrawnCard(null);  // belt-and-suspenders: clear any stale drawn card
+    }
     if (gameState.phase === 'PLAYING') { setShowPeek(false); setKnownCards(new Map()); }
     if (gameState.phase !== 'KING_CHOICE') { setKingChoiceCards(null); setKingSelectedIdx(null); }
   }, [gameState.phase]);
@@ -999,16 +1002,57 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   );
 
   const AfkOverlay = () => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-      <div className="rounded-2xl border border-gold/30 bg-night-mid/95 px-8 py-6 flex flex-col items-center gap-4 pointer-events-auto"
-        style={{ backdropFilter: 'blur(12px)' }}>
-        <p className="text-gold font-arabic text-lg font-bold">البوت جالس يلعب</p>
-        <p className="text-sand/60 font-arabic text-sm text-center">البوت يلعب بدلك تلقائياً واللعبة تكمل</p>
-        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
-          className="px-6 py-2 rounded-xl border border-gold/60 text-gold font-arabic bg-gold/10 hover:bg-gold/20 transition-all"
-          onClick={() => { setShowAfk(false); afkCountRef.current = 0; }}>العودة</motion.button>
-      </div>
-    </div>
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(8,4,0,0.86)', backdropFilter: 'blur(8px)' }}
+    >
+      <motion.div
+        initial={{ scale: 0.85, y: 16 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.85, y: 16 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+        className="rounded-3xl border w-full flex flex-col items-center gap-5"
+        style={{
+          background: 'linear-gradient(160deg, #241810 0%, #14100A 100%)',
+          borderColor: 'rgba(201,168,76,0.5)',
+          maxWidth: 380,
+          padding: '32px 26px 28px',
+          boxShadow: '0 20px 80px rgba(0,0,0,0.85), 0 0 50px rgba(201,168,76,0.18)',
+        }}
+      >
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
+          style={{ fontSize: 56, lineHeight: 1 }}>🤖</motion.div>
+        <div className="text-center">
+          <p className="font-arabic font-bold mb-1" style={{ fontSize: 22, color: '#E8C97A' }}>
+            البوت يالس يلعب عنك
+          </p>
+          <p className="font-arabic" style={{ fontSize: 14, color: 'rgba(245,230,200,0.55)', lineHeight: 1.6 }}>
+            اللعبة كملت تلقائياً —<br/>اضغط العودة عشان ترجع تلعب بنفسك
+          </p>
+        </div>
+        <motion.button
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+          onClick={() => { setShowAfk(false); afkCountRef.current = 0; }}
+          className="w-full font-arabic font-bold"
+          style={{
+            padding: '14px 24px',
+            borderRadius: 16,
+            fontSize: 18,
+            background: 'linear-gradient(135deg, #C9A84C 0%, #8B6914 100%)',
+            color: '#0E0905',
+            border: '2px solid #E8C97A',
+            boxShadow: '0 0 18px rgba(201,168,76,0.4)',
+            cursor: 'pointer',
+          }}
+        >
+          ▶ العودة للعب
+        </motion.button>
+      </motion.div>
+    </motion.div>
   );
 
   const doLeaveGame = () => {
@@ -1280,53 +1324,6 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 )}
               </div>
 
-              {/* Drawn card — direct child of table circle → always dead-center */}
-              <AnimatePresence>
-                {drawnCard && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 60,
-                    pointerEvents: 'auto',
-                  }}>
-                    <motion.div
-                      initial={{ opacity: 0, scale: .7 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: .7 }}
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 10,
-                      }}
-                    >
-                      <PlayingCard card={{ ...drawnCard, isRevealed: true }} highlight="select" />
-                      {isMyTurn && (
-                        <button
-                          onClick={onBurnDrawn}
-                          style={{
-                            background: '#C9A84C',
-                            border: '2px solid #E8C97A',
-                            borderRadius: 12,
-                            padding: '8px 28px',
-                            color: '#0D1B2A',
-                            fontSize: 16,
-                            fontFamily: 'inherit',
-                            fontWeight: 800,
-                            boxShadow: '0 0 16px rgba(201,168,76,0.5)',
-                            cursor: 'pointer',
-                            letterSpacing: 1,
-                          }}
-                        >
-                          احرق
-                        </button>
-                      )}
-                    </motion.div>
-                  </div>
-                )}
-              </AnimatePresence>
             </div>{/* end table circle */}
 
             </div>{/* end position:relative wrapper */}
@@ -1799,6 +1796,52 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         {showAfk && <AfkOverlay />}
         {showExitConfirm && <ExitOverlay />}
         {showScoreboard && <ScoreboardModal />}
+      </AnimatePresence>
+
+      {/* ── Drawn card overlay — full-screen on top so nothing covers it ── */}
+      <AnimatePresence>
+        {drawnCard && isMyTurn && (gameState.phase === 'PLAYING' || gameState.phase === 'CHECK_CALLED') && (
+          <motion.div
+            key="drawn-card-overlay"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center pointer-events-none"
+            style={{ zIndex: 70, background: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0) 100%)' }}
+          >
+            <motion.div
+              initial={{ scale: 0.6, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.6, y: 20 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+              className="flex flex-col items-center gap-3 pointer-events-auto"
+            >
+              <p className="font-arabic font-bold rounded-full px-4 py-1"
+                style={{ fontSize: 13, color: '#E8C97A', background: 'rgba(20,14,8,0.92)', border: '1px solid rgba(201,168,76,0.5)' }}>
+                ورقة سحبتها — اختر أحد كروتك للتبديل أو احرقها
+              </p>
+              <div style={{ transform: isMobile ? 'scale(1.0)' : 'scale(1.15)', transformOrigin: 'center', filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.7))' }}>
+                <PlayingCard card={{ ...drawnCard, isRevealed: true }} highlight="select" />
+              </div>
+              <button
+                onClick={onBurnDrawn}
+                style={{
+                  background: 'linear-gradient(135deg, #E04030 0%, #B02818 100%)',
+                  border: '2px solid #FF6048',
+                  borderRadius: 14,
+                  padding: '12px 36px',
+                  color: '#fff',
+                  fontSize: 18,
+                  fontFamily: 'inherit',
+                  fontWeight: 900,
+                  boxShadow: '0 0 18px rgba(224,64,48,0.6)',
+                  cursor: 'pointer',
+                  letterSpacing: 2,
+                }}
+              >
+                🔥 احرق
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* ── J action: Step 1 — select opponent ── */}

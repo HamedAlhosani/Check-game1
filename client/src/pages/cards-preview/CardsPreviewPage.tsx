@@ -34,67 +34,61 @@ function specialOf(rank: Rank, suit: Suit): 'K' | 'J' | 'Q_RED' | 'TEN_RED' | nu
 // All centered around (50, 70) within the 100×150 card viewBox.
 
 function SwapIllustration({ ink, accent, accent2 }: { ink: string; accent: string; accent2: string }) {
-  // Two big real-looking cards exchanging places with curved arrows.
+  // Two compact cards with a single centered letter inside each, with curved
+  // swap arrows above and below.
   return (
     <g transform="translate(50 70)">
-      {/* Curved arrow above (left → right) */}
-      <path d="M -22 -28 Q 0 -42 22 -28" stroke={accent2} strokeWidth={2.2} fill="none" strokeLinecap="round"/>
-      <polygon points="22,-28 16,-32 18,-24" fill={accent2}/>
-      {/* Curved arrow below (right → left) */}
-      <path d="M 22 28 Q 0 42 -22 28" stroke={accent} strokeWidth={2.2} fill="none" strokeLinecap="round"/>
-      <polygon points="-22,28 -16,32 -18,24" fill={accent}/>
+      {/* Arrows */}
+      <path d="M -16 -22 Q 0 -32 16 -22" stroke={accent2} strokeWidth={2} fill="none" strokeLinecap="round"/>
+      <polygon points="16,-22 11,-26 12,-19" fill={accent2}/>
+      <path d="M 16 22 Q 0 32 -16 22" stroke={accent} strokeWidth={2} fill="none" strokeLinecap="round"/>
+      <polygon points="-16,22 -11,26 -12,19" fill={accent}/>
 
-      {/* Left card (going to right) */}
-      <g transform="translate(-18 0) rotate(-12)">
-        <rect x={-10} y={-15} width={20} height={30} rx={2.5} fill="#FFF" stroke={ink} strokeWidth={1.1}/>
-        <text x={-6} y={-7} fontFamily="Georgia, serif" fontWeight="800" fontSize="8" fill={accent2}>A</text>
-        <text x={-6} y={1} fontSize="8" fill={accent2}>♥</text>
-        <text x={6} y={13} fontFamily="Georgia, serif" fontWeight="800" fontSize="8" fill={accent2} transform="rotate(180 6 13)">A</text>
+      {/* Left card (going to right) — letter centered inside */}
+      <g transform="translate(-14 0) rotate(-12)">
+        <rect x={-9} y={-14} width={18} height={28} rx={2.5} fill="#FFF" stroke={ink} strokeWidth={1.1}/>
+        <text x={0} y={4} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="800" fontSize="14" fill={accent2}>A</text>
       </g>
       {/* Right card (going to left) */}
-      <g transform="translate(18 0) rotate(12)">
-        <rect x={-10} y={-15} width={20} height={30} rx={2.5} fill="#FFF" stroke={ink} strokeWidth={1.1}/>
-        <text x={-6} y={-7} fontFamily="Georgia, serif" fontWeight="800" fontSize="8" fill={ink}>K</text>
-        <text x={-6} y={1} fontSize="8" fill={ink}>♣</text>
-        <text x={6} y={13} fontFamily="Georgia, serif" fontWeight="800" fontSize="8" fill={ink} transform="rotate(180 6 13)">K</text>
+      <g transform="translate(14 0) rotate(12)">
+        <rect x={-9} y={-14} width={18} height={28} rx={2.5} fill="#FFF" stroke={ink} strokeWidth={1.1}/>
+        <text x={0} y={4} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="800" fontSize="14" fill={ink}>K</text>
       </g>
     </g>
   );
 }
 
 function PullIllustration({ ink, accent, accent2 }: { ink: string; accent: string; accent2: string }) {
-  // A deck on the left and two cards being drawn out, with a "2" badge on top.
+  // A small deck on the left + two compact drawn cards on the right with
+  // letters centered inside, plus a '2' badge.
   return (
     <g transform="translate(50 70)">
-      {/* Hand-drawn arrow indicating pull direction */}
-      <path d="M -28 -28 Q -8 -36 16 -22" stroke={accent2} strokeWidth={2} fill="none" strokeLinecap="round"/>
-      <polygon points="16,-22 10,-26 12,-18" fill={accent2}/>
+      {/* Arrow from deck → drawn cards */}
+      <path d="M -22 -22 Q -4 -28 12 -16" stroke={accent2} strokeWidth={1.8} fill="none" strokeLinecap="round"/>
+      <polygon points="12,-16 7,-20 8,-13" fill={accent2}/>
 
       {/* Deck stack (3 layered cards) */}
-      <g transform="translate(-22 0)">
+      <g transform="translate(-20 0)">
         {[2, 1, 0].map(i => (
-          <rect key={i} x={-9 + i * 0.6} y={-16 + i * 0.6} width={18} height={28} rx={2} fill="#080318" stroke={accent} strokeWidth={0.8}/>
+          <rect key={i} x={-7 + i * 0.6} y={-13 + i * 0.6} width={14} height={24} rx={2} fill="#080318" stroke={accent} strokeWidth={0.7}/>
         ))}
-        {/* deck count "..." */}
-        <text x={0} y={2} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="800" fontSize="10" fill={accent}>♢</text>
+        <text x={0} y={2} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="800" fontSize="9" fill={accent}>♢</text>
       </g>
 
-      {/* Two drawn cards — fanned out to the right of the deck */}
-      <g transform="translate(8 -2) rotate(-14)">
-        <rect x={-10} y={-16} width={20} height={32} rx={2.5} fill="#FFF" stroke={ink} strokeWidth={1.1}/>
-        <text x={-6} y={-8} fontFamily="Georgia, serif" fontWeight="800" fontSize="9" fill={accent2}>A</text>
-        <text x={-6} y={0} fontSize="8" fill={accent2}>♥</text>
+      {/* Two drawn cards fanned out — single centered letter each */}
+      <g transform="translate(6 -2) rotate(-14)">
+        <rect x={-9} y={-14} width={18} height={28} rx={2.5} fill="#FFF" stroke={ink} strokeWidth={1.1}/>
+        <text x={0} y={4} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="800" fontSize="14" fill={accent2}>A</text>
       </g>
-      <g transform="translate(22 4) rotate(14)">
-        <rect x={-10} y={-16} width={20} height={32} rx={2.5} fill="#FFF" stroke={ink} strokeWidth={1.1}/>
-        <text x={-6} y={-8} fontFamily="Georgia, serif" fontWeight="800" fontSize="9" fill={ink}>K</text>
-        <text x={-6} y={0} fontSize="8" fill={ink}>♠</text>
+      <g transform="translate(20 4) rotate(14)">
+        <rect x={-9} y={-14} width={18} height={28} rx={2.5} fill="#FFF" stroke={ink} strokeWidth={1.1}/>
+        <text x={0} y={4} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="800" fontSize="14" fill={ink}>K</text>
       </g>
 
-      {/* Big "2" badge */}
-      <g transform="translate(28 -22)">
-        <circle r={9} fill={accent2} stroke="#FFF" strokeWidth={1.4}/>
-        <text y={3.5} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="11" fill="#FFF">2</text>
+      {/* '2' badge */}
+      <g transform="translate(26 -20)">
+        <circle r={8} fill={accent2} stroke="#FFF" strokeWidth={1.4}/>
+        <text y={3} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="10" fill="#FFF">2</text>
       </g>
     </g>
   );
@@ -148,16 +142,17 @@ function PeekIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
 }
 
 function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: string; accent2: string }) {
-  // Layout: "حظك حلو" banner on top, BIG '0' in the middle, "صفر" word below.
-  // Arabic text needs direction="rtl" inside SVG or it can render reversed.
+  // Layout INSIDE the card: red 'حظك حلو' pill at top, BIG '0' in middle,
+  // 'صفر' word below. All as plain SVG (foreignObject was rendering outside
+  // the card on iOS Safari).
   return (
     <g transform="translate(50 72)">
       {/* Sparkle stars in the corners */}
       {[
-        [-34, -8, 3],
-        [34, -8, 3.5],
-        [-30, 26, 2.5],
-        [32, 26, 3],
+        [-32, -6, 3],
+        [32, -6, 3.5],
+        [-30, 24, 2.5],
+        [30, 24, 3],
       ].map(([cx, cy, r], i) => (
         <g key={i}>
           <line x1={cx} y1={cy - r * 1.8} x2={cx} y2={cy + r * 1.8} stroke={accent2} strokeWidth={1.2} strokeLinecap="round"/>
@@ -166,19 +161,13 @@ function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
         </g>
       ))}
 
-      {/* "حظك حلو" banner — sits just above the digit (foreignObject for
-          reliable Arabic glyph shaping). */}
-      <foreignObject x={-32} y={-30} width={64} height={18}>
-        <div style={{
-          width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          direction: 'rtl', textAlign: 'center',
-          background: accent2, opacity: 0.95, borderRadius: 9,
-          color: '#FFF', fontWeight: 900, fontSize: 10,
-          fontFamily: "'Tajawal','Cairo','Segoe UI',sans-serif",
-        }}>
-          حظك حلو ✨
-        </div>
-      </foreignObject>
+      {/* 'حظك حلو' red pill banner */}
+      <g transform="translate(0 -28)">
+        <rect x={-30} y={-9} width={60} height={18} rx={9} fill={accent2} opacity={0.95}/>
+        <text x={0} y={4} textAnchor="middle" direction="rtl" xmlLang="ar"
+          fontFamily="'Tajawal','Cairo','Noto Sans Arabic','Arial',sans-serif"
+          fontWeight="900" fontSize="11" fill="#FFF">حظك حلو ✨</text>
+      </g>
 
       {/* The big digit '0' in the centre */}
       <text y={10} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="46"
@@ -186,18 +175,10 @@ function LuckIllustration({ ink, accent, accent2 }: { ink: string; accent: strin
       <text y={10} textAnchor="middle" fontFamily="Georgia, serif" fontWeight="900" fontSize="46"
         fill={ink}>0</text>
 
-      {/* "صفر" word — directly under the digit */}
-      <foreignObject x={-22} y={16} width={44} height={14}>
-        <div style={{
-          width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          direction: 'rtl', textAlign: 'center',
-          color: accent2, fontWeight: 800, fontSize: 11,
-          fontFamily: "'Tajawal','Cairo','Segoe UI',sans-serif",
-          letterSpacing: 1,
-        }}>
-          صفر
-        </div>
-      </foreignObject>
+      {/* 'صفر' word — directly under the digit */}
+      <text x={0} y={26} textAnchor="middle" direction="rtl" xmlLang="ar"
+        fontFamily="'Tajawal','Cairo','Noto Sans Arabic','Arial',sans-serif"
+        fontWeight="800" fontSize="11" fill={accent2} letterSpacing="1">صفر</text>
     </g>
   );
 }
@@ -306,20 +287,14 @@ function CardSVG({ rank, suit, w = 150 }: { rank: Rank; suit: Suit; w?: number }
       {special === 'Q_RED' && <PeekIllustration ink={ink} accent={accent} accent2={accent2}/>}
       {special === 'TEN_RED' && <LuckIllustration ink={ink} accent={accent} accent2={accent2}/>}
 
-      {/* Action label for special cards — HTML foreignObject so Arabic
-          glyphs render in the correct order on every browser (SVG <text>
-          alone is unreliable for short Arabic words). */}
+      {/* Action label for special cards (plain SVG text, not foreignObject:
+          foreignObject renders outside the card frame on iOS Safari) */}
       {actionLabel && (
-        <foreignObject x={20} y={114} width={60} height={14}>
-          <div style={{
-            width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            direction: 'rtl', textAlign: 'center',
-            color: accent2, fontWeight: 800, fontSize: 11,
-            fontFamily: "'Tajawal','Cairo','Segoe UI',sans-serif",
-          }}>
-            {actionLabel}
-          </div>
-        </foreignObject>
+        <text x={50} y={122} textAnchor="middle" direction="rtl" xmlLang="ar"
+          fontFamily="'Tajawal','Cairo','Noto Sans Arabic','Arial',sans-serif"
+          fontWeight="800" fontSize="11" fill={accent2}>
+          {actionLabel}
+        </text>
       )}
 
       {/* CHECK brand — bottom centre, modest pill */}

@@ -1,11 +1,29 @@
 import { RoomPlayer, RoomState, GameType, GameMode } from '@check-game/shared';
 
 const MAX_PLAYERS = 10;
+// Big pool of names so a 10-player table doesn't repeat. We pick uniquely
+// per-room so each bot feels like its own person.
 const BOT_NAMES = [
-  'بوت البدوي', 'بوت الصقار', 'بوت التاجر', 'بوت الصحراء',
-  'بوت النخلة', 'بوت الرمال', 'بوت الواحة', 'بوت الفارس',
-  'بوت القمر',
+  'سالم', 'علي', 'خالد', 'أحمد', 'محمد', 'يوسف', 'حمد', 'راشد',
+  'سلطان', 'فيصل', 'منصور', 'بدر', 'طلال', 'ناصر', 'فارس', 'عمر',
+  'زايد', 'حمدان', 'عبدالله', 'مبارك', 'سعيد', 'جاسم', 'ماجد', 'سيف',
 ];
+// Avatar pool — every avatar id we have art for. Picks uniquely too.
+const BOT_AVATARS = [
+  'avatar_2', 'avatar_3', 'avatar_4', 'avatar_5', 'avatar_6', 'avatar_7',
+  'avatar_9', 'avatar_10', 'avatar_11', 'avatar_12', 'avatar_13', 'avatar_14',
+  'avatar_15', 'avatar_19', 'avatar_20', 'avatar_22',
+];
+
+function pickUnique<T>(pool: T[], used: Set<T>): T {
+  // Returns a random unused item — falls back to a random item if exhausted.
+  const free = pool.filter(x => !used.has(x));
+  const choice = free.length > 0
+    ? free[Math.floor(Math.random() * free.length)]
+    : pool[Math.floor(Math.random() * pool.length)];
+  used.add(choice);
+  return choice;
+}
 
 export class Room {
   readonly roomId: string;
@@ -86,15 +104,28 @@ export class Room {
     );
   }
 
+  /** Names + avatars currently in use in this room — humans + bots. Used to
+   *  pick distinct bot identities so the table never has duplicates. */
+  private usedIdentities() {
+    const usedNames = new Set<string>();
+    const usedAvatars = new Set<string>();
+    for (const p of this.players) {
+      usedNames.add(p.displayName);
+      usedAvatars.add(p.avatarId);
+    }
+    return { usedNames, usedAvatars };
+  }
+
   addBots(count: number, difficulty: 'easy' | 'medium' | 'hard' = 'medium'): void {
+    const { usedNames, usedAvatars } = this.usedIdentities();
     const existingBots = this.players.filter(p => p.isBot).length;
     for (let i = 0; i < count && this.players.length < this.maxPlayers; i++) {
       const idx = existingBots + i;
       const botId = `bot-${this.roomId}-${idx}`;
       this.players.push({
         uid: botId,
-        displayName: BOT_NAMES[idx % BOT_NAMES.length],
-        avatarId: `avatar_${(idx % 8) + 1}`,
+        displayName: pickUnique(BOT_NAMES, usedNames),
+        avatarId:    pickUnique(BOT_AVATARS, usedAvatars),
         isBot: true,
         botDifficulty: difficulty,
         isReady: true,
@@ -105,12 +136,12 @@ export class Room {
 
   addOneBot(difficulty: 'easy' | 'medium' | 'hard' = 'medium'): boolean {
     if (this.players.length >= this.maxPlayers) return false;
-    const idx = this.players.filter(p => p.isBot).length;
+    const { usedNames, usedAvatars } = this.usedIdentities();
     const botId = `bot-${this.roomId}-${Date.now()}`;
     this.players.push({
       uid: botId,
-      displayName: BOT_NAMES[idx % BOT_NAMES.length],
-      avatarId: `avatar_${(idx % 8) + 1}`,
+      displayName: pickUnique(BOT_NAMES, usedNames),
+      avatarId:    pickUnique(BOT_AVATARS, usedAvatars),
       isBot: true,
       botDifficulty: difficulty,
       isReady: true,

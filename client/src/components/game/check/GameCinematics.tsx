@@ -22,15 +22,16 @@ export function RoundStartCinematic({ playerCount, onDealComplete, onComplete }:
 
   useEffect(() => {
     soundService.playCardDraw();
-    const t1 = setTimeout(() => {                                  // dealing → quiet 1s pause
+    // Snappier timing — user asked for CHECK to fire faster.
+    const t1 = setTimeout(() => {                                  // dealing → tiny 300ms pause
       setStage('pause');
       onDealComplete?.();                                          // hands + deck appear NOW
     }, 1500);
     const t2 = setTimeout(() => {                                  // pause → CHECK announce
       setStage('announce');
       soundService.playCheckVoice();
-    }, 2500);
-    const t3 = setTimeout(() => onComplete(), 3700);               // done → reveal peek
+    }, 1800);
+    const t3 = setTimeout(() => onComplete(), 2700);               // done → reveal peek
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [onDealComplete, onComplete]);
 

@@ -34,9 +34,11 @@ export function calculateRoundScores(
     .filter(([uid]) => uid !== checkCallerId)
     .map(([, s]) => s);
   const minOther = otherSums.length ? Math.min(...otherSums) : Infinity;
-  // Penalty only if SOMEONE ELSE is strictly lower than the caller.
-  // Tie at lowest → no penalty, both pay their hand sum.
-  const checkPenalty = callerSum > minOther;
+  // Penalty ONLY if at least one other player is STRICTLY less than caller.
+  // Equality at the lowest is a tie — caller pays their hand sum but NOT
+  // double. Use .some() with strict < so the rule is unambiguous.
+  const checkPenalty = otherSums.some(s => s < callerSum);
+  const tiedAtLowest = !checkPenalty && otherSums.some(s => s === callerSum);
 
   const roundScores: { [uid: string]: number } = {};
 
@@ -50,12 +52,13 @@ export function calculateRoundScores(
       if (checkPenalty) {
         // Someone is strictly lower → caller pays double their hand sum.
         score = callerSum * 2;
-      } else if (callerSum < minOther) {
-        // Caller is alone-lowest → free round.
-        score = 0;
-      } else {
-        // Tie at lowest → caller pays their hand sum like everyone else.
+      } else if (tiedAtLowest) {
+        // At least one other player tied with the caller → no double, no
+        // bonus. Both pay their hand sum normally.
         score = callerSum;
+      } else {
+        // Caller alone-lowest → free round.
+        score = 0;
       }
     } else if (checkPenalty && handSums[p.uid] === Math.min(...Object.values(handSums))) {
       // When the caller is penalised, the single lowest player pays 0.

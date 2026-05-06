@@ -6,8 +6,14 @@ import {
 } from '@check-game/shared';
 
 const BOT_NAMES = [
-  'بوت البدوي', 'بوت الصقار', 'بوت التاجر', 'بوت الصحراء',
-  'بوت النخلة', 'بوت الرمال', 'بوت الواحة', 'بوت الفارس', 'بوت القمر',
+  'سالم', 'علي', 'خالد', 'أحمد', 'محمد', 'يوسف', 'حمد', 'راشد',
+  'سلطان', 'فيصل', 'منصور', 'بدر', 'طلال', 'ناصر', 'فارس', 'عمر',
+  'زايد', 'حمدان', 'عبدالله', 'مبارك', 'سعيد', 'جاسم', 'ماجد', 'سيف',
+];
+const BOT_AVATARS = [
+  'avatar_2', 'avatar_3', 'avatar_4', 'avatar_5', 'avatar_6', 'avatar_7',
+  'avatar_9', 'avatar_10', 'avatar_11', 'avatar_12', 'avatar_13', 'avatar_14',
+  'avatar_15', 'avatar_19', 'avatar_20', 'avatar_22',
 ];
 
 export class TournamentEngine {
@@ -119,12 +125,23 @@ export class TournamentEngine {
 
   fillBots(): void {
     if (this.state.status !== 'waiting') return;
+    // Pick names + avatars uniquely so no two bracket bots share an identity.
+    const usedNames = new Set(this.state.players.map(p => p.displayName));
+    const usedAvatars = new Set(this.state.players.map(p => p.avatarId));
+    const pickU = <T>(pool: T[], used: Set<T>): T => {
+      const free = pool.filter(x => !used.has(x));
+      const choice = free.length > 0
+        ? free[Math.floor(Math.random() * free.length)]
+        : pool[Math.floor(Math.random() * pool.length)];
+      used.add(choice);
+      return choice;
+    };
     let i = this.state.players.filter(p => p.isBot).length;
     while (this.state.players.length < this.state.size) {
       this.state.players.push({
         uid: `bot-${this.state.id}-${i}`,
-        displayName: BOT_NAMES[i % BOT_NAMES.length],
-        avatarId: `avatar_${(i % 8) + 1}`,
+        displayName: pickU(BOT_NAMES, usedNames),
+        avatarId:    pickU(BOT_AVATARS, usedAvatars),
         isBot: true,
         botDifficulty: this.state.difficulty,
         isEliminated: false,

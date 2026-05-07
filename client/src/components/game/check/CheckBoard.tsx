@@ -13,6 +13,7 @@ import { FrameRing } from '../../shared/FrameRing';
 import { CharacterArt } from '../../shared/CharacterArt';
 import { RoundStartCinematic, ReshuffleAnimation } from './GameCinematics';
 import { RulesModal } from '../../shared/RulesModal';
+import { ProfileModal } from '../../shared/ProfileModal';
 
 interface Props { gameId: string; roomId: string; gameState: GameState; }
 
@@ -412,10 +413,14 @@ function FullBar({ endAt, active, maxMs = 30000 }: { endAt: number | null; activ
 }
 
 // ─── Shared player box (same design for everyone) ─────────────────────────────
-const PlayerBox = memo(function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11, opaque = false }: { player: any; gameState: any; avSize?: number; scoreFs?: number; nameFs?: number; opaque?: boolean }) {
+const PlayerBox = memo(function PlayerBox({ player, gameState, avSize = 42, scoreFs = 26, nameFs = 11, opaque = false, onAvatarClick }: { player: any; gameState: any; avSize?: number; scoreFs?: number; nameFs?: number; opaque?: boolean; onAvatarClick?: (uid: string) => void }) {
   const calledCheck = player.uid === gameState.checkCallerId;
   const isTurn = player.isTurn, isElim = player.isEliminated;
   const compact = avSize <= 30;
+  const clickable = !!onAvatarClick && !player.isBot;
+  const handleAv = clickable
+    ? (e: React.MouseEvent) => { e.stopPropagation(); onAvatarClick!(player.uid); }
+    : undefined;
   return (
     <div
       className={`w-full rounded-xl border overflow-hidden ${isTurn ? 'border-gold/70' : 'border-yellow-900/30'}`}
@@ -431,7 +436,13 @@ const PlayerBox = memo(function PlayerBox({ player, gameState, avSize = 42, scor
       }}
     >
       <div className={`flex items-center gap-2 ${compact ? 'px-1.5 py-1' : 'px-2.5 py-2'}`}>
-        <div className="relative shrink-0">
+        <div
+          className="relative shrink-0"
+          onClick={handleAv}
+          style={clickable ? { cursor: 'pointer' } : undefined}
+          role={clickable ? 'button' : undefined}
+          aria-label={clickable ? `بروفايل ${player.displayName}` : undefined}
+        >
           <Av id={player.avatarId} name={player.displayName} frameId={(player as any).equippedFrame} size={avSize} />
           {isTurn && <div className="absolute -bottom-0.5 -right-0.5 rounded-full border-2 border-black animate-pulse" style={{ width: compact ? 8 : 11, height: compact ? 8 : 11, background: '#C9A84C' }} />}
           {isElim && <div className="absolute inset-0 rounded-full bg-black/70 flex items-center justify-center"><span className="text-red-400 font-bold" style={{ fontSize: compact ? 8 : 10 }}>✕</span></div>}
@@ -553,7 +564,7 @@ function samePlayerSeat(prev: any, next: any): boolean {
 }
 
 // ─── Unified opponent seat (top / left / right / mobile) ─────────────────────
-const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, cfg, swapPos, hideCards }: any) {
+const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, cfg, swapPos, hideCards, onAvatarClick }: any) {
   const mobileCompact = cfg.w <= 120;
   return (
     <div className="relative flex flex-col items-center shrink-0" style={{ width: cfg.w, zIndex: 20, gap: mobileCompact ? 2 : 4 }}>
@@ -562,7 +573,7 @@ const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ,
         <AnimatePresence>
           {chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}
         </AnimatePresence>
-        <PlayerBox player={player} gameState={gameState} avSize={cfg.avSize} scoreFs={cfg.scoreFs} nameFs={cfg.nameFs} opaque={cfg.opaque} />
+        <PlayerBox player={player} gameState={gameState} avSize={cfg.avSize} scoreFs={cfg.scoreFs} nameFs={cfg.nameFs} opaque={cfg.opaque} onAvatarClick={onAvatarClick} />
       </div>
       {mobileCompact ? (
         <CardCountDots count={player.cards.filter(Boolean).length} eliminated={player.isEliminated} />
@@ -574,10 +585,11 @@ const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ,
 }, samePlayerSeat);
 
 // ─── Compact seat for mobile strip (shows all opponents in one row) ─────────
-const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSelectForJ, swapPos, hideCards }: any) {
+const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSelectForJ, swapPos, hideCards, onAvatarClick }: any) {
   const isTurn = player.isTurn;
   const isElim = player.isEliminated;
   const cardCount = player.cards.filter(Boolean).length;
+  const avClickable = !!onAvatarClick && !player.isBot;
   return (
     <div className="relative flex flex-col items-center"
       style={{
@@ -592,7 +604,11 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
     >
       <AnimatePresence>{emoji && <EmojiFloat em={emoji} />}</AnimatePresence>
       <AnimatePresence>{chatBubble && <ChatBubble text={chatBubble.text} key={chatBubble.key} />}</AnimatePresence>
-      <div className="relative">
+      <div
+        className="relative"
+        onClick={avClickable ? (e) => { e.stopPropagation(); onAvatarClick(player.uid); } : undefined}
+        style={avClickable ? { cursor: 'pointer' } : undefined}
+      >
         <Av id={player.avatarId} name={player.displayName} frameId={(player as any).equippedFrame} size={26} />
         {isTurn && <div className="absolute animate-pulse" style={{ bottom:-1, right:-1, width:7, height:7, borderRadius:'50%', background:'#C9A84C', border:'1.5px solid #000' }} />}
         {isElim && <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'rgba(0,0,0,0.65)', display:'flex', alignItems:'center', justifyContent:'center' }}><span style={{color:'#ef4444', fontSize:8, fontWeight:700}}>✕</span></div>}
@@ -631,11 +647,12 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
 }, samePlayerSeat);
 
 // ─── Mini seat for circular orbit (2×2 real cards) ───────────────────────────
-const MiniSeat = memo(function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob, swapPos, backId }: any) {
+const MiniSeat = memo(function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob, swapPos, backId, onAvatarClick }: any) {
   const isTurn = player.isTurn;
   const isElim = player.isEliminated;
   const w = isMob ? 96 : 118;
   const avSz = isMob ? 24 : 28;
+  const avClickable = !!onAvatarClick && !player.isBot;
 
   const handleClick = () => {
     if (isSpecialJ && selectedPos !== null && !isElim) {
@@ -660,7 +677,11 @@ const MiniSeat = memo(function MiniSeat({ player, isSpecialJ, selectedPos, onSpe
         boxShadow: isTurn ? '0 0 10px rgba(201,168,76,0.3)' : 'none',
         padding: '3px 4px 2px', display: 'flex', alignItems: 'center', gap: 3,
       }}>
-        <div className="relative shrink-0">
+        <div
+          className="relative shrink-0"
+          onClick={avClickable ? (e) => { e.stopPropagation(); onAvatarClick(player.uid); } : undefined}
+          style={avClickable ? { cursor: 'pointer' } : undefined}
+        >
           <Av id={player.avatarId} name={player.displayName} frameId={(player as any).equippedFrame} size={avSz} />
           {isTurn && <div className="absolute animate-pulse" style={{ bottom: -1, right: -1, width: 6, height: 6, borderRadius: '50%', background: '#C9A84C', border: '1px solid #000' }} />}
           {isElim && <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ color: '#ef4444', fontSize: 7, fontWeight: 700 }}>✕</span></div>}
@@ -696,7 +717,7 @@ const MiniSeat = memo(function MiniSeat({ player, isSpecialJ, selectedPos, onSpe
 }, samePlayerSeat);
 
 // ─── Opponents orbiting the table ─────────────────────────────────────────────
-function CircularOpponents({ opponents, tableRadius, isMobile, gameState, isSpecialJ, selectedPos, onSpecialSwap, emojiMap, chatBubbleMap, swapHighlights = {} }: any) {
+function CircularOpponents({ opponents, tableRadius, isMobile, gameState, isSpecialJ, selectedPos, onSpecialSwap, emojiMap, chatBubbleMap, swapHighlights = {}, onAvatarClick }: any) {
   const n = opponents.length;
   if (n === 0) return null;
   // Arc from -140° to +140° (avoiding bottom where player sits)
@@ -713,7 +734,7 @@ function CircularOpponents({ opponents, tableRadius, isMobile, gameState, isSpec
           <div key={p.uid} style={{ position: 'absolute', left: '50%', top: '50%', transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`, zIndex: 20 }}>
             <MiniSeat player={p} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap}
               emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null} isMob={isMobile}
-              swapPos={swapHighlights[p.uid]} />
+              swapPos={swapHighlights[p.uid]} onAvatarClick={onAvatarClick} />
           </div>
         );
       })}
@@ -843,6 +864,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const [selectedPos, setSelectedPos] = useState<number | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [emojiPanelOpen, setEmojiPanelOpen] = useState(false);
+  const [profileUid, setProfileUid] = useState<string | null>(null);
   const [emojiMap, setEmojiMap] = useState<Record<string, string | null>>({});
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [showIntro, setShowIntro] = useState(true);
@@ -1266,7 +1288,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   // 'opaque' makes the player-box backgrounds solid (no see-through)
   // on tablet/desktop where transparency was visually noisy on the felt.
   const seatCfgWithBack = { ...seatCfg, backId: cardBackId, opaque: !isMobile };
-  const commonSeatProps = { gameState, isSpecialJ, selectedPos, onSpecialSwap, cfg: seatCfgWithBack, hideCards: !tableReady };
+  const onAvatarClick = useCallback((uid: string) => setProfileUid(uid), []);
+  const commonSeatProps = { gameState, isSpecialJ, selectedPos, onSpecialSwap, cfg: seatCfgWithBack, hideCards: !tableReady, onAvatarClick };
 
   // ── Overlays ──────────────────────────────────────────────────────────────
   const IntroOverlay = () => (
@@ -1534,7 +1557,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                 emoji={emojiMap[p.uid]} chatBubble={chatBubbleMap[p.uid] ?? null}
                 isSpecialJ={isSpecialJ} selectedPos={selectedPos}
                 onSelectForJ={(uid: string) => setJTargetUid(uid)}
-                swapPos={swapHighlights[p.uid]} hideCards={!tableReady} />
+                swapPos={swapHighlights[p.uid]} hideCards={!tableReady}
+                onAvatarClick={onAvatarClick} />
             ))}
           </div>
         )}
@@ -1899,9 +1923,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         </div>
 
         <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: .92 }}
-          className="px-4 py-1.5 rounded-xl border font-arabic text-sm transition-all"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(245,230,200,0.65)' }}
-          onClick={() => setShowSettings(true)}>إعدادات</motion.button>
+          className="px-3 py-1.5 rounded-xl border transition-all"
+          style={{ fontSize: 18, lineHeight: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)' }}
+          aria-label="الإعدادات"
+          onClick={() => setShowSettings(true)}>⚙️</motion.button>
       </div>
 
       {/* ── Quick emoji popover — one-tap reactions sent via chat ── */}
@@ -2018,6 +2043,8 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
       )}
 
       <ChatPanel roomId={roomId} open={chatOpen} onToggle={() => setChatOpen(s => !s)} />
+
+      <ProfileModal uid={profileUid} onClose={() => setProfileUid(null)} />
 
       {/* ── K choice modal ── */}
       <AnimatePresence>

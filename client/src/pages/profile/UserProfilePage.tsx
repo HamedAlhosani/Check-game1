@@ -7,6 +7,8 @@ import { LangToggle } from '../../components/shared/LangToggle';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { CharacterArt } from '../../components/shared/CharacterArt';
 
+type FriendStatus = 'self' | 'friends' | 'requested_by_me' | 'requested_by_them' | 'none';
+
 interface PublicProfile {
   uid: string;
   username: string;
@@ -15,6 +17,8 @@ interface PublicProfile {
   equippedItems?: { avatarFrame?: string };
   ranking?: { level: number; xp: number };
   stats?: { totalGames: number; totalWins: number; totalLosses: number; currentStreak?: number };
+  clan?: { id: string; name: string; tag: string; emblem: string } | null;
+  friendStatus?: FriendStatus;
 }
 
 const AVATAR_EMOJIS: Record<string, string> = {
@@ -38,16 +42,42 @@ export function UserProfilePage() {
   const [profile, setProfile] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [friendStatus, setFriendStatus] = useState<FriendStatus>('none');
+  const [friendBusy, setFriendBusy] = useState(false);
 
   useEffect(() => {
     if (!uid) return;
     setLoading(true);
     setError(null);
     apiClient.get<PublicProfile>(`/api/profile/${uid}`)
-      .then(setProfile)
+      .then(p => { setProfile(p); setFriendStatus(p.friendStatus ?? 'none'); })
       .catch(() => setError(lang === 'ar' ? 'تعذّر تحميل الملف' : 'Failed to load profile'))
       .finally(() => setLoading(false));
   }, [uid, lang]);
+
+  const sendFriendRequest = async () => {
+    if (!profile || friendBusy) return;
+    setFriendBusy(true);
+    try {
+      await apiClient.post('/api/friends/request', { username: profile.username });
+      setFriendStatus('requested_by_me');
+    } catch {
+      // surface a small inline error rather than blocking page; profile still visible
+    } finally {
+      setFriendBusy(false);
+    }
+  };
+
+  const acceptFriend = async () => {
+    if (!profile || friendBusy) return;
+    setFriendBusy(true);
+    try {
+      await apiClient.post('/api/friends/accept', { uid: profile.uid });
+      setFriendStatus('friends');
+    } finally {
+      setFriendBusy(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -136,6 +166,84 @@ export function UserProfilePage() {
             </div>
           </div>
         </motion.div>
+
+        {/* Clan + Friend action row */}
+        <div className="grid sm:grid-cols-2 gap-3 mb-4">
+          {profile.clan ? (
+            <button onClick={() => navigate(`/clans/${profile.clan!.id}`)}
+              className="rounded-2xl px-4 py-3 flex items-center gap-3 border text-start active:scale-[0.99] transition"
+              style={{
+                background: 'linear-gradient(135deg, rgba(232,144,58,0.12) 0%, rgba(20,14,8,0.85) 100%)',
+                borderColor: 'rgba(232,144,58,0.32)',
+              }}>
+              <span style={{ fontSize: 32, lineHeight: 1 }}>{profile.clan.emblem}</span>
+              <div className="flex-1 min-w-0">
+                <p className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.45)' }}>
+                  {lang === 'ar' ? 'القبيلة' : 'Clan'}
+                </p>
+                <p className="font-arabic font-bold text-sand-light truncate" style={{ fontSize: 15 }}>
+                  {profile.clan.name}
+                </p>
+                <p className="font-mono text-xs" style={{ color: 'rgba(232,144,58,0.85)' }}>
+                  [{profile.clan.tag}]
+                </p>
+              </div>
+            </button>
+          ) : (
+            <div className="rounded-2xl px-4 py-3 flex items-center gap-3 border font-arabic"
+              style={{
+                background: 'rgba(255,255,255,0.025)',
+                border: '1px dashed rgba(245,230,200,0.18)',
+                fontSize: 13, color: 'rgba(245,230,200,0.5)',
+              }}>
+              <span style={{ fontSize: 26 }}>🏳️</span>
+              <span>{lang === 'ar' ? 'بدون قبيلة' : 'No clan'}</span>
+            </div>
+          )}
+
+          {/* Friend action */}
+          {friendStatus === 'self' ? (
+            <div className="hidden sm:block" />
+          ) : friendStatus === 'friends' ? (
+            <div className="rounded-2xl flex items-center justify-center gap-2 font-arabic font-bold"
+              style={{
+                background: 'rgba(122,224,138,0.08)', border: '1px solid rgba(122,224,138,0.32)',
+                color: '#7AE08A', fontSize: 15,
+              }}>
+              <span>✓</span>
+              <span>{lang === 'ar' ? 'صديق' : 'Friends'}</span>
+            </div>
+          ) : friendStatus === 'requested_by_me' ? (
+            <div className="rounded-2xl flex items-center justify-center font-arabic"
+              style={{
+                background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(245,230,200,0.18)',
+                color: 'rgba(245,230,200,0.6)', fontSize: 14,
+              }}>
+              {lang === 'ar' ? 'الطلب مرسل…' : 'Request sent…'}
+            </div>
+          ) : friendStatus === 'requested_by_them' ? (
+            <button onClick={acceptFriend} disabled={friendBusy}
+              className="rounded-2xl font-arabic font-bold disabled:opacity-50 active:scale-[0.98] transition"
+              style={{
+                background: 'linear-gradient(135deg, #E8C97A 0%, #C9A84C 100%)',
+                color: '#14100A', fontSize: 15,
+                boxShadow: '0 4px 14px rgba(201,168,76,0.35)',
+              }}>
+              {lang === 'ar' ? 'قبول طلب الصداقة' : 'Accept request'}
+            </button>
+          ) : (
+            <button onClick={sendFriendRequest} disabled={friendBusy}
+              className="rounded-2xl font-arabic font-bold flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.98] transition"
+              style={{
+                background: 'linear-gradient(135deg, #E8C97A 0%, #C9A84C 100%)',
+                color: '#14100A', fontSize: 15,
+                boxShadow: '0 4px 14px rgba(201,168,76,0.35)',
+              }}>
+              <span style={{ fontSize: 18 }}>＋</span>
+              {lang === 'ar' ? 'إضافة صديق' : 'Add friend'}
+            </button>
+          )}
+        </div>
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

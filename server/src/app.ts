@@ -186,9 +186,30 @@ app.get('/api/profile', requireAuth, wrap(async (req, res) => {
 
 // Public profile (read-only, sensitive fields stripped) — used to view another user's profile
 app.get('/api/profile/:uid', requireAuth, wrap(async (req, res) => {
+  const viewerUid = (req as any).uid;
   const profile = await getUserProfile(req.params.uid);
   if (!profile) return res.status(404).json({ error: 'Not found' });
   const p = profile as any;
+
+  // Clan info — show which clan they belong to (empty if none)
+  let clan: { id: string; name: string; tag: string; emblem: string } | null = null;
+  if (p.clanId) {
+    const c = getClan(p.clanId);
+    if (c) clan = { id: c.id, name: c.name, tag: c.tag, emblem: c.emblem };
+  }
+
+  // Friend status from the viewer's perspective
+  type FriendStatus = 'self' | 'friends' | 'requested_by_me' | 'requested_by_them' | 'none';
+  let friendStatus: FriendStatus = 'none';
+  if (viewerUid === p.uid) {
+    friendStatus = 'self';
+  } else {
+    const viewer = (await getUserProfile(viewerUid)) as any;
+    if (viewer?.friends?.includes(p.uid)) friendStatus = 'friends';
+    else if (viewer?.friendRequests?.includes(p.uid)) friendStatus = 'requested_by_them';
+    else if ((p.friendRequests || []).includes(viewerUid)) friendStatus = 'requested_by_me';
+  }
+
   res.json({
     uid: p.uid,
     username: p.username,
@@ -197,6 +218,8 @@ app.get('/api/profile/:uid', requireAuth, wrap(async (req, res) => {
     equippedItems: p.equippedItems,
     ranking: p.ranking,
     stats: p.stats,
+    clan,
+    friendStatus,
   });
 }));
 

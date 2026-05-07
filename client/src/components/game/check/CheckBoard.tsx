@@ -822,7 +822,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const isTablet = !isMobile && winW < 1280;
 
   const myAreaH = 300; // small cards (72w → 108h) 2×2 + box + CHECK button
-  const stripH = isMobile ? 100 : 0;
+  // 100 → 116: the 2-line opponent name takes ~10px more vertical room than
+  // the old single-line ellipsis, so the 2×2 card-count dots were spilling
+  // out the bottom of the seat box.
+  const stripH = isMobile ? 116 : 0;
   const mobileTableSize = isMobile
     ? Math.min(
         Math.floor(winW * 0.92),

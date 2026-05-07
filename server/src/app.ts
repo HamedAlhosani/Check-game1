@@ -13,6 +13,7 @@ import {
   markRulesSeen,
   getLeaderboard,
   purchaseItem,
+  purchaseLudoItem,
   equipItem,
   rechargeCoins,
   getDailyReward,
@@ -258,6 +259,18 @@ app.post('/api/store/purchase', requireAuth, wrap(async (req, res) => {
   if (!result.ok) return res.status(400).json({ error: result.error });
   const profile = await getUserProfile(uid);
   res.json({ ok: true, coins: result.coins, profile });
+}));
+
+// Ludo store — same item catalogue, but pays from the user's separate
+// Ludo wallet (ludoCoins) instead of the Check wallet.
+app.post('/api/ludo-store/purchase', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const { itemId } = req.body;
+  if (!itemId) return res.status(400).json({ error: 'Missing itemId' });
+  const result = await purchaseLudoItem(uid, itemId);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, ludoCoins: result.ludoCoins, profile });
 }));
 
 app.patch('/api/store/equip', requireAuth, wrap(async (req, res) => {

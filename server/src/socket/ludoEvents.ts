@@ -3,7 +3,8 @@ import { AuthenticatedSocket } from '../middleware/authMiddleware';
 import { roomManager } from '../rooms/RoomManager';
 import { LudoEngine } from '../game/ludo/LudoEngine';
 import { LudoBotPlayer } from '../game/ludo/LudoBotPlayer';
-import { recordGameResult } from '../services/firestoreService';
+import { recordGameResult, getUserProfile } from '../services/firestoreService';
+import { saveUsers } from '../data/store';
 import { SOCKET_EVENTS } from '@check-game/shared';
 
 export function scheduleLudoBotTurns(io: Server, roomId: string, engine: LudoEngine): void {
@@ -56,5 +57,22 @@ export function registerLudoEvents(io: Server, socket: AuthenticatedSocket): voi
     if (!socket.uid) return;
     const engine = roomManager.getGame(payload.gameId) as LudoEngine;
     engine?.onSkipTurn(socket.uid);
+  });
+
+  // Re-roll the dice using one Ludo gem. Pre-flight in the handler so the
+  // engine never has to know about currency. If the player has 0 gems, no
+  // refund-on-failure is needed since we never deducted.
+  socket.on(SOCKET_EVENTS.LUDO_REROLL_DICE, async (payload: { gameId: string }) => {
+    if (!socket.uid) return;
+    const engine = roomManager.getGame(payload.gameId) as LudoEngine;
+    if (!engine) return;
+    const profile = await getUserProfile(socket.uid);
+    if (!profile) return;
+    const cur = ((profile as any).ludoGems ?? 0) as number;
+    if (cur < 1) return; // silent — UI gates this
+    const result = engine.onRerollDice(socket.uid);
+    if (!result.ok) return;
+    (profile as any).ludoGems = cur - 1;
+    saveUsers();
   });
 }

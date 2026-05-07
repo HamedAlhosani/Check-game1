@@ -126,6 +126,40 @@ export class LudoEngine {
     return true;
   }
 
+  /**
+   * Re-roll the dice once per turn at the cost of a Ludo gem. The caller
+   * (socket handler) is responsible for deducting the gem after this returns
+   * true — engine itself stays currency-agnostic. We DO clear the dice flag
+   * and pick a fresh value so movablePieces is recomputed from the new roll.
+   */
+  onRerollDice(uid: string): { ok: boolean; value?: number } {
+    if (!this.isPlayerTurn(uid)) return { ok: false };
+    if (!this.diceRolled) return { ok: false };
+    if (this.diceValue === null) return { ok: false };
+
+    this.clearTimers();
+    const value = Math.floor(Math.random() * 6) + 1;
+    this.diceValue = value;
+    // consecutiveSixes accounting: a re-roll shouldn't punish the player
+    // with an extra six, but if both rolls are sixes we still bump the
+    // counter so the 3-six forfeit rule still applies.
+    if (value === 6) this.consecutiveSixes++;
+
+    this.emit('ludo:dice_rolled', { uid, value, forfeit: false, reroll: true });
+
+    const movable = this.getMovablePieces(uid, value);
+    if (movable.length === 0) {
+      // Re-rolled into a dead end too — give the bot/AFK timer the same
+      // 1.5s window as the original onRollDice, then advance.
+      setTimeout(() => this.advanceTurn(), 1500);
+    } else {
+      this.broadcastState();
+      const timer = setTimeout(() => this.autoMoveBest(uid), TURN_DURATION_MS);
+      this.timers.push(timer);
+    }
+    return { ok: true, value };
+  }
+
   private applyMove(uid: string, pieceId: string, diceVal: number): void {
     const player = this.getPlayer(uid)!;
     const piece = player.pieces.find(p => p.id === pieceId)!;

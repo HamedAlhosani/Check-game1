@@ -1,8 +1,13 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { LudoPageBackground } from '../../components/game/ludo/BoardEmblems';
+import { STORE_ITEMS, RARITY_LABEL, ItemCategory } from '@check-game/shared';
+import { useAuthStore } from '../../store/authStore';
+import { useUiStore } from '../../store/uiStore';
+import { apiClient } from '../../services/api.service';
 
 const SAND = {
   bg1: '#0E0905',
@@ -99,20 +104,195 @@ function LudoSubPage({ icon, titleAr, titleEn, taglineAr, taglineEn, bullets }: 
   );
 }
 
-// ── Six dedicated stubs ──────────────────────────────────────────────────────
+// ─── REAL Ludo store: dice / boards / characters, paid in ludoCoins ────────
+const LUDO_CATEGORIES: { id: 'all' | ItemCategory; ar: string; en: string; icon: string }[] = [
+  { id: 'all',        ar: 'الكل',     en: 'All',        icon: '✨' },
+  { id: 'diceSkin',   ar: 'النرد',    en: 'Dice',       icon: '🎲' },
+  { id: 'boardTheme', ar: 'الطاولات', en: 'Boards',     icon: '🟫' },
+  { id: 'character',  ar: 'الشخصيات', en: 'Characters', icon: '👤' },
+];
+
+const RARITY_RING: Record<string, string> = {
+  free:      '#9CA3AF',
+  bronze:    '#A57440',
+  silver:    '#C0C8D8',
+  gold:      '#E8C97A',
+  legendary: '#7DD8E8',
+};
+
 export function LudoStorePage() {
-  return <LudoSubPage
-    icon="🛒"
-    titleAr="متجر النرد" titleEn="DICE STORE"
-    taglineAr="نرد ذهبية، طاولات حصرية، شخصيات بدوية"
-    taglineEn="Golden dice, exclusive boards, Bedouin tokens"
-    bullets={[
-      { ar: 'نرد ذهبي، عاجي، صدفي، رملي', en: 'Gold, ivory, pearl, sand dice skins' },
-      { ar: 'طاولات حصرية: الواحة، الصحراء، البيت الإماراتي', en: 'Boards: Oasis, Sahara, Diyar Al-Imarat' },
-      { ar: 'توكنز: صقر، جمل، نخلة، لؤلؤة', en: 'Tokens: falcon, camel, palm, pearl' },
-      { ar: 'شراء بكوينز لودو أو جواهر لودو', en: 'Pay with Ludo coins or Ludo gems' },
-    ]}
-  />;
+  const lang = useLang();
+  const isAr = lang === 'ar';
+  const dir = isAr ? 'rtl' : 'ltr';
+  const navigate = useNavigate();
+  const { profile, setProfile } = useAuthStore();
+  const { addToast } = useUiStore();
+  const [tab, setTab] = useState<'all' | ItemCategory>('all');
+  const [busyItem, setBusyItem] = useState<string | null>(null);
+
+  const ludoCoins = (profile as any)?.ludoCoins ?? 0;
+  const owned = new Set(profile?.ownedItems ?? []);
+  const eligibleCats: ItemCategory[] = ['diceSkin', 'boardTheme', 'character'];
+  const items = STORE_ITEMS.filter(it => eligibleCats.includes(it.category))
+                           .filter(it => tab === 'all' || it.category === tab);
+
+  useEffect(() => {
+    if (!profile) return;
+    // refresh in case the store opened after a tournament/wheel reward
+  }, [profile]);
+
+  const buy = async (itemId: string) => {
+    if (busyItem) return;
+    setBusyItem(itemId);
+    try {
+      const res = await apiClient.post<{ ok: boolean; profile: any }>('/api/ludo-store/purchase', { itemId });
+      if (res.profile) setProfile(res.profile);
+      addToast(isAr ? '✨ تم الشراء' : '✨ Purchased', 'success');
+    } catch (e: any) {
+      addToast(e?.message || (isAr ? 'فشل الشراء' : 'Purchase failed'), 'error');
+    } finally {
+      setBusyItem(null);
+    }
+  };
+
+  const equip = async (itemId: string) => {
+    if (busyItem) return;
+    setBusyItem(itemId);
+    try {
+      const res = await apiClient.patch<{ ok: boolean; profile: any }>('/api/store/equip', { itemId });
+      if (res.profile) setProfile(res.profile);
+      addToast(isAr ? '✓ تم التجهيز' : '✓ Equipped', 'success');
+    } catch (e: any) {
+      addToast(e?.message || (isAr ? 'فشل التجهيز' : 'Equip failed'), 'error');
+    } finally {
+      setBusyItem(null);
+    }
+  };
+
+  return (
+    <div className="min-h-screen relative" style={{ background: SAND.bg1, direction: dir }}>
+      <LudoPageBackground />
+
+      <nav className="sticky top-0 z-30 flex items-center justify-between px-3 py-2.5"
+        style={{ background: '#0E0905', borderBottom: `1.5px solid ${SAND.gold}55`, boxShadow: '0 4px 18px rgba(0,0,0,0.5)' }}>
+        <button onClick={() => navigate('/ludo')}
+          className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-white/5 transition">
+          <span style={{ fontSize: 18, color: SAND.gold }}>{isAr ? '→' : '←'}</span>
+          <span className="font-arabic" style={{ fontSize: 12, color: SAND.cream }}>{isAr ? 'لودو' : 'Ludo'}</span>
+        </button>
+        <span className="font-display tracking-widest" style={{ fontSize: 14, color: SAND.gold }}>
+          {isAr ? 'متجر لودو' : 'LUDO STORE'}
+        </span>
+        <div className="flex items-center gap-2">
+          <div className="rounded-xl px-2.5 py-1 flex items-center gap-1.5"
+            style={{ background: '#14100A', border: `1.5px solid ${SAND.gold}77` }}>
+            <span style={{ fontSize: 14 }}>🪙</span>
+            <span className="font-mono font-bold" style={{ fontSize: 13, color: SAND.gold }}>{ludoCoins.toLocaleString()}</span>
+          </div>
+          <LangToggle />
+        </div>
+      </nav>
+
+      <main className="relative z-10 max-w-2xl mx-auto px-3 pt-4 pb-12">
+        {/* Category tabs */}
+        <div className="flex gap-1.5 mb-4 overflow-x-auto pb-1">
+          {LUDO_CATEGORIES.map(cat => {
+            const sel = tab === cat.id;
+            return (
+              <button key={cat.id}
+                onClick={() => setTab(cat.id)}
+                className="rounded-xl font-arabic font-bold flex items-center gap-1.5 shrink-0 transition-all"
+                style={{
+                  padding: sel ? '8px 14px' : '7px 12px',
+                  background: sel ? SAND.gold : '#1A1408',
+                  color: sel ? '#0E0905' : 'rgba(245,230,200,0.7)',
+                  border: `1.5px solid ${sel ? SAND.gold : 'rgba(255,255,255,0.08)'}`,
+                  boxShadow: sel ? `0 0 18px ${SAND.gold}66` : 'none',
+                  fontSize: 12, cursor: 'pointer',
+                }}>
+                <span style={{ fontSize: 14, lineHeight: 1 }}>{cat.icon}</span>
+                {isAr ? cat.ar : cat.en}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Items grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {items.map(item => {
+            const isOwned = owned.has(item.id);
+            const isEquipped =
+              (item.category === 'diceSkin'   && profile?.equippedItems?.diceSkin   === item.id) ||
+              (item.category === 'boardTheme' && profile?.equippedItems?.boardTheme === item.id) ||
+              (item.category === 'character'  && profile?.equippedItems?.character  === item.id);
+            const ringColor = RARITY_RING[item.rarity] || SAND.gold;
+            const canBuy = !isOwned && ludoCoins >= item.price;
+            return (
+              <div key={item.id} className="rounded-2xl p-3 flex flex-col"
+                style={{
+                  background: '#14100A',
+                  border: `2px solid ${ringColor}66`,
+                  boxShadow: isEquipped ? `0 0 22px ${ringColor}99` : `0 4px 12px rgba(0,0,0,0.5)`,
+                }}>
+                {/* Preview swatch */}
+                <div className="rounded-xl flex items-center justify-center mb-2"
+                  style={{
+                    height: 80,
+                    background: item.preview.bg,
+                    border: `2px solid ${item.preview.border}`,
+                  }}>
+                  <span style={{ fontSize: 32, color: item.preview.text, lineHeight: 1 }}>
+                    {item.category === 'diceSkin' ? '🎲'
+                     : item.category === 'boardTheme' ? '🟫'
+                     : '👤'}
+                  </span>
+                </div>
+                <p className="font-arabic font-bold truncate" style={{ fontSize: 12, color: SAND.cream }}>
+                  {item.nameAr}
+                </p>
+                <p className="font-arabic" style={{ fontSize: 10, color: ringColor, marginTop: 1 }}>
+                  {RARITY_LABEL[item.rarity]}
+                </p>
+                <div className="flex items-center justify-between mt-2 gap-1">
+                  <div className="flex items-center gap-1 font-mono"
+                    style={{ fontSize: 12, color: canBuy || isOwned ? SAND.gold : '#FF8A65' }}>
+                    🪙 {item.price.toLocaleString()}
+                  </div>
+                  {isEquipped ? (
+                    <span className="font-arabic font-bold rounded-md px-2 py-1"
+                      style={{ background: `${ringColor}22`, color: ringColor, fontSize: 10 }}>
+                      ✓ مُجهّز
+                    </span>
+                  ) : isOwned ? (
+                    <button onClick={() => equip(item.id)}
+                      disabled={busyItem === item.id}
+                      className="font-arabic font-bold rounded-md px-2.5 py-1 disabled:opacity-50"
+                      style={{ background: SAND.gold, color: '#0E0905', fontSize: 11, cursor: 'pointer' }}>
+                      جهّز
+                    </button>
+                  ) : (
+                    <button onClick={() => buy(item.id)}
+                      disabled={!canBuy || busyItem === item.id}
+                      className="font-arabic font-bold rounded-md px-2.5 py-1 disabled:opacity-40"
+                      style={{
+                        background: canBuy
+                          ? `linear-gradient(135deg, ${SAND.goldLight}, ${SAND.gold})`
+                          : 'rgba(255,255,255,0.04)',
+                        color: canBuy ? '#0E0905' : 'rgba(255,255,255,0.4)',
+                        fontSize: 11,
+                        cursor: canBuy ? 'pointer' : 'not-allowed',
+                      }}>
+                      {busyItem === item.id ? '…' : 'اشترِ'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </main>
+    </div>
+  );
 }
 
 export function LudoLeaderboardPage() {

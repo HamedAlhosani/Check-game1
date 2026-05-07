@@ -341,6 +341,27 @@ export async function purchaseItem(uid: string, itemId: string): Promise<{ ok: b
   return { ok: true, coins: p.coins };
 }
 
+/** Ludo-wallet variant of purchaseItem. Spends ludoCoins instead of coins. */
+export async function purchaseLudoItem(uid: string, itemId: string): Promise<{ ok: boolean; error?: string; ludoCoins?: number }> {
+  const p = users.get(uid);
+  if (!p) return { ok: false, error: 'User not found' };
+
+  const item = STORE_ITEMS.find(i => i.id === itemId);
+  if (!item) return { ok: false, error: 'Item not found' };
+
+  const owned: string[] = p.ownedItems || [];
+  if (owned.includes(itemId)) return { ok: false, error: 'Already owned' };
+
+  const ludoCoins: number = (p as any).ludoCoins ?? 0;
+  if (ludoCoins < item.price) return { ok: false, error: 'Not enough Ludo coins' };
+
+  (p as any).ludoCoins = ludoCoins - item.price;
+  p.ownedItems = [...owned, itemId];
+  saveUsers();
+
+  return { ok: true, ludoCoins: (p as any).ludoCoins };
+}
+
 /** Direct coin credit (used for tournament prizes etc.). Returns the new balance. */
 export async function grantCoins(uid: string, amount: number): Promise<{ ok: boolean; coins?: number }> {
   const p = users.get(uid);

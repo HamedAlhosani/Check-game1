@@ -25,16 +25,11 @@ interface Props {
 
 const COIN_STEPS = [0, 10, 25, 50, 100, 250, 500, 1000];
 const PLAYER_OPTIONS = [2, 3, 4];
-const DIFFICULTIES = [
-  { id: 'easy'   as const, ar: 'سهل',   en: 'Easy',   icon: '🌱' },
-  { id: 'medium' as const, ar: 'متوسط', en: 'Medium', icon: '🔥' },
-  { id: 'hard'   as const, ar: 'صعب',   en: 'Hard',   icon: '⚔️' },
-];
 
 const MODE_TITLE: Record<LudoConfigMode, { ar: string; en: string; icon: string; sub: { ar: string; en: string } }> = {
-  bots:    { ar: 'ضد البوتات',  en: 'Vs Bots',       icon: '🤖', sub: { ar: 'اختر عدد البوتات وصعوبتهم', en: 'Pick bot count and difficulty' } },
-  online:  { ar: 'أونلاين',      en: 'Online',        icon: '🌐', sub: { ar: 'اختر الرهان والعدد',         en: 'Pick bet and player count' } },
-  private: { ar: 'غرفة خاصة',   en: 'Private Room',  icon: '🔒', sub: { ar: 'اختر الرهان والعدد',         en: 'Pick bet and player count' } },
+  bots:    { ar: 'ضد البوتات',  en: 'Vs Bots',       icon: '🤖', sub: { ar: 'اختر العملة وعدد البوتات', en: 'Pick coins and bot count' } },
+  online:  { ar: 'أونلاين',      en: 'Online',        icon: '🌐', sub: { ar: 'اختر العملة والعدد',         en: 'Pick coins and player count' } },
+  private: { ar: 'غرفة خاصة',   en: 'Private Room',  icon: '🔒', sub: { ar: 'اختر العملة والعدد',         en: 'Pick coins and player count' } },
 };
 
 /**
@@ -101,7 +96,9 @@ export function LudoConfigModal({ open, mode, onClose, ludoCoins, lang }: Props)
   const [bet, setBet] = useState(10);
   const [playerCount, setPlayerCount] = useState(4);
   const [botCount, setBotCount] = useState(3);
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  // Bots always play at 'medium' — bots still capture and play smart, the
+  // user just doesn't see a difficulty selector cluttering the menu.
+  const difficulty: 'easy' | 'medium' | 'hard' = 'medium';
   const [busy, setBusy] = useState(false);
   const startedRef = useRef(false);
 
@@ -277,15 +274,16 @@ export function LudoConfigModal({ open, mode, onClose, ludoCoins, lang }: Props)
               </p>
             </div>
 
-            {/* Bet stepper — common to all modes */}
+            {/* Coin stepper — common to all modes. Just shows the icon, no
+                'bet' word — the player picks their stake intuitively. */}
             <div className="rounded-2xl px-3 py-3 mb-3"
-              style={{ background: 'rgba(217,164,65,0.06)', border: `1px solid ${SAND.gold}33` }}>
+              style={{ background: 'rgba(36,24,12,0.92)', border: `1.5px solid ${SAND.gold}55` }}>
               <Stepper
-                label={isAr ? `الرهان · رصيدك ${ludoCoins.toLocaleString()} 🪙` : `Bet · balance ${ludoCoins.toLocaleString()} 🪙`}
+                label={isAr ? `🪙  رصيدك  ${ludoCoins.toLocaleString()}` : `🪙  balance  ${ludoCoins.toLocaleString()}`}
                 value={bet}
                 onChange={setBet}
                 options={COIN_STEPS}
-                format={v => v === 0 ? (isAr ? 'بدون رهان' : 'No bet') : `${v.toLocaleString()} 🪙`}
+                format={v => v === 0 ? (isAr ? '— مجاناً —' : '— Free —') : `🪙  ${v.toLocaleString()}`}
               />
               {!canAfford && (
                 <p className="text-center font-arabic mt-2" style={{ fontSize: 11, color: '#FF8A65' }}>
@@ -296,54 +294,20 @@ export function LudoConfigModal({ open, mode, onClose, ludoCoins, lang }: Props)
 
             {/* Mode-specific options */}
             {mode === 'bots' ? (
-              <>
-                <div className="rounded-2xl px-3 py-3 mb-3"
-                  style={{ background: 'rgba(217,164,65,0.06)', border: `1px solid ${SAND.gold}33` }}>
-                  <Stepper
-                    label={isAr ? 'عدد البوتات' : 'Number of bots'}
-                    value={botCount}
-                    onChange={setBotCount}
-                    options={[1, 2, 3]}
-                  />
-                </div>
-
-                {/* Difficulty cards */}
-                <div className="rounded-2xl px-3 py-3 mb-3"
-                  style={{ background: 'rgba(217,164,65,0.06)', border: `1px solid ${SAND.gold}33` }}>
-                  <p className="font-arabic text-center mb-2" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)', letterSpacing: 1 }}>
-                    {isAr ? 'الصعوبة' : 'Difficulty'}
-                  </p>
-                  <div className="grid grid-cols-3 gap-2">
-                    {DIFFICULTIES.map(d => {
-                      const sel = difficulty === d.id;
-                      return (
-                        <motion.button
-                          key={d.id}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => setDifficulty(d.id)}
-                          className="rounded-xl flex flex-col items-center justify-center gap-1 py-2 transition-all"
-                          style={{
-                            background: sel ? `${SAND.gold}33` : 'rgba(255,255,255,0.025)',
-                            border: `1.5px solid ${sel ? SAND.gold : 'rgba(255,255,255,0.08)'}`,
-                            color: sel ? SAND.goldLight : 'rgba(245,230,200,0.55)',
-                            boxShadow: sel ? `0 0 14px ${SAND.gold}55` : 'none',
-                            cursor: 'pointer',
-                          }}>
-                          <span style={{ fontSize: 18 }}>{d.icon}</span>
-                          <span className="font-arabic font-bold" style={{ fontSize: 11 }}>
-                            {isAr ? d.ar : d.en}
-                          </span>
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
+              <div className="rounded-2xl px-3 py-3 mb-3"
+                style={{ background: 'rgba(36,24,12,0.92)', border: `1.5px solid ${SAND.gold}55` }}>
+                <Stepper
+                  label={isAr ? '🤖  عدد البوتات' : '🤖  Number of bots'}
+                  value={botCount}
+                  onChange={setBotCount}
+                  options={[1, 2, 3]}
+                />
+              </div>
             ) : (
               <div className="rounded-2xl px-3 py-3 mb-3"
-                style={{ background: 'rgba(217,164,65,0.06)', border: `1px solid ${SAND.gold}33` }}>
+                style={{ background: 'rgba(36,24,12,0.92)', border: `1.5px solid ${SAND.gold}55` }}>
                 <Stepper
-                  label={isAr ? 'عدد اللاعبين' : 'Number of players'}
+                  label={isAr ? '👥  عدد اللاعبين' : '👥  Number of players'}
                   value={playerCount}
                   onChange={setPlayerCount}
                   options={PLAYER_OPTIONS}

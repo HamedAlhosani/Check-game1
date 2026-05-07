@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { LudoGameState, LudoPiece, LudoColor, LUDO_START_OFFSETS, SOCKET_EVENTS } from '@check-game/shared';
 import { socketService } from '../../../services/socket.service';
 import { useAuthStore } from '../../../store/authStore';
+import { useUiStore } from '../../../store/uiStore';
 import { soundService } from '../../../services/sound.service';
 import { LudoDice } from './LudoDice';
 import { ChatPanel } from '../shared/ChatPanel';
@@ -430,6 +431,7 @@ interface Props {
 
 export function LudoBoard({ gameId, state }: Props) {
   const { user, profile } = useAuthStore();
+  const { addToast } = useUiStore();
   const navigate = useNavigate();
   const [chatOpen, setChatOpen] = useState(false);
   const [rolling, setRolling] = useState(false);
@@ -463,7 +465,18 @@ export function LudoBoard({ gameId, state }: Props) {
       setTimeout(() => setRolling(false), 700);
     };
     const onOver = (data: any) => setGameOver(data);
-    const onMoved = () => soundService.playClick?.();
+    const onMoved = (data: { uid?: string; pieceId?: string; captured?: boolean; toCell?: number }) => {
+      soundService.playClick?.();
+      // When my piece is the one captured, surface a toast so I know why
+      // it just flew back home — the user reported losing pieces silently
+      // and not understanding it was a capture.
+      if (data?.captured && data?.uid === user?.uid) {
+        addToast('⚔️ تم أكل قطعتك — رجعت للبيت', 'info');
+      } else if (data?.captured && data?.uid && data.uid !== user?.uid) {
+        // I captured someone — celebrate
+        soundService.playClick?.();
+      }
+    };
     socket.on(SOCKET_EVENTS.LUDO_DICE_ROLLED, onRolled);
     socket.on(SOCKET_EVENTS.LUDO_PIECE_MOVED, onMoved);
     socket.on(SOCKET_EVENTS.LUDO_GAME_OVER, onOver);
@@ -564,27 +577,42 @@ export function LudoBoard({ gameId, state }: Props) {
               <motion.button
                 key={piece.id}
                 initial={false}
-                animate={{
-                  top: `${(row / 15) * 100}%`,
-                  left: `${(col / 15) * 100}%`,
-                }}
-                transition={{ type: 'spring', stiffness: 240, damping: 22 }}
+                animate={movable
+                  ? {
+                      top: `${(row / 15) * 100}%`,
+                      left: `${(col / 15) * 100}%`,
+                      // Bounce in place when movable so the player can't miss it
+                      scale: [1, 1.18, 1],
+                    }
+                  : {
+                      top: `${(row / 15) * 100}%`,
+                      left: `${(col / 15) * 100}%`,
+                      scale: 1,
+                    }}
+                transition={movable
+                  ? {
+                      top:   { type: 'spring', stiffness: 240, damping: 22 },
+                      left:  { type: 'spring', stiffness: 240, damping: 22 },
+                      scale: { duration: 0.9, repeat: Infinity, ease: 'easeInOut' },
+                    }
+                  : { type: 'spring', stiffness: 240, damping: 22 }}
                 onClick={() => onMove(piece.id)}
                 disabled={!movable}
                 className="absolute"
                 style={{
                   width: `${100 / 15}%`,
                   height: `${100 / 15}%`,
-                  padding: inHome ? '12%' : '10%',
+                  // Movable pieces use a bigger hit target so home-base launches
+                  // (which were tiny before) are easy to tap.
+                  padding: movable ? '4%' : (inHome ? '12%' : '10%'),
                   cursor: movable ? 'pointer' : 'default',
-                  zIndex: piece.status === 'finished' ? 5 : 12,
+                  zIndex: movable ? 20 : (piece.status === 'finished' ? 5 : 12),
                   // Counter-rotate the piece so its emblem stays right-side-up
                   // for everyone, regardless of how the user's POV rotated the
                   // board container.
                   transform: `rotate(${-boardRotation}deg)`,
                   transformOrigin: 'center',
                 }}
-                whileHover={movable ? { scale: 1.18 } : undefined}
                 whileTap={movable ? { scale: 0.92 } : undefined}>
                 <div
                   className="w-full h-full relative rounded-full flex items-center justify-center"

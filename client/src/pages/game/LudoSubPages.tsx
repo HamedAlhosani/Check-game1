@@ -571,10 +571,15 @@ export function LudoHistoryPage() {
   );
 }
 
+// Friends and Clans live in their own files now (full feature parity with
+// the Check versions, just sand-themed). Re-export under the original names.
+export { LudoFriendsPageFull as LudoFriendsPage } from './LudoFriendsPageFull';
+export { LudoClansPageFull as LudoClansPage } from './LudoClansPageFull';
+
 // ─── Friends — same data, Ludo chrome + private-room invite shortcut ────────
 interface FriendEntry { uid: string; displayName: string; username: string; avatarId: string; level: number; wins: number; }
 
-export function LudoFriendsPage() {
+function _LudoFriendsPage_unused() {
   const lang = useLang();
   const isAr = lang === 'ar';
   const navigate = useNavigate();
@@ -637,7 +642,7 @@ export function LudoFriendsPage() {
 }
 
 // ─── Clans — link to existing clan system, Ludo chrome ──────────────────────
-export function LudoClansPage() {
+function _LudoClansPage_unused() {
   const lang = useLang();
   const isAr = lang === 'ar';
   const navigate = useNavigate();

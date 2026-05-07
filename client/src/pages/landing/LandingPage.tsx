@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { useLang } from '../../i18n/useT';
-import { GameMenuModal } from '../../components/shared/GameMenuModal';
 
 // ── UAE Skyline SVG ────────────────────────────────────────────────────────────
 function UAESkyline() {
@@ -376,10 +375,7 @@ const RULES_LUDO_EN = [
 // ── Rules section ─────────────────────────────────────────────────────────────
 function RulesSection({ lang }: { lang: string }) {
   const [open, setOpen] = useState<number | null>(0);
-  const [game, setGame] = useState<'check' | 'ludo'>('check');
-  const rules = game === 'check'
-    ? (lang === 'ar' ? RULES_AR : RULES_EN)
-    : (lang === 'ar' ? RULES_LUDO_AR : RULES_LUDO_EN);
+  const rules = lang === 'ar' ? RULES_AR : RULES_EN;
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
   return (
@@ -389,38 +385,9 @@ function RulesSection({ lang }: { lang: string }) {
           <h2 className="text-center font-arabic font-bold mb-2" style={{ fontSize: 28, color: '#E8C97A' }}>
             {lang === 'ar' ? 'كيف تلعب؟' : 'How to Play?'}
           </h2>
-          <p className="text-center font-arabic mb-4" style={{ fontSize: 13, color: 'rgba(245,230,200,0.4)' }}>
-            {lang === 'ar' ? 'اختر اللعبة لعرض قواعدها' : 'Pick a game to read its rules'}
+          <p className="text-center font-arabic mb-6" style={{ fontSize: 14, color: 'rgba(245,230,200,0.4)' }}>
+            {lang === 'ar' ? 'قواعد CHECK في ست نقاط' : 'CHECK rules in six points'}
           </p>
-
-          {/* Game toggle: Check rules / Ludo rules */}
-          <div className="flex justify-center gap-2 mb-4">
-            {(['check', 'ludo'] as const).map(g => {
-              const sel = game === g;
-              const meta = g === 'check'
-                ? { icon: '🃏', ar: 'قواعد تشيك', en: 'CHECK Rules', accent: '#E8C97A', glow: 'rgba(232,201,122,0.40)' }
-                : { icon: '🎲', ar: 'قواعد لودو', en: 'LUDO Rules',  accent: '#D9A441', glow: 'rgba(217,164,65,0.40)' };
-              return (
-                <button
-                  key={g}
-                  onClick={() => { setGame(g); setOpen(0); }}
-                  className="flex items-center gap-2 rounded-xl font-arabic font-bold transition-all"
-                  style={{
-                    padding: sel ? '8px 18px' : '7px 14px',
-                    background: sel ? meta.accent : 'rgba(255,255,255,0.04)',
-                    color: sel ? '#0E0905' : 'rgba(245,230,200,0.65)',
-                    border: `1.5px solid ${sel ? meta.accent : 'rgba(255,255,255,0.10)'}`,
-                    boxShadow: sel ? `0 0 22px ${meta.glow}` : 'none',
-                    fontSize: 13, cursor: 'pointer',
-                  }}
-                >
-                  <span style={{ fontSize: 16, lineHeight: 1 }}>{meta.icon}</span>
-                  {lang === 'ar' ? meta.ar : meta.en}
-                </button>
-              );
-            })}
-          </div>
-
           <ArabesqueDivider />
         </motion.div>
 
@@ -480,13 +447,9 @@ export function LandingPage() {
   const navigate = useNavigate();
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
   const isAr = lang === 'ar';
-  const [menuOpen, setMenuOpen] = useState(false);
 
-  // Logged-in users hit a game-picker modal first (Check vs Ludo). Guests
-  // still go through the auth flow before they can pick a game.
   const handlePlayNow = () => {
-    if (user) setMenuOpen(true);
-    else navigate('/register');
+    navigate(user ? '/home' : '/register');
   };
 
   return (
@@ -547,7 +510,7 @@ export function LandingPage() {
         >
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2, duration: 0.7 }}>
             <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(201,168,76,0.6)', letterSpacing: 4, marginBottom: 8 }}>
-              {isAr ? '✦ ألعاب إماراتية أصيلة ✦' : '✦ Authentic Emirati Games ✦'}
+              {isAr ? '✦ لعبة ورق بأجواء إماراتية ✦' : '✦ A Card Game with UAE Spirit ✦'}
             </p>
             <h1 className="font-display" style={{
               fontSize: 'clamp(56px, 12vw, 96px)', color: '#C9A84C', lineHeight: 1,
@@ -556,24 +519,24 @@ export function LandingPage() {
             }}>
               CHECK
             </h1>
-            <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(245,230,200,0.40)', letterSpacing: 2, marginTop: -8, marginBottom: 0 }}>
-              {isAr ? 'تشيك · لودو' : 'CHECK · LUDO'}
-            </p>
           </motion.div>
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6, duration: 0.8 }}>
-            <p className="font-arabic mt-4" style={{
+            <p className="font-arabic" style={{
               fontSize: 'clamp(14px, 2.5vw, 18px)', color: 'rgba(245,230,200,0.55)',
-              lineHeight: 2, maxWidth: 520, margin: '16px auto 10px', fontStyle: 'italic',
+              lineHeight: 2, maxWidth: 520, margin: '0 auto 8px', fontStyle: 'italic',
             }}>
               {isAr
-                ? '"في ظل النخيل و دفء الديار، تجتمع الأوراق و يُرمى النرد"'
-                : '"Under the palms\' shade, cards are dealt and dice are rolled"'}
+                ? '"في ظل النخيل و دفء الديار، تجتمع الأوراق و تُروى الحكايا"'
+                : '"Under the shade of palms, cards are played and stories are told"'}
             </p>
-            <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(245,230,200,0.40)', marginBottom: 28 }}>
+            <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(245,230,200,0.35)', marginBottom: 24 }}>
               {isAr
-                ? 'اختر لعبتك — تشيك بالورق أو لودو بالنرد'
-                : 'Pick your game — Check with cards or Ludo with dice'}
+                ? 'اجمع أقل النقاط، احرق أوراقك بذكاء، وقول CHECK في الوقت المناسب'
+                : 'Collect the fewest points, burn cards wisely, and call CHECK at the right moment'}
+            </p>
+            <p className="font-arabic font-bold" style={{ fontSize: 14, color: 'rgba(201,168,76,0.5)', marginBottom: 28 }}>
+              {isAr ? 'أول من يوصل ١٠٠ نقطة يخسر — كن الأذكى' : 'First to reach 100 points loses — be the smartest'}
             </p>
           </motion.div>
 
@@ -622,15 +585,15 @@ export function LandingPage() {
         <div style={{ maxWidth: 680, margin: '0 auto' }}>
           <div className="grid grid-cols-2 gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
             {(isAr ? [
-              { icon: '🃏', label: 'تشيك للورق', sub: 'حتى ١٠ لاعبين' },
-              { icon: '🎲', label: 'لودو بالنرد', sub: 'سباق ٢-٤ لاعبين' },
+              { icon: '👥', label: 'حتى ١٠ لاعبين', sub: 'أونلاين أو مع أصدقاء' },
               { icon: '🤖', label: 'بوتات ذكية', sub: '٣ مستويات صعوبة' },
               { icon: '🏆', label: 'تصنيف عالمي', sub: 'نافس اللاعبين' },
+              { icon: '🎁', label: 'متجر الشخصيات', sub: 'شخصيات حصرية' },
             ] : [
-              { icon: '🃏', label: 'CHECK Cards', sub: 'Up to 10 players' },
-              { icon: '🎲', label: 'LUDO Dice', sub: 'Race 2-4 players' },
+              { icon: '👥', label: 'Up to 10 Players', sub: 'Online or with friends' },
               { icon: '🤖', label: 'Smart Bots', sub: '3 difficulty levels' },
               { icon: '🏆', label: 'Global Leaderboard', sub: 'Compete with players' },
+              { icon: '🎁', label: 'Character Store', sub: 'Exclusive characters' },
             ]).map((f, i) => (
               <motion.div key={i}
                 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
@@ -695,7 +658,6 @@ export function LandingPage() {
         </div>
       </footer>
 
-      <GameMenuModal open={menuOpen} onClose={() => setMenuOpen(false)} lang={lang} />
     </div>
   );
 }

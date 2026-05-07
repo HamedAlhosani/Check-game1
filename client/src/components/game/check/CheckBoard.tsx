@@ -318,20 +318,19 @@ const Av = memo(function Av({ id, name, size = 32, frameId }: { id: string; name
 
 // ─── Emoji float ──────────────────────────────────────────────────────────────
 function EmojiFloat({ em }: { em: string }) {
-  // Lifecycle: pop-in (0→0.3s) → hold large (0.3→4.2s) → fade-up (4.2→5s).
-  // Total 5s matches the timeout in CheckBoard so the visual stays in sync
-  // with the state map driving it.
+  // Big, in-your-face reaction. Held at 110px for ~4s, then floats up and out.
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.4, y: 4 }}
-      animate={{ opacity: [0, 1, 1, 0], scale: [0.4, 1.25, 1, 0.95], y: [4, -6, -10, -52] }}
-      transition={{ duration: 5, times: [0, 0.06, 0.84, 1], ease: 'easeOut' }}
+      initial={{ opacity: 0, scale: 0.3, y: 8 }}
+      animate={{ opacity: [0, 1, 1, 0], scale: [0.3, 1.4, 1.15, 1.1], y: [8, -8, -8, -70] }}
+      transition={{ duration: 5, times: [0, 0.08, 0.85, 1], ease: [0.34, 1.56, 0.64, 1] }}
       className="absolute left-1/2 -translate-x-1/2 z-50 pointer-events-none"
       style={{
-        top: -52,
-        fontSize: 56,
+        top: -110,
+        fontSize: 110,
         lineHeight: 1,
-        filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.85)) drop-shadow(0 0 16px rgba(255,200,80,0.45))',
+        filter:
+          'drop-shadow(0 6px 18px rgba(0,0,0,0.95)) drop-shadow(0 0 28px rgba(255,200,80,0.75)) drop-shadow(0 0 60px rgba(232,144,58,0.45))',
       }}
     >
       {em}

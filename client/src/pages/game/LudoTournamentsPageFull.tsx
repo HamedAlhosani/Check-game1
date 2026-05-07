@@ -79,14 +79,16 @@ export function LudoTournamentsPageFull() {
   }, [addToast, isAr, navigate]);
 
   // ── Actions ────────────────────────────────────────────────────────────────
-  const startSolo = (size: TournamentSize, difficulty: 'easy' | 'medium' | 'hard') => {
+  const startSolo = (size: TournamentSize) => {
     soundService.playClick();
     const sock = socketService.getSocket();
     sock?.emit(SOCKET_EVENTS.TOURNAMENT_CREATE, {
       kind: 'solo',
       visibility: 'private',
       size,
-      difficulty,
+      // Bots always play at medium — no exposed difficulty selector. The
+      // user explicitly asked for one consistent bot level.
+      difficulty: 'medium',
       matchLength: 'quick',
       gameType: 'ludo' as GameType,
     });
@@ -104,6 +106,23 @@ export function LudoTournamentsPageFull() {
       matchLength: 'standard',
       entryFee,
       prizeSplit: size === 8 ? 'top3' : 'winner_takes_all',
+      gameType: 'ludo' as GameType,
+    });
+    setTab('mine');
+  };
+
+  const createClan = (entryFee: number, size: TournamentSize) => {
+    soundService.playClick();
+    const sock = socketService.getSocket();
+    sock?.emit(SOCKET_EVENTS.TOURNAMENT_CREATE, {
+      kind: 'online',
+      visibility: 'public',
+      size,
+      difficulty: 'medium',
+      matchLength: 'standard',
+      entryFee,
+      prizeSplit: 'winner_takes_all', // 70/30 winner/clan-bank
+      clanOnly: true,
       gameType: 'ludo' as GameType,
     });
     setTab('mine');
@@ -175,8 +194,11 @@ export function LudoTournamentsPageFull() {
           )}
           {tab === 'create' && (
             <motion.div key="create" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <CreateTab isAr={isAr} myCoins={(profile as any)?.ludoCoins ?? 0} hasActive={!!myState}
-                onSolo={startSolo} onOnline={createOnline} />
+              <CreateTab isAr={isAr} myCoins={(profile as any)?.ludoCoins ?? 0}
+                ludoClanId={(profile as any)?.ludoClanId ?? null}
+                ludoClanTag={(profile as any)?.ludoClanTag ?? null}
+                hasActive={!!myState}
+                onSolo={startSolo} onOnline={createOnline} onClan={createClan} />
             </motion.div>
           )}
           {tab === 'mine' && (
@@ -275,14 +297,19 @@ function BrowseTab({ list, myState, isAr, onJoin }: {
 }
 
 // ─── Create ─────────────────────────────────────────────────────────────────
-function CreateTab({ isAr, myCoins, hasActive, onSolo, onOnline }: {
-  isAr: boolean; myCoins: number; hasActive: boolean;
-  onSolo: (size: TournamentSize, difficulty: 'easy' | 'medium' | 'hard') => void;
+function CreateTab({ isAr, myCoins, ludoClanId, ludoClanTag, hasActive, onSolo, onOnline, onClan }: {
+  isAr: boolean; myCoins: number;
+  ludoClanId: string | null; ludoClanTag: string | null;
+  hasActive: boolean;
+  onSolo: (size: TournamentSize) => void;
   onOnline: (fee: number, size: TournamentSize) => void;
+  onClan: (fee: number, size: TournamentSize) => void;
 }) {
-  const [size, setSize] = useState<TournamentSize>(4);
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
-  const [fee, setFee] = useState<number>(50);
+  const [soloSize, setSoloSize] = useState<TournamentSize>(4);
+  const [onlineSize, setOnlineSize] = useState<TournamentSize>(4);
+  const [onlineFee, setOnlineFee] = useState<number>(50);
+  const [clanSize, setClanSize] = useState<TournamentSize>(4);
+  const [clanFee, setClanFee] = useState<number>(100);
 
   if (hasActive) {
     return (
@@ -299,39 +326,29 @@ function CreateTab({ isAr, myCoins, hasActive, onSolo, onOnline }: {
     );
   }
 
+  // Solo cups use a fixed prize (no difficulty multiplier — bots always
+  // play medium). Pass 'medium' to tournamentPrize for the same value.
+  const soloPrize = tournamentPrize(soloSize, 'medium');
+
   return (
     <div className="space-y-3">
-      {/* Solo cup */}
+      {/* ── Solo cup vs bots ── */}
       <div className="rounded-2xl p-4"
         style={{ background: SAND.panel, border: `2px solid ${SAND.gold}77` }}>
         <p className="font-arabic font-bold mb-1" style={{ fontSize: 14, color: SAND.gold }}>
           🏆 {isAr ? 'كأس الفارس (ضد البوتات)' : 'Solo Cup vs Bots'}
         </p>
         <p className="font-arabic mb-3" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
-          {isAr ? 'ابدأ شجرة كاملة فوراً، الجائزة من السيرفر' : 'Full bracket starts instantly, prize paid by the server'}
+          {isAr ? 'ابدأ شجرة كاملة فوراً — الجائزة من السيرفر' : 'Full bracket starts instantly — prize paid by the server'}
         </p>
 
-        {/* Size + difficulty pickers */}
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          <PickerLabel label={isAr ? 'الحجم' : 'Size'}>
-            <div className="grid grid-cols-2 gap-1">
-              {([4, 8] as TournamentSize[]).map(s => (
-                <Pick key={s} sel={size === s} onClick={() => setSize(s)}>
-                  {s}
-                </Pick>
-              ))}
-            </div>
-          </PickerLabel>
-          <PickerLabel label={isAr ? 'الصعوبة' : 'Difficulty'}>
-            <div className="grid grid-cols-3 gap-1">
-              {(['easy', 'medium', 'hard'] as const).map(d => (
-                <Pick key={d} sel={difficulty === d} onClick={() => setDifficulty(d)}>
-                  {d === 'easy' ? '🌱' : d === 'medium' ? '🔥' : '⚔️'}
-                </Pick>
-              ))}
-            </div>
-          </PickerLabel>
-        </div>
+        <PickerLabel label={isAr ? 'الحجم' : 'Size'}>
+          <div className="grid grid-cols-2 gap-1">
+            {([4, 8] as TournamentSize[]).map(s => (
+              <Pick key={s} sel={soloSize === s} onClick={() => setSoloSize(s)}>{s}</Pick>
+            ))}
+          </div>
+        </PickerLabel>
 
         <div className="flex items-center justify-between rounded-xl px-3 py-2 mb-3"
           style={{ background: '#0E0905', border: `1px solid ${SAND.gold}55` }}>
@@ -339,11 +356,11 @@ function CreateTab({ isAr, myCoins, hasActive, onSolo, onOnline }: {
             {isAr ? 'جائزة الكأس' : 'Cup prize'}
           </span>
           <span className="font-mono font-bold" style={{ fontSize: 14, color: SAND.gold }}>
-            🪙 {tournamentPrize(size, difficulty).toLocaleString()}
+            🪙 {soloPrize.toLocaleString()}
           </span>
         </div>
 
-        <button onClick={() => onSolo(size, difficulty)}
+        <button onClick={() => onSolo(soloSize)}
           className="w-full rounded-xl py-3 font-arabic font-bold"
           style={{
             background: `linear-gradient(135deg, ${SAND.goldLight}, ${SAND.gold}, ${SAND.goldDark})`,
@@ -355,21 +372,21 @@ function CreateTab({ isAr, myCoins, hasActive, onSolo, onOnline }: {
         </button>
       </div>
 
-      {/* Online cup */}
+      {/* ── Online cup ── */}
       <div className="rounded-2xl p-4"
         style={{ background: SAND.panel, border: `1.5px solid ${SAND.gold}55` }}>
         <p className="font-arabic font-bold mb-1" style={{ fontSize: 14, color: SAND.cream }}>
           🌐 {isAr ? 'بطولة أونلاين' : 'Online Tournament'}
         </p>
         <p className="font-arabic mb-3" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
-          {isAr ? 'انضم لبطولة عامة. كل لاعب يدفع الرسوم وتجمع المجموعة الجائزة.'
+          {isAr ? 'بطولة عامة. كل لاعب يدفع الرسوم وتجتمع الجوائز.'
                 : 'A public bracket. Each player pays the entry fee — pot is split by the prize rule.'}
         </p>
 
         <PickerLabel label={isAr ? 'الحجم' : 'Size'}>
           <div className="grid grid-cols-2 gap-1">
             {([4, 8] as TournamentSize[]).map(s => (
-              <Pick key={s} sel={size === s} onClick={() => setSize(s)}>{s}</Pick>
+              <Pick key={s} sel={onlineSize === s} onClick={() => setOnlineSize(s)}>{s}</Pick>
             ))}
           </div>
         </PickerLabel>
@@ -377,36 +394,112 @@ function CreateTab({ isAr, myCoins, hasActive, onSolo, onOnline }: {
         <PickerLabel label={isAr ? 'رسم الدخول' : 'Entry fee'}>
           <div className="grid grid-cols-4 gap-1">
             {ENTRY_FEE_TIERS.slice(0, 6).map(v => (
-              <Pick key={v} sel={fee === v} onClick={() => setFee(v)}>
+              <Pick key={v} sel={onlineFee === v} onClick={() => setOnlineFee(v)}>
                 <span style={{ fontSize: 10 }}>🪙 {v}</span>
               </Pick>
             ))}
           </div>
         </PickerLabel>
 
-        <div className="flex items-center justify-between rounded-xl px-3 py-2 mb-3"
-          style={{ background: '#0E0905', border: `1px solid ${SAND.gold}55` }}>
-          <span className="font-arabic" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
-            {isAr ? `رصيدك` : 'Your balance'}
-          </span>
-          <span className="font-mono font-bold" style={{ fontSize: 13, color: myCoins >= fee ? SAND.gold : '#FF8A65' }}>
-            🪙 {myCoins.toLocaleString()}
-          </span>
-        </div>
+        <BalanceLine isAr={isAr} myCoins={myCoins} required={onlineFee} />
 
-        <button onClick={() => onOnline(fee, size)} disabled={myCoins < fee}
+        <button onClick={() => onOnline(onlineFee, onlineSize)} disabled={myCoins < onlineFee}
           className="w-full rounded-xl py-3 font-arabic font-bold disabled:opacity-50"
           style={{
-            background: myCoins >= fee
+            background: myCoins >= onlineFee
               ? `linear-gradient(135deg, ${SAND.goldLight}, ${SAND.gold})`
               : 'rgba(255,255,255,0.04)',
-            color: myCoins >= fee ? '#0E0905' : 'rgba(255,255,255,0.4)',
+            color: myCoins >= onlineFee ? '#0E0905' : 'rgba(255,255,255,0.4)',
             fontSize: 14,
-            cursor: myCoins >= fee ? 'pointer' : 'not-allowed',
+            cursor: myCoins >= onlineFee ? 'pointer' : 'not-allowed',
           }}>
           {isAr ? '🌐 أنشئ بطولة أونلاين' : '🌐 Create Online Tournament'}
         </button>
       </div>
+
+      {/* ── Clan cup ── */}
+      <div className="rounded-2xl p-4 relative"
+        style={{
+          background: SAND.panel,
+          border: `2px solid ${ludoClanId ? '#9DD8E8' : `${SAND.goldDark}88`}`,
+        }}>
+        <p className="font-arabic font-bold mb-1" style={{ fontSize: 14, color: ludoClanId ? '#9DD8E8' : SAND.cream }}>
+          🛡️ {isAr ? 'بطولة قبائل لودو' : 'Ludo Clan Cup'}
+        </p>
+        <p className="font-arabic mb-3" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
+          {isAr
+            ? 'بطولة مخصصة لأعضاء قبيلتك في لودو فقط. ٧٠٪ للفائز و ٣٠٪ لبنك القبيلة.'
+            : 'Open only to your Ludo clan. 70% to the champion, 30% to the clan bank.'}
+        </p>
+
+        {!ludoClanId ? (
+          <div className="rounded-xl px-3 py-3 text-center font-arabic"
+            style={{ background: `${SAND.goldDark}33`, border: `1px dashed ${SAND.gold}55`, color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
+            {isAr ? 'لازم تكون في قبيلة لودو لتنشئ بطولة قبائل' : 'You must be in a Ludo clan to host a clan cup'}
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 mb-3 rounded-xl px-3 py-2"
+              style={{ background: '#0E0905', border: `1px solid ${SAND.gold}55` }}>
+              <span style={{ fontSize: 16 }}>🛡️</span>
+              <span className="font-arabic" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
+                {isAr ? 'قبيلتك' : 'Your clan'}
+              </span>
+              <span className="font-mono font-bold flex-1 text-end" style={{ fontSize: 12, color: '#9DD8E8' }}>
+                [{ludoClanTag || '—'}]
+              </span>
+            </div>
+
+            <PickerLabel label={isAr ? 'الحجم' : 'Size'}>
+              <div className="grid grid-cols-2 gap-1">
+                {([4, 8] as TournamentSize[]).map(s => (
+                  <Pick key={s} sel={clanSize === s} onClick={() => setClanSize(s)}>{s}</Pick>
+                ))}
+              </div>
+            </PickerLabel>
+
+            <PickerLabel label={isAr ? 'رسم الدخول' : 'Entry fee'}>
+              <div className="grid grid-cols-4 gap-1">
+                {ENTRY_FEE_TIERS.slice(0, 6).map(v => (
+                  <Pick key={v} sel={clanFee === v} onClick={() => setClanFee(v)}>
+                    <span style={{ fontSize: 10 }}>🪙 {v}</span>
+                  </Pick>
+                ))}
+              </div>
+            </PickerLabel>
+
+            <BalanceLine isAr={isAr} myCoins={myCoins} required={clanFee} />
+
+            <button onClick={() => onClan(clanFee, clanSize)} disabled={myCoins < clanFee}
+              className="w-full rounded-xl py-3 font-arabic font-bold disabled:opacity-50"
+              style={{
+                background: myCoins >= clanFee
+                  ? 'linear-gradient(135deg, #9DD8E8 0%, #4A90D9 100%)'
+                  : 'rgba(255,255,255,0.04)',
+                color: myCoins >= clanFee ? '#0E0905' : 'rgba(255,255,255,0.4)',
+                fontSize: 14,
+                boxShadow: myCoins >= clanFee ? '0 0 18px rgba(157,216,232,0.55)' : 'none',
+                cursor: myCoins >= clanFee ? 'pointer' : 'not-allowed',
+              }}>
+              {isAr ? '🛡️ أنشئ بطولة قبائل' : '🛡️ Create Clan Cup'}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BalanceLine({ isAr, myCoins, required }: { isAr: boolean; myCoins: number; required: number }) {
+  return (
+    <div className="flex items-center justify-between rounded-xl px-3 py-2 mb-3"
+      style={{ background: '#0E0905', border: `1px solid ${SAND.gold}55` }}>
+      <span className="font-arabic" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
+        {isAr ? 'رصيدك' : 'Your balance'}
+      </span>
+      <span className="font-mono font-bold" style={{ fontSize: 13, color: myCoins >= required ? SAND.gold : '#FF8A65' }}>
+        🪙 {myCoins.toLocaleString()}
+      </span>
     </div>
   );
 }

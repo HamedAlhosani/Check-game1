@@ -590,6 +590,26 @@ export async function deductCoins(uid: string, amount: number): Promise<{ ok: bo
   return { ok: true, coins: p.coins };
 }
 
+/** Ludo wallet — atomic deduction. Failure returns ok:false; never goes negative. */
+export async function deductLudoCoins(uid: string, amount: number): Promise<{ ok: boolean; error?: string; ludoCoins?: number }> {
+  const p: any = users.get(uid);
+  if (!p) return { ok: false, error: 'User not found' };
+  const cost = Math.max(0, Math.floor(amount));
+  if ((p.ludoCoins || 0) < cost) return { ok: false, error: 'Not enough Ludo coins' };
+  p.ludoCoins = (p.ludoCoins || 0) - cost;
+  saveUsers();
+  return { ok: true, ludoCoins: p.ludoCoins };
+}
+
+/** Direct Ludo-coin credit — used by Ludo tournament prizes. */
+export async function grantLudoCoins(uid: string, amount: number): Promise<{ ok: boolean; ludoCoins?: number }> {
+  const p: any = users.get(uid);
+  if (!p) return { ok: false };
+  p.ludoCoins = (p.ludoCoins || 0) + Math.max(0, Math.floor(amount));
+  saveUsers();
+  return { ok: true, ludoCoins: p.ludoCoins };
+}
+
 /** Update tournament-related stats on a profile. Idempotent-ish; merges with
  *  existing values. Used by the tournament engine when a cup finishes. */
 export async function recordTournamentResult(uid: string, opts: {

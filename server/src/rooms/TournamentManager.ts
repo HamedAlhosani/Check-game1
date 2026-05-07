@@ -16,9 +16,23 @@ import { Room } from './Room';
 import { createEmitter, scheduleCheckBotTurns } from '../socket/gameEvents';
 import { scheduleLudoBotTurns } from '../socket/ludoEvents';
 import {
-  grantCoins, deductCoins,
+  grantCoins, deductCoins, grantLudoCoins, deductLudoCoins,
   recordTournamentResult, recordTournamentEntered,
 } from '../services/firestoreService';
+
+// Pick the right wallet helpers for a tournament's game world.
+function walletFor(gameType: GameType | undefined) {
+  if (gameType === 'ludo') {
+    return {
+      grant:  (uid: string, amt: number) => grantLudoCoins(uid, amt),
+      deduct: (uid: string, amt: number) => deductLudoCoins(uid, amt),
+    };
+  }
+  return {
+    grant:  (uid: string, amt: number) => grantCoins(uid, amt),
+    deduct: (uid: string, amt: number) => deductCoins(uid, amt),
+  };
+}
 import { depositToClanBank } from '../services/clanService';
 import { users } from '../data/store';
 
@@ -61,9 +75,11 @@ class TournamentManager {
     gameType?: GameType;
   }): Promise<{ ok: boolean; error?: string; tournament?: TournamentEngine }> {
     // For online tournaments, the host pays the entry fee upfront (so they
-    // count toward the pot just like every other joiner).
+    // count toward the pot just like every other joiner). Pay from the
+    // tournament's own wallet so Ludo cups don't drain Check coins.
+    const wallet = walletFor(opts.gameType);
     if (opts.kind === 'online' && (opts.entryFee || 0) > 0) {
-      const r = await deductCoins(opts.hostUid, opts.entryFee!);
+      const r = await wallet.deduct(opts.hostUid, opts.entryFee!);
       if (!r.ok) return { ok: false, error: r.error || 'Cannot pay entry fee' };
     }
 
@@ -114,11 +130,12 @@ class TournamentManager {
   async cancel(io: Server, id: string): Promise<void> {
     const t = this.tournaments.get(id);
     if (!t || t.state.status !== 'waiting') return;
+    const wallet = walletFor(t.state.gameType);
     if (t.state.kind === 'online' && t.state.entryFee > 0) {
-      // Refund every human in the player list
+      // Refund every human in the player list — same wallet they paid from.
       for (const p of t.state.players) {
         if (p.isBot) continue;
-        await grantCoins(p.uid, t.state.entryFee);
+        await wallet.grant(p.uid, t.state.entryFee);
       }
     }
     t.cancel();
@@ -137,22 +154,27 @@ class TournamentManager {
   async join(io: Server, id: string, player: { uid: string; displayName: string; avatarId: string; equippedFrame?: string }): Promise<{ ok: boolean; error?: string }> {
     const t = this.tournaments.get(id);
     if (!t) return { ok: false, error: 'Tournament not found' };
-    // Clan-only filter — must be in the same clan to join
+    // Clan-only filter — must be in the same clan as the host. Ludo cups
+    // gate on the user's Ludo clan slot (ludoClanId), Check cups on
+    // their Check clan (clanId).
     if (t.state.clanOnlyId) {
       const u: any = users.get(player.uid);
-      if (!u || u.clanId !== t.state.clanOnlyId) {
+      const isLudo = t.state.gameType === 'ludo';
+      const myClanId = isLudo ? u?.ludoClanId : u?.clanId;
+      if (!u || myClanId !== t.state.clanOnlyId) {
         return { ok: false, error: 'هذه البطولة مخصصة لأعضاء قبيلة معينة' };
       }
     }
+    const wallet = walletFor(t.state.gameType);
     if (t.state.kind === 'online' && t.state.entryFee > 0) {
-      const r = await deductCoins(player.uid, t.state.entryFee);
+      const r = await wallet.deduct(player.uid, t.state.entryFee);
       if (!r.ok) return { ok: false, error: r.error || 'Cannot pay entry fee' };
     }
     const r = t.join(player);
     if (!r.ok) {
       // Refund if we charged but the join failed
       if (t.state.kind === 'online' && t.state.entryFee > 0) {
-        await grantCoins(player.uid, t.state.entryFee);
+        await wallet.grant(player.uid, t.state.entryFee);
       }
       return r;
     }
@@ -184,9 +206,9 @@ class TournamentManager {
 
     t.leave(uid);
 
-    // Refund if leaving during waiting (and they paid).
+    // Refund if leaving during waiting (and they paid) — same wallet.
     if (wasWaiting && wasInPlayers && t.state.kind === 'online' && t.state.entryFee > 0) {
-      await grantCoins(uid, t.state.entryFee);
+      await walletFor(t.state.gameType).grant(uid, t.state.entryFee);
     }
 
     // If host abandons during waiting, cancel + refund everyone.
@@ -450,7 +472,7 @@ class TournamentManager {
       const winnerCut  = isClanOnly && r.rank === 1 ? Math.floor(baseAmount * 0.7) : baseAmount;
       const bankCut    = isClanOnly && r.rank === 1 ? baseAmount - winnerCut       : 0;
       if (winnerCut > 0) {
-        const grant = await grantCoins(r.uid, winnerCut);
+        const grant = await walletFor(t.state.gameType).grant(r.uid, winnerCut);
         if (grant.ok) awarded.push({ uid: r.uid, rank: r.rank, amount: winnerCut });
       } else {
         awarded.push({ uid: r.uid, rank: r.rank, amount: 0 });

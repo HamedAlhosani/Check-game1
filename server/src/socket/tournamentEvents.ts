@@ -47,12 +47,22 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
     const difficulty = payload.difficulty || 'medium';
     const matchLength: GameMode = payload.matchLength || (kind === 'online' ? 'standard' : 'quick');
 
-    // Clan-only tournament requires the host to be in a clan.
+    // Clan-only tournament requires the host to be in a clan. Ludo cups
+    // read the player's Ludo clan slot, Check cups read the Check slot.
     const wantClanOnly = !!payload.clanOnly && kind === 'online';
-    const hostClanId   = (profile as any).clanId  || null;
-    const hostClanTag  = (profile as any).clanTag || null;
+    const isLudoCup = payload.gameType === 'ludo';
+    const hostClanId  = isLudoCup
+      ? ((profile as any).ludoClanId  || null)
+      : ((profile as any).clanId      || null);
+    const hostClanTag = isLudoCup
+      ? ((profile as any).ludoClanTag || null)
+      : ((profile as any).clanTag     || null);
     if (wantClanOnly && !hostClanId) {
-      socket.emit(SOCKET_EVENTS.TOURNAMENT_ERROR, { message: 'يجب أن تكون في قبيلة لإنشاء بطولة قبلية' });
+      socket.emit(SOCKET_EVENTS.TOURNAMENT_ERROR, {
+        message: isLudoCup
+          ? 'يجب أن تكون في قبيلة لودو لإنشاء بطولة قبائل'
+          : 'يجب أن تكون في قبيلة لإنشاء بطولة قبلية',
+      });
       return;
     }
 

@@ -324,37 +324,83 @@ const MODE_THEMES: Record<GameMode, ModeTheme> = {
 };
 
 // ── Tiny mode chip-switcher used INSIDE the giant card ───────────────────────
-// ── Game-kind chips: Check vs Ludo ───────────────────────────────────────────
-const GAME_KIND_META: Record<GameType, { icon: string; ar: string; en: string; accent: string; glow: string }> = {
-  check:   { icon: '🃏', ar: 'تشيك',  en: 'Check',  accent: '#E8C97A', glow: 'rgba(232,201,122,0.45)' },
-  ludo:    { icon: '🎲', ar: 'لودو',  en: 'Ludo',   accent: '#7AC74F', glow: 'rgba(122,199,79,0.45)' },
-  domino:  { icon: '🁢', ar: 'دومنو', en: 'Domino', accent: '#9C8AFF', glow: 'rgba(156,138,255,0.4)' },
-  jackaro: { icon: '🂡', ar: 'جكارو', en: 'Jackaro',accent: '#FF8A65', glow: 'rgba(255,138,101,0.4)' },
+// ── Game-kind picker: two prominent cards (Check vs Ludo) ────────────────────
+// Lives at the top of the play area as the FIRST decision the player makes —
+// "which game am I playing today?" — before any mode or config choices below.
+const GAME_KIND_META: Record<GameType, { icon: string; ar: string; en: string; tagline: { ar: string; en: string }; accent: string; bg: string; glow: string }> = {
+  check: {
+    icon: '🃏',
+    ar: 'تشيك', en: 'Check',
+    tagline: { ar: 'لعبة الورق الإماراتية', en: 'Emirati card game' },
+    accent: '#E8C97A',
+    bg: 'linear-gradient(135deg, #2A1F12 0%, #14100A 100%)',
+    glow: 'rgba(232,201,122,0.45)',
+  },
+  ludo: {
+    icon: '🎲',
+    ar: 'لودو', en: 'Ludo',
+    tagline: { ar: 'سباق على الرمال', en: 'Race on the sands' },
+    accent: '#D9A441',
+    bg: 'linear-gradient(135deg, #2A1808 0%, #14100A 100%)',
+    glow: 'rgba(217,164,65,0.45)',
+  },
+  domino:  { icon: '🁢', ar: 'دومنو', en: 'Domino', tagline: { ar: '', en: '' }, accent: '#9C8AFF', bg: '', glow: 'rgba(156,138,255,0.4)' },
+  jackaro: { icon: '🂡', ar: 'جكارو', en: 'Jackaro', tagline: { ar: '', en: '' }, accent: '#FF8A65', bg: '', glow: 'rgba(255,138,101,0.4)' },
 };
 
-function GameKindChips({ gameKind, onSelect, lang }: { gameKind: GameType; onSelect: (g: GameType) => void; lang: string }) {
+function GamePicker({ gameKind, onSelect, lang }: { gameKind: GameType; onSelect: (g: GameType) => void; lang: string }) {
   const order: GameType[] = ['check', 'ludo'];
+  const isAr = lang === 'ar';
   return (
-    <div className="flex gap-2 justify-center">
-      {order.map(g => {
-        const isSel = gameKind === g;
-        const m = GAME_KIND_META[g];
-        return (
-          <motion.button key={g} whileTap={{ scale: 0.92 }} onClick={() => { onSelect(g); soundService.playClick(); }}
-            className="rounded-2xl font-arabic font-bold flex items-center gap-2"
-            style={{
-              padding: isSel ? '8px 18px' : '7px 15px',
-              background: isSel ? m.accent : 'rgba(255,255,255,0.06)',
-              color: isSel ? '#0E0905' : 'rgba(245,230,200,0.75)',
-              border: `2px solid ${isSel ? m.accent : 'rgba(255,255,255,0.10)'}`,
-              boxShadow: isSel ? `0 0 22px ${m.glow}` : 'none',
-              fontSize: 13, transition: 'all .2s', cursor: 'pointer',
-            }}>
-            <span style={{ fontSize: 18, lineHeight: 1 }}>{m.icon}</span>
-            {lang === 'ar' ? m.ar : m.en}
-          </motion.button>
-        );
-      })}
+    <div className="flex flex-col gap-2">
+      <p className="font-arabic text-center" style={{ fontSize: 11, color: 'rgba(245,230,200,0.45)', letterSpacing: 1 }}>
+        {isAr ? 'اختر اللعبة' : 'Choose the game'}
+      </p>
+      <div className="grid grid-cols-2 gap-2.5">
+        {order.map(g => {
+          const isSel = gameKind === g;
+          const m = GAME_KIND_META[g];
+          return (
+            <motion.button
+              key={g}
+              whileHover={!isSel ? { scale: 1.02, y: -1 } : {}}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => { onSelect(g); soundService.playClick(); }}
+              className="relative rounded-2xl font-arabic overflow-hidden transition-all"
+              style={{
+                padding: '14px 12px',
+                background: isSel ? m.bg : 'rgba(255,255,255,0.025)',
+                border: `2px solid ${isSel ? m.accent : 'rgba(255,255,255,0.08)'}`,
+                boxShadow: isSel
+                  ? `0 8px 24px rgba(0,0,0,0.5), 0 0 28px ${m.glow}, inset 0 1px 0 rgba(255,255,255,0.08)`
+                  : '0 2px 6px rgba(0,0,0,0.25)',
+                cursor: 'pointer',
+              }}
+            >
+              {/* Glow halo behind icon */}
+              {isSel && (
+                <div className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(circle at 50% 30%, ${m.accent}22 0%, transparent 60%)`,
+                  }} />
+              )}
+              <div className="relative flex flex-col items-center gap-1">
+                <span style={{ fontSize: 32, lineHeight: 1, filter: isSel ? `drop-shadow(0 0 12px ${m.glow})` : 'none' }}>{m.icon}</span>
+                <span className="font-bold" style={{ fontSize: 16, color: isSel ? m.accent : 'rgba(245,230,200,0.85)' }}>
+                  {isAr ? m.ar : m.en}
+                </span>
+                <span style={{ fontSize: 10, color: isSel ? `${m.accent}AA` : 'rgba(245,230,200,0.35)' }}>
+                  {isAr ? m.tagline.ar : m.tagline.en}
+                </span>
+              </div>
+              {isSel && (
+                <span className="absolute top-1.5 inset-inline-end-1.5"
+                  style={{ insetInlineEnd: 6, top: 6, color: m.accent, fontSize: 11 }}>✓</span>
+              )}
+            </motion.button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -786,9 +832,9 @@ function PlayBox({ mode, setMode, coins, onCreate, lang, gameKind, setGameKind }
 
   return (
     <div className="flex flex-col items-stretch gap-4">
-      {/* Game-kind switcher: Check vs Ludo. Stays above mode chips so the
-          choice is the very first thing visible on the play card. */}
-      <GameKindChips gameKind={gameKind} onSelect={setGameKind} lang={lang} />
+      {/* Game picker — prominent two-card selector so Check and Ludo are
+          equals at the top of the play menu, not nested under one another. */}
+      <GamePicker gameKind={gameKind} onSelect={setGameKind} lang={lang} />
 
       {/* Mode switcher ABOVE the giant card */}
       <ModeChips mode={mode} onSelect={setMode} lang={lang} />

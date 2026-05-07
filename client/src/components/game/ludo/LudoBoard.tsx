@@ -9,9 +9,10 @@ import { LudoDice } from './LudoDice';
 import { ChatPanel } from '../shared/ChatPanel';
 import { GameOverModal } from '../shared/GameOverModal';
 import { CharacterArt } from '../../shared/CharacterArt';
+import { BoardDefs, LudoPageBackground, LUDO_EMIRATI_PALETTE, COLOR_LABELS_AR } from './BoardEmblems';
 
-// ─── Board geometry ───────────────────────────────────────────────────────────
-// 15×15 grid. Path is the cross around the perimeter; home bases sit in the
+// ─── Board geometry — 15×15 grid ─────────────────────────────────────────────
+// Path is the cross around the perimeter (52 tiles); home bases sit in the
 // four 6×6 corners; home columns are the colored axes leading to center (7,7).
 //
 // Engine encodes piece position as relativePos:
@@ -21,18 +22,18 @@ import { CharacterArt } from '../../shared/CharacterArt';
 //   58            → finished (center)
 
 const PATH_COORDS: [number, number][] = [
-  [6, 1], [6, 2], [6, 3], [6, 4], [6, 5],         // 0-4   right across left arm's upper row
-  [5, 6], [4, 6], [3, 6], [2, 6], [1, 6],         // 5-9   up the left side of the top arm
-  [0, 6], [0, 7], [0, 8],                         // 10-12 across the top edge
-  [1, 8], [2, 8], [3, 8], [4, 8], [5, 8],         // 13-17 down the right side of the top arm
-  [6, 9], [6, 10], [6, 11], [6, 12], [6, 13], [6, 14], // 18-23 right across the right arm
-  [7, 14],                                        // 24    right edge transition
-  [8, 14], [8, 13], [8, 12], [8, 11], [8, 10], [8, 9], // 25-30 left across the right arm's lower row
-  [9, 8], [10, 8], [11, 8], [12, 8], [13, 8], [14, 8], // 31-36 down the right side of the bottom arm
-  [14, 7],                                        // 37    bottom edge transition
-  [14, 6], [13, 6], [12, 6], [11, 6], [10, 6], [9, 6], // 38-43 up the left side of the bottom arm
-  [8, 5], [8, 4], [8, 3], [8, 2], [8, 1], [8, 0], // 44-49 left across the left arm's lower row
-  [7, 0], [6, 0],                                 // 50-51 left edge close
+  [6, 1], [6, 2], [6, 3], [6, 4], [6, 5],         // 0-4
+  [5, 6], [4, 6], [3, 6], [2, 6], [1, 6],         // 5-9
+  [0, 6], [0, 7], [0, 8],                         // 10-12
+  [1, 8], [2, 8], [3, 8], [4, 8], [5, 8],         // 13-17
+  [6, 9], [6, 10], [6, 11], [6, 12], [6, 13], [6, 14], // 18-23
+  [7, 14],                                        // 24
+  [8, 14], [8, 13], [8, 12], [8, 11], [8, 10], [8, 9], // 25-30
+  [9, 8], [10, 8], [11, 8], [12, 8], [13, 8], [14, 8], // 31-36
+  [14, 7],                                        // 37
+  [14, 6], [13, 6], [12, 6], [11, 6], [10, 6], [9, 6], // 38-43
+  [8, 5], [8, 4], [8, 3], [8, 2], [8, 1], [8, 0], // 44-49
+  [7, 0], [6, 0],                                 // 50-51
 ];
 
 const HOME_COLUMN_COORDS: Record<LudoColor, [number, number][]> = {
@@ -49,7 +50,6 @@ const HOME_BASE_REGION: Record<LudoColor, { row: [number, number]; col: [number,
   yellow: { row: [9, 14], col: [0, 5] },
 };
 
-// 2×2 piece slots inside each home base, expressed as cell coordinates.
 const HOME_BASE_SLOTS: Record<LudoColor, [number, number][]> = {
   red:    [[1.4, 1.4], [1.4, 3.6], [3.6, 1.4], [3.6, 3.6]],
   blue:   [[1.4, 10.4], [1.4, 12.6], [3.6, 10.4], [3.6, 12.6]],
@@ -57,31 +57,26 @@ const HOME_BASE_SLOTS: Record<LudoColor, [number, number][]> = {
   yellow: [[10.4, 1.4], [10.4, 3.6], [12.6, 1.4], [12.6, 3.6]],
 };
 
-const COLOR_HEX: Record<LudoColor, { main: string; light: string; dark: string; piece: string }> = {
-  red:    { main: '#E74C3C', light: '#FFB6AE', dark: '#7A1D14', piece: '#E74C3C' },
-  blue:   { main: '#4A90D9', light: '#B5D2EE', dark: '#1B4870', piece: '#4A90D9' },
-  green:  { main: '#7AC74F', light: '#C8E5AE', dark: '#3F7124', piece: '#7AC74F' },
-  yellow: { main: '#F1C40F', light: '#FFE89A', dark: '#7A6303', piece: '#F1C40F' },
-};
-
-const COLOR_LABELS: Record<LudoColor, string> = {
-  red: 'أحمر', blue: 'أزرق', green: 'أخضر', yellow: 'أصفر',
+const COLOR_EMBLEM: Record<LudoColor, string> = {
+  red: 'emb-falcon',
+  blue: 'emb-pearl',
+  green: 'emb-palm',
+  yellow: 'emb-dunes',
 };
 
 const SAFE_TILES = new Set([0, 8, 13, 21, 26, 34, 39, 47]);
 const STAR_TILES = new Set([8, 21, 34, 47]); // safes that aren't a player's start
+const START_TILES: Record<number, LudoColor> = { 0: 'red', 13: 'blue', 26: 'green', 39: 'yellow' };
 
 const CENTER = { row: 7, col: 7 };
 
-// Returns grid (row, col) for a piece given its current state.
 function pieceCoord(piece: LudoPiece, indexInColor: number): { row: number; col: number } {
   if (piece.status === 'home_base') {
     const [row, col] = HOME_BASE_SLOTS[piece.color][indexInColor % 4];
     return { row, col };
   }
   if (piece.status === 'finished' || piece.relativePos >= 58) {
-    // Stagger finished pieces around center so they don't all sit on top.
-    const offsets: [number, number][] = [[-0.2, -0.2], [-0.2, 0.2], [0.2, -0.2], [0.2, 0.2]];
+    const offsets: [number, number][] = [[-0.18, -0.18], [-0.18, 0.18], [0.18, -0.18], [0.18, 0.18]];
     const [dr, dc] = offsets[indexInColor % 4];
     return { row: CENTER.row + dr, col: CENTER.col + dc };
   }
@@ -90,77 +85,134 @@ function pieceCoord(piece: LudoPiece, indexInColor: number): { row: number; col:
     const [row, col] = PATH_COORDS[globalIdx];
     return { row, col };
   }
-  // Home column 52-57
   const coords = HOME_COLUMN_COORDS[piece.color];
   const idx = Math.max(0, Math.min(5, piece.relativePos - 52));
   const [row, col] = coords[idx];
   return { row, col };
 }
 
-// ─── Static board background — drawn once per render via memoized children ───
+// ─── Static board background ─────────────────────────────────────────────────
 function BoardBackground() {
   return (
-    <svg viewBox="0 0 15 15" className="absolute inset-0 w-full h-full" style={{ shapeRendering: 'crispEdges' }}>
-      {/* Outer board */}
+    <svg viewBox="0 0 15 15" className="absolute inset-0 w-full h-full" style={{ shapeRendering: 'auto' }}>
+      <BoardDefs />
+
+      {/* Outer parchment — base under everything */}
       <rect x="0" y="0" width="15" height="15" fill="#1A1408" />
 
-      {/* 4 colored home bases (6×6 corners) */}
+      {/* Subtle radial highlight in the centre to draw the eye in */}
+      <radialGradient id="board-radial" cx="50%" cy="50%" r="60%">
+        <stop offset="0%"  stopColor="#3A2410" />
+        <stop offset="100%" stopColor="#1A1408" />
+      </radialGradient>
+      <rect x="0" y="0" width="15" height="15" fill="url(#board-radial)" />
+
+      {/* ── 4 home bases (6×6 corners) ── */}
       {(['red', 'blue', 'green', 'yellow'] as LudoColor[]).map(color => {
         const r = HOME_BASE_REGION[color];
-        const c = COLOR_HEX[color];
+        const c = LUDO_EMIRATI_PALETTE[color];
         return (
           <g key={color}>
+            {/* Outer colored frame */}
             <rect x={r.col[0]} y={r.row[0]} width={6} height={6} fill={c.main} />
-            <rect x={r.col[0] + 0.6} y={r.row[0] + 0.6} width={4.8} height={4.8} fill="#FFFFFF" opacity={0.96} />
-            {/* Inner light tint for the 4 piece pockets */}
+            {/* Inner parchment plaque */}
+            <rect x={r.col[0] + 0.5} y={r.row[0] + 0.5} width={5} height={5}
+              fill="#F4E4BE" stroke={c.dark} strokeWidth={0.06} />
+            {/* Themed watermark — falcon / pearl / palm / dunes */}
+            <use
+              href={`#${COLOR_EMBLEM[color]}`}
+              x={r.col[0] + 0.5} y={r.row[0] + 0.5}
+              width={5} height={5}
+              color={c.dark}
+              opacity={0.18}
+            />
+            {/* 4 piece pockets */}
             {HOME_BASE_SLOTS[color].map((slot, i) => (
-              <circle key={i} cx={slot[1] + 0.5} cy={slot[0] + 0.5} r={0.55} fill={c.light} stroke={c.dark} strokeWidth={0.04} />
+              <g key={i}>
+                <circle cx={slot[1] + 0.5} cy={slot[0] + 0.5} r={0.62}
+                  fill={c.light} stroke={c.dark} strokeWidth={0.05} />
+                <circle cx={slot[1] + 0.5} cy={slot[0] + 0.5} r={0.5}
+                  fill="none" stroke={c.dark} strokeWidth={0.025} opacity={0.5} />
+              </g>
             ))}
           </g>
         );
       })}
 
-      {/* Path tiles — main 52-tile loop, plus row 7 / col 7 corner cells */}
+      {/* ── Path tiles ── */}
       {PATH_COORDS.map(([row, col], i) => {
-        const isSafe = SAFE_TILES.has(i);
-        // Tile 0 is red, 13 blue, 26 green, 39 yellow — color the start tiles
-        let fill = '#FFFFFF';
-        if (i === 0)  fill = COLOR_HEX.red.main;
-        if (i === 13) fill = COLOR_HEX.blue.main;
-        if (i === 26) fill = COLOR_HEX.green.main;
-        if (i === 39) fill = COLOR_HEX.yellow.main;
+        const startColor = START_TILES[i];
+        const fill = startColor ? LUDO_EMIRATI_PALETTE[startColor].main : 'url(#sand-grain)';
         return (
           <g key={i}>
-            <rect x={col} y={row} width={1} height={1} fill={fill} stroke="#1A1408" strokeWidth={0.04} />
-            {isSafe && !STAR_TILES.has(i) && (
-              // colored start tile already conveys 'safe'; skip the star
-              null
+            <rect x={col} y={row} width={1} height={1} fill={fill}
+              stroke="#7A6303" strokeWidth={0.025} />
+            {/* Inner subtle inset */}
+            {!startColor && (
+              <rect x={col + 0.08} y={row + 0.08} width={0.84} height={0.84}
+                fill="none" stroke="#C9A84C" strokeWidth={0.02} opacity={0.35} />
             )}
+            {/* Star (khatim) tiles */}
             {STAR_TILES.has(i) && (
-              <text x={col + 0.5} y={row + 0.78} textAnchor="middle" fontSize="0.78" fill="#7A6440">★</text>
+              <use href="#emb-khatim" x={col + 0.15} y={row + 0.15} width={0.7} height={0.7} />
+            )}
+            {/* Mini emblem on start tiles */}
+            {startColor && (
+              <use href={`#${COLOR_EMBLEM[startColor]}`}
+                x={col + 0.1} y={row + 0.1} width={0.8} height={0.8}
+                color="#F4E4BE" opacity={0.85} />
             )}
           </g>
         );
       })}
 
-      {/* Home columns — colored strips toward center */}
-      {(['red', 'blue', 'green', 'yellow'] as LudoColor[]).map(color =>
-        HOME_COLUMN_COORDS[color].map(([row, col], i) =>
-          <rect key={`${color}-${i}`} x={col} y={row} width={1} height={1}
-            fill={COLOR_HEX[color].main} stroke="#1A1408" strokeWidth={0.04} />
-        )
-      )}
+      {/* ── Home columns — gradient strips toward center ── */}
+      {(['red', 'blue', 'green', 'yellow'] as LudoColor[]).map(color => {
+        const c = LUDO_EMIRATI_PALETTE[color];
+        return HOME_COLUMN_COORDS[color].map(([row, col], i) => {
+          // Fade colour along the column so it visibly "leads home"
+          const t = i / 5;
+          const alpha = 0.55 + t * 0.45;
+          return (
+            <g key={`${color}-${i}`}>
+              <rect x={col} y={row} width={1} height={1}
+                fill={c.main} opacity={alpha}
+                stroke={c.dark} strokeWidth={0.03} />
+              <rect x={col + 0.1} y={row + 0.1} width={0.8} height={0.8}
+                fill="none" stroke={c.light} strokeWidth={0.02} opacity={0.4} />
+            </g>
+          );
+        });
+      })}
 
-      {/* Center finish — 4 colored triangles meeting at the middle */}
+      {/* ── Center finish — 4 colored triangles + gold star + ✦ ── */}
       <g>
-        <polygon points="6,6 9,6 7.5,7.5"  fill={COLOR_HEX.blue.main} stroke="#1A1408" strokeWidth={0.05} />
-        <polygon points="9,6 9,9 7.5,7.5"  fill={COLOR_HEX.green.main} stroke="#1A1408" strokeWidth={0.05} />
-        <polygon points="9,9 6,9 7.5,7.5"  fill={COLOR_HEX.yellow.main} stroke="#1A1408" strokeWidth={0.05} />
-        <polygon points="6,9 6,6 7.5,7.5"  fill={COLOR_HEX.red.main} stroke="#1A1408" strokeWidth={0.05} />
+        <polygon points="6,6 9,6 7.5,7.5"  fill={LUDO_EMIRATI_PALETTE.blue.main}   stroke="#7A6303" strokeWidth={0.04} />
+        <polygon points="9,6 9,9 7.5,7.5"  fill={LUDO_EMIRATI_PALETTE.green.main}  stroke="#7A6303" strokeWidth={0.04} />
+        <polygon points="9,9 6,9 7.5,7.5"  fill={LUDO_EMIRATI_PALETTE.yellow.main} stroke="#7A6303" strokeWidth={0.04} />
+        <polygon points="6,9 6,6 7.5,7.5"  fill={LUDO_EMIRATI_PALETTE.red.main}    stroke="#7A6303" strokeWidth={0.04} />
+        {/* Gold rim around the centre */}
+        <circle cx="7.5" cy="7.5" r="1.45" fill="none" stroke="#C9A84C" strokeWidth={0.08} opacity={0.7} />
+        <circle cx="7.5" cy="7.5" r="1.55" fill="none" stroke="#7A6303" strokeWidth={0.04}
+          strokeDasharray="0.12 0.12" />
+        {/* 8-point khatim star at centre */}
+        <use href="#emb-khatim" x="6.6" y="6.6" width="1.8" height="1.8" />
       </g>
 
-      {/* Outer board border */}
-      <rect x="0" y="0" width="15" height="15" fill="none" stroke="#C9A84C" strokeWidth={0.12} />
+      {/* ── Outer frame: double gold border + corner medallions ── */}
+      <g>
+        <rect x="0" y="0" width="15" height="15" fill="none" stroke="#C9A84C" strokeWidth={0.18} />
+        <rect x="0.16" y="0.16" width="14.68" height="14.68" fill="none" stroke="#7A6303" strokeWidth={0.04} />
+      </g>
+      {/* 4 corner medallions */}
+      {[
+        [0.5, 0.5], [14.5, 0.5], [0.5, 14.5], [14.5, 14.5],
+      ].map(([cx, cy], i) => (
+        <g key={i}>
+          <circle cx={cx} cy={cy} r={0.32} fill="#1A1408" stroke="#C9A84C" strokeWidth={0.06} />
+          <use href="#emb-khatim" x={cx - 0.22} y={cy - 0.22} width={0.44} height={0.44} />
+        </g>
+      ))}
     </svg>
   );
 }
@@ -175,7 +227,7 @@ export function LudoBoard({ gameId, state }: Props) {
   const navigate = useNavigate();
   const [chatOpen, setChatOpen] = useState(false);
   const [rolling, setRolling] = useState(false);
-  const [gameOver, setGameOver] = useState<{ winnerId: string | null; rankings: { uid: string; rank: number | null }[] } | null>(null);
+  const [gameOver, setGameOver] = useState<{ winnerId: string | null } | null>(null);
 
   const socket = socketService.getSocket();
   const me = state.players.find(p => p.uid === user?.uid);
@@ -213,7 +265,6 @@ export function LudoBoard({ gameId, state }: Props) {
 
   const canRoll = isMyTurn && !state.diceRolled && state.phase === 'PLAYING';
 
-  // All pieces flattened with their per-color index (so we can compute home-base slot)
   const allPieces = useMemo(() => {
     const out: { piece: LudoPiece; player: typeof state.players[0]; indexInColor: number }[] = [];
     for (const player of state.players) {
@@ -223,58 +274,80 @@ export function LudoBoard({ gameId, state }: Props) {
   }, [state.players]);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'linear-gradient(180deg,#1A1408 0%,#0E0905 100%)' }}>
+    <div className="min-h-screen flex flex-col relative" style={{ background: '#0E0905' }}>
+      {/* Page-level desert background — sits behind everything */}
+      <LudoPageBackground />
+
       {/* ── Players strip ── */}
-      <div className="flex justify-around items-center px-2 py-2 sm:py-3 gap-1 sm:gap-2"
-        style={{ background: 'rgba(20,14,8,0.85)', borderBottom: '1px solid rgba(201,168,76,0.18)' }}>
+      <div className="relative flex justify-around items-center px-2 py-2 sm:py-3 gap-1 sm:gap-2 z-10"
+        style={{
+          background: 'linear-gradient(180deg, rgba(20,14,8,0.96) 0%, rgba(14,9,5,0.85) 100%)',
+          borderBottom: '1px solid rgba(201,168,76,0.32)',
+          boxShadow: '0 4px 18px rgba(0,0,0,0.45)',
+        }}>
         {state.players.map(p => {
-          const c = COLOR_HEX[p.color];
+          const c = LUDO_EMIRATI_PALETTE[p.color];
           return (
             <div key={p.uid}
               className="flex flex-col items-center gap-1 rounded-xl px-2 py-1.5 transition-all"
               style={{
-                background: p.isTurn ? `${c.main}26` : 'rgba(255,255,255,0.03)',
-                border: `1.5px solid ${p.isTurn ? c.main : 'rgba(255,255,255,0.08)'}`,
-                boxShadow: p.isTurn ? `0 0 14px ${c.main}77` : 'none',
-                minWidth: 60,
+                background: p.isTurn
+                  ? `linear-gradient(135deg, ${c.main}38 0%, ${c.dark}88 100%)`
+                  : 'rgba(255,255,255,0.025)',
+                border: `1.5px solid ${p.isTurn ? c.accent : 'rgba(255,255,255,0.08)'}`,
+                boxShadow: p.isTurn ? `0 0 16px ${c.main}99, inset 0 1px 0 rgba(255,255,255,0.1)` : 'none',
+                minWidth: 64,
               }}>
-              <div className="relative" style={{ width: 32, height: 32 }}>
-                <CharacterArt id={p.avatarId} size={32} />
-                <div className="absolute -bottom-1 -right-1 rounded-full" style={{
-                  width: 12, height: 12, background: c.main, border: '2px solid #14100A',
-                }} />
+              <div className="relative" style={{ width: 34, height: 34 }}>
+                <CharacterArt id={p.avatarId} size={34} />
+                <div className="absolute -bottom-1 -right-1 rounded-full flex items-center justify-center"
+                  style={{
+                    width: 14, height: 14,
+                    background: c.main,
+                    border: '2px solid #14100A',
+                    boxShadow: `0 0 6px ${c.main}AA`,
+                  }} />
               </div>
-              <p className="font-arabic font-bold truncate" style={{ fontSize: 10, color: '#F5E6C8', maxWidth: 70 }}>
+              <p className="font-arabic font-bold truncate" style={{ fontSize: 10, color: '#F5E6C8', maxWidth: 72 }}>
                 {p.uid === user?.uid ? 'أنت' : p.displayName}
               </p>
-              <div className="flex items-center gap-1 text-[10px] font-arabic" style={{ color: c.main }}>
-                <span>{COLOR_LABELS[p.color]}</span>
-                <span className="font-mono">· {p.finishedCount}/4</span>
+              <div className="flex items-center gap-1 text-[10px] font-arabic" style={{ color: c.accent }}>
+                <span>{COLOR_LABELS_AR[p.color]}</span>
+                <span className="font-mono opacity-80">· {p.finishedCount}/4</span>
               </div>
+              {p.isTurn && (
+                <div className="absolute -bottom-0.5 left-2 right-2 h-0.5 rounded-full"
+                  style={{ background: `linear-gradient(90deg, transparent, ${c.accent}, transparent)` }} />
+              )}
             </div>
           );
         })}
       </div>
 
       {/* ── Board ── */}
-      <div className="flex-1 flex items-center justify-center p-2 sm:p-4 min-h-0">
-        <div className="relative w-full"
-          style={{ aspectRatio: '1 / 1', maxWidth: 'min(94vw, 480px)' }}>
+      <div className="flex-1 flex items-center justify-center p-2 sm:p-4 min-h-0 relative z-10">
+        <div className="relative"
+          style={{
+            width: '100%',
+            aspectRatio: '1 / 1',
+            maxWidth: 'min(94vw, 480px)',
+            // Drop a warm halo behind the board so it floats above the dunes
+            filter: 'drop-shadow(0 16px 40px rgba(0,0,0,0.85)) drop-shadow(0 0 36px rgba(201,168,76,0.20))',
+          }}>
           <BoardBackground />
 
           {/* Pieces overlay */}
           {allPieces.map(({ piece, player, indexInColor }) => {
             const { row, col } = pieceCoord(piece, indexInColor);
-            const c = COLOR_HEX[piece.color];
+            const c = LUDO_EMIRATI_PALETTE[piece.color];
             const isMine = player.uid === user?.uid;
             const movable = isMine && movableSet.has(piece.id);
+            const inHome = piece.status === 'home_base';
             return (
               <motion.button
                 key={piece.id}
                 initial={false}
                 animate={{
-                  // Position via top/left percentages so pieces land on the
-                  // correct grid cell at any board size.
                   top: `${(row / 15) * 100}%`,
                   left: `${(col / 15) * 100}%`,
                 }}
@@ -285,26 +358,34 @@ export function LudoBoard({ gameId, state }: Props) {
                 style={{
                   width: `${100 / 15}%`,
                   height: `${100 / 15}%`,
-                  padding: '8%',
+                  padding: inHome ? '12%' : '10%',
                   cursor: movable ? 'pointer' : 'default',
-                  zIndex: piece.status === 'finished' ? 5 : 10,
+                  zIndex: piece.status === 'finished' ? 5 : 12,
                 }}
-                whileHover={movable ? { scale: 1.15 } : undefined}
+                whileHover={movable ? { scale: 1.18 } : undefined}
                 whileTap={movable ? { scale: 0.92 } : undefined}>
                 <div
-                  className="w-full h-full rounded-full flex items-center justify-center"
+                  className="w-full h-full relative rounded-full flex items-center justify-center"
                   style={{
-                    background: `radial-gradient(circle at 30% 25%, ${c.main} 0%, ${c.dark} 100%)`,
-                    border: `2px solid ${movable ? '#FFFFFF' : 'rgba(255,255,255,0.55)'}`,
+                    background: `radial-gradient(circle at 32% 24%, ${c.light} 0%, ${c.main} 55%, ${c.dark} 100%)`,
+                    border: `2px solid ${movable ? '#F6E6BE' : '#C9A84C'}`,
                     boxShadow: movable
-                      ? `0 0 14px ${c.main}, 0 2px 4px rgba(0,0,0,0.6)`
-                      : '0 2px 4px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.25)',
+                      ? `0 0 0 2px #C9A84C, 0 0 18px ${c.main}, 0 3px 6px rgba(0,0,0,0.6)`
+                      : '0 3px 6px rgba(0,0,0,0.65), inset 0 1.5px 0 rgba(255,255,255,0.35), inset 0 -1.5px 0 rgba(0,0,0,0.35)',
                     color: '#fff',
-                    fontSize: '0.6em',
-                    fontWeight: 800,
-                    animation: movable ? 'pulse 1.2s ease-in-out infinite' : undefined,
+                    animation: movable ? 'pulse 1.4s ease-in-out infinite' : undefined,
                   }}>
-                  {piece.status === 'finished' && '✓'}
+                  {/* Themed glyph inside the piece */}
+                  <svg viewBox="0 0 6 6" className="absolute inset-0 w-full h-full" style={{ padding: '18%' }}>
+                    <BoardDefs />
+                    <use href={`#${COLOR_EMBLEM[piece.color]}`}
+                      width="6" height="6"
+                      color="#F6E6BE"
+                      opacity={piece.status === 'finished' ? 1 : 0.55} />
+                  </svg>
+                  {piece.status === 'finished' && (
+                    <span className="relative" style={{ fontSize: '0.55em', fontWeight: 900, color: '#F6E6BE', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>★</span>
+                  )}
                 </div>
               </motion.button>
             );
@@ -313,13 +394,23 @@ export function LudoBoard({ gameId, state }: Props) {
       </div>
 
       {/* ── Bottom: dice + status ── */}
-      <div className="flex flex-col items-center gap-2 px-4 py-3 sm:py-4"
-        style={{ background: 'rgba(20,14,8,0.85)', borderTop: '1px solid rgba(201,168,76,0.18)' }}>
+      <div className="relative flex flex-col items-center gap-2 px-4 py-3 sm:py-4 z-10"
+        style={{
+          background: 'linear-gradient(0deg, rgba(20,14,8,0.96) 0%, rgba(14,9,5,0.6) 100%)',
+          borderTop: '1px solid rgba(201,168,76,0.32)',
+          boxShadow: '0 -4px 18px rgba(0,0,0,0.45)',
+        }}>
         <div className="flex items-center gap-4">
-          <LudoDice value={state.diceValue} rolling={rolling}
-            onClick={canRoll ? onRoll : undefined} disabled={!canRoll} />
-          <div className="flex flex-col gap-0.5">
-            <p className="font-arabic font-bold text-sand-light" style={{ fontSize: 13 }}>
+          <div className="relative">
+            {canRoll && (
+              <div className="absolute inset-0 rounded-xl pointer-events-none"
+                style={{ boxShadow: '0 0 24px rgba(232,201,122,0.7)', animation: 'pulse 1.6s ease-in-out infinite' }} />
+            )}
+            <LudoDice value={state.diceValue} rolling={rolling}
+              onClick={canRoll ? onRoll : undefined} disabled={!canRoll} />
+          </div>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <p className="font-arabic font-bold" style={{ fontSize: 14, color: '#F5E6C8' }}>
               {state.phase === 'GAME_OVER'
                 ? 'انتهت اللعبة'
                 : isMyTurn
@@ -330,7 +421,7 @@ export function LudoBoard({ gameId, state }: Props) {
             </p>
             {state.consecutiveSixes > 0 && (
               <p className="font-arabic text-xs" style={{ color: '#E8C97A' }}>
-                ست متتالية: {state.consecutiveSixes}
+                ✦ ست متتالية: {state.consecutiveSixes}
               </p>
             )}
           </div>

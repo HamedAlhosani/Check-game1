@@ -3,7 +3,7 @@ import cors from 'cors';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { verifyToken, signToken, hashPassword, comparePassword } from './services/localAuth';
-import { credentials, saveCredentials } from './data/store';
+import { credentials, saveCredentials, users, saveUsers } from './data/store';
 import { COIN_PACKS, packById, createOrder, captureOrder, verifyWebhook, customFromWebhook } from './services/paypal';
 import {
   createUserProfile,
@@ -14,6 +14,7 @@ import {
   getLeaderboard,
   purchaseItem,
   purchaseLudoItem,
+  grantLudoCoins,
   equipItem,
   rechargeCoins,
   getDailyReward,
@@ -271,6 +272,38 @@ app.post('/api/ludo-store/purchase', requireAuth, wrap(async (req, res) => {
   if (!result.ok) return res.status(400).json({ error: result.error });
   const profile = await getUserProfile(uid);
   res.json({ ok: true, ludoCoins: result.ludoCoins, profile });
+}));
+
+// Ludo wallet recharge — picks one of the named packs (coin or gem) and
+// credits the user. For now this is a direct grant (no PayPal capture yet);
+// once real payments are wired the body will move to /webhook/paypal-ludo
+// and we'll only allow this route for sandbox/test users.
+const LUDO_PACKS: Record<string, { coins?: number; gems?: number }> = {
+  // Coin packs
+  ludo_coins_small:  { coins: 1000 },
+  ludo_coins_medium: { coins: 5500 },
+  ludo_coins_large:  { coins: 12000 },
+  // Gem packs
+  ludo_gems_small:   { gems: 50 },
+  ludo_gems_medium:  { gems: 300 },
+  ludo_gems_large:   { gems: 800 },
+};
+
+app.post('/api/ludo-store/recharge', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const { packId } = req.body || {};
+  const pack = packId && LUDO_PACKS[packId];
+  if (!pack) return res.status(400).json({ error: 'Invalid pack' });
+  if (pack.coins) await grantLudoCoins(uid, pack.coins);
+  if (pack.gems) {
+    const u: any = users.get(uid);
+    if (u) {
+      u.ludoGems = (u.ludoGems || 0) + pack.gems;
+      saveUsers();
+    }
+  }
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, profile });
 }));
 
 app.patch('/api/store/equip', requireAuth, wrap(async (req, res) => {

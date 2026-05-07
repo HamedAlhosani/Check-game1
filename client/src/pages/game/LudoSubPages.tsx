@@ -14,6 +14,7 @@ import { StoreItemPreview } from '../../components/game/ludo/StoreItemPreviews';
 
 const SAND = {
   bg1: '#0E0905',
+  panel: '#14100A',
   gold: '#D9A441',
   goldLight: '#F6E6BE',
   cream: '#F4E4BE',
@@ -188,11 +189,26 @@ function ItemPreview({ item }: { item: typeof STORE_ITEMS[number] }) {
 }
 
 // ─── REAL Ludo store: dice / boards / characters, paid in ludoCoins ────────
-const LUDO_CATEGORIES: { id: 'all' | ItemCategory; ar: string; en: string; icon: string }[] = [
+type LudoStoreTab = 'all' | ItemCategory | 'recharge';
+const LUDO_CATEGORIES: { id: LudoStoreTab; ar: string; en: string; icon: string }[] = [
   { id: 'all',        ar: 'الكل',     en: 'All',        icon: '✨' },
   { id: 'diceSkin',   ar: 'النرد',    en: 'Dice',       icon: '🎲' },
   { id: 'boardTheme', ar: 'الطاولات', en: 'Boards',     icon: '🟫' },
   { id: 'character',  ar: 'الشخصيات', en: 'Characters', icon: '👤' },
+  { id: 'recharge',   ar: 'شحن',      en: 'Top up',     icon: '💎' },
+];
+
+// Coin + gem packs the recharge tab offers. IDs must match LUDO_PACKS in
+// server/src/app.ts so the grant lands.
+const COIN_PACKS = [
+  { id: 'ludo_coins_small',  amount: 1000,  price: '$0.99', label: { ar: 'جزء صغير', en: 'Small' } },
+  { id: 'ludo_coins_medium', amount: 5500,  price: '$4.99', label: { ar: 'كيس متوسط', en: 'Medium' }, badge: 'POPULAR' },
+  { id: 'ludo_coins_large',  amount: 12000, price: '$9.99', label: { ar: 'صندوق كبير', en: 'Large' } },
+];
+const GEM_PACKS = [
+  { id: 'ludo_gems_small',  amount: 50,  price: '$0.99', label: { ar: 'حفنة', en: 'Handful' } },
+  { id: 'ludo_gems_medium', amount: 300, price: '$4.99', label: { ar: 'كنز', en: 'Treasure' }, badge: 'POPULAR' },
+  { id: 'ludo_gems_large',  amount: 800, price: '$9.99', label: { ar: 'كنز ملكي', en: 'Royal' } },
 ];
 
 const RARITY_RING: Record<string, string> = {
@@ -210,14 +226,17 @@ export function LudoStorePage() {
   const navigate = useNavigate();
   const { profile, setProfile } = useAuthStore();
   const { addToast } = useUiStore();
-  const [tab, setTab] = useState<'all' | ItemCategory>('all');
+  const [tab, setTab] = useState<LudoStoreTab>('all');
   const [busyItem, setBusyItem] = useState<string | null>(null);
+  const [busyPack, setBusyPack] = useState<string | null>(null);
 
   const ludoCoins = (profile as any)?.ludoCoins ?? 0;
+  const ludoGems  = (profile as any)?.ludoGems  ?? 0;
   const owned = new Set(profile?.ownedItems ?? []);
   const eligibleCats: ItemCategory[] = ['diceSkin', 'boardTheme', 'character'];
-  const items = STORE_ITEMS.filter(it => eligibleCats.includes(it.category))
-                           .filter(it => tab === 'all' || it.category === tab);
+  const items = tab === 'recharge' ? [] :
+    STORE_ITEMS.filter(it => eligibleCats.includes(it.category))
+               .filter(it => tab === 'all' || it.category === tab);
 
   useEffect(() => {
     if (!profile) return;
@@ -235,6 +254,20 @@ export function LudoStorePage() {
       addToast(e?.message || (isAr ? 'فشل الشراء' : 'Purchase failed'), 'error');
     } finally {
       setBusyItem(null);
+    }
+  };
+
+  const recharge = async (packId: string) => {
+    if (busyPack) return;
+    setBusyPack(packId);
+    try {
+      const res = await apiClient.post<{ ok: boolean; profile: any }>('/api/ludo-store/recharge', { packId });
+      if (res.profile) setProfile(res.profile);
+      addToast(isAr ? '✓ تمت الإضافة' : '✓ Topped up', 'success');
+    } catch (e: any) {
+      addToast(e?.message || (isAr ? 'فشل' : 'Failed'), 'error');
+    } finally {
+      setBusyPack(null);
     }
   };
 
@@ -266,11 +299,16 @@ export function LudoStorePage() {
         <span className="font-display tracking-widest" style={{ fontSize: 14, color: SAND.gold }}>
           {isAr ? 'متجر لودو' : 'LUDO STORE'}
         </span>
-        <div className="flex items-center gap-2">
-          <div className="rounded-xl px-2.5 py-1 flex items-center gap-1.5"
+        <div className="flex items-center gap-1.5">
+          <div className="rounded-xl px-2 py-1 flex items-center gap-1.5"
             style={{ background: '#14100A', border: `1.5px solid ${SAND.gold}77` }}>
-            <span style={{ fontSize: 14 }}>🪙</span>
-            <span className="font-mono font-bold" style={{ fontSize: 13, color: SAND.gold }}>{ludoCoins.toLocaleString()}</span>
+            <span style={{ fontSize: 13 }}>🪙</span>
+            <span className="font-mono font-bold" style={{ fontSize: 12, color: SAND.gold }}>{ludoCoins.toLocaleString()}</span>
+          </div>
+          <div className="rounded-xl px-2 py-1 flex items-center gap-1.5"
+            style={{ background: '#14100A', border: `1.5px solid #4A90D9AA` }}>
+            <span style={{ fontSize: 13 }}>💎</span>
+            <span className="font-mono font-bold" style={{ fontSize: 12, color: '#9DD8E8' }}>{ludoGems.toLocaleString()}</span>
           </div>
           <LangToggle />
         </div>
@@ -300,8 +338,43 @@ export function LudoStorePage() {
           })}
         </div>
 
+        {/* Recharge view — coin + gem packs (top-up only) */}
+        {tab === 'recharge' && (
+          <div className="space-y-4">
+            <PackSection
+              isAr={isAr}
+              titleAr="🪙 شحن كوينز لودو"
+              titleEn="🪙 Top-up Ludo Coins"
+              subAr="حمل رصيدك ليوم اللعب الكبير"
+              subEn="Top up before the big tournament"
+              accent={SAND.gold}
+              packs={COIN_PACKS}
+              busy={busyPack}
+              onBuy={recharge}
+              kind="coins"
+            />
+            <PackSection
+              isAr={isAr}
+              titleAr="💎 شحن جواهر"
+              titleEn="💎 Top-up Gems"
+              subAr="الجواهر تعيد رمي النرد وتفتح الكؤوس"
+              subEn="Gems re-roll the dice and unlock cups"
+              accent="#9DD8E8"
+              packs={GEM_PACKS}
+              busy={busyPack}
+              onBuy={recharge}
+              kind="gems"
+            />
+            <p className="font-arabic text-center" style={{ fontSize: 11, color: 'rgba(245,230,200,0.4)', lineHeight: 1.7 }}>
+              {isAr
+                ? 'الشحن حالياً في وضع التجربة — الباقات تُمنح مباشرة. الدفع الفعلي يربط لاحقاً.'
+                : 'Recharge is in test mode — packs are granted directly. Real payment wires later.'}
+            </p>
+          </div>
+        )}
+
         {/* Items grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {tab !== 'recharge' && <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {items.map(item => {
             const isOwned = owned.has(item.id);
             const isEquipped =
@@ -361,8 +434,73 @@ export function LudoStorePage() {
               </div>
             );
           })}
-        </div>
+        </div>}
       </main>
+    </div>
+  );
+}
+
+// ─── Pack section for recharge tab ─────────────────────────────────────────
+function PackSection({ titleAr, titleEn, subAr, subEn, accent, packs, busy, onBuy, kind, isAr }: {
+  titleAr: string; titleEn: string; subAr: string; subEn: string;
+  accent: string;
+  packs: { id: string; amount: number; price: string; label: { ar: string; en: string }; badge?: string }[];
+  busy: string | null;
+  onBuy: (id: string) => void;
+  kind: 'coins' | 'gems';
+  isAr: boolean;
+}) {
+  return (
+    <div className="rounded-2xl p-4"
+      style={{ background: SAND.panel, border: `1.5px solid ${accent}55` }}>
+      <p className="font-arabic font-bold" style={{ fontSize: 14, color: accent }}>
+        {isAr ? titleAr : titleEn}
+      </p>
+      <p className="font-arabic mb-3 mt-0.5" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
+        {isAr ? subAr : subEn}
+      </p>
+      <div className="grid grid-cols-3 gap-2">
+        {packs.map(p => {
+          const active = busy === p.id;
+          return (
+            <button key={p.id} onClick={() => onBuy(p.id)} disabled={!!busy}
+              className="relative rounded-xl py-3 px-2 text-center disabled:opacity-50"
+              style={{
+                background: `linear-gradient(180deg, ${accent}1F 0%, ${SAND.bg1} 100%)`,
+                border: `1.5px solid ${accent}AA`,
+                cursor: busy ? 'wait' : 'pointer',
+              }}>
+              {p.badge && (
+                <span className="absolute font-bold rounded-md font-arabic"
+                  style={{
+                    top: -8, insetInlineEnd: 6,
+                    padding: '1px 6px',
+                    background: '#E04030', color: '#fff', fontSize: 8, letterSpacing: 1,
+                  }}>
+                  {isAr ? 'الأكثر' : p.badge}
+                </span>
+              )}
+              <div style={{ fontSize: 22, lineHeight: 1, marginBottom: 4 }}>
+                {kind === 'coins' ? '🪙' : '💎'}
+              </div>
+              <p className="font-mono font-bold" style={{ fontSize: 14, color: accent, lineHeight: 1.1 }}>
+                {p.amount.toLocaleString()}
+              </p>
+              <p className="font-arabic" style={{ fontSize: 9, color: 'rgba(245,230,200,0.5)', marginTop: 2 }}>
+                {isAr ? p.label.ar : p.label.en}
+              </p>
+              <p className="font-mono font-bold mt-2 rounded-md py-1"
+                style={{
+                  fontSize: 11,
+                  background: accent,
+                  color: '#0E0905',
+                }}>
+                {active ? '…' : p.price}
+              </p>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

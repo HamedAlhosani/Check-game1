@@ -1,16 +1,20 @@
 import { Server } from 'socket.io';
 import { AuthenticatedSocket } from '../middleware/authMiddleware';
-import { SOCKET_EVENTS, TournamentSize, GameMode, TournamentVisibility, TournamentKind, PrizeSplit } from '@check-game/shared';
+import { SOCKET_EVENTS, TournamentSize, GameMode, GameType, TournamentVisibility, TournamentKind, PrizeSplit } from '@check-game/shared';
 import { tournamentManager } from '../rooms/TournamentManager';
 import { getUserProfile } from '../services/firestoreService';
 
 export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket): void {
 
-  // Push current public list to the new socket on register.
-  socket.emit(SOCKET_EVENTS.TOURNAMENT_LIST, tournamentManager.getPublicSummaries());
+  // Push current public lists to the new socket on register — both worlds
+  // get their own scoped event so a Check page never sees Ludo cups and
+  // vice versa.
+  socket.emit(SOCKET_EVENTS.TOURNAMENT_LIST,      tournamentManager.getPublicSummaries('check'));
+  socket.emit(SOCKET_EVENTS.LUDO_TOURNAMENT_LIST, tournamentManager.getPublicSummaries('ludo'));
 
   socket.on(SOCKET_EVENTS.TOURNAMENT_LIST_REQUEST, () => {
-    socket.emit(SOCKET_EVENTS.TOURNAMENT_LIST, tournamentManager.getPublicSummaries());
+    socket.emit(SOCKET_EVENTS.TOURNAMENT_LIST,      tournamentManager.getPublicSummaries('check'));
+    socket.emit(SOCKET_EVENTS.LUDO_TOURNAMENT_LIST, tournamentManager.getPublicSummaries('ludo'));
   });
 
   socket.on(SOCKET_EVENTS.TOURNAMENT_CREATE, async (payload: {
@@ -23,6 +27,8 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
     entryFee?: number;
     prizeSplit?: PrizeSplit;
     clanOnly?: boolean;
+    /** Game world this cup runs in. 'ludo' uses LudoEngine matches. */
+    gameType?: GameType;
   }) => {
     if (!socket.uid) return;
     const profile = await getUserProfile(socket.uid);
@@ -64,6 +70,7 @@ export function registerTournamentEvents(io: Server, socket: AuthenticatedSocket
       clanOnlyId:   wantClanOnly ? hostClanId  : null,
       clanOnlyTag:  wantClanOnly ? hostClanTag : null,
       clanOnlyName: null,
+      gameType:     payload.gameType === 'ludo' ? 'ludo' : 'check',
     });
     if (!r.ok || !r.tournament) {
       socket.emit(SOCKET_EVENTS.TOURNAMENT_ERROR, { message: r.error || 'Could not create tournament' });

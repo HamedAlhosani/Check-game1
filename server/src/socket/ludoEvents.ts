@@ -5,23 +5,29 @@ import { LudoEngine } from '../game/ludo/LudoEngine';
 import { LudoBotPlayer } from '../game/ludo/LudoBotPlayer';
 import { recordGameResult, getUserProfile } from '../services/firestoreService';
 import { saveUsers } from '../data/store';
+import { tournamentManager } from '../rooms/TournamentManager';
 import { SOCKET_EVENTS } from '@check-game/shared';
 
 export function scheduleLudoBotTurns(io: Server, roomId: string, engine: LudoEngine): void {
   const bots = roomManager.getLudoBots(roomId);
-  if (!bots.length) return;
+  // Even when there are no bots (human-vs-human Ludo tournament), keep the
+  // poll running so we detect GAME_OVER and feed it to the tournament hook.
 
   const poll = setInterval(() => {
     const state = engine.getPublicState();
 
     if (state.phase === 'GAME_OVER') {
       clearInterval(poll);
-      const winner = state.winners[0];
+      const winner = state.winners[0] || null;
       for (const p of state.players) {
         if (!p.uid.startsWith('bot-')) {
           recordGameResult(p.uid, p.uid === winner, 'ludo').catch(() => null);
         }
       }
+      // Bracket hook — Ludo tournament matches advance the bracket the same
+      // way Check matches do. tournamentManager.onGameOver is a no-op when
+      // the gameId isn't bound to a tournament.
+      tournamentManager.onGameOver(io, engine.gameId, winner).catch(() => null);
       return;
     }
 

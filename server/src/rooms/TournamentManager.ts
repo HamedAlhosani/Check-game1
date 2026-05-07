@@ -1,17 +1,20 @@
 import { Server } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  SOCKET_EVENTS, TournamentSize, GameMode, ELIMINATION_SCORE,
+  SOCKET_EVENTS, TournamentSize, GameMode, GameType, ELIMINATION_SCORE,
   TournamentState, TournamentSummary, TournamentVisibility, TournamentKind,
   TournamentMatch, PrizeSplit,
   splitPrizePool, FORFEIT_WINDOW_MS,
 } from '@check-game/shared';
 import { TournamentEngine } from '../game/Tournament';
 import { GameEngine } from '../game/GameEngine';
+import { LudoEngine } from '../game/ludo/LudoEngine';
 import { BotPlayer } from '../game/BotPlayer';
+import { LudoBotPlayer } from '../game/ludo/LudoBotPlayer';
 import { roomManager } from './RoomManager';
 import { Room } from './Room';
 import { createEmitter, scheduleCheckBotTurns } from '../socket/gameEvents';
+import { scheduleLudoBotTurns } from '../socket/ludoEvents';
 import {
   grantCoins, deductCoins,
   recordTournamentResult, recordTournamentEntered,
@@ -54,6 +57,8 @@ class TournamentManager {
     clanOnlyId?: string | null;
     clanOnlyName?: string | null;
     clanOnlyTag?: string | null;
+    /** Game world ('check' default, 'ludo' for Ludo cups). */
+    gameType?: GameType;
   }): Promise<{ ok: boolean; error?: string; tournament?: TournamentEngine }> {
     // For online tournaments, the host pays the entry fee upfront (so they
     // count toward the pot just like every other joiner).
@@ -78,6 +83,7 @@ class TournamentManager {
       clanOnlyId:   opts.clanOnlyId,
       clanOnlyName: opts.clanOnlyName,
       clanOnlyTag:  opts.clanOnlyTag,
+      gameType:     opts.gameType,
     });
 
     this.tournaments.set(t.state.id, t);
@@ -237,12 +243,13 @@ class TournamentManager {
     const p2 = t.player(m.p2Uid);
     if (!p1 || !p2) return;
 
+    const tGameType: GameType = t.state.gameType === 'ludo' ? 'ludo' : 'check';
     const roomId = uuidv4();
     const room = new Room(
       roomId, '🏆 بطولة', 'private',
       p1.uid, p1.displayName, p1.avatarId,
-      'check', p1.equippedFrame || 'frame_default',
-      2, t.state.matchLength,
+      tGameType, p1.equippedFrame || 'frame_default',
+      tGameType === 'ludo' ? 2 : 2, t.state.matchLength,
     );
     room.addPlayer({
       uid: p2.uid, displayName: p2.displayName, avatarId: p2.avatarId,
@@ -264,17 +271,30 @@ class TournamentManager {
       uid: p.uid, displayName: p.displayName, avatarId: p.avatarId,
       isBot: p.isBot, equippedFrame: p.equippedFrame || 'frame_default',
     }));
-    const eliminationScore = ELIMINATION_SCORE[t.state.matchLength];
-    const engine = new GameEngine(
-      roomId, playerList, createEmitter(io, roomId),
-      { eliminationScore, gameMode: t.state.matchLength },
-    );
 
-    (roomManager as any).games.set(engine.gameId, engine);
-    (roomManager as any).games.set(roomId, engine);
-    const bots: BotPlayer[] = room.players.filter(p => p.isBot)
-      .map(p => new BotPlayer(p.uid, p.botDifficulty || t.state.difficulty));
-    (roomManager as any).checkBots.set(roomId, bots);
+    // Engine swap — Ludo bracket matches run on LudoEngine + LudoBotPlayer,
+    // Check matches keep their original GameEngine flow. Both feed the same
+    // tournamentManager.onGameOver hook so the bracket advances identically.
+    let engine: GameEngine | LudoEngine;
+    if (tGameType === 'ludo') {
+      engine = new LudoEngine(roomId, playerList, createEmitter(io, roomId));
+      (roomManager as any).games.set(engine.gameId, engine);
+      (roomManager as any).games.set(roomId, engine);
+      const bots: LudoBotPlayer[] = room.players.filter(p => p.isBot)
+        .map(p => new LudoBotPlayer(p.uid, p.botDifficulty || t.state.difficulty));
+      (roomManager as any).ludoBots.set(roomId, bots);
+    } else {
+      const eliminationScore = ELIMINATION_SCORE[t.state.matchLength];
+      engine = new GameEngine(
+        roomId, playerList, createEmitter(io, roomId),
+        { eliminationScore, gameMode: t.state.matchLength },
+      );
+      (roomManager as any).games.set(engine.gameId, engine);
+      (roomManager as any).games.set(roomId, engine);
+      const bots: BotPlayer[] = room.players.filter(p => p.isBot)
+        .map(p => new BotPlayer(p.uid, p.botDifficulty || t.state.difficulty));
+      (roomManager as any).checkBots.set(roomId, bots);
+    }
     room.gameId = engine.gameId;
 
     this.gameToTournament.set(engine.gameId, { tournamentId: t.state.id, matchNum: m.matchNum });
@@ -297,6 +317,7 @@ class TournamentManager {
           tournamentId: t.state.id,
           gameId: engine.gameId,
           matchNum: m.matchNum,
+          gameType: tGameType,
         });
       }
     }
@@ -305,7 +326,11 @@ class TournamentManager {
 
     setTimeout(() => {
       engine.start();
-      scheduleCheckBotTurns(io, roomId, engine);
+      if (tGameType === 'ludo') {
+        scheduleLudoBotTurns(io, roomId, engine as LudoEngine);
+      } else {
+        scheduleCheckBotTurns(io, roomId, engine as GameEngine);
+      }
     }, 400);
   }
 
@@ -470,12 +495,16 @@ class TournamentManager {
   }
 
   broadcastPublicList(io: Server): void {
-    const list = this.getPublicSummaries();
-    io.emit(SOCKET_EVENTS.TOURNAMENT_LIST, list);
+    // Two scoped lists — Check tournaments stay on TOURNAMENT_LIST so the
+    // existing Check pages keep working, and Ludo tournaments go on a
+    // dedicated event the Ludo page subscribes to.
+    io.emit(SOCKET_EVENTS.TOURNAMENT_LIST,        this.getPublicSummaries('check'));
+    io.emit(SOCKET_EVENTS.LUDO_TOURNAMENT_LIST,   this.getPublicSummaries('ludo'));
   }
 
-  getPublicSummaries(): TournamentSummary[] {
+  getPublicSummaries(gameType: GameType = 'check'): TournamentSummary[] {
     return Array.from(this.tournaments.values())
+      .filter(t => (t.state.gameType ?? 'check') === gameType)
       .filter(t => t.state.visibility === 'public' && t.state.kind === 'online')
       .filter(t => t.state.status === 'waiting' || t.state.status === 'in_progress')
       .sort((a, b) => b.state.createdAt - a.state.createdAt)

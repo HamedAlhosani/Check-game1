@@ -7,6 +7,7 @@ export const SOCKET_EVENTS = {
   LUDO_MOVE_PIECE: 'ludo:move_piece',
   LUDO_SKIP_TURN: 'ludo:skip_turn',
   LUDO_REROLL_DICE: 'ludo:reroll_dice',
+  LUDO_TOURNAMENT_LIST: 'ludo_tournament:list',
 
   // Ludo - Server → Client
   LUDO_STATE: 'ludo:state',

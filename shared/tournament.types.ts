@@ -3,7 +3,7 @@
 // when they win. V1 is solo + bots only: the host's matches use the real
 // GameEngine, while bot-vs-bot matches in the same round are simulated.
 
-import type { GameMode } from './game.types';
+import type { GameMode, GameType } from './game.types';
 
 export type TournamentSize = 4 | 8;
 
@@ -47,6 +47,9 @@ export type PrizeSplit = 'winner_takes_all' | 'top3';
 export interface TournamentState {
   id: string;
   hostUid: string;
+  /** Which game's matches run inside this bracket — Check or Ludo. Legacy
+   *  tournaments default to 'check' on read. */
+  gameType?: GameType;
   /** "بطولة أحمد" or similar — used in the public list. */
   name: string;
   visibility: TournamentVisibility;
@@ -93,6 +96,8 @@ export interface TournamentSummary {
   hostUid: string;
   hostName: string;
   hostAvatarId: string;
+  /** Game world this cup runs in — used to filter the Ludo vs Check lists. */
+  gameType?: GameType;
   name: string;
   size: TournamentSize;
   difficulty: 'easy' | 'medium' | 'hard';

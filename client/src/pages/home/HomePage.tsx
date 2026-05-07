@@ -1092,8 +1092,8 @@ export function HomePage() {
     socket.on(SOCKET_EVENTS.TOURNAMENT_STATE, (state: TournamentState) => {
       setTournamentState(state);
     });
-    socket.on(SOCKET_EVENTS.TOURNAMENT_MATCH_START, (data: { gameId: string }) => {
-      navigate(`/game/check/${data.gameId}`);
+    socket.on(SOCKET_EVENTS.TOURNAMENT_MATCH_START, (data: { gameId: string; gameType?: GameType }) => {
+      navigate(`/game/${data.gameType || 'check'}/${data.gameId}`);
     });
     socket.on(SOCKET_EVENTS.TOURNAMENT_FINISHED, (data: { isHostChampion: boolean; prizeCoins: number; championUid: string | null; tournamentId: string }) => {
       setTournamentFinished(data);

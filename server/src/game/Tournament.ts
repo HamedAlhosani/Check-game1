@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   TournamentState, TournamentMatch, TournamentPlayer, TournamentSize,
   TournamentSummary, TournamentVisibility, TournamentKind,
-  GameMode, PrizeSplit, tournamentPrize, computePool, FORFEIT_WINDOW_MS,
+  GameMode, GameType, PrizeSplit, tournamentPrize, computePool, FORFEIT_WINDOW_MS,
 } from '@check-game/shared';
 
 const BOT_NAMES = [
@@ -36,6 +36,8 @@ export class TournamentEngine {
     clanOnlyId?: string | null;
     clanOnlyName?: string | null;
     clanOnlyTag?: string | null;
+    /** Game world this cup runs in. Defaults to 'check'. */
+    gameType?: GameType;
   }) {
     const id = uuidv4();
     const isSolo = opts.kind === 'solo';
@@ -54,6 +56,7 @@ export class TournamentEngine {
     this.state = {
       id,
       hostUid: opts.hostUid,
+      gameType: opts.gameType === 'ludo' ? 'ludo' : 'check',
       name: opts.name || (isSolo ? `كأس ${opts.hostName}` : `بطولة ${opts.hostName}`),
       visibility,
       kind: opts.kind,
@@ -399,6 +402,7 @@ export class TournamentEngine {
       hostUid: this.state.hostUid,
       hostName: host?.displayName || '—',
       hostAvatarId: host?.avatarId || 'avatar_1',
+      gameType: this.state.gameType === 'ludo' ? 'ludo' : 'check',
       name: this.state.name,
       size: this.state.size,
       difficulty: this.state.difficulty,

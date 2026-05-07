@@ -151,6 +151,21 @@ export class GameEngine {
     this.broadcastState();
     this.emit('game:turn_start', { uid: player.uid, timeoutMs: TURN_DURATION_MS });
 
+    // Bot-specific short safety net. The normal flow drives bots from the
+    // socket-layer 400ms poll within ~700ms, but races (a stale decision
+    // colliding with a phase change, e.g. right after a CHECK call) can
+    // cause every queued action to be rejected. Without this, the bot
+    // would sit idle until the 25s human-grade timer fires. Re-resolves
+    // through smartAutoPlay so it handles whatever phase the engine is in.
+    if (player.isBot) {
+      const botFallback = setTimeout(() => {
+        if (!this.isPlayerTurn(player.uid)) return;
+        if (this.turnActedUid === player.uid) return; // already acted, advance is on its way
+        this.smartAutoPlay(player.uid);
+      }, 3500);
+      this.timers.push(botFallback);
+    }
+
     const timer = setTimeout(() => {
       // Smart auto-play instead of dumb draw-and-burn — uses bot logic so
       // AFK humans still play sensibly (burn matching from discard, take a

@@ -144,6 +144,13 @@ export function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEn
   // Track bots that already have a queued special-phase autoPlay timeout
   // so the 350ms poll doesn't pile up a dozen pending actions.
   const specialActionPending = new Set<string>();
+  // Same idea for the regular PLAYING / CHECK_CALLED branch — the previous
+  // version queued a fresh setTimeout every poll while a bot was on turn,
+  // so a single bot turn could have 3-4 stale actions racing each other.
+  // After CHECK was called, those stale CALL_CHECK / DRAW decisions all
+  // got rejected (phase mismatch, turnActedUid set), and the bot looked
+  // frozen until the 25s human timer fired.
+  const turnActionPending = new Set<string>();
   // Always start the polling loop — even all-human games may add bot stand-ins
   // later when a player disconnects, AFKs out, or hands their seat to a bot
   // via GAME_BOT_TAKEOVER. The interior already no-ops if there are 0 bots.
@@ -220,34 +227,62 @@ export function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEn
       }
 
       if ((state.phase === 'PLAYING' || state.phase === 'CHECK_CALLED') && me.isTurn) {
+        if (turnActionPending.has(bot.uid)) continue; // already scheduled for this turn
+        turnActionPending.add(bot.uid);
+
         // Update bot's card knowledge from server-side actual cards
         bot.updateCards(engine.getBotCards(bot.uid));
         const action = bot.decideTurn(state);
         const delay = 350 + Math.random() * 350;
 
         setTimeout(() => {
+          // Re-check: state may have shifted (phase change, someone else
+          // called CHECK, etc) between decision and fire. If so, bail and
+          // let the next poll re-decide instead of running a stale action.
+          const live = engine.getPublicState();
+          const liveMe = live.players.find(p => p.uid === bot.uid);
+          const stillMyTurn = !!liveMe && liveMe.isTurn
+            && (live.phase === 'PLAYING' || live.phase === 'CHECK_CALLED');
+          if (!stillMyTurn) { turnActionPending.delete(bot.uid); return; }
+
           if (action.type === 'CALL_CHECK') {
             engine.onCallCheck(bot.uid);
+            turnActionPending.delete(bot.uid);
           } else if (action.type === 'BURN_DISCARD') {
             engine.onBurnAttempt(bot.uid, action.position);
+            turnActionPending.delete(bot.uid);
           } else if (action.type === 'TAKE_DISCARD') {
             engine.onTakeDiscard(bot.uid, action.position);
+            turnActionPending.delete(bot.uid);
           } else if (action.type === 'DRAW') {
             engine.onDrawDeck(bot.uid);
             setTimeout(() => {
-              const drawnCard = engine.getDrawnCard(bot.uid);
-              if (!drawnCard) return;
-              bot.updateCards(engine.getBotCards(bot.uid));
-              const postAction = bot.decideTurn(state, drawnCard);
-              if (postAction.type === 'SWAP_DRAWN') {
-                engine.onSwapDrawn(bot.uid, postAction.position);
-              } else {
-                engine.onBurnDrawn(bot.uid);
+              try {
+                const drawnCard = engine.getDrawnCard(bot.uid);
+                // No drawn card → either onDrawDeck was rejected, or the
+                // engine routed to a special phase (K/J/Q) which the
+                // special-phase branch + smartAutoPlay will handle.
+                if (!drawnCard) return;
+                bot.updateCards(engine.getBotCards(bot.uid));
+                const postAction = bot.decideTurn(engine.getPublicState(), drawnCard);
+                if (postAction.type === 'SWAP_DRAWN') {
+                  engine.onSwapDrawn(bot.uid, postAction.position);
+                } else {
+                  engine.onBurnDrawn(bot.uid);
+                }
+              } finally {
+                turnActionPending.delete(bot.uid);
               }
             }, 300 + Math.random() * 300);
+          } else {
+            turnActionPending.delete(bot.uid);
           }
         }, delay);
         continue;
+      } else {
+        // Not their turn anymore — release the lock so the next time it is
+        // their turn, a fresh action can be scheduled.
+        turnActionPending.delete(bot.uid);
       }
 
       if (state.phase === 'SPECIAL_J' && state.specialActionUid === bot.uid) {

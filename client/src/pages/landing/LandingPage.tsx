@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { useLang } from '../../i18n/useT';
+import { GameMenuModal } from '../../components/shared/GameMenuModal';
 
 // ── UAE Skyline SVG ────────────────────────────────────────────────────────────
 function UAESkyline() {
@@ -252,10 +253,10 @@ function RulesSection({ lang }: { lang: string }) {
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '0 20px' }}>
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <h2 className="text-center font-arabic font-bold mb-2" style={{ fontSize: 28, color: '#E8C97A' }}>
-            {lang === 'ar' ? 'كيف تلعب؟' : 'How to Play?'}
+            {lang === 'ar' ? 'كيف تلعب CHECK؟' : 'How to Play CHECK?'}
           </h2>
           <p className="text-center font-arabic mb-6" style={{ fontSize: 14, color: 'rgba(245,230,200,0.4)' }}>
-            {lang === 'ar' ? 'قواعد CHECK في ست نقاط' : 'CHECK rules in six points'}
+            {lang === 'ar' ? 'قواعد لعبة الورق · لودو لها قواعدها الخاصة' : 'Card-game rules · Ludo has its own rules'}
           </p>
           <ArabesqueDivider />
         </motion.div>
@@ -316,6 +317,14 @@ export function LandingPage() {
   const navigate = useNavigate();
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
   const isAr = lang === 'ar';
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Logged-in users hit a game-picker modal first (Check vs Ludo). Guests
+  // still go through the auth flow before they can pick a game.
+  const handlePlayNow = () => {
+    if (user) setMenuOpen(true);
+    else navigate('/register');
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#0E0905', overflowX: 'hidden', direction: dir }}>
@@ -328,7 +337,7 @@ export function LandingPage() {
           <LangToggle />
           {user ? (
             <button
-              onClick={() => navigate('/home')}
+              onClick={handlePlayNow}
               className="px-4 py-1.5 rounded-lg font-arabic font-bold transition-all"
               style={{ background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.5)', color: '#E8C97A', fontSize: 13 }}
             >
@@ -375,7 +384,7 @@ export function LandingPage() {
         >
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2, duration: 0.7 }}>
             <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(201,168,76,0.6)', letterSpacing: 4, marginBottom: 8 }}>
-              {isAr ? '✦ لعبة ورق بأجواء إماراتية ✦' : '✦ A Card Game with UAE Spirit ✦'}
+              {isAr ? '✦ ألعاب إماراتية أصيلة ✦' : '✦ Authentic Emirati Games ✦'}
             </p>
             <h1 className="font-display" style={{
               fontSize: 'clamp(56px, 12vw, 96px)', color: '#C9A84C', lineHeight: 1,
@@ -384,24 +393,24 @@ export function LandingPage() {
             }}>
               CHECK
             </h1>
+            <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(245,230,200,0.40)', letterSpacing: 2, marginTop: -8, marginBottom: 0 }}>
+              {isAr ? 'تشيك · لودو' : 'CHECK · LUDO'}
+            </p>
           </motion.div>
 
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6, duration: 0.8 }}>
-            <p className="font-arabic" style={{
+            <p className="font-arabic mt-4" style={{
               fontSize: 'clamp(14px, 2.5vw, 18px)', color: 'rgba(245,230,200,0.55)',
-              lineHeight: 2, maxWidth: 520, margin: '0 auto 8px', fontStyle: 'italic',
+              lineHeight: 2, maxWidth: 520, margin: '16px auto 10px', fontStyle: 'italic',
             }}>
               {isAr
-                ? '"في ظل النخيل و دفء الديار، تجتمع الأوراق و تُروى الحكايا"'
-                : '"Under the shade of palms, cards are played and stories are told"'}
+                ? '"في ظل النخيل و دفء الديار، تجتمع الأوراق و يُرمى النرد"'
+                : '"Under the palms\' shade, cards are dealt and dice are rolled"'}
             </p>
-            <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(245,230,200,0.35)', marginBottom: 24 }}>
+            <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(245,230,200,0.40)', marginBottom: 28 }}>
               {isAr
-                ? 'اجمع أقل النقاط، احرق أوراقك بذكاء، وقول CHECK في الوقت المناسب'
-                : 'Collect the fewest points, burn cards wisely, and call CHECK at the right moment'}
-            </p>
-            <p className="font-arabic font-bold" style={{ fontSize: 14, color: 'rgba(201,168,76,0.5)', marginBottom: 28 }}>
-              {isAr ? 'أول من يوصل ١٠٠ نقطة يخسر — كن الأذكى' : 'First to reach 100 points loses — be the smartest'}
+                ? 'اختر لعبتك — تشيك بالورق أو لودو بالنرد'
+                : 'Pick your game — Check with cards or Ludo with dice'}
             </p>
           </motion.div>
 
@@ -411,7 +420,7 @@ export function LandingPage() {
           >
             {user ? (
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                onClick={() => navigate('/home')}
+                onClick={handlePlayNow}
                 className="font-arabic font-bold px-8 py-3 rounded-2xl"
                 style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0E0905', fontSize: 16, boxShadow: '0 0 32px rgba(201,168,76,0.4)' }}>
                 {isAr ? 'ابدأ اللعب الآن ←' : 'Play Now →'}
@@ -450,15 +459,15 @@ export function LandingPage() {
         <div style={{ maxWidth: 680, margin: '0 auto' }}>
           <div className="grid grid-cols-2 gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))' }}>
             {(isAr ? [
-              { icon: '👥', label: 'حتى ١٠ لاعبين', sub: 'أونلاين أو مع أصدقاء' },
+              { icon: '🃏', label: 'تشيك للورق', sub: 'حتى ١٠ لاعبين' },
+              { icon: '🎲', label: 'لودو بالنرد', sub: 'سباق ٢-٤ لاعبين' },
               { icon: '🤖', label: 'بوتات ذكية', sub: '٣ مستويات صعوبة' },
               { icon: '🏆', label: 'تصنيف عالمي', sub: 'نافس اللاعبين' },
-              { icon: '🎁', label: 'متجر الشخصيات', sub: 'شخصيات حصرية' },
             ] : [
-              { icon: '👥', label: 'Up to 10 Players', sub: 'Online or with friends' },
+              { icon: '🃏', label: 'CHECK Cards', sub: 'Up to 10 players' },
+              { icon: '🎲', label: 'LUDO Dice', sub: 'Race 2-4 players' },
               { icon: '🤖', label: 'Smart Bots', sub: '3 difficulty levels' },
               { icon: '🏆', label: 'Global Leaderboard', sub: 'Compete with players' },
-              { icon: '🎁', label: 'Character Store', sub: 'Exclusive characters' },
             ]).map((f, i) => (
               <motion.div key={i}
                 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
@@ -500,7 +509,7 @@ export function LandingPage() {
             </div>
           )}
           {user && (
-            <button onClick={() => navigate('/home')}
+            <button onClick={handlePlayNow}
               className="font-arabic font-bold px-8 py-3 rounded-2xl"
               style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0E0905', fontSize: 15, boxShadow: '0 0 24px rgba(201,168,76,0.35)' }}>
               {isAr ? 'ابدأ اللعب الآن ←' : 'Play Now →'}
@@ -522,6 +531,8 @@ export function LandingPage() {
           </p>
         </div>
       </footer>
+
+      <GameMenuModal open={menuOpen} onClose={() => setMenuOpen(false)} lang={lang} />
     </div>
   );
 }

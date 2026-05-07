@@ -778,16 +778,14 @@ function MatchLengthPicker({ value, onChange, accent, lang }: {
   );
 }
 
-function PlayBox({ mode, setMode, coins, onCreate, lang, gameKind, setGameKind }: {
+function PlayBox({ mode, setMode, coins, onCreate, lang }: {
   mode: GameMode;
   setMode: (m: GameMode) => void;
   coins: number;
   onCreate: (cfg: any) => void;
   lang: string;
-  gameKind: GameType;
-  setGameKind: (g: GameType) => void;
 }) {
-  const isLudo = gameKind === 'ludo';
+  const isLudo = false; // Check-only on /home; Ludo lives behind /play-ludo.
   // Ludo only supports 2-4 colors. Cap player/bot counts when switching kinds
   // so a stale Check setting (e.g. 8 players) doesn't break room creation.
   const [playerCount, setPlayerCount] = useState(isLudo ? 4 : 4);
@@ -832,10 +830,6 @@ function PlayBox({ mode, setMode, coins, onCreate, lang, gameKind, setGameKind }
 
   return (
     <div className="flex flex-col items-stretch gap-4">
-      {/* Game picker — prominent two-card selector so Check and Ludo are
-          equals at the top of the play menu, not nested under one another. */}
-      <GamePicker gameKind={gameKind} onSelect={setGameKind} lang={lang} />
-
       {/* Mode switcher ABOVE the giant card */}
       <ModeChips mode={mode} onSelect={setMode} lang={lang} />
 
@@ -1023,7 +1017,9 @@ export function HomePage() {
   const { rooms, setRooms, currentRoom, setCurrentRoom } = useLobbyStore();
   const { addToast } = useUiStore();
   const [mode, setMode] = useState<GameMode>('bots');
-  const [gameKind, setGameKind] = useState<GameType>('check');
+  // /home is the Check-specific dashboard. Ludo has its own entry from the
+  // landing-page game menu — we don't show the kind picker here anymore.
+  const gameKind: GameType = 'check';
   const [showJoin, setShowJoin] = useState(false);
   const [searching, setSearching] = useState(false);
   const [botLoading, setBotLoading] = useState(false);
@@ -1166,7 +1162,7 @@ export function HomePage() {
 
     if (cfg.type === 'bots') {
       socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, {
-        name: gameKind === 'ludo' ? `لودو ضد البوت` : `لعبة بوتات`,
+        name: `لعبة بوتات`,
         type: 'private',
         botCount: cfg.botCount,
         botDifficulty: cfg.difficulty,
@@ -1175,7 +1171,7 @@ export function HomePage() {
       });
     } else if (cfg.type === 'private') {
       socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, {
-        name: gameKind === 'ludo' ? `غرفة لودو خاصة` : `غرفة خاصة`,
+        name: `غرفة خاصة`,
         type: 'private',
         botCount: 0,
         botDifficulty: 'medium',
@@ -1186,7 +1182,7 @@ export function HomePage() {
       });
     } else {
       socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, {
-        name: gameKind === 'ludo' ? `غرفة لودو عامة` : `غرفة عامة`,
+        name: `غرفة عامة`,
         type: 'public',
         botCount: 0,
         botDifficulty: 'medium',
@@ -1381,8 +1377,7 @@ export function HomePage() {
             </div>
 
             {/* ── Single morphing PlayBox (tabs + visual config + CTA) ── */}
-            <PlayBox mode={mode} setMode={setMode} coins={coins} onCreate={handleCreate} lang={lang}
-              gameKind={gameKind} setGameKind={setGameKind} />
+            <PlayBox mode={mode} setMode={setMode} coins={coins} onCreate={handleCreate} lang={lang} />
 
             {/* ── Rules + Tournament + Join private room actions ── */}
             <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">

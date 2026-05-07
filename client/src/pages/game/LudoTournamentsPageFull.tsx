@@ -391,7 +391,7 @@ function CreateTab({ isAr, myCoins, ludoClanId, ludoClanTag, hasActive, onSolo, 
           </div>
         </PickerLabel>
 
-        <PickerLabel label={isAr ? 'رسم الدخول' : 'Entry fee'}>
+        <PickerLabel label={isAr ? '🪙 الكوينز للدخول' : '🪙 Entry coins'}>
           <div className="grid grid-cols-4 gap-1">
             {ENTRY_FEE_TIERS.slice(0, 6).map(v => (
               <Pick key={v} sel={onlineFee === v} onClick={() => setOnlineFee(v)}>
@@ -458,7 +458,7 @@ function CreateTab({ isAr, myCoins, ludoClanId, ludoClanTag, hasActive, onSolo, 
               </div>
             </PickerLabel>
 
-            <PickerLabel label={isAr ? 'رسم الدخول' : 'Entry fee'}>
+            <PickerLabel label={isAr ? '🪙 الكوينز للدخول' : '🪙 Entry coins'}>
               <div className="grid grid-cols-4 gap-1">
                 {ENTRY_FEE_TIERS.slice(0, 6).map(v => (
                   <Pick key={v} sel={clanFee === v} onClick={() => setClanFee(v)}>

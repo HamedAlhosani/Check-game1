@@ -303,7 +303,7 @@ export function LudoHomePage() {
           <ModeCard
             icon="🌐"
             title={isAr ? 'أونلاين' : 'Online'}
-            sub={isAr ? 'اختر الرهان والعدد' : 'Pick bet and players'}
+            sub={isAr ? 'اختر الكوينز والعدد' : 'Pick coins and players'}
             accent="#7AC74F"
             onClick={() => openConfig('online')}
             isAr={isAr}
@@ -317,6 +317,22 @@ export function LudoHomePage() {
             isAr={isAr}
           />
         </div>
+
+        {/* Join-by-code: enter someone else's private room */}
+        <button
+          onClick={() => openConfig('join-code')}
+          className="w-full rounded-2xl flex items-center justify-center gap-2 mb-6 active:scale-[0.99] transition"
+          style={{
+            padding: '12px 16px',
+            background: 'linear-gradient(135deg, rgba(217,164,65,0.18), rgba(20,14,8,0.9))',
+            border: `1.5px dashed ${SAND.gold}AA`,
+            color: SAND.cream,
+            fontSize: 13,
+            cursor: 'pointer',
+          }}>
+          <span style={{ fontSize: 18 }}>🔑</span>
+          <span className="font-arabic font-bold">{isAr ? 'انضم بكود غرفة خاصة' : 'Join with private-room code'}</span>
+        </button>
 
         {/* ── Quick nav grid — links into the broader app for now (Ludo gets
               its own dedicated screens in a follow-up) ── */}

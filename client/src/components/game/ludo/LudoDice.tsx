@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 
 interface Props {
   value: number | null;
@@ -8,165 +9,127 @@ interface Props {
   size?: 'sm' | 'md' | 'lg';
 }
 
-const SIZES = { sm: 36, md: 56, lg: 72 } as const;
+const SIZES = { sm: 40, md: 64, lg: 84 } as const;
 
-// Pip layout per face — 0..1 normalized inside the face square.
-const FACE_PIPS: Record<number, [number, number][]> = {
-  1: [[0.5, 0.5]],
-  2: [[0.25, 0.25], [0.75, 0.75]],
-  3: [[0.25, 0.25], [0.5, 0.5], [0.75, 0.75]],
-  4: [[0.25, 0.25], [0.75, 0.25], [0.25, 0.75], [0.75, 0.75]],
-  5: [[0.25, 0.25], [0.75, 0.25], [0.5, 0.5], [0.25, 0.75], [0.75, 0.75]],
-  6: [[0.25, 0.20], [0.75, 0.20], [0.25, 0.50], [0.75, 0.50], [0.25, 0.80], [0.75, 0.80]],
+// Pip layout per face, normalized 0..1 inside the front square.
+const PIPS: Record<number, [number, number][]> = {
+  1: [[0.50, 0.50]],
+  2: [[0.28, 0.28], [0.72, 0.72]],
+  3: [[0.28, 0.28], [0.50, 0.50], [0.72, 0.72]],
+  4: [[0.28, 0.28], [0.72, 0.28], [0.28, 0.72], [0.72, 0.72]],
+  5: [[0.28, 0.28], [0.72, 0.28], [0.50, 0.50], [0.28, 0.72], [0.72, 0.72]],
+  6: [[0.28, 0.22], [0.72, 0.22], [0.28, 0.50], [0.72, 0.50], [0.28, 0.78], [0.72, 0.78]],
 };
-
-// Cube faces wrapping (opposite sums = 7):
-// Front = 1, Back = 6, Right = 4, Left = 3, Top = 2, Bottom = 5.
-// Each face is positioned by translating along its axis by HALF the cube edge.
-//
-// To show value V on the front, we rotate the inner cube so that face V is
-// facing the camera. The math below maps every value to (rotX, rotY).
-const ORIENT: Record<number, { rx: number; ry: number }> = {
-  1: { rx:    0, ry:    0 }, // front
-  2: { rx:  -90, ry:    0 }, // top → bring DOWN to front
-  3: { rx:    0, ry:   90 }, // left
-  4: { rx:    0, ry:  -90 }, // right
-  5: { rx:   90, ry:    0 }, // bottom → bring UP to front
-  6: { rx:    0, ry:  180 }, // back
-};
-
-function Pip({ x, y, size }: { x: number; y: number; size: number }) {
-  const r = size === 36 ? 3 : size === 56 ? 4.6 : 5.6;
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        left: `${x * 100}%`,
-        top: `${y * 100}%`,
-        transform: 'translate(-50%, -50%)',
-        width: r * 2,
-        height: r * 2,
-        borderRadius: '50%',
-        background: 'radial-gradient(circle at 32% 28%, #4A2A05 0%, #1A0F02 100%)',
-        boxShadow:
-          'inset 0 1px 0 rgba(255,255,255,0.18), ' +
-          'inset 0 -1px 0 rgba(0,0,0,0.5), ' +
-          '0 1px 2px rgba(255,255,255,0.5)',
-      }}
-    />
-  );
-}
-
-function DiceFace({ value, side, size }: { value: number; side: 'front'|'back'|'left'|'right'|'top'|'bottom'; size: number }) {
-  const half = size / 2;
-  const transform = {
-    front:  `rotateY(0deg)   translateZ(${half}px)`,
-    back:   `rotateY(180deg) translateZ(${half}px)`,
-    right:  `rotateY(-90deg) translateZ(${half}px)`,
-    left:   `rotateY(90deg)  translateZ(${half}px)`,
-    top:    `rotateX(90deg)  translateZ(${half}px)`,
-    bottom: `rotateX(-90deg) translateZ(${half}px)`,
-  }[side];
-
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        width: size,
-        height: size,
-        transform,
-        borderRadius: '14%',
-        background: `
-          radial-gradient(circle at 28% 22%, #FFFFFF 0%, transparent 38%),
-          linear-gradient(135deg, #F6E6BE 0%, #E8C97A 55%, #C9A84C 100%)
-        `,
-        border: '2px solid #7A6303',
-        boxShadow:
-          'inset 0 2px 0 rgba(255,255,255,0.6), ' +
-          'inset 0 -2px 0 rgba(122,99,3,0.45), ' +
-          'inset 0 0 0 1px rgba(255,255,255,0.18)',
-        backfaceVisibility: 'hidden',
-      }}
-    >
-      {FACE_PIPS[value].map(([x, y], i) => (
-        <Pip key={i} x={x} y={y} size={size} />
-      ))}
-    </div>
-  );
-}
 
 /**
- * Real 3D dice — six CSS faces wrapped into a cube via preserve-3d. The cube
- * rotates to bring the active face to the front. While `rolling` is true the
- * cube tumbles through multiple full rotations + a small bounce, then settles
- * on the target value.
+ * Isometric SVG dice — Ludo Star inspired. Three visible faces (front,
+ * top, right) drawn as flat polygons with a single tilt; pips render on
+ * the front face only so the rolled value is *always* visible regardless
+ * of device, browser, or 3D-transform support. Much more reliable than
+ * the previous CSS-cube approach (which on some browsers could leave the
+ * dice rendering blank).
+ *
+ * While `rolling` is true the front face cycles through random pip
+ * layouts every ~80ms and the whole die wobbles + rotates slightly,
+ * settling on the actual value when rolling clears.
  */
 export function LudoDice({ value, rolling, onClick, disabled, size = 'md' }: Props) {
   const px = SIZES[size];
-  const [tumble, setTumble] = useState({ rx: 0, ry: 0 });
+  const [tumbleValue, setTumbleValue] = useState<number>(value || 1);
 
-  // While rolling, fast random orientation changes give the tumble effect.
+  // Cycle pip layouts while rolling
   useEffect(() => {
-    if (!rolling) return;
+    if (!rolling) {
+      if (value) setTumbleValue(value);
+      return;
+    }
     let alive = true;
     const tick = () => {
       if (!alive) return;
-      setTumble({
-        rx: Math.floor(Math.random() * 4) * 90 + (value === 5 ? 90 : value === 2 ? -90 : 0),
-        ry: Math.floor(Math.random() * 4) * 90 + (value === 6 ? 180 : 0),
-      });
-      setTimeout(tick, 90);
+      setTumbleValue(1 + Math.floor(Math.random() * 6));
+      setTimeout(tick, 80);
     };
     tick();
     return () => { alive = false; };
   }, [rolling, value]);
 
-  const target = value && ORIENT[value]
-    ? { rx: ORIENT[value].rx, ry: ORIENT[value].ry }
-    : { rx: -22, ry: 28 };
-
-  // Add multiple full rotations during the roll for the "tumble" feel
-  const rolledExtraX = rolling ? 720 + tumble.rx : 0;
-  const rolledExtraY = rolling ? 720 + tumble.ry : 0;
-
-  const finalRx = rolling ? rolledExtraX : target.rx;
-  const finalRy = rolling ? rolledExtraY : target.ry;
+  // Whichever value to draw right now
+  const showValue = rolling ? tumbleValue : (value ?? null);
 
   return (
-    <button
+    <motion.button
       onClick={!disabled && onClick ? onClick : undefined}
       disabled={disabled}
-      aria-label={value ? `Dice ${value}` : 'Dice'}
+      animate={rolling
+        ? { rotate: [-8, 8, -6, 6, -3, 3, 0], scale: [1, 1.08, 0.96, 1.04, 1] }
+        : { rotate: 0, scale: 1 }}
+      transition={rolling
+        ? { duration: 0.7, ease: 'easeOut' }
+        : { duration: 0.3, type: 'spring', stiffness: 320, damping: 20 }}
+      whileHover={onClick && !disabled ? { scale: 1.06 } : undefined}
+      whileTap={onClick && !disabled ? { scale: 0.92 } : undefined}
+      className="relative"
       style={{
         width: px,
         height: px,
-        perspective: px * 4,
         background: 'transparent',
         border: 'none',
         padding: 0,
         cursor: onClick && !disabled ? 'pointer' : 'default',
-        // Idle resting tilt makes it look 3D even before any roll
-        position: 'relative',
-        filter: disabled ? 'none' : 'drop-shadow(0 6px 14px rgba(0,0,0,0.55)) drop-shadow(0 0 14px rgba(232,201,122,0.55))',
       }}
+      aria-label={value ? `Dice ${value}` : 'Dice'}
     >
-      <div
-        style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
-          transformStyle: 'preserve-3d',
-          transform: `rotateX(${finalRx}deg) rotateY(${finalRy}deg)`,
-          transition: rolling ? 'transform 90ms linear' : 'transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-        }}
-      >
-        <DiceFace value={1} side="front"  size={px} />
-        <DiceFace value={6} side="back"   size={px} />
-        <DiceFace value={4} side="right"  size={px} />
-        <DiceFace value={3} side="left"   size={px} />
-        <DiceFace value={2} side="top"    size={px} />
-        <DiceFace value={5} side="bottom" size={px} />
-      </div>
-    </button>
+      <svg viewBox="0 0 100 100" width={px} height={px} style={{ overflow: 'visible' }}>
+        {/* Drop shadow under the dice */}
+        <ellipse cx="50" cy="94" rx="32" ry="4" fill="#000" opacity={disabled ? 0.18 : 0.45} />
+
+        {/* Top face — lighter trapezoid */}
+        <path d="M 20 22 L 30 10 L 90 10 L 80 22 Z"
+          fill="#FFFFFF"
+          stroke="#7A6303" strokeWidth="1.2" strokeLinejoin="round" />
+
+        {/* Right face — darker trapezoid */}
+        <path d="M 80 22 L 90 10 L 90 78 L 80 90 Z"
+          fill="#D8D5CE"
+          stroke="#7A6303" strokeWidth="1.2" strokeLinejoin="round" />
+
+        {/* Front face — white square with the pips */}
+        <rect x="20" y="22" width="60" height="68" rx="9" ry="9"
+          fill="#FAFAF8"
+          stroke="#7A6303" strokeWidth="1.4" />
+
+        {/* Inner gold bezel for premium feel */}
+        <rect x="22" y="24" width="56" height="64" rx="7" ry="7"
+          fill="none" stroke="#E8C97A" strokeWidth="0.6" opacity="0.6" />
+
+        {/* Pips */}
+        {showValue && PIPS[showValue]?.map(([x, y], i) => {
+          const cx = 20 + x * 60;
+          const cy = 22 + y * 68;
+          return (
+            <g key={`${showValue}-${i}`}>
+              <circle cx={cx} cy={cy} r={5.5}
+                fill="#C8323A"
+                stroke="#5E1612" strokeWidth="0.8" />
+              <circle cx={cx - 1.3} cy={cy - 1.3} r={1.6}
+                fill="#FFCFD0" opacity="0.85" />
+            </g>
+          );
+        })}
+
+        {/* No value yet — soft '?' so the empty die isn't a blank square */}
+        {!showValue && (
+          <text x="50" y="62" textAnchor="middle"
+            fontSize="32" fontWeight="800" fill="#C9A84C" opacity="0.5">?</text>
+        )}
+
+        {/* Glow halo when interactive */}
+        {!disabled && onClick && (
+          <rect x="20" y="22" width="60" height="68" rx="9" ry="9"
+            fill="none" stroke="#E8C97A" strokeWidth="2" opacity="0.7"
+            style={{ filter: 'drop-shadow(0 0 6px #E8C97A)' }} />
+        )}
+      </svg>
+    </motion.button>
   );
 }

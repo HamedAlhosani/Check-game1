@@ -13,7 +13,7 @@ const SAND = {
   cream: '#F4E4BE',
 };
 
-export type LudoConfigMode = 'bots' | 'online' | 'private';
+export type LudoConfigMode = 'bots' | 'online' | 'private' | 'join-code';
 
 interface Props {
   open: boolean;
@@ -27,9 +27,10 @@ const COIN_STEPS = [0, 10, 25, 50, 100, 250, 500, 1000];
 const PLAYER_OPTIONS = [2, 3, 4];
 
 const MODE_TITLE: Record<LudoConfigMode, { ar: string; en: string; icon: string; sub: { ar: string; en: string } }> = {
-  bots:    { ar: 'ضد البوتات',  en: 'Vs Bots',       icon: '🤖', sub: { ar: 'اختر العملة وعدد البوتات', en: 'Pick coins and bot count' } },
-  online:  { ar: 'أونلاين',      en: 'Online',        icon: '🌐', sub: { ar: 'اختر العملة والعدد',         en: 'Pick coins and player count' } },
-  private: { ar: 'غرفة خاصة',   en: 'Private Room',  icon: '🔒', sub: { ar: 'اختر العملة والعدد',         en: 'Pick coins and player count' } },
+  bots:    { ar: 'ضد البوتات',  en: 'Vs Bots',       icon: '🤖', sub: { ar: 'اختر الكوينز وعدد البوتات',  en: 'Pick coins and bot count' } },
+  online:  { ar: 'أونلاين',      en: 'Online',        icon: '🌐', sub: { ar: 'اختر الكوينز والعدد',         en: 'Pick coins and player count' } },
+  private: { ar: 'غرفة خاصة',   en: 'Private Room',  icon: '🔒', sub: { ar: 'اختر الكوينز والعدد',         en: 'Pick coins and player count' } },
+  'join-code': { ar: 'انضم بكود', en: 'Join by code', icon: '🔑', sub: { ar: 'ادخل كود الغرفة الخاصة',     en: 'Enter the private-room code' } },
 };
 
 /**
@@ -103,6 +104,7 @@ export function LudoConfigModal({ open, mode, onClose, ludoCoins, lang }: Props)
   const [phase, setPhase] = useState<Phase>('config');
   const [currentRoom, setCurrentRoom] = useState<RoomState | null>(null);
   const [copied, setCopied] = useState(false);
+  const [joinCode, setJoinCode] = useState('');
   const startedRef = useRef(false);
 
   // Reset on open
@@ -263,6 +265,48 @@ export function LudoConfigModal({ open, mode, onClose, ludoCoins, lang }: Props)
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
     });
+  };
+
+  // Join an existing private room by code. After server accepts, the
+  // LOBBY_ROOM_UPDATED handler swaps us into the 'lobby' phase.
+  const handleJoinByCode = async () => {
+    const code = joinCode.trim().toUpperCase();
+    if (!code || busy) return;
+    setBusy(true);
+    soundService.playClick();
+
+    let socket;
+    try {
+      socket = await socketService.ensureReady(5000);
+    } catch {
+      setBusy(false);
+      addToast(isAr ? 'تعذّر الاتصال بالخادم' : 'Could not reach server', 'error');
+      return;
+    }
+
+    const onUpdated = (room: RoomState) => {
+      setCurrentRoom(room);
+      setPhase('lobby');
+    };
+    const onStarting = (data: { gameId: string; gameType: GameType }) => {
+      socket.off(SOCKET_EVENTS.LOBBY_ROOM_UPDATED, onUpdated);
+      socket.off(SOCKET_EVENTS.LOBBY_GAME_STARTING, onStarting);
+      socket.off(SOCKET_EVENTS.LOBBY_ERROR, onError);
+      onClose();
+      navigate(`/game/${data.gameType}/${data.gameId}`);
+    };
+    const onError = (data: { message: string }) => {
+      socket.off(SOCKET_EVENTS.LOBBY_ROOM_UPDATED, onUpdated);
+      socket.off(SOCKET_EVENTS.LOBBY_GAME_STARTING, onStarting);
+      socket.off(SOCKET_EVENTS.LOBBY_ERROR, onError);
+      addToast(data.message || (isAr ? 'كود غير صحيح' : 'Invalid code'), 'error');
+      setBusy(false);
+    };
+
+    socket.on(SOCKET_EVENTS.LOBBY_ROOM_UPDATED, onUpdated);
+    socket.on(SOCKET_EVENTS.LOBBY_GAME_STARTING, onStarting);
+    socket.on(SOCKET_EVENTS.LOBBY_ERROR, onError);
+    socket.emit(SOCKET_EVENTS.LOBBY_JOIN_PRIVATE, { code });
   };
 
   return (
@@ -450,13 +494,60 @@ export function LudoConfigModal({ open, mode, onClose, ludoCoins, lang }: Props)
             </div>
             )}
 
-            {phase === 'config' && (
+            {phase === 'config' && mode === 'join-code' && (
+              <div>
+                <div className="rounded-2xl px-3 py-3 mb-3"
+                  style={{ background: 'rgba(36,24,12,0.92)', border: `1.5px solid ${SAND.gold}55` }}>
+                  <p className="font-arabic text-center mb-2"
+                    style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)', letterSpacing: 1 }}>
+                    {isAr ? '🔑  كود الغرفة' : '🔑  Room code'}
+                  </p>
+                  <input
+                    value={joinCode}
+                    onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
+                    onKeyDown={e => { if (e.key === 'Enter') handleJoinByCode(); }}
+                    placeholder="ABCD12"
+                    className="w-full rounded-xl px-3 py-3 outline-none font-mono font-bold text-center"
+                    autoCapitalize="characters"
+                    style={{
+                      background: '#0E0905',
+                      border: `2px solid ${SAND.gold}77`,
+                      color: SAND.goldLight,
+                      fontSize: 22,
+                      letterSpacing: 6,
+                      direction: 'ltr',
+                    }}
+                  />
+                </div>
+                <motion.button
+                  whileHover={!busy && joinCode.trim().length > 0 ? { scale: 1.02 } : {}}
+                  whileTap={!busy && joinCode.trim().length > 0 ? { scale: 0.97 } : {}}
+                  disabled={busy || joinCode.trim().length === 0}
+                  onClick={handleJoinByCode}
+                  className="w-full rounded-2xl font-arabic font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                  style={{
+                    padding: '14px 20px',
+                    background: !busy && joinCode.trim().length > 0
+                      ? `linear-gradient(135deg, ${SAND.goldLight} 0%, ${SAND.gold} 50%, ${SAND.goldDark} 100%)`
+                      : 'rgba(255,255,255,0.04)',
+                    color: !busy && joinCode.trim().length > 0 ? '#0E0905' : 'rgba(255,255,255,0.4)',
+                    fontSize: 16, letterSpacing: 1,
+                    boxShadow: !busy && joinCode.trim().length > 0
+                      ? `0 10px 28px rgba(0,0,0,0.5), 0 0 30px ${SAND.gold}66` : 'none',
+                    cursor: !busy && joinCode.trim().length > 0 ? 'pointer' : 'not-allowed',
+                  }}>
+                  {busy ? (isAr ? 'جاري الانضمام…' : 'Joining…') : (isAr ? '🔑 انضم للغرفة' : '🔑 Join room')}
+                </motion.button>
+              </div>
+            )}
+
+            {phase === 'config' && mode !== 'join-code' && (
             <>
               {/* Coin stepper */}
               <div className="rounded-2xl px-3 py-3 mb-3"
                 style={{ background: 'rgba(36,24,12,0.92)', border: `1.5px solid ${SAND.gold}55` }}>
                 <Stepper
-                  label={isAr ? `🪙  رصيدك  ${ludoCoins.toLocaleString()}` : `🪙  balance  ${ludoCoins.toLocaleString()}`}
+                  label={isAr ? `🪙  كوينزك  ${ludoCoins.toLocaleString()}` : `🪙  your coins  ${ludoCoins.toLocaleString()}`}
                   value={bet}
                   onChange={setBet}
                   options={COIN_STEPS}
@@ -464,7 +555,7 @@ export function LudoConfigModal({ open, mode, onClose, ludoCoins, lang }: Props)
                 />
                 {!canAfford && (
                   <p className="text-center font-arabic mt-2" style={{ fontSize: 11, color: '#FF8A65' }}>
-                    {isAr ? 'الرصيد غير كافٍ' : 'Insufficient balance'}
+                    {isAr ? 'الكوينز غير كافية' : 'Insufficient coins'}
                   </p>
                 )}
               </div>

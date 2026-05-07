@@ -29,6 +29,7 @@ const loadCardsPreview  = () => import('./pages/cards-preview/CardsPreviewPage')
 const loadTournaments   = () => import('./pages/tournaments/TournamentsPage');
 const loadClans         = () => import('./pages/clans/ClansPage');
 const loadLudoGame      = () => import('./pages/game/LudoGamePage');
+const loadLudoHome      = () => import('./pages/game/LudoHomePage');
 
 const RegisterPage      = lazy(() => loadRegister().then(m => ({ default: m.RegisterPage })));
 const ProfilePage       = lazy(() => loadProfile().then(m => ({ default: m.ProfilePage })));
@@ -41,6 +42,7 @@ const CardsPreviewPage  = lazy(() => loadCardsPreview().then(m => ({ default: m.
 const TournamentsPage   = lazy(() => loadTournaments().then(m => ({ default: m.TournamentsPage })));
 const ClansPage         = lazy(() => loadClans().then(m => ({ default: m.ClansPage })));
 const LudoGamePage      = lazy(() => loadLudoGame().then(m => ({ default: m.LudoGamePage })));
+const LudoHomePage      = lazy(() => loadLudoHome().then(m => ({ default: m.LudoHomePage })));
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { setUser, setProfile, setLoading } = useAuthStore();
@@ -253,6 +255,7 @@ export function App() {
             <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/game/check/:gameId" element={<ProtectedRoute><CheckGamePage /></ProtectedRoute>} />
             <Route path="/game/ludo/:gameId" element={<ProtectedRoute><LudoGamePage /></ProtectedRoute>} />
+            <Route path="/ludo" element={<ProtectedRoute><LudoHomePage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/user/:uid" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
             <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />

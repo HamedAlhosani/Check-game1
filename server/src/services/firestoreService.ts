@@ -98,6 +98,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
     saveUsers();
   }
   if (data.coins === undefined) data.coins = 0;
+  if ((data as any).gems === undefined) (data as any).gems = 0;
   if (!data.ownedItems) data.ownedItems = [...FREE_ITEMS];
   if (!data.equippedItems) data.equippedItems = { ...defaultEquipped };
   if (!data.username) { data.username = generateUsername(data.displayName); saveUsers(); }

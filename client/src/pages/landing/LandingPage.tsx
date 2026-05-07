@@ -242,10 +242,144 @@ const RULES_EN = [
   },
 ];
 
+// ─── Ludo rules content ──────────────────────────────────────────────────────
+const RULES_LUDO_AR = [
+  {
+    title: 'الهدف من اللعبة',
+    icon: '🎯',
+    content:
+      'كل لاعب عنده ٤ قطع بنفس اللون\n' +
+      'الهدف: أوصل كل قطعك للوسط (الصومعة) قبل خصومك\n' +
+      'أول لاعب يوصل قطعه الأربعة كلهم للوسط = الفائز 🏆',
+  },
+  {
+    title: 'النرد و الحركة',
+    icon: '🎲',
+    content:
+      'في دورك ترمي النرد\n' +
+      'العدد اللي يطلع = عدد الخانات اللي تتحرك بها قطعتك\n' +
+      'إذا طلع لك ٦: تلعب دور إضافي 🎁\n' +
+      'إذا طلعت ٣ سادسات متتالية: دورك يضيع كعقوبة ⚠️',
+  },
+  {
+    title: 'إخراج القطع من البيت',
+    icon: '🏠',
+    content:
+      'كل قطعك تبدأ في "البيت" (الزاوية الملونة)\n' +
+      'لا تقدر تخرج قطعة إلا إذا طلع لك ٦ في النرد\n' +
+      'القطعة الجديدة تنزل على خانة البداية الملونة بنفس لونك\n' +
+      'بعدها تتحرك حول المسار باتجاه عقارب الساعة',
+  },
+  {
+    title: 'الأكل و القتل',
+    icon: '⚔️',
+    content:
+      'لو وصلت قطعتك إلى خانة فيها قطعة خصم: تأكلها 🔥\n' +
+      'القطعة المأكولة ترجع إلى بيت صاحبها من البداية\n' +
+      'الأكل ما يصير على الخانات الآمنة ⭐ (النجوم وخانات البداية الملونة)',
+  },
+  {
+    title: 'الخانات الآمنة',
+    icon: '⭐',
+    content:
+      'فيه ٨ خانات آمنة على المسار\n' +
+      '٤ منها خانات البداية الملونة (وحدة لكل لاعب)\n' +
+      '٤ منها نجوم ذهبية موزعة على المسار\n' +
+      'القطع داخل هذه الخانات لا يمكن أكلها 🛡️',
+  },
+  {
+    title: 'دخول البيت النهائي',
+    icon: '✨',
+    content:
+      'بعد ما تكمل لفة كاملة (٥٢ خانة)، قطعتك تدخل ممرها الملون\n' +
+      'الممر يقودها للوسط (الصومعة الذهبية)\n' +
+      'لازم تطلع رقم بالضبط للوصول — لو زاد، ما تتحرك\n' +
+      'القطعة في الممر آمنة 100% — ما يقدر أحد يأكلها',
+  },
+  {
+    title: 'الفوز',
+    icon: '🏆',
+    content:
+      'لما توصل كل قطعك الأربعة للوسط = فزت في المباراة\n' +
+      'الفوز = نقاط XP + كوينز + إنجاز للوبي\n' +
+      'يقدر يلعب لودو من ٢ إلى ٤ لاعبين\n' +
+      '٢ لاعبين: لاعب لكل لون متقابل\n' +
+      '٤ لاعبين: كل لاعب على لون',
+  },
+];
+
+const RULES_LUDO_EN = [
+  {
+    title: 'Goal of the Game',
+    icon: '🎯',
+    content:
+      'Each player has 4 same-colored tokens\n' +
+      'Goal: get all your tokens to the center home before your opponents\n' +
+      'First player to land all 4 tokens in the center wins 🏆',
+  },
+  {
+    title: 'Dice & Movement',
+    icon: '🎲',
+    content:
+      'On your turn you roll the dice\n' +
+      'The number rolled = how many cells you move\n' +
+      'Roll a 6 → bonus turn 🎁\n' +
+      'Three 6s in a row → forfeit your turn ⚠️',
+  },
+  {
+    title: 'Launching Tokens',
+    icon: '🏠',
+    content:
+      'All tokens start in the colored corner home\n' +
+      'You can only launch a token by rolling a 6\n' +
+      'The launched token lands on your colored start tile\n' +
+      'It then travels clockwise around the cross-shaped path',
+  },
+  {
+    title: 'Capturing',
+    icon: '⚔️',
+    content:
+      'If you land on a cell with an opponent\'s token: you capture it 🔥\n' +
+      'Captured tokens return to their owner\'s home\n' +
+      'No captures on safe tiles (⭐ stars and colored start tiles)',
+  },
+  {
+    title: 'Safe Tiles',
+    icon: '⭐',
+    content:
+      '8 safe tiles spread around the path\n' +
+      '4 are colored start tiles (one per player)\n' +
+      '4 are golden khatim stars\n' +
+      'Tokens on safe tiles cannot be captured 🛡️',
+  },
+  {
+    title: 'Entering Home Column',
+    icon: '✨',
+    content:
+      'After a full lap (52 tiles), your token enters its colored home column\n' +
+      'The column leads to the golden center home\n' +
+      'You must roll the exact number to land — overshooting means no move\n' +
+      'Tokens in the home column are 100% safe — no captures',
+  },
+  {
+    title: 'Winning',
+    icon: '🏆',
+    content:
+      'Get all 4 tokens to the center home to win\n' +
+      'Wins grant XP + coins + leaderboard credit\n' +
+      'Ludo supports 2-4 players\n' +
+      '2 players: one each on opposite colors\n' +
+      '4 players: one player per color',
+  },
+];
+
 // ── Rules section ─────────────────────────────────────────────────────────────
 function RulesSection({ lang }: { lang: string }) {
   const [open, setOpen] = useState<number | null>(0);
-  const rules = lang === 'ar' ? RULES_AR : RULES_EN;
+  const [game, setGame] = useState<'check' | 'ludo'>('check');
+  const rules = game === 'check'
+    ? (lang === 'ar' ? RULES_AR : RULES_EN)
+    : (lang === 'ar' ? RULES_LUDO_AR : RULES_LUDO_EN);
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
   return (
@@ -253,11 +387,40 @@ function RulesSection({ lang }: { lang: string }) {
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '0 20px' }}>
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <h2 className="text-center font-arabic font-bold mb-2" style={{ fontSize: 28, color: '#E8C97A' }}>
-            {lang === 'ar' ? 'كيف تلعب CHECK؟' : 'How to Play CHECK?'}
+            {lang === 'ar' ? 'كيف تلعب؟' : 'How to Play?'}
           </h2>
-          <p className="text-center font-arabic mb-6" style={{ fontSize: 14, color: 'rgba(245,230,200,0.4)' }}>
-            {lang === 'ar' ? 'قواعد لعبة الورق · لودو لها قواعدها الخاصة' : 'Card-game rules · Ludo has its own rules'}
+          <p className="text-center font-arabic mb-4" style={{ fontSize: 13, color: 'rgba(245,230,200,0.4)' }}>
+            {lang === 'ar' ? 'اختر اللعبة لعرض قواعدها' : 'Pick a game to read its rules'}
           </p>
+
+          {/* Game toggle: Check rules / Ludo rules */}
+          <div className="flex justify-center gap-2 mb-4">
+            {(['check', 'ludo'] as const).map(g => {
+              const sel = game === g;
+              const meta = g === 'check'
+                ? { icon: '🃏', ar: 'قواعد تشيك', en: 'CHECK Rules', accent: '#E8C97A', glow: 'rgba(232,201,122,0.40)' }
+                : { icon: '🎲', ar: 'قواعد لودو', en: 'LUDO Rules',  accent: '#D9A441', glow: 'rgba(217,164,65,0.40)' };
+              return (
+                <button
+                  key={g}
+                  onClick={() => { setGame(g); setOpen(0); }}
+                  className="flex items-center gap-2 rounded-xl font-arabic font-bold transition-all"
+                  style={{
+                    padding: sel ? '8px 18px' : '7px 14px',
+                    background: sel ? meta.accent : 'rgba(255,255,255,0.04)',
+                    color: sel ? '#0E0905' : 'rgba(245,230,200,0.65)',
+                    border: `1.5px solid ${sel ? meta.accent : 'rgba(255,255,255,0.10)'}`,
+                    boxShadow: sel ? `0 0 22px ${meta.glow}` : 'none',
+                    fontSize: 13, cursor: 'pointer',
+                  }}
+                >
+                  <span style={{ fontSize: 16, lineHeight: 1 }}>{meta.icon}</span>
+                  {lang === 'ar' ? meta.ar : meta.en}
+                </button>
+              );
+            })}
+          </div>
+
           <ArabesqueDivider />
         </motion.div>
 

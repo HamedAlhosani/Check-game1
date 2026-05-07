@@ -318,10 +318,22 @@ const Av = memo(function Av({ id, name, size = 32, frameId }: { id: string; name
 
 // ─── Emoji float ──────────────────────────────────────────────────────────────
 function EmojiFloat({ em }: { em: string }) {
+  // Lifecycle: pop-in (0→0.3s) → hold large (0.3→4.2s) → fade-up (4.2→5s).
+  // Total 5s matches the timeout in CheckBoard so the visual stays in sync
+  // with the state map driving it.
   return (
-    <motion.div initial={{ opacity: 1, y: 0 }} animate={{ opacity: 0, y: -44 }}
-      transition={{ duration: 1.3 }}
-      className="absolute left-1/2 -translate-x-1/2 -top-8 text-2xl z-50 pointer-events-none">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.4, y: 4 }}
+      animate={{ opacity: [0, 1, 1, 0], scale: [0.4, 1.25, 1, 0.95], y: [4, -6, -10, -52] }}
+      transition={{ duration: 5, times: [0, 0.06, 0.84, 1], ease: 'easeOut' }}
+      className="absolute left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+      style={{
+        top: -52,
+        fontSize: 56,
+        lineHeight: 1,
+        filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.85)) drop-shadow(0 0 16px rgba(255,200,80,0.45))',
+      }}
+    >
       {em}
     </motion.div>
   );
@@ -331,22 +343,37 @@ function EmojiFloat({ em }: { em: string }) {
 function ChatBubble({ text }: { text: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.82, y: 6 }}
+      initial={{ opacity: 0, scale: 0.78, y: 8 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.82, y: -4 }}
-      transition={{ type: 'spring', stiffness: 340, damping: 26 }}
+      exit={{ opacity: 0, scale: 0.85, y: -6 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 24 }}
       className="absolute left-1/2 z-50 pointer-events-none"
-      style={{ bottom: '105%', transform: 'translateX(-50%)', maxWidth: 190 }}
+      style={{ bottom: '108%', transform: 'translateX(-50%)', maxWidth: 240 }}
     >
-      <div className="rounded-xl px-3 py-1.5 font-arabic text-xs text-white text-center"
-        style={{ background: 'rgba(20,14,8,0.97)', border: '1px solid rgba(201,168,76,0.5)',
-                 boxShadow: '0 2px 14px rgba(0,0,0,0.75)', wordBreak: 'break-word', lineHeight: 1.5,
-                 whiteSpace: 'pre-wrap' }}>
+      <div
+        className="rounded-2xl px-4 py-2 font-arabic font-semibold text-sand-light text-center"
+        style={{
+          background: 'linear-gradient(135deg, rgba(36,24,12,0.98) 0%, rgba(20,14,8,0.98) 100%)',
+          border: '1.5px solid rgba(232,201,122,0.65)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.85), 0 0 18px rgba(201,168,76,0.25)',
+          wordBreak: 'break-word',
+          lineHeight: 1.45,
+          whiteSpace: 'pre-wrap',
+          fontSize: 15,
+          minWidth: 60,
+        }}
+      >
         {text}
       </div>
-      <div style={{ width: 0, height: 0, margin: '0 auto',
-        borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
-        borderTop: '6px solid rgba(201,168,76,0.5)' }}/>
+      <div
+        style={{
+          width: 0, height: 0, margin: '0 auto',
+          borderLeft: '7px solid transparent',
+          borderRight: '7px solid transparent',
+          borderTop: '8px solid rgba(232,201,122,0.65)',
+          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
+        }}
+      />
     </motion.div>
   );
 }
@@ -1143,12 +1170,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
     for (const msg of newMsgs) {
       if (!chatOpenRef.current) setUnreadCount(c => c + 1);
 
-      // Emoji float for all players
+      // Emoji float for all players — 5s lifetime, matches EmojiFloat keyframes
       if (msg.emoji) {
         const uid = msg.uid;
         const em = msg.emoji;
         setEmojiMap(prev => ({ ...prev, [uid]: em }));
-        setTimeout(() => setEmojiMap(prev => ({ ...prev, [uid]: null })), 2000);
+        setTimeout(() => setEmojiMap(prev => ({ ...prev, [uid]: null })), 5000);
       }
 
       // Chat bubble above seat (text only, skip pure-emoji messages)
@@ -1842,10 +1869,12 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         style={{ background: 'rgba(3,7,18,0.98)', height: isMobile ? 46 : isTablet ? 44 : 50, zIndex: 40, padding: isMobile ? '0 8px' : '0 12px' }}>
         <div className="flex items-center gap-2">
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: .95 }}
-            className={`relative px-4 py-1.5 rounded-xl border font-arabic text-sm transition-all
-              ${chatOpen ? 'border-gold/60 text-gold bg-gold/12' : 'border-white/15 text-white/60 bg-white/5'}`}
-            onClick={() => { setChatOpen(s => !s); setEmojiPanelOpen(false); setUnreadCount(0); }}>
-            شات
+            className={`relative px-3 py-1.5 rounded-xl border transition-all
+              ${chatOpen ? 'border-gold/60 bg-gold/12' : 'border-white/15 bg-white/5'}`}
+            style={{ fontSize: 18, lineHeight: 1 }}
+            onClick={() => { setChatOpen(s => !s); setEmojiPanelOpen(false); setUnreadCount(0); }}
+            aria-label="الشات">
+            💬
             <AnimatePresence>
               {!chatOpen && unreadCount > 0 && (
                 <motion.span

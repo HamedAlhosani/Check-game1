@@ -178,12 +178,15 @@ function BoardBackground() {
   );
 }
 
-// Board orientation is fixed in this Ludo-King-style layout — every player
-// sees the same canonical view (green top-left, yellow top-right, red
-// bottom-left, blue bottom-right). The seat cards still rotate so the user
-// is at bottom-left.
+// Like Ludo King: rotate the board so the user's home (in their engine
+// color) lands at the visual bottom-left. Engine homes are at fixed
+// corners — yellow (=visual RED) is already bottom-left, the other
+// three rotate by 90/180/270 to bring their home there.
 const ROTATION_DEG: Record<LudoColor, number> = {
-  yellow: 0, green: 0, blue: 0, red: 0,
+  yellow: 0,    // engine.yellow (visual RED)   already bottom-left
+  green: 90,    // engine.green (visual BLUE)   bottom-right → bottom-left
+  blue: 180,    // engine.blue (visual YELLOW)  top-right → bottom-left
+  red: 270,     // engine.red (visual GREEN)    top-left → bottom-left
 };
 const SLOT_ORDER_FOR: Record<LudoColor, [LudoColor, LudoColor, LudoColor, LudoColor]> = {
   yellow: ['red',    'blue',   'yellow', 'green'],
@@ -492,17 +495,51 @@ export function LudoBoard({ gameId, state }: Props) {
     );
   };
 
+  // Opponents = everyone except me, in turn order (engine cycle order).
+  const opponents = state.players.filter(p => p.uid !== user?.uid);
+
   return (
     <div className="min-h-screen flex flex-col relative" style={{ background: '#1A1A1A' }}>
 
-      {/* ── Top rank ribbon ── */}
-      <RankRibbon state={state} />
+      {/* ── Top bar: menu + WIN + opponents ── */}
+      <div className="flex items-center justify-between px-3 py-2 z-10"
+        style={{ background: '#14100A', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <button onClick={() => navigate('/ludo')}
+          className="rounded-lg flex items-center justify-center"
+          style={{ width: 36, height: 36, background: '#0E0905', border: '1px solid rgba(255,255,255,0.1)' }}
+          aria-label="القائمة">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5E6C8" strokeWidth="2.5" strokeLinecap="round">
+            <path d="M3 6h18M3 12h18M3 18h18" />
+          </svg>
+        </button>
 
-      {/* ── Top row: 2 corner seats ── */}
-      <div className="relative z-10 grid grid-cols-2 gap-2 px-2 py-2"
-        style={{ background: '#0E0905' }}>
-        {renderSeat(slotOrder[0])}
-        {renderSeat(slotOrder[1])}
+        <div className="rounded-lg px-2.5 py-1 font-display tracking-widest"
+          style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', color: '#0E0905', fontSize: 12 }}>
+          WIN
+        </div>
+
+        {/* Opponent avatars — up to 3, with the active one highlighted */}
+        <div className="flex items-center gap-2">
+          {opponents.map(p => {
+            const c = LUDO_EMIRATI_PALETTE[p.color];
+            return (
+              <div key={p.uid} className="flex items-center gap-1.5">
+                <div className="rounded-full overflow-hidden relative"
+                  style={{
+                    width: 32, height: 32,
+                    border: `2.5px solid ${p.isTurn ? c.main : 'rgba(255,255,255,0.2)'}`,
+                    boxShadow: p.isTurn ? `0 0 12px ${c.main}` : 'none',
+                  }}>
+                  <CharacterArt id={p.avatarId} size={32} />
+                </div>
+                <span className="font-arabic font-bold truncate"
+                  style={{ fontSize: 11, color: '#F5E6C8', maxWidth: 80 }}>
+                  {p.displayName}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* ── Board (rotated so my home corner is bottom-left) ── */}
@@ -600,16 +637,81 @@ export function LudoBoard({ gameId, state }: Props) {
         </motion.div>
       </div>
 
-      {/* ── Bottom row: my seat (left) + opposite-corner seat (right) ── */}
-      <div className="relative z-10 grid grid-cols-2 gap-2 px-2 py-2"
-        style={{ background: '#0E0905' }}>
-        {renderSeat(slotOrder[2])}
-        {renderSeat(slotOrder[3])}
+      {/* ── Bottom bar: EMOJI · dice · CHAT ── */}
+      <div className="flex items-center justify-between px-3 py-3 relative z-10"
+        style={{ background: '#14100A', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <button
+          onClick={() => addToast('🎉 الإيموجي قريباً', 'info')}
+          className="rounded-lg px-3 py-2 font-bold tracking-wider"
+          style={{
+            background: '#0E0905',
+            border: '1px solid rgba(255,255,255,0.10)',
+            color: '#F5E6C8',
+            fontSize: 11,
+          }}>
+          EMOJI
+        </button>
+
+        <div className="flex items-center gap-3 relative">
+          {/* Small inactive dice — shows the player's last roll once they have one */}
+          <LudoDice value={isMyTurn ? null : state.diceValue} disabled size="sm" />
+
+          {/* The big active dice — only the user-on-turn can tap. Others see it
+              dimmed in the active player's color. */}
+          <div className="relative">
+            {canRoll && (
+              <motion.div
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute"
+                style={{ top: -22, left: '50%', transform: 'translateX(-50%)', fontSize: 22, color: '#7AC74F', textShadow: '0 0 12px #7AC74F' }}>
+                ▼
+              </motion.div>
+            )}
+            <LudoDice
+              value={state.diceValue}
+              rolling={rolling}
+              onClick={canRoll ? onRoll : undefined}
+              disabled={!canRoll}
+              size="lg"
+            />
+          </div>
+
+          {/* Reroll-with-gems pill (kept compact, slips below the big dice) */}
+          {isMyTurn && state.diceValue !== null && !rolling && !hasReusedThisTurn && ludoGems > 0 && (
+            <button onClick={onReroll}
+              className="absolute font-arabic font-bold rounded-lg flex items-center gap-1 active:scale-95 transition"
+              style={{
+                bottom: -16, left: '50%', transform: 'translateX(-50%)',
+                padding: '2px 8px',
+                fontSize: 10,
+                background: 'linear-gradient(135deg, #9DD8E8 0%, #4A90D9 100%)',
+                color: '#0E0905',
+                border: '1px solid #4A90D9',
+                boxShadow: '0 0 10px rgba(157,216,232,0.55)',
+                cursor: 'pointer',
+              }}>
+              💎 أعد
+            </button>
+          )}
+        </div>
+
+        <button
+          onClick={() => setChatOpen(s => !s)}
+          className="rounded-lg px-3 py-2 font-bold tracking-wider"
+          style={{
+            background: '#0E0905',
+            border: '1px solid rgba(255,255,255,0.10)',
+            color: '#F5E6C8',
+            fontSize: 11,
+          }}>
+          CHAT
+        </button>
       </div>
 
-      {/* Game-over status banner */}
+      {/* Status badges — small, centered, above the bottom bar */}
       {state.phase === 'GAME_OVER' && (
-        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-20 rounded-xl px-4 py-2 font-arabic font-bold"
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-20 rounded-xl px-4 py-2 font-arabic font-bold"
           style={{
             background: '#14100A',
             border: '1.5px solid #C9A84C',
@@ -621,7 +723,7 @@ export function LudoBoard({ gameId, state }: Props) {
         </div>
       )}
       {state.consecutiveSixes > 0 && state.phase !== 'GAME_OVER' && (
-        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-20 rounded-xl px-3 py-1.5 font-arabic"
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-20 rounded-xl px-3 py-1.5 font-arabic"
           style={{ background: '#14100A', border: '1px solid #C9A84C', color: '#E8C97A', fontSize: 11 }}>
           ✦ ست متتالية: {state.consecutiveSixes}
         </div>

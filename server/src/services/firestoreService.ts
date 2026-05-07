@@ -659,53 +659,168 @@ export async function rechargeCoins(uid: string, packageId: string): Promise<{ o
   return { ok: true, coins: p.coins, granted };
 }
 
-const DAILY_REWARDS = [
-  { coins: 100, frame: null },
-  { coins: 200, frame: null },
-  { coins: 300, frame: null },
-  { coins: 500, frame: 'frame_desert' },
-  { coins: 700, frame: null },
-  { coins: 1000, frame: null },
-  { coins: 2000, frame: 'frame_sultan' },
+// 30-day calendar. Coins escalate each day; every 7th day flips to a
+// milestone reward (frame, character, gem pack). Day 30 is the big one.
+// Server picks the cosmetic IDs from items the user might not already own;
+// the client just renders { coins, frame, kind, label } per day.
+type DailyRewardItem = {
+  coins: number;
+  frame?: string | null;
+  // 'milestone' marks the every-7-days rewards so the client can render
+  // them with a different visual treatment.
+  kind?: 'normal' | 'milestone' | 'grand';
+  /** Optional one-time character grant on the legendary day. */
+  characterId?: string;
+  /** Bonus gems on milestone days. */
+  gems?: number;
+};
+
+const DAILY_REWARDS: DailyRewardItem[] = [
+  // Week 1 — gentle ramp + first frame on day 7
+  { coins: 100,  kind: 'normal' },
+  { coins: 200,  kind: 'normal' },
+  { coins: 300,  kind: 'normal' },
+  { coins: 400,  kind: 'normal' },
+  { coins: 500,  kind: 'normal' },
+  { coins: 600,  kind: 'normal' },
+  { coins: 800,  frame: 'frame_desert', kind: 'milestone' },     // day 7
+
+  // Week 2 — bigger pots + chest key on day 14 (gems stand-in)
+  { coins: 700,  kind: 'normal' },
+  { coins: 800,  kind: 'normal' },
+  { coins: 900,  kind: 'normal' },
+  { coins: 1000, kind: 'normal' },
+  { coins: 1100, kind: 'normal' },
+  { coins: 1200, kind: 'normal' },
+  { coins: 1500, gems: 25, kind: 'milestone' },                  // day 14
+
+  // Week 3 — silver-tier frame on day 21
+  { coins: 1300, kind: 'normal' },
+  { coins: 1400, kind: 'normal' },
+  { coins: 1500, kind: 'normal' },
+  { coins: 1600, kind: 'normal' },
+  { coins: 1700, kind: 'normal' },
+  { coins: 1800, kind: 'normal' },
+  { coins: 2200, frame: 'frame_pearl', gems: 50, kind: 'milestone' },  // day 21
+
+  // Week 4 — push to the legendary
+  { coins: 2000, kind: 'normal' },
+  { coins: 2200, kind: 'normal' },
+  { coins: 2400, kind: 'normal' },
+  { coins: 2600, kind: 'normal' },
+  { coins: 2800, kind: 'normal' },
+  { coins: 3000, kind: 'normal' },
+
+  // Days 28-30 — finale
+  { coins: 3500, gems: 100, kind: 'milestone' },                 // day 28
+  { coins: 4500, kind: 'normal' },
+  { coins: 7500, frame: 'frame_sultan', characterId: 'avatar_28', gems: 250, kind: 'grand' }, // day 30
 ];
 
 function dayKey(d = new Date()): string {
   return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
 }
 
-export async function getDailyReward(uid: string): Promise<{ day: number; canClaim: boolean; lastClaimDay: string | null; rewards: typeof DAILY_REWARDS }> {
+export async function getDailyReward(uid: string): Promise<{
+  day: number;
+  canClaim: boolean;
+  lastClaimDay: string | null;
+  rewards: typeof DAILY_REWARDS;
+  streak: number;
+  longestStreak: number;
+}> {
   const p = users.get(uid) as any;
-  if (!p) return { day: 0, canClaim: false, lastClaimDay: null, rewards: DAILY_REWARDS };
+  if (!p) {
+    return { day: 0, canClaim: false, lastClaimDay: null, rewards: DAILY_REWARDS, streak: 0, longestStreak: 0 };
+  }
   const today = dayKey();
+  const yesterday = previousDayKey();
   const lastClaimDay: string | null = p.dailyLastClaimDay || null;
-  const dayIdx: number = p.dailyDayIndex ?? 0;
+  let dayIdx: number = p.dailyDayIndex ?? 0;
+  let streak: number = p.dailyStreak ?? 0;
+  // If we missed a day, the streak resets the next time we look.
+  if (lastClaimDay && lastClaimDay !== today && lastClaimDay !== yesterday) {
+    dayIdx = 0;
+    streak = 0;
+  }
   const canClaim = lastClaimDay !== today;
-  return { day: dayIdx, canClaim, lastClaimDay, rewards: DAILY_REWARDS };
+  return {
+    day: dayIdx,
+    canClaim,
+    lastClaimDay,
+    rewards: DAILY_REWARDS,
+    streak,
+    longestStreak: p.dailyLongestStreak ?? streak,
+  };
 }
 
-export async function claimDailyReward(uid: string): Promise<{ ok: boolean; error?: string; coins?: number; granted?: { coins: number; frame: string | null }; nextDay?: number }> {
+export async function claimDailyReward(uid: string): Promise<{
+  ok: boolean;
+  error?: string;
+  coins?: number;
+  granted?: DailyRewardItem;
+  nextDay?: number;
+  streak?: number;
+  longestStreak?: number;
+}> {
   const p = users.get(uid) as any;
   if (!p) return { ok: false, error: 'User not found' };
   const today = dayKey();
-  const yesterday = (() => { const d = new Date(); d.setUTCDate(d.getUTCDate() - 1); return dayKey(d); })();
+  const yesterday = previousDayKey();
   if (p.dailyLastClaimDay === today) return { ok: false, error: 'Already claimed today' };
 
   let dayIdx: number = p.dailyDayIndex ?? 0;
-  if (p.dailyLastClaimDay && p.dailyLastClaimDay !== yesterday) {
+  let streak: number = p.dailyStreak ?? 0;
+  // Streak only continues if we claimed yesterday. Anything else resets.
+  if (!p.dailyLastClaimDay || p.dailyLastClaimDay !== yesterday) {
     dayIdx = 0;
+    streak = 0;
   }
   if (dayIdx >= DAILY_REWARDS.length) dayIdx = 0;
   const reward = DAILY_REWARDS[dayIdx];
 
+  // Coins
   p.coins = (p.coins || 0) + reward.coins;
+  // Frame (avatar) — only granted once
   if (reward.frame) {
     const owned: string[] = p.ownedItems || [];
     if (!owned.includes(reward.frame)) p.ownedItems = [...owned, reward.frame];
   }
+  // Gems on milestone days
+  if (reward.gems) {
+    p.gems = (p.gems || 0) + reward.gems;
+  }
+  // Character grant on the grand finale
+  if (reward.characterId) {
+    const owned: string[] = p.ownedItems || [];
+    if (!owned.includes(reward.characterId)) p.ownedItems = [...owned, reward.characterId];
+  }
+
+  // Streak bookkeeping
+  streak += 1;
+  p.dailyStreak = streak;
+  if (streak > (p.dailyLongestStreak ?? 0)) p.dailyLongestStreak = streak;
+
   p.dailyLastClaimDay = today;
+  // After day 30, loop back to day 0 — the streak keeps counting upward
+  // even past 30 (so 'longest streak' can show 60+).
   p.dailyDayIndex = (dayIdx + 1) % DAILY_REWARDS.length;
+
   saveUsers();
-  return { ok: true, coins: p.coins, granted: reward, nextDay: p.dailyDayIndex };
+  return {
+    ok: true,
+    coins: p.coins,
+    granted: reward,
+    nextDay: p.dailyDayIndex,
+    streak,
+    longestStreak: p.dailyLongestStreak,
+  };
+}
+
+function previousDayKey(): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() - 1);
+  return dayKey(d);
 }
 
 export async function equipItem(uid: string, itemId: string): Promise<{ ok: boolean; error?: string }> {

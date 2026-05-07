@@ -29,7 +29,7 @@ export function getLevelFromXp(xp: number): { level: number; title: string } {
 }
 
 const defaultStats = {
-  totalGames: 0, totalWins: 0, currentStreak: 0,
+  totalGames: 0, totalWins: 0, totalLosses: 0, currentStreak: 0,
   checkWins: 0, ludoWins: 0, dominoWins: 0, jacaroWins: 0,
 };
 
@@ -90,6 +90,13 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const data = users.get(uid);
   if (!data) return null;
   if (!data.stats?.checkWins) data.stats = { ...defaultStats, ...data.stats };
+  // Backfill totalLosses for users who played before the field existed.
+  // totalGames is authoritative, so derive: losses = games - wins.
+  const s = data.stats as any;
+  if (s.totalLosses === undefined || s.totalLosses === null) {
+    s.totalLosses = Math.max(0, (s.totalGames || 0) - (s.totalWins || 0));
+    saveUsers();
+  }
   if (data.coins === undefined) data.coins = 0;
   if (!data.ownedItems) data.ownedItems = [...FREE_ITEMS];
   if (!data.equippedItems) data.equippedItems = { ...defaultEquipped };
@@ -131,6 +138,7 @@ export async function recordGameResult(uid: string, isWinner: boolean, gameType:
 
   stats.totalGames += 1;
   stats.totalWins += isWinner ? 1 : 0;
+  stats.totalLosses += isWinner ? 0 : 1;
   stats.currentStreak = isWinner ? stats.currentStreak + 1 : 0;
   if (isWinner) (stats as any)[`${gameType}Wins`] = ((stats as any)[`${gameType}Wins`] || 0) + 1;
 

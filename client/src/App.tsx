@@ -28,6 +28,7 @@ const loadHistory       = () => import('./pages/history/HistoryPage');
 const loadCardsPreview  = () => import('./pages/cards-preview/CardsPreviewPage');
 const loadTournaments   = () => import('./pages/tournaments/TournamentsPage');
 const loadClans         = () => import('./pages/clans/ClansPage');
+const loadLudoGame      = () => import('./pages/game/LudoGamePage');
 
 const RegisterPage      = lazy(() => loadRegister().then(m => ({ default: m.RegisterPage })));
 const ProfilePage       = lazy(() => loadProfile().then(m => ({ default: m.ProfilePage })));
@@ -39,6 +40,7 @@ const HistoryPage       = lazy(() => loadHistory().then(m => ({ default: m.Histo
 const CardsPreviewPage  = lazy(() => loadCardsPreview().then(m => ({ default: m.CardsPreviewPage })));
 const TournamentsPage   = lazy(() => loadTournaments().then(m => ({ default: m.TournamentsPage })));
 const ClansPage         = lazy(() => loadClans().then(m => ({ default: m.ClansPage })));
+const LudoGamePage      = lazy(() => loadLudoGame().then(m => ({ default: m.LudoGamePage })));
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { setUser, setProfile, setLoading } = useAuthStore();
@@ -209,12 +211,18 @@ function ResumeGameGate() {
     // would yank the user back into their old game. URL-refresh / direct URL
     // entry triggers a fresh page load, so this ref resets to false again.
     let used = false;
-    const onResume = (state: GameState) => {
-      if (used) { setGameState(state); return; }
+    const onResume = (state: any) => {
+      // Game-type discriminator: Ludo state carries diceRolled/diceValue,
+      // Check state has phase like 'PEEK_PHASE' | 'PLAYING' with cards.
+      const isLudo = state && 'diceRolled' in state;
+      if (used) {
+        if (!isLudo) setGameState(state as GameState);
+        return;
+      }
       used = true;
       if (!state?.gameId) return;
-      setGameState(state);
-      const target = `/game/check/${state.gameId}`;
+      if (!isLudo) setGameState(state as GameState);
+      const target = isLudo ? `/game/ludo/${state.gameId}` : `/game/check/${state.gameId}`;
       // Only redirect from genuinely 'idle' pages — / or /home — never from
       // /game/* (we're already there) or /profile etc (user is doing
       // something else and shouldn't get yanked away).
@@ -244,6 +252,7 @@ export function App() {
             <Route path="/register" element={<PublicOnly><RegisterPage /></PublicOnly>} />
             <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/game/check/:gameId" element={<ProtectedRoute><CheckGamePage /></ProtectedRoute>} />
+            <Route path="/game/ludo/:gameId" element={<ProtectedRoute><LudoGamePage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/user/:uid" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
             <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />

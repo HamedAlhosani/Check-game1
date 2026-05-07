@@ -324,6 +324,41 @@ const MODE_THEMES: Record<GameMode, ModeTheme> = {
 };
 
 // ── Tiny mode chip-switcher used INSIDE the giant card ───────────────────────
+// ── Game-kind chips: Check vs Ludo ───────────────────────────────────────────
+const GAME_KIND_META: Record<GameType, { icon: string; ar: string; en: string; accent: string; glow: string }> = {
+  check:   { icon: '🃏', ar: 'تشيك',  en: 'Check',  accent: '#E8C97A', glow: 'rgba(232,201,122,0.45)' },
+  ludo:    { icon: '🎲', ar: 'لودو',  en: 'Ludo',   accent: '#7AC74F', glow: 'rgba(122,199,79,0.45)' },
+  domino:  { icon: '🁢', ar: 'دومنو', en: 'Domino', accent: '#9C8AFF', glow: 'rgba(156,138,255,0.4)' },
+  jackaro: { icon: '🂡', ar: 'جكارو', en: 'Jackaro',accent: '#FF8A65', glow: 'rgba(255,138,101,0.4)' },
+};
+
+function GameKindChips({ gameKind, onSelect, lang }: { gameKind: GameType; onSelect: (g: GameType) => void; lang: string }) {
+  const order: GameType[] = ['check', 'ludo'];
+  return (
+    <div className="flex gap-2 justify-center">
+      {order.map(g => {
+        const isSel = gameKind === g;
+        const m = GAME_KIND_META[g];
+        return (
+          <motion.button key={g} whileTap={{ scale: 0.92 }} onClick={() => { onSelect(g); soundService.playClick(); }}
+            className="rounded-2xl font-arabic font-bold flex items-center gap-2"
+            style={{
+              padding: isSel ? '8px 18px' : '7px 15px',
+              background: isSel ? m.accent : 'rgba(255,255,255,0.06)',
+              color: isSel ? '#0E0905' : 'rgba(245,230,200,0.75)',
+              border: `2px solid ${isSel ? m.accent : 'rgba(255,255,255,0.10)'}`,
+              boxShadow: isSel ? `0 0 22px ${m.glow}` : 'none',
+              fontSize: 13, transition: 'all .2s', cursor: 'pointer',
+            }}>
+            <span style={{ fontSize: 18, lineHeight: 1 }}>{m.icon}</span>
+            {lang === 'ar' ? m.ar : m.en}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
 function ModeChips({ mode, onSelect, lang }: { mode: GameMode; onSelect: (m: GameMode) => void; lang: string }) {
   const order: GameMode[] = ['online', 'private', 'bots'];
   return (
@@ -697,19 +732,31 @@ function MatchLengthPicker({ value, onChange, accent, lang }: {
   );
 }
 
-function PlayBox({ mode, setMode, coins, onCreate, lang }: {
+function PlayBox({ mode, setMode, coins, onCreate, lang, gameKind, setGameKind }: {
   mode: GameMode;
   setMode: (m: GameMode) => void;
   coins: number;
   onCreate: (cfg: any) => void;
   lang: string;
+  gameKind: GameType;
+  setGameKind: (g: GameType) => void;
 }) {
-  const [playerCount, setPlayerCount] = useState(4);
+  const isLudo = gameKind === 'ludo';
+  // Ludo only supports 2-4 colors. Cap player/bot counts when switching kinds
+  // so a stale Check setting (e.g. 8 players) doesn't break room creation.
+  const [playerCount, setPlayerCount] = useState(isLudo ? 4 : 4);
   const [coinAmount, setCoinAmount] = useState(50);
-  const [botCount, setBotCount] = useState(3);
+  const [botCount, setBotCount] = useState(isLudo ? 3 : 3);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [matchLength, setMatchLength] = useState<MatchLength>('standard');
   const theme = MODE_THEMES[mode];
+
+  useEffect(() => {
+    if (isLudo) {
+      if (playerCount > 4) setPlayerCount(4);
+      if (botCount > 3) setBotCount(3);
+    }
+  }, [isLudo]);
 
   useEffect(() => {
     if (coinAmount > coins) {
@@ -739,6 +786,10 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
 
   return (
     <div className="flex flex-col items-stretch gap-4">
+      {/* Game-kind switcher: Check vs Ludo. Stays above mode chips so the
+          choice is the very first thing visible on the play card. */}
+      <GameKindChips gameKind={gameKind} onSelect={setGameKind} lang={lang} />
+
       {/* Mode switcher ABOVE the giant card */}
       <ModeChips mode={mode} onSelect={setMode} lang={lang} />
 
@@ -773,7 +824,7 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
             {mode !== 'bots' ? (
               <>
                 <PlayerStepper value={playerCount} onChange={setPlayerCount}
-                  min={2} max={10} accent={theme.accent} lang={lang}
+                  min={2} max={isLudo ? 4 : 10} accent={theme.accent} lang={lang}
                   label={lang === 'ar' ? 'عدد اللاعبين' : 'Players'} />
                 <CoinStepper value={coinAmount} onChange={setCoinAmount}
                   accent={theme.accent} max={coins} lang={lang} />
@@ -782,15 +833,19 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
                     {lang === 'ar' ? 'كوينزك غير كافية!' : 'Not enough coins!'}
                   </p>
                 )}
-                <MatchLengthPicker value={matchLength} onChange={setMatchLength} accent={theme.accent} lang={lang} />
+                {!isLudo && (
+                  <MatchLengthPicker value={matchLength} onChange={setMatchLength} accent={theme.accent} lang={lang} />
+                )}
               </>
             ) : (
               <>
                 <PlayerStepper value={botCount} onChange={setBotCount}
-                  min={1} max={9} accent={theme.accent} lang={lang}
+                  min={1} max={isLudo ? 3 : 9} accent={theme.accent} lang={lang}
                   label={lang === 'ar' ? 'عدد البوتات' : 'Bots'} />
                 <DifficultyCards value={difficulty} onChange={setDifficulty} lang={lang} />
-                <MatchLengthPicker value={matchLength} onChange={setMatchLength} accent={theme.accent} lang={lang} />
+                {!isLudo && (
+                  <MatchLengthPicker value={matchLength} onChange={setMatchLength} accent={theme.accent} lang={lang} />
+                )}
               </>
             )}
           </div>
@@ -922,6 +977,7 @@ export function HomePage() {
   const { rooms, setRooms, currentRoom, setCurrentRoom } = useLobbyStore();
   const { addToast } = useUiStore();
   const [mode, setMode] = useState<GameMode>('bots');
+  const [gameKind, setGameKind] = useState<GameType>('check');
   const [showJoin, setShowJoin] = useState(false);
   const [searching, setSearching] = useState(false);
   const [botLoading, setBotLoading] = useState(false);
@@ -1064,31 +1120,31 @@ export function HomePage() {
 
     if (cfg.type === 'bots') {
       socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, {
-        name: `لعبة بوتات`,
+        name: gameKind === 'ludo' ? `لودو ضد البوت` : `لعبة بوتات`,
         type: 'private',
         botCount: cfg.botCount,
         botDifficulty: cfg.difficulty,
-        gameType: 'check',
+        gameType: gameKind,
         gameMode: cfg.matchLength,
       });
     } else if (cfg.type === 'private') {
       socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, {
-        name: `غرفة خاصة`,
+        name: gameKind === 'ludo' ? `غرفة لودو خاصة` : `غرفة خاصة`,
         type: 'private',
         botCount: 0,
         botDifficulty: 'medium',
-        gameType: 'check',
+        gameType: gameKind,
         betAmount: cfg.bet,
         maxPlayers: cfg.playerCount,
         gameMode: cfg.matchLength,
       });
     } else {
       socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, {
-        name: `غرفة عامة`,
+        name: gameKind === 'ludo' ? `غرفة لودو عامة` : `غرفة عامة`,
         type: 'public',
         botCount: 0,
         botDifficulty: 'medium',
-        gameType: 'check',
+        gameType: gameKind,
         betAmount: cfg.bet,
         maxPlayers: cfg.playerCount,
         gameMode: cfg.matchLength,
@@ -1279,7 +1335,8 @@ export function HomePage() {
             </div>
 
             {/* ── Single morphing PlayBox (tabs + visual config + CTA) ── */}
-            <PlayBox mode={mode} setMode={setMode} coins={coins} onCreate={handleCreate} lang={lang} />
+            <PlayBox mode={mode} setMode={setMode} coins={coins} onCreate={handleCreate} lang={lang}
+              gameKind={gameKind} setGameKind={setGameKind} />
 
             {/* ── Rules + Tournament + Join private room actions ── */}
             <div className="mt-4 flex items-center justify-center gap-3 flex-wrap">

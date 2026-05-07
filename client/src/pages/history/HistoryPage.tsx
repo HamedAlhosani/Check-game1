@@ -6,17 +6,12 @@ import { apiClient } from '../../services/api.service';
 import { useT, useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { FrameRing } from '../../components/shared/FrameRing';
+import { CharacterArt } from '../../components/shared/CharacterArt';
+import { ProfileModal } from '../../components/shared/ProfileModal';
 import { MatchRecord } from '@check-game/shared';
 import { ReplayModal } from '../../components/shared/ReplayModal';
 
-const AVATAR_EMOJIS: Record<string, string> = {
-  avatar_1: '🦅', avatar_2: '🐪', avatar_3: '🌴', avatar_4: '⚔️',
-  avatar_5: '🌙', avatar_6: '⭐', avatar_7: '🏜️', avatar_8: '🌊',
-  avatar_9: '🦁', avatar_10: '🔥', avatar_11: '💎', avatar_12: '🎭',
-  avatar_13: '⚔️', avatar_14: '⛵', avatar_15: '🧭', avatar_16: '🇦🇪',
-  avatar_17: '👸', avatar_18: '🧕', avatar_19: '🤵', avatar_20: '👳', avatar_21: '👩', avatar_22: '🧓',
-  avatar_23: '👩‍🎓', avatar_24: '👵', avatar_25: '👩‍🏫', avatar_26: '🧕', avatar_27: '👩‍⚕️', avatar_28: '👑',
-};
+const isBotUid = (uid: string) => uid.startsWith('bot-');
 
 const GAME_LABELS_AR: Record<string, string> = { check: 'Check', ludo: 'لودو', domino: 'دومنو', jackaro: 'جكارو' };
 const GAME_LABELS_EN: Record<string, string> = { check: 'Check', ludo: 'Ludo', domino: 'Domino', jackaro: 'Jackaro' };
@@ -31,6 +26,7 @@ export function HistoryPage() {
   const [records, setRecords] = useState<MatchRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [replayRecord, setReplayRecord] = useState<MatchRecord | null>(null);
+  const [profileUid, setProfileUid] = useState<string | null>(null);
 
   useEffect(() => {
     apiClient.get<MatchRecord[]>('/api/history')
@@ -138,17 +134,20 @@ export function HistoryPage() {
                       {sortedPlayers.map(p => {
                         const isThisWinner = p.uid === rec.winnerId;
                         const isMe = p.uid === myUid;
+                        const clickable = !isBotUid(p.uid);
+                        const onClick = clickable ? () => setProfileUid(p.uid) : undefined;
                         return (
-                          <div key={p.uid} className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
+                          <button
+                            key={p.uid}
+                            onClick={onClick}
+                            disabled={!clickable}
+                            className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-start ${clickable ? 'active:scale-[0.97] hover:brightness-110' : 'cursor-default'} transition`}
                             style={{
                               background: isThisWinner ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.03)',
                               border: `1px solid ${isMe ? 'rgba(201,168,76,0.4)' : isThisWinner ? 'rgba(201,168,76,0.2)' : 'rgba(255,255,255,0.07)'}`,
                             }}>
                             <div className="relative shrink-0" style={{ width: 28, height: 28 }}>
-                              <div className="rounded-full flex items-center justify-center"
-                                style={{ width: 28, height: 28, background: 'rgba(201,168,76,0.08)', fontSize: 16 }}>
-                                {AVATAR_EMOJIS[p.avatarId] || '👤'}
-                              </div>
+                              <CharacterArt id={p.avatarId} size={28} />
                               <FrameRing size={28} frameId={(p as any).equippedFrame}/>
                             </div>
                             <div>
@@ -162,7 +161,7 @@ export function HistoryPage() {
                                 {p.score} {lang === 'ar' ? 'نقطة' : 'pts'}
                               </p>
                             </div>
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
@@ -201,6 +200,8 @@ export function HistoryPage() {
         lang={lang}
         onClose={() => setReplayRecord(null)}
       />
+
+      <ProfileModal uid={profileUid} onClose={() => setProfileUid(null)} />
     </div>
   );
 }

@@ -30,6 +30,7 @@ const loadTournaments   = () => import('./pages/tournaments/TournamentsPage');
 const loadClans         = () => import('./pages/clans/ClansPage');
 const loadLudoGame      = () => import('./pages/game/LudoGamePage');
 const loadLudoHome      = () => import('./pages/game/LudoHomePage');
+const loadLudoSubPages  = () => import('./pages/game/LudoSubPages');
 
 const RegisterPage      = lazy(() => loadRegister().then(m => ({ default: m.RegisterPage })));
 const ProfilePage       = lazy(() => loadProfile().then(m => ({ default: m.ProfilePage })));
@@ -43,6 +44,12 @@ const TournamentsPage   = lazy(() => loadTournaments().then(m => ({ default: m.T
 const ClansPage         = lazy(() => loadClans().then(m => ({ default: m.ClansPage })));
 const LudoGamePage      = lazy(() => loadLudoGame().then(m => ({ default: m.LudoGamePage })));
 const LudoHomePage      = lazy(() => loadLudoHome().then(m => ({ default: m.LudoHomePage })));
+const LudoStorePage         = lazy(() => loadLudoSubPages().then(m => ({ default: m.LudoStorePage })));
+const LudoLeaderboardPage   = lazy(() => loadLudoSubPages().then(m => ({ default: m.LudoLeaderboardPage })));
+const LudoFriendsPage       = lazy(() => loadLudoSubPages().then(m => ({ default: m.LudoFriendsPage })));
+const LudoClansPage         = lazy(() => loadLudoSubPages().then(m => ({ default: m.LudoClansPage })));
+const LudoTournamentsPage   = lazy(() => loadLudoSubPages().then(m => ({ default: m.LudoTournamentsPage })));
+const LudoHistoryPage       = lazy(() => loadLudoSubPages().then(m => ({ default: m.LudoHistoryPage })));
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { setUser, setProfile, setLoading } = useAuthStore();
@@ -256,6 +263,12 @@ export function App() {
             <Route path="/game/check/:gameId" element={<ProtectedRoute><CheckGamePage /></ProtectedRoute>} />
             <Route path="/game/ludo/:gameId" element={<ProtectedRoute><LudoGamePage /></ProtectedRoute>} />
             <Route path="/ludo" element={<ProtectedRoute><LudoHomePage /></ProtectedRoute>} />
+            <Route path="/ludo/store" element={<ProtectedRoute><LudoStorePage /></ProtectedRoute>} />
+            <Route path="/ludo/leaderboard" element={<ProtectedRoute><LudoLeaderboardPage /></ProtectedRoute>} />
+            <Route path="/ludo/friends" element={<ProtectedRoute><LudoFriendsPage /></ProtectedRoute>} />
+            <Route path="/ludo/clans" element={<ProtectedRoute><LudoClansPage /></ProtectedRoute>} />
+            <Route path="/ludo/tournaments" element={<ProtectedRoute><LudoTournamentsPage /></ProtectedRoute>} />
+            <Route path="/ludo/history" element={<ProtectedRoute><LudoHistoryPage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/user/:uid" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
             <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />

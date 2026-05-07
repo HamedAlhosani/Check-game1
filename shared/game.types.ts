@@ -155,6 +155,10 @@ export interface UserProfile {
   keys?: number;
   /** Premium currency earned from rare achievements only — not buyable. */
   gems?: number;
+  /** Ludo wallet — completely separate from Check's coins/gems. */
+  ludoCoins?: number;
+  /** Premium Ludo gems — earned only inside Ludo (tournaments, rare drops). */
+  ludoGems?: number;
   /** Clan the user belongs to (null if none). */
   clanId?: string | null;
   clanTag?: string | null;

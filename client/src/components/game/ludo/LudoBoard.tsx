@@ -217,6 +217,156 @@ function BoardBackground() {
   );
 }
 
+// ─── Top rank ribbon — turn-timer + 1st/2nd/3rd by finishedCount ─────────────
+function RankRibbon({ state }: { state: LudoGameState }) {
+  const [pct, setPct] = useState(100);
+
+  useEffect(() => {
+    const end = state.turnEndAt;
+    if (!end) { setPct(0); return; }
+    const max = 30000;
+    const tick = () => setPct(Math.max(0, Math.min(100, ((end - Date.now()) / max) * 100)));
+    tick();
+    const id = setInterval(tick, 200);
+    return () => clearInterval(id);
+  }, [state.turnEndAt]);
+
+  // Sort by finishedCount desc, eliminated/finished first only when ranked.
+  const ranked = [...state.players].sort((a, b) => b.finishedCount - a.finishedCount);
+  const medal = ['🥇', '🥈', '🥉'];
+  const active = state.players.find(p => p.isTurn);
+  const activeColor = active ? LUDO_EMIRATI_PALETTE[active.color] : null;
+
+  return (
+    <div className="relative z-20 flex items-center gap-2 px-3 py-1.5"
+      style={{
+        background: 'linear-gradient(180deg, rgba(20,14,8,0.95) 0%, rgba(14,9,5,0.85) 100%)',
+        borderBottom: `1px solid rgba(201,168,76,0.32)`,
+        boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
+      }}>
+      {/* Left: ranks */}
+      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+        {ranked.slice(0, 3).map((p, i) => {
+          const c = LUDO_EMIRATI_PALETTE[p.color];
+          return (
+            <div key={p.uid}
+              className="flex items-center gap-1 rounded-lg px-1.5 py-1 truncate"
+              style={{
+                background: `linear-gradient(135deg, ${c.main}28, rgba(20,14,8,0.6))`,
+                border: `1px solid ${c.accent}55`,
+                fontSize: 10,
+              }}>
+              <span style={{ fontSize: 12, lineHeight: 1 }}>{medal[i]}</span>
+              <span className="font-arabic font-bold truncate"
+                style={{ color: c.accent, maxWidth: 56 }}>
+                {p.displayName}
+              </span>
+              <span className="font-mono" style={{ color: 'rgba(245,230,200,0.7)', fontSize: 9 }}>
+                {p.finishedCount}/4
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Right: timer + active player */}
+      <div className="flex items-center gap-2 shrink-0">
+        {active && activeColor && (
+          <div className="flex items-center gap-1.5">
+            <div className="rounded-full" style={{ width: 8, height: 8, background: activeColor.main, boxShadow: `0 0 8px ${activeColor.main}`, animation: 'pulse 1.6s ease-in-out infinite' }} />
+            <span className="font-arabic font-bold truncate"
+              style={{ fontSize: 11, color: activeColor.accent, maxWidth: 80 }}>
+              {active.displayName}
+            </span>
+          </div>
+        )}
+        {/* Turn timer — slim bar */}
+        <div style={{ width: 50, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+          <div style={{
+            width: `${pct}%`, height: '100%',
+            background: pct > 50 ? '#7AC74F' : pct > 25 ? '#D9A441' : '#E04030',
+            transition: 'width .2s linear, background .3s',
+          }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Corner row: 2 player cards positioned at their home corners ─────────────
+function CornerCardsRow({ slots, players, meUid }: {
+  slots: [LudoColor, LudoColor];
+  players: LudoGameState['players'];
+  meUid?: string;
+}) {
+  return (
+    <div className="relative z-10 grid grid-cols-2 gap-2 px-2 py-1.5"
+      style={{ background: 'rgba(20,14,8,0.50)' }}>
+      {slots.map(color => {
+        const player = players.find(p => p.color === color);
+        const c = LUDO_EMIRATI_PALETTE[color];
+        if (!player) {
+          return (
+            <div key={color}
+              className="rounded-xl px-2.5 py-1.5 flex items-center justify-center"
+              style={{
+                background: 'rgba(255,255,255,0.02)',
+                border: `1px dashed ${c.dark}88`,
+                opacity: 0.5,
+                minHeight: 48,
+              }}>
+              <span className="font-arabic" style={{ fontSize: 10, color: `${c.accent}99` }}>
+                مقعد {COLOR_LABELS_AR[color]} فارغ
+              </span>
+            </div>
+          );
+        }
+        const isTurn = player.isTurn;
+        const isMe = player.uid === meUid;
+        return (
+          <div key={player.uid}
+            className="rounded-xl px-2.5 py-1.5 flex items-center gap-2 transition-all"
+            style={{
+              background: isTurn
+                ? `linear-gradient(135deg, ${c.main}3A, rgba(20,14,8,0.9))`
+                : `linear-gradient(135deg, ${c.main}14, rgba(20,14,8,0.7))`,
+              border: `1.5px solid ${isTurn ? c.accent : `${c.main}55`}`,
+              boxShadow: isTurn ? `0 0 16px ${c.main}99` : 'none',
+              minHeight: 48,
+            }}>
+            <div className="relative shrink-0" style={{ width: 32, height: 32 }}>
+              <CharacterArt id={player.avatarId} size={32} />
+              <div className="absolute -bottom-0.5 -right-0.5 rounded-full"
+                style={{
+                  width: 12, height: 12, background: c.main,
+                  border: '2px solid #14100A',
+                  boxShadow: `0 0 6px ${c.main}`,
+                }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-arabic font-bold truncate"
+                style={{ fontSize: 11, color: '#F5E6C8' }}>
+                {isMe ? 'أنت' : player.displayName}
+              </p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="font-arabic" style={{ fontSize: 9, color: c.accent, opacity: 0.85 }}>
+                  {COLOR_LABELS_AR[color]}
+                </span>
+                <span className="font-mono" style={{ fontSize: 10, color: c.accent }}>
+                  · {player.finishedCount}/4
+                </span>
+              </div>
+            </div>
+            {isTurn && (
+              <div className="rounded-full shrink-0" style={{ width: 7, height: 7, background: c.accent, boxShadow: `0 0 8px ${c.accent}`, animation: 'pulse 1.6s ease-in-out infinite' }} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 interface Props {
   gameId: string;
   state: LudoGameState;
@@ -278,60 +428,23 @@ export function LudoBoard({ gameId, state }: Props) {
       {/* Page-level desert background — sits behind everything */}
       <LudoPageBackground />
 
-      {/* ── Players strip ── */}
-      <div className="relative flex justify-around items-center px-2 py-2 sm:py-3 gap-1 sm:gap-2 z-10"
-        style={{
-          background: 'linear-gradient(180deg, rgba(20,14,8,0.96) 0%, rgba(14,9,5,0.85) 100%)',
-          borderBottom: '1px solid rgba(201,168,76,0.32)',
-          boxShadow: '0 4px 18px rgba(0,0,0,0.45)',
-        }}>
-        {state.players.map(p => {
-          const c = LUDO_EMIRATI_PALETTE[p.color];
-          return (
-            <div key={p.uid}
-              className="flex flex-col items-center gap-1 rounded-xl px-2 py-1.5 transition-all"
-              style={{
-                background: p.isTurn
-                  ? `linear-gradient(135deg, ${c.main}38 0%, ${c.dark}88 100%)`
-                  : 'rgba(255,255,255,0.025)',
-                border: `1.5px solid ${p.isTurn ? c.accent : 'rgba(255,255,255,0.08)'}`,
-                boxShadow: p.isTurn ? `0 0 16px ${c.main}99, inset 0 1px 0 rgba(255,255,255,0.1)` : 'none',
-                minWidth: 64,
-              }}>
-              <div className="relative" style={{ width: 34, height: 34 }}>
-                <CharacterArt id={p.avatarId} size={34} />
-                <div className="absolute -bottom-1 -right-1 rounded-full flex items-center justify-center"
-                  style={{
-                    width: 14, height: 14,
-                    background: c.main,
-                    border: '2px solid #14100A',
-                    boxShadow: `0 0 6px ${c.main}AA`,
-                  }} />
-              </div>
-              <p className="font-arabic font-bold truncate" style={{ fontSize: 10, color: '#F5E6C8', maxWidth: 72 }}>
-                {p.uid === user?.uid ? 'أنت' : p.displayName}
-              </p>
-              <div className="flex items-center gap-1 text-[10px] font-arabic" style={{ color: c.accent }}>
-                <span>{COLOR_LABELS_AR[p.color]}</span>
-                <span className="font-mono opacity-80">· {p.finishedCount}/4</span>
-              </div>
-              {p.isTurn && (
-                <div className="absolute -bottom-0.5 left-2 right-2 h-0.5 rounded-full"
-                  style={{ background: `linear-gradient(90deg, transparent, ${c.accent}, transparent)` }} />
-              )}
-            </div>
-          );
-        })}
-      </div>
+      {/* ── Top rank ribbon ── */}
+      <RankRibbon state={state} />
+
+      {/* ── Top-row player cards (red top-left, blue top-right) ── */}
+      <CornerCardsRow
+        slots={['red', 'blue']}
+        players={state.players}
+        meUid={user?.uid}
+      />
 
       {/* ── Board ── */}
-      <div className="flex-1 flex items-center justify-center p-2 sm:p-4 min-h-0 relative z-10">
+      <div className="flex-1 flex items-center justify-center px-2 py-1 sm:py-2 min-h-0 relative z-10">
         <div className="relative"
           style={{
             width: '100%',
             aspectRatio: '1 / 1',
-            maxWidth: 'min(94vw, 480px)',
-            // Drop a warm halo behind the board so it floats above the dunes
+            maxWidth: 'min(94vw, 460px)',
             filter: 'drop-shadow(0 16px 40px rgba(0,0,0,0.85)) drop-shadow(0 0 36px rgba(201,168,76,0.20))',
           }}>
           <BoardBackground />
@@ -392,6 +505,13 @@ export function LudoBoard({ gameId, state }: Props) {
           })}
         </div>
       </div>
+
+      {/* ── Bottom-row player cards (yellow bottom-left, green bottom-right) ── */}
+      <CornerCardsRow
+        slots={['yellow', 'green']}
+        players={state.players}
+        meUid={user?.uid}
+      />
 
       {/* ── Bottom: dice + status ── */}
       <div className="relative flex flex-col items-center gap-2 px-4 py-3 sm:py-4 z-10"

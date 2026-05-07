@@ -2,15 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { socketService } from '../../services/socket.service';
-import { SOCKET_EVENTS, GameType } from '@check-game/shared';
 import { useAuthStore } from '../../store/authStore';
-import { useUiStore } from '../../store/uiStore';
 import { useLang } from '../../i18n/useT';
 import { LangToggle } from '../../components/shared/LangToggle';
 import { CharacterArt } from '../../components/shared/CharacterArt';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { soundService } from '../../services/sound.service';
 import { LudoPageBackground } from '../../components/game/ludo/BoardEmblems';
+import { LudoConfigModal, LudoConfigMode } from '../../components/game/ludo/LudoConfigModal';
 
 // ─── Sand palette tokens (kept here so this page doesn't drag the whole
 // home dashboard's chunky theme module). All gold/sand based — this is
@@ -102,23 +101,22 @@ function CurrencyChip({ icon, value, color, label }: { icon: string; value: numb
 }
 
 // ─── Big play-mode card ──────────────────────────────────────────────────────
-function ModeCard({ icon, title, sub, accent, onClick, busy, isAr }: {
+function ModeCard({ icon, title, sub, accent, onClick, isAr }: {
   icon: string; title: string; sub: string; accent: string;
-  onClick: () => void; busy: boolean; isAr: boolean;
+  onClick: () => void; isAr: boolean;
 }) {
   return (
     <motion.button
-      whileHover={busy ? {} : { scale: 1.025, y: -2 }}
-      whileTap={busy ? {} : { scale: 0.97 }}
-      disabled={busy}
+      whileHover={{ scale: 1.025, y: -2 }}
+      whileTap={{ scale: 0.97 }}
       onClick={onClick}
-      className="relative rounded-2xl text-start overflow-hidden disabled:opacity-50"
+      className="relative rounded-2xl text-start overflow-hidden"
       style={{
         padding: '18px 18px 16px',
         background: `linear-gradient(135deg, ${accent}24 0%, rgba(20,14,8,0.92) 100%)`,
         border: `2px solid ${accent}AA`,
         boxShadow: `0 10px 28px rgba(0,0,0,0.6), 0 0 32px ${accent}33, inset 0 1px 0 rgba(255,255,255,0.08)`,
-        cursor: busy ? 'not-allowed' : 'pointer',
+        cursor: 'pointer',
       }}
     >
       <div className="absolute inset-0 pointer-events-none"
@@ -170,72 +168,21 @@ export function LudoHomePage() {
   const dir = isAr ? 'rtl' : 'ltr';
   const navigate = useNavigate();
   const { profile } = useAuthStore();
-  const { addToast } = useUiStore();
-  const [busy, setBusy] = useState(false);
+  const [configMode, setConfigMode] = useState<LudoConfigMode | null>(null);
 
   useEffect(() => {
     // Make sure socket is alive when the user tries to launch
     socketService.connect();
   }, []);
 
-  const launchLudo = async (mode: 'bots' | 'online' | 'private') => {
-    if (busy) return;
-    setBusy(true);
+  const openConfig = (mode: LudoConfigMode) => {
     soundService.playClick();
-
-    let socket;
-    try {
-      socket = await socketService.ensureReady(5000);
-    } catch {
-      setBusy(false);
-      addToast(isAr ? 'تعذّر الاتصال بالخادم' : 'Could not reach server', 'error');
-      return;
-    }
-
-    const onStarting = (data: { gameId: string; gameType: GameType }) => {
-      socket.off(SOCKET_EVENTS.LOBBY_GAME_STARTING, onStarting);
-      navigate(`/game/${data.gameType}/${data.gameId}`);
-    };
-    socket.on(SOCKET_EVENTS.LOBBY_GAME_STARTING, onStarting);
-
-    const payloadBase = {
-      gameType: 'ludo' as GameType,
-      maxPlayers: 4,
-    };
-    if (mode === 'bots') {
-      socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, {
-        ...payloadBase,
-        name: 'لودو ضد البوت',
-        type: 'private',
-        botCount: 3,
-        botDifficulty: 'medium',
-      });
-    } else if (mode === 'online') {
-      socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, {
-        ...payloadBase,
-        name: 'غرفة لودو عامة',
-        type: 'public',
-        botCount: 0,
-        botDifficulty: 'medium',
-      });
-    } else {
-      socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, {
-        ...payloadBase,
-        name: 'غرفة لودو خاصة',
-        type: 'private',
-        botCount: 0,
-        botDifficulty: 'medium',
-      });
-    }
-
-    setTimeout(() => {
-      socket.off(SOCKET_EVENTS.LOBBY_GAME_STARTING, onStarting);
-      setBusy(false);
-    }, 8000);
+    setConfigMode(mode);
   };
 
-  const coins = profile?.coins ?? 0;
-  const gems = (profile as any)?.gems ?? 0;
+  // Ludo wallet — fully separate from Check's coins/gems.
+  const ludoCoins = (profile as any)?.ludoCoins ?? 0;
+  const ludoGems  = (profile as any)?.ludoGems  ?? 0;
   const ludoWins = profile?.stats?.ludoWins ?? 0;
   const totalGames = profile?.stats?.totalGames ?? 0;
   const level = profile?.ranking?.level ?? 1;
@@ -272,8 +219,8 @@ export function LudoHomePage() {
         </div>
 
         <div className="flex items-center gap-1.5">
-          <CurrencyChip icon="🪙" value={coins} color={SAND.gold} label={isAr ? 'كوينز' : 'Coins'} />
-          <CurrencyChip icon="💎" value={gems} color="#9DD8E8" label={isAr ? 'جواهر' : 'Gems'} />
+          <CurrencyChip icon="🪙" value={ludoCoins} color={SAND.gold} label={isAr ? 'كوينز لودو' : 'Ludo Coins'} />
+          <CurrencyChip icon="💎" value={ludoGems}  color="#9DD8E8" label={isAr ? 'جواهر لودو' : 'Ludo Gems'} />
           <LangToggle />
         </div>
       </nav>
@@ -348,26 +295,26 @@ export function LudoHomePage() {
           <ModeCard
             icon="🤖"
             title={isAr ? 'ضد البوتات' : 'Vs Bots'}
-            sub={isAr ? '٣ بوتات · ابدأ فوراً' : '3 bots · instant start'}
+            sub={isAr ? 'اختر العدد والصعوبة' : 'Pick count and difficulty'}
             accent={SAND.gold}
-            onClick={() => launchLudo('bots')}
-            busy={busy} isAr={isAr}
+            onClick={() => openConfig('bots')}
+            isAr={isAr}
           />
           <ModeCard
             icon="🌐"
             title={isAr ? 'أونلاين' : 'Online'}
-            sub={isAr ? 'ابحث عن خصوم' : 'Match with players'}
+            sub={isAr ? 'اختر الرهان والعدد' : 'Pick bet and players'}
             accent="#7AC74F"
-            onClick={() => launchLudo('online')}
-            busy={busy} isAr={isAr}
+            onClick={() => openConfig('online')}
+            isAr={isAr}
           />
           <ModeCard
             icon="🔒"
             title={isAr ? 'غرفة خاصة' : 'Private Room'}
             sub={isAr ? 'العب مع أصدقائك' : 'Play with friends'}
             accent="#9DD8E8"
-            onClick={() => launchLudo('private')}
-            busy={busy} isAr={isAr}
+            onClick={() => openConfig('private')}
+            isAr={isAr}
           />
         </div>
 
@@ -377,12 +324,12 @@ export function LudoHomePage() {
           {isAr ? '✦ القائمة ✦' : '✦ MENU ✦'}
         </p>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-6">
-          <NavTile icon="🎲" label={isAr ? 'متجر النرد' : 'Dice Store'}    sub={isAr ? 'نرد و طاولات' : 'dice & boards'} color="#D9A441" to="/store" />
-          <NavTile icon="🏆" label={isAr ? 'التصنيف' : 'Leaderboard'}      sub={isAr ? 'عالمي · أصدقاء' : 'global · friends'} color="#F1C40F" to="/leaderboard" />
-          <NavTile icon="👥" label={isAr ? 'الأصدقاء' : 'Friends'}          sub={isAr ? 'أضف خصومك' : 'add players'} color="#7AC74F" to="/friends" />
-          <NavTile icon="🛡️" label={isAr ? 'القبائل' : 'Clans'}             sub={isAr ? 'انضم لقبيلة' : 'join a clan'} color="#9DD8E8" to="/clans" />
-          <NavTile icon="🎯" label={isAr ? 'البطولات' : 'Tournaments'}      sub={isAr ? 'فرديه · قبائل' : 'solo · clan'} color="#E07040" to="/tournaments" />
-          <NavTile icon="📜" label={isAr ? 'التاريخ' : 'History'}           sub={isAr ? 'مبارياتك' : 'your matches'} color="#C495FF" to="/history" />
+          <NavTile icon="🛒" label={isAr ? 'متجر النرد' : 'Dice Store'}    sub={isAr ? 'نرد و طاولات' : 'dice & boards'} color="#D9A441" to="/ludo/store" />
+          <NavTile icon="🏆" label={isAr ? 'التصنيف' : 'Leaderboard'}      sub={isAr ? 'عالمي · أصدقاء' : 'global · friends'} color="#F1C40F" to="/ludo/leaderboard" />
+          <NavTile icon="👥" label={isAr ? 'الأصدقاء' : 'Friends'}          sub={isAr ? 'أضف خصومك' : 'add players'} color="#7AC74F" to="/ludo/friends" />
+          <NavTile icon="🛡️" label={isAr ? 'القبائل' : 'Clans'}             sub={isAr ? 'انضم لقبيلة' : 'join a clan'} color="#9DD8E8" to="/ludo/clans" />
+          <NavTile icon="🎯" label={isAr ? 'البطولات' : 'Tournaments'}      sub={isAr ? 'فرديه · قبائل' : 'solo · clan'} color="#E07040" to="/ludo/tournaments" />
+          <NavTile icon="📜" label={isAr ? 'التاريخ' : 'History'}           sub={isAr ? 'مبارياتك' : 'your matches'} color="#C495FF" to="/ludo/history" />
         </div>
 
         {/* ── Coming-soon banner — sets expectations honestly ── */}
@@ -411,6 +358,14 @@ export function LudoHomePage() {
             : 'In the shade of palms and warmth of homes ✦ our people play and tales are told'}
         </p>
       </main>
+
+      <LudoConfigModal
+        open={!!configMode}
+        mode={configMode || 'bots'}
+        onClose={() => setConfigMode(null)}
+        ludoCoins={ludoCoins}
+        lang={lang}
+      />
     </div>
   );
 }

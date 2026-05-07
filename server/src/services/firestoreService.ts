@@ -99,6 +99,10 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   }
   if (data.coins === undefined) data.coins = 0;
   if ((data as any).gems === undefined) (data as any).gems = 0;
+  // Ludo wallet is fully separate. New players get a 200-coin starter pot
+  // so the bet/bot config menu has something to work with from day one.
+  if ((data as any).ludoCoins === undefined) (data as any).ludoCoins = 200;
+  if ((data as any).ludoGems === undefined) (data as any).ludoGems = 0;
   if (!data.ownedItems) data.ownedItems = [...FREE_ITEMS];
   if (!data.equippedItems) data.equippedItems = { ...defaultEquipped };
   if (!data.username) { data.username = generateUsername(data.displayName); saveUsers(); }

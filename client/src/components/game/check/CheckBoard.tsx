@@ -593,12 +593,12 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
   return (
     <div className="relative flex flex-col items-center"
       style={{
-        flex: 1, borderRadius: 8, padding: '4px 3px 5px',
+        flex: 1, borderRadius: 8, padding: '3px 3px 4px',
         background: isTurn ? 'rgba(201,168,76,0.16)' : 'rgba(255,255,255,0.04)',
         border: isTurn ? '1px solid rgba(201,168,76,0.65)' : '1px solid rgba(255,255,255,0.06)',
         boxShadow: isTurn ? '0 0 8px rgba(201,168,76,0.22)' : 'none',
         opacity: isElim ? 0.45 : 1, cursor: isSpecialJ && selectedPos !== null && !isElim ? 'pointer' : 'default',
-        gap: 2, transition: 'all 0.3s', minWidth: 0,
+        gap: 1, transition: 'all 0.3s', minWidth: 0,
       }}
       onClick={() => isSpecialJ && selectedPos !== null && !isElim && onSelectForJ(player.uid)}
     >
@@ -619,10 +619,9 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
         style={{
           fontSize: 10,
           color: isTurn ? '#E8C97A' : 'rgba(245,230,200,0.95)',
-          lineHeight: 1.15,
+          lineHeight: 1.1,
           width: '100%',
           textAlign: 'center',
-          marginTop: 2,
           // Wrap to up to 2 lines so names stay visible even on very narrow
           // 6-8 player strips. Long names break across lines + truncate with
           // an ellipsis only on the second line — no more invisible cells.
@@ -631,14 +630,14 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden',
           wordBreak: 'break-word',
-          minHeight: 22,
+          minHeight: 18,
         }}
       >
         {player.displayName}
       </p>
       <p style={{ fontSize: 12, fontWeight:800, lineHeight:1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.8)' }}>{player.cumulativeScore}</p>
       {/* 2×2 card indicators */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1.5, marginTop:1, position: 'relative', visibility: hideCards ? 'hidden' : 'visible' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1.5, position: 'relative', visibility: hideCards ? 'hidden' : 'visible' }}>
         {Array.from({ length: Math.min(cardCount, 4) }).map((_, j) => {
           const isSwap = swapPos === j;
           return (
@@ -822,10 +821,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
   const isTablet = !isMobile && winW < 1280;
 
   const myAreaH = 300; // small cards (72w → 108h) 2×2 + box + CHECK button
-  // 100 → 116: the 2-line opponent name takes ~10px more vertical room than
-  // the old single-line ellipsis, so the 2×2 card-count dots were spilling
-  // out the bottom of the seat box.
-  const stripH = isMobile ? 116 : 0;
+  // Tuned around the CompactSeat stack: avatar (26) + name (18, 2-line clamp)
+  // + score (12) + 2×2 dots (40) + paddings/gaps. Keep it lean so score and
+  // cards sit high in the seat instead of floating with empty space below.
+  const stripH = isMobile ? 108 : 0;
   const mobileTableSize = isMobile
     ? Math.min(
         Math.floor(winW * 0.92),

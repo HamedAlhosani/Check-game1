@@ -103,6 +103,11 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   // so the bet/bot config menu has something to work with from day one.
   if ((data as any).ludoCoins === undefined) (data as any).ludoCoins = 200;
   if ((data as any).ludoGems === undefined) (data as any).ludoGems = 0;
+  // Ludo clan slot is also separate from Check's clanId. New users start
+  // in no Ludo clan; we just initialize the field so the API doesn't
+  // return undefined.
+  if ((data as any).ludoClanId === undefined) (data as any).ludoClanId = null;
+  if ((data as any).ludoClanTag === undefined) (data as any).ludoClanTag = null;
   if (!data.ownedItems) data.ownedItems = [...FREE_ITEMS];
   if (!data.equippedItems) data.equippedItems = { ...defaultEquipped };
   if (!data.username) { data.username = generateUsername(data.displayName); saveUsers(); }

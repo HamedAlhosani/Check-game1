@@ -562,6 +562,38 @@ app.post('/api/clans/leave', requireAuth, wrap(async (req, res) => {
   res.json({ ok: true, disbanded: r.disbanded, profile });
 }));
 
+// ── Ludo clans — fully separate registry from Check clans. The same
+//    service functions are used; only the scope differs. Member operations
+//    (apply / accept / kick / etc.) work via /api/clans/:id/<op> because
+//    the clan id already encodes its scope; we only need dedicated routes
+//    for the entry points that take no clan id (list, me, create, leave).
+app.get('/api/ludo-clans', requireAuth, wrap(async (req, res) => {
+  res.json(listClans((req as any).uid, 'ludo'));
+}));
+
+app.get('/api/ludo-clans/me', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  res.json({ clan: getMyClan(uid, 'ludo'), invites: getMyInvites(uid, 'ludo') });
+}));
+
+app.post('/api/ludo-clans', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const { name, tag, emblem, description, visibility } = req.body || {};
+  if (!name || !tag) return res.status(400).json({ error: 'Missing name or tag' });
+  const r = await createClan({ founderUid: uid, name, tag, emblem, description, visibility, scope: 'ludo' });
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, clan: r.clan, profile });
+}));
+
+app.post('/api/ludo-clans/leave', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const r = await leaveClan(uid, 'ludo');
+  if (!r.ok) return res.status(400).json({ error: r.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, disbanded: r.disbanded, profile });
+}));
+
 // ── Daily reward ───────────────────────────────────────────────────────────────
 
 app.get('/api/daily/status', requireAuth, wrap(async (req, res) => {

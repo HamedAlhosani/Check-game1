@@ -3,6 +3,9 @@
 
 export type ClanRole = 'leader' | 'officer' | 'member';
 export type ClanVisibility = 'open' | 'private';
+/** Which game's world a clan belongs to. Two parallel registries — a player
+ *  can be in one Check clan and one Ludo clan independently. */
+export type ClanScope = 'check' | 'ludo';
 
 export interface ClanMember {
   uid: string;
@@ -31,6 +34,9 @@ export interface ClanInvite {
 
 export interface Clan {
   id: string;
+  /** Game world this clan belongs to. Defaults to 'check' for back-compat
+   *  with clans created before the split. */
+  scope?: ClanScope;
   name: string;
   /** 2-5 letter tag rendered next to player names, like [FALC]. */
   tag: string;

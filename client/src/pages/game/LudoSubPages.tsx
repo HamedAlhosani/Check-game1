@@ -397,7 +397,7 @@ function LudoSubShell({ title, icon, children }: { title: string; icon: string; 
 }
 
 // ─── REAL Leaderboard — pulls top players, ranks by ludoWins ───────────────
-export function LudoLeaderboardPage() {
+function _LudoLeaderboardPage_unused() {
   const lang = useLang();
   const isAr = lang === 'ar';
   const { user } = useAuthStore();
@@ -571,10 +571,12 @@ export function LudoHistoryPage() {
   );
 }
 
-// Friends and Clans live in their own files now (full feature parity with
-// the Check versions, just sand-themed). Re-export under the original names.
+// Friends, Clans, and Leaderboard live in their own files (full feature
+// parity with the Check versions, sand-themed). Re-export under the
+// original names so /ludo/* routes pick them up.
 export { LudoFriendsPageFull as LudoFriendsPage } from './LudoFriendsPageFull';
 export { LudoClansPageFull as LudoClansPage } from './LudoClansPageFull';
+export { LudoLeaderboardPageFull as LudoLeaderboardPage } from './LudoLeaderboardPageFull';
 
 // ─── Friends — same data, Ludo chrome + private-room invite shortcut ────────
 interface FriendEntry { uid: string; displayName: string; username: string; avatarId: string; level: number; wins: number; }

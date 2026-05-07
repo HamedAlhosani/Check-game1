@@ -161,7 +161,12 @@ export interface UserProfile {
   ludoGems?: number;
   /** Clan the user belongs to (null if none). */
   clanId?: string | null;
+  /** Cached tag for the Check clan, used in name decorations. */
   clanTag?: string | null;
+  /** Ludo clan slot — fully separate from Check. A player can sit in one
+   *  Check clan and one Ludo clan at the same time. */
+  ludoClanId?: string | null;
+  ludoClanTag?: string | null;
 }
 
 export interface MatchPlayer {

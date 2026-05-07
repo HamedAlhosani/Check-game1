@@ -45,9 +45,10 @@ export function LudoClansPageFull() {
   async function refresh(showLoading = false) {
     if (showLoading) setLoading(true);
     try {
+      // Scoped endpoints — only Ludo clans + Ludo invites.
       const [l, mine] = await Promise.all([
-        apiClient.get<ClanSummary[]>('/api/clans'),
-        apiClient.get<{ clan: Clan | null; invites: ClanSummary[] }>('/api/clans/me'),
+        apiClient.get<ClanSummary[]>('/api/ludo-clans'),
+        apiClient.get<{ clan: Clan | null; invites: ClanSummary[] }>('/api/ludo-clans/me'),
       ]);
       setList(l);
       setMyClan(mine.clan);
@@ -108,7 +109,7 @@ export function LudoClansPageFull() {
                 onLeft={async () => { await refresh(); setTab('browse'); }} />
             )}
             {tab === 'create' && !myClan && (
-              <CreateTab isAr={isAr} myCoins={profile?.coins ?? 0} onCreated={async () => { await refresh(); setTab('mine'); }} />
+              <CreateTab isAr={isAr} myCoins={(profile as any)?.ludoCoins ?? 0} onCreated={async () => { await refresh(); setTab('mine'); }} />
             )}
             {tab === 'create' && myClan && (
               <p className="text-center font-arabic py-8" style={{ color: 'rgba(245,230,200,0.5)', fontSize: 13 }}>
@@ -313,7 +314,7 @@ function MineTab({ clan, myUid, isAr, onLeft }: {
     setConfirmLeave(false);
     soundService.playClick();
     try {
-      await apiClient.post(`/api/clans/${clan!.id}/leave`, {});
+      await apiClient.post(`/api/ludo-clans/leave`, {});
       addToast(isAr ? 'غادرت القبيلة' : 'Left the clan', 'info');
       await onLeft();
     } catch (e: any) { addToast(e?.message || 'Failed', 'error'); }
@@ -477,7 +478,7 @@ function CreateTab({ isAr, myCoins, onCreated }: { isAr: boolean; myCoins: numbe
     setBusy(true);
     soundService.playClick();
     try {
-      await apiClient.post('/api/clans', { name: name.trim(), tag: tag.trim(), emblem, description: description.trim(), visibility });
+      await apiClient.post('/api/ludo-clans', { name: name.trim(), tag: tag.trim(), emblem, description: description.trim(), visibility });
       addToast(isAr ? '🎉 تم إنشاء القبيلة' : '🎉 Clan created', 'success');
       await onCreated();
     } catch (e: any) {
@@ -489,7 +490,7 @@ function CreateTab({ isAr, myCoins, onCreated }: { isAr: boolean; myCoins: numbe
   return (
     <div className="rounded-2xl p-4"
       style={{ background: SAND.panel, border: `1.5px solid ${SAND.gold}55` }}>
-      {/* Cost */}
+      {/* Cost — paid in Ludo coins, not Check coins */}
       <div className="flex items-center justify-between mb-4 rounded-xl px-3 py-2"
         style={{ background: `${SAND.gold}22`, border: `1px solid ${SAND.gold}77` }}>
         <span className="font-arabic" style={{ fontSize: 12, color: SAND.cream }}>
@@ -498,7 +499,7 @@ function CreateTab({ isAr, myCoins, onCreated }: { isAr: boolean; myCoins: numbe
         <span className="font-mono font-bold" style={{ fontSize: 14, color: myCoins >= CLAN_CREATE_COST ? SAND.gold : '#FF8A65' }}>
           🪙 {CLAN_CREATE_COST.toLocaleString()}
           <span style={{ marginInlineStart: 6, fontSize: 10, opacity: 0.7 }}>
-            ({isAr ? 'رصيدك' : 'you'} {myCoins.toLocaleString()})
+            ({isAr ? 'رصيد لودو' : 'Ludo balance'} {myCoins.toLocaleString()})
           </span>
         </span>
       </div>

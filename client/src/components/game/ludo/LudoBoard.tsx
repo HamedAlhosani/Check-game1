@@ -10,7 +10,7 @@ import { LudoDice } from './LudoDice';
 import { ChatPanel } from '../shared/ChatPanel';
 import { GameOverModal } from '../shared/GameOverModal';
 import { CharacterArt } from '../../shared/CharacterArt';
-import { BoardDefs, LudoPageBackground, LUDO_EMIRATI_PALETTE, COLOR_LABELS_AR } from './BoardEmblems';
+import { LUDO_EMIRATI_PALETTE, COLOR_LABELS_AR } from './BoardEmblems';
 
 // ─── Board geometry — 15×15 grid ─────────────────────────────────────────────
 // Path is the cross around the perimeter (52 tiles); home bases sit in the
@@ -22,26 +22,35 @@ import { BoardDefs, LudoPageBackground, LUDO_EMIRATI_PALETTE, COLOR_LABELS_AR } 
 //   52..57        → that color's home column (6 cells leading to center)
 //   58            → finished (center)
 
+// Path layout matching the Ludo King screenshot. Tile 0 is the GREEN
+// start (top-left corner), 13 the YELLOW start (top-right), 26 the BLUE
+// start (bottom-right), 39 the RED start (bottom-left). Walking the
+// array clockwise around the cross.
 const PATH_COORDS: [number, number][] = [
-  [6, 1], [6, 2], [6, 3], [6, 4], [6, 5],         // 0-4
-  [5, 6], [4, 6], [3, 6], [2, 6], [1, 6],         // 5-9
-  [0, 6], [0, 7], [0, 8],                         // 10-12
-  [1, 8], [2, 8], [3, 8], [4, 8], [5, 8],         // 13-17
-  [6, 9], [6, 10], [6, 11], [6, 12], [6, 13], [6, 14], // 18-23
-  [7, 14],                                        // 24
-  [8, 14], [8, 13], [8, 12], [8, 11], [8, 10], [8, 9], // 25-30
-  [9, 8], [10, 8], [11, 8], [12, 8], [13, 8], [14, 8], // 31-36
-  [14, 7],                                        // 37
-  [14, 6], [13, 6], [12, 6], [11, 6], [10, 6], [9, 6], // 38-43
-  [8, 5], [8, 4], [8, 3], [8, 2], [8, 1], [8, 0], // 44-49
-  [7, 0], [6, 0],                                 // 50-51
+  [1, 6],  [0, 6],  [0, 7],  [0, 8],  [1, 8],  [2, 8],  [3, 8],  [4, 8],  [5, 8],   // 0-8   green start → top arm
+  [6, 9],  [6, 10], [6, 11], [6, 12], [6, 13],                                       // 9-13  enter right arm → yellow start
+  [6, 14], [7, 14], [8, 14],                                                         // 14-16 right edge
+  [8, 13], [8, 12], [8, 11], [8, 10], [8, 9],                                        // 17-21 right arm bottom row
+  [9, 8],  [10, 8], [11, 8], [12, 8], [13, 8],                                       // 22-26 down bottom arm → blue start
+  [14, 8], [14, 7], [14, 6],                                                         // 27-29 bottom edge
+  [13, 6], [12, 6], [11, 6], [10, 6], [9, 6],                                        // 30-34 bottom arm right col (going up)
+  [8, 5],  [8, 4],  [8, 3],  [8, 2],  [8, 1],                                        // 35-39 left arm bottom → red start
+  [8, 0],  [7, 0],  [6, 0],                                                          // 40-42 left edge
+  [6, 1],  [6, 2],  [6, 3],  [6, 4],  [6, 5],                                        // 43-47 left arm top
+  [5, 6],  [4, 6],  [3, 6],  [2, 6],                                                 // 48-51 up top arm left col
 ];
 
+// Home columns leading from the perimeter to the center (7, 7). Each
+// engine colour gets a 6-cell strip on its visual side of the cross.
 const HOME_COLUMN_COORDS: Record<LudoColor, [number, number][]> = {
-  red:    [[7, 1], [7, 2], [7, 3], [7, 4], [7, 5], [7, 6]],
-  blue:   [[1, 7], [2, 7], [3, 7], [4, 7], [5, 7], [6, 7]],
-  green:  [[7, 13], [7, 12], [7, 11], [7, 10], [7, 9], [7, 8]],
-  yellow: [[13, 7], [12, 7], [11, 7], [10, 7], [9, 7], [8, 7]],
+  // engine red (visual GREEN, top-left) — top arm middle column going down
+  red:    [[1, 7],  [2, 7],  [3, 7],  [4, 7],  [5, 7],  [6, 7]],
+  // engine blue (visual YELLOW, top-right) — right arm middle row going left
+  blue:   [[7, 13], [7, 12], [7, 11], [7, 10], [7, 9],  [7, 8]],
+  // engine green (visual BLUE, bottom-right) — bottom arm middle column going up
+  green:  [[13, 7], [12, 7], [11, 7], [10, 7], [9, 7],  [8, 7]],
+  // engine yellow (visual RED, bottom-left) — left arm middle row going right
+  yellow: [[7, 1],  [7, 2],  [7, 3],  [7, 4],  [7, 5],  [7, 6]],
 };
 
 const HOME_BASE_REGION: Record<LudoColor, { row: [number, number]; col: [number, number] }> = {
@@ -58,15 +67,12 @@ const HOME_BASE_SLOTS: Record<LudoColor, [number, number][]> = {
   yellow: [[10.4, 1.4], [10.4, 3.6], [12.6, 1.4], [12.6, 3.6]],
 };
 
-const COLOR_EMBLEM: Record<LudoColor, string> = {
-  red: 'emb-falcon',
-  blue: 'emb-pearl',
-  green: 'emb-palm',
-  yellow: 'emb-dunes',
-};
 
 const SAFE_TILES = new Set([0, 8, 13, 21, 26, 34, 39, 47]);
 const STAR_TILES = new Set([8, 21, 34, 47]); // safes that aren't a player's start
+// Engine-color → visual-color screen positions handled implicitly via
+// the palette swap in BoardEmblems.tsx; the engine still calls the
+// top-left start tile 'red'.
 const START_TILES: Record<number, LudoColor> = { 0: 'red', 13: 'blue', 26: 'green', 39: 'yellow' };
 
 const CENTER = { row: 7, col: 7 };
@@ -92,50 +98,36 @@ function pieceCoord(piece: LudoPiece, indexInColor: number): { row: number; col:
   return { row, col };
 }
 
-// ─── Static board background ─────────────────────────────────────────────────
+// ─── Clean Ludo King-style board background ──────────────────────────────────
 function BoardBackground() {
   return (
     <svg viewBox="0 0 15 15" className="absolute inset-0 w-full h-full" style={{ shapeRendering: 'auto' }}>
-      <BoardDefs />
+      {/* Plain white board surface */}
+      <rect x="0" y="0" width="15" height="15" fill="#FFFFFF" />
 
-      {/* Outer parchment — base under everything */}
-      <rect x="0" y="0" width="15" height="15" fill="#1A1408" />
-
-      {/* Subtle radial highlight in the centre to draw the eye in */}
-      <radialGradient id="board-radial" cx="50%" cy="50%" r="60%">
-        <stop offset="0%"  stopColor="#3A2410" />
-        <stop offset="100%" stopColor="#1A1408" />
-      </radialGradient>
-      <rect x="0" y="0" width="15" height="15" fill="url(#board-radial)" />
-
-      {/* ── 4 home bases (6×6 corners) ── */}
+      {/* ── 4 colored home bases (6×6 corners) ── */}
       {(['red', 'blue', 'green', 'yellow'] as LudoColor[]).map(color => {
         const r = HOME_BASE_REGION[color];
         const c = LUDO_EMIRATI_PALETTE[color];
         return (
           <g key={color}>
-            {/* Outer colored frame */}
+            {/* Solid colored outer 6×6 */}
             <rect x={r.col[0]} y={r.row[0]} width={6} height={6} fill={c.main} />
-            {/* Inner parchment plaque */}
-            <rect x={r.col[0] + 0.5} y={r.row[0] + 0.5} width={5} height={5}
-              fill="#F4E4BE" stroke={c.dark} strokeWidth={0.06} />
-            {/* Themed watermark — falcon / pearl / palm / dunes */}
-            <use
-              href={`#${COLOR_EMBLEM[color]}`}
-              x={r.col[0] + 0.5} y={r.row[0] + 0.5}
-              width={5} height={5}
-              color={c.dark}
-              opacity={0.18}
-            />
-            {/* 4 piece pockets */}
-            {HOME_BASE_SLOTS[color].map((slot, i) => (
-              <g key={i}>
-                <circle cx={slot[1] + 0.5} cy={slot[0] + 0.5} r={0.62}
-                  fill={c.light} stroke={c.dark} strokeWidth={0.05} />
-                <circle cx={slot[1] + 0.5} cy={slot[0] + 0.5} r={0.5}
-                  fill="none" stroke={c.dark} strokeWidth={0.025} opacity={0.5} />
-              </g>
-            ))}
+            {/* White inner plaque */}
+            <rect x={r.col[0] + 0.6} y={r.row[0] + 0.6} width={4.8} height={4.8} fill="#FFFFFF" />
+            {/* 4 concentric-ring piece pockets — empty home spots */}
+            {HOME_BASE_SLOTS[color].map((slot, i) => {
+              const cx = slot[1] + 0.5;
+              const cy = slot[0] + 0.5;
+              return (
+                <g key={i}>
+                  <circle cx={cx} cy={cy} r={0.55} fill="#FFFFFF" stroke={c.main} strokeWidth={0.06} />
+                  <circle cx={cx} cy={cy} r={0.40} fill={c.main} />
+                  <circle cx={cx} cy={cy} r={0.26} fill="#FFFFFF" />
+                  <circle cx={cx} cy={cy} r={0.12} fill={c.main} />
+                </g>
+              );
+            })}
           </g>
         );
       })}
@@ -143,93 +135,56 @@ function BoardBackground() {
       {/* ── Path tiles ── */}
       {PATH_COORDS.map(([row, col], i) => {
         const startColor = START_TILES[i];
-        const fill = startColor ? LUDO_EMIRATI_PALETTE[startColor].main : 'url(#sand-grain)';
+        const fill = startColor ? LUDO_EMIRATI_PALETTE[startColor].main : '#FFFFFF';
         return (
           <g key={i}>
             <rect x={col} y={row} width={1} height={1} fill={fill}
-              stroke="#7A6303" strokeWidth={0.025} />
-            {/* Inner subtle inset */}
-            {!startColor && (
-              <rect x={col + 0.08} y={row + 0.08} width={0.84} height={0.84}
-                fill="none" stroke="#C9A84C" strokeWidth={0.02} opacity={0.35} />
-            )}
-            {/* Star (khatim) tiles */}
+              stroke="#222222" strokeWidth={0.04} />
+            {/* Star on safe non-start tiles */}
             {STAR_TILES.has(i) && (
-              <use href="#emb-khatim" x={col + 0.15} y={row + 0.15} width={0.7} height={0.7} />
-            )}
-            {/* Mini emblem on start tiles */}
-            {startColor && (
-              <use href={`#${COLOR_EMBLEM[startColor]}`}
-                x={col + 0.1} y={row + 0.1} width={0.8} height={0.8}
-                color="#F4E4BE" opacity={0.85} />
+              <text x={col + 0.5} y={col === 0 ? row + 0.78 : row + 0.78}
+                textAnchor="middle"
+                fontSize="0.85"
+                fontWeight="700"
+                fill="#888888"
+              >★</text>
             )}
           </g>
         );
       })}
 
-      {/* ── Home columns — gradient strips toward center ── */}
+      {/* ── Home columns — solid colored cells with thin black border ── */}
       {(['red', 'blue', 'green', 'yellow'] as LudoColor[]).map(color => {
         const c = LUDO_EMIRATI_PALETTE[color];
-        return HOME_COLUMN_COORDS[color].map(([row, col], i) => {
-          // Fade colour along the column so it visibly "leads home"
-          const t = i / 5;
-          const alpha = 0.55 + t * 0.45;
-          return (
-            <g key={`${color}-${i}`}>
-              <rect x={col} y={row} width={1} height={1}
-                fill={c.main} opacity={alpha}
-                stroke={c.dark} strokeWidth={0.03} />
-              <rect x={col + 0.1} y={row + 0.1} width={0.8} height={0.8}
-                fill="none" stroke={c.light} strokeWidth={0.02} opacity={0.4} />
-            </g>
-          );
-        });
+        return HOME_COLUMN_COORDS[color].map(([row, col], i) => (
+          <rect key={`${color}-${i}`} x={col} y={row} width={1} height={1}
+            fill={c.main}
+            stroke="#222222" strokeWidth={0.04} />
+        ));
       })}
 
-      {/* ── Center finish — 4 colored triangles + gold star + ✦ ── */}
+      {/* ── Center finish — 4 colored triangles meeting at the middle ── */}
       <g>
-        <polygon points="6,6 9,6 7.5,7.5"  fill={LUDO_EMIRATI_PALETTE.blue.main}   stroke="#7A6303" strokeWidth={0.04} />
-        <polygon points="9,6 9,9 7.5,7.5"  fill={LUDO_EMIRATI_PALETTE.green.main}  stroke="#7A6303" strokeWidth={0.04} />
-        <polygon points="9,9 6,9 7.5,7.5"  fill={LUDO_EMIRATI_PALETTE.yellow.main} stroke="#7A6303" strokeWidth={0.04} />
-        <polygon points="6,9 6,6 7.5,7.5"  fill={LUDO_EMIRATI_PALETTE.red.main}    stroke="#7A6303" strokeWidth={0.04} />
-        {/* Gold rim around the centre */}
-        <circle cx="7.5" cy="7.5" r="1.45" fill="none" stroke="#C9A84C" strokeWidth={0.08} opacity={0.7} />
-        <circle cx="7.5" cy="7.5" r="1.55" fill="none" stroke="#7A6303" strokeWidth={0.04}
-          strokeDasharray="0.12 0.12" />
-        {/* 8-point khatim star at centre */}
-        <use href="#emb-khatim" x="6.6" y="6.6" width="1.8" height="1.8" />
+        {/* Visual: GREEN(top-left) YELLOW(top-right) BLUE(bottom-right) RED(bottom-left) */}
+        <polygon points="6,6 9,6 7.5,7.5" fill={LUDO_EMIRATI_PALETTE.blue.main}  stroke="#222" strokeWidth={0.04} />
+        <polygon points="9,6 9,9 7.5,7.5" fill={LUDO_EMIRATI_PALETTE.green.main} stroke="#222" strokeWidth={0.04} />
+        <polygon points="9,9 6,9 7.5,7.5" fill={LUDO_EMIRATI_PALETTE.yellow.main} stroke="#222" strokeWidth={0.04} />
+        <polygon points="6,9 6,6 7.5,7.5" fill={LUDO_EMIRATI_PALETTE.red.main}   stroke="#222" strokeWidth={0.04} />
       </g>
 
-      {/* ── Outer frame: double gold border + corner medallions ── */}
-      <g>
-        <rect x="0" y="0" width="15" height="15" fill="none" stroke="#C9A84C" strokeWidth={0.18} />
-        <rect x="0.16" y="0.16" width="14.68" height="14.68" fill="none" stroke="#7A6303" strokeWidth={0.04} />
-      </g>
-      {/* 4 corner medallions */}
-      {[
-        [0.5, 0.5], [14.5, 0.5], [0.5, 14.5], [14.5, 14.5],
-      ].map(([cx, cy], i) => (
-        <g key={i}>
-          <circle cx={cx} cy={cy} r={0.32} fill="#1A1408" stroke="#C9A84C" strokeWidth={0.06} />
-          <use href="#emb-khatim" x={cx - 0.22} y={cy - 0.22} width={0.44} height={0.44} />
-        </g>
-      ))}
+      {/* Outer frame */}
+      <rect x="0" y="0" width="15" height="15" fill="none" stroke="#222222" strokeWidth={0.10} />
     </svg>
   );
 }
 
-// ─── Color rotation: user's home should always sit at the visual bottom-left.
-// Engine assigns colors red/blue/green/yellow at fixed home corners; we rotate
-// the whole board container by the right multiple of 90° so the user's color
-// home appears bottom-left after rotation.
+// Board orientation is fixed in this Ludo-King-style layout — every player
+// sees the same canonical view (green top-left, yellow top-right, red
+// bottom-left, blue bottom-right). The seat cards still rotate so the user
+// is at bottom-left.
 const ROTATION_DEG: Record<LudoColor, number> = {
-  yellow: 0,
-  green: 90,
-  blue: 180,
-  red: 270,
+  yellow: 0, green: 0, blue: 0, red: 0,
 };
-// Given the user's color, what color should appear in each *visual* corner
-// (after rotation)? top-left, top-right, bottom-left (=me), bottom-right.
 const SLOT_ORDER_FOR: Record<LudoColor, [LudoColor, LudoColor, LudoColor, LudoColor]> = {
   yellow: ['red',    'blue',   'yellow', 'green'],
   green:  ['yellow', 'red',    'green',  'blue'],
@@ -538,9 +493,7 @@ export function LudoBoard({ gameId, state }: Props) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative" style={{ background: '#0E0905' }}>
-      {/* Page-level desert background — sits behind everything */}
-      <LudoPageBackground />
+    <div className="min-h-screen flex flex-col relative" style={{ background: '#1A1A1A' }}>
 
       {/* ── Top rank ribbon ── */}
       <RankRibbon state={state} />
@@ -562,7 +515,7 @@ export function LudoBoard({ gameId, state }: Props) {
             width: '100%',
             aspectRatio: '1 / 1',
             maxWidth: 'min(94vw, 440px)',
-            filter: 'drop-shadow(0 14px 36px rgba(0,0,0,0.85)) drop-shadow(0 0 30px rgba(201,168,76,0.22))',
+            filter: 'drop-shadow(0 12px 24px rgba(0,0,0,0.7))',
           }}>
           <BoardBackground />
 
@@ -617,23 +570,28 @@ export function LudoBoard({ gameId, state }: Props) {
                 <div
                   className="w-full h-full relative rounded-full flex items-center justify-center"
                   style={{
-                    background: `radial-gradient(circle at 32% 24%, ${c.light} 0%, ${c.main} 55%, ${c.dark} 100%)`,
-                    border: `2px solid ${movable ? '#F6E6BE' : '#C9A84C'}`,
+                    background: c.main,
+                    border: `2px solid ${movable ? '#FFFFFF' : c.dark}`,
                     boxShadow: movable
-                      ? `0 0 0 2px #C9A84C, 0 0 18px ${c.main}, 0 3px 6px rgba(0,0,0,0.6)`
-                      : '0 3px 6px rgba(0,0,0,0.65), inset 0 1.5px 0 rgba(255,255,255,0.35), inset 0 -1.5px 0 rgba(0,0,0,0.35)',
-                    color: '#fff',
-                    animation: movable ? 'pulse 1.4s ease-in-out infinite' : undefined,
+                      ? `0 0 0 2px #FFFFFF, 0 0 16px ${c.main}, 0 3px 6px rgba(0,0,0,0.6)`
+                      : '0 3px 6px rgba(0,0,0,0.55), inset 0 1.5px 0 rgba(255,255,255,0.35), inset 0 -1.5px 0 rgba(0,0,0,0.30)',
                   }}>
-                  <svg viewBox="0 0 6 6" className="absolute inset-0 w-full h-full" style={{ padding: '18%' }}>
-                    <BoardDefs />
-                    <use href={`#${COLOR_EMBLEM[piece.color]}`}
-                      width="6" height="6"
-                      color="#F6E6BE"
-                      opacity={piece.status === 'finished' ? 1 : 0.55} />
-                  </svg>
+                  {/* Concentric ring matching the Ludo King piece look */}
+                  <div className="rounded-full"
+                    style={{
+                      width: '60%', height: '60%',
+                      background: '#FFFFFF',
+                      boxShadow: 'inset 0 0 0 2px ' + c.main,
+                    }}>
+                    <div className="rounded-full mx-auto"
+                      style={{
+                        width: '60%', height: '60%',
+                        marginTop: '20%',
+                        background: c.main,
+                      }} />
+                  </div>
                   {piece.status === 'finished' && (
-                    <span className="relative" style={{ fontSize: '0.55em', fontWeight: 900, color: '#F6E6BE', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>★</span>
+                    <span className="absolute" style={{ fontSize: '0.55em', fontWeight: 900, color: '#FFFFFF', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>★</span>
                   )}
                 </div>
               </motion.button>

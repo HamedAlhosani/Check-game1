@@ -2,30 +2,37 @@
 // Drop a single <BoardDefs/> into any SVG to make every emblem available
 // via <use href="#emb-falcon"/> etc.
 
+// Ludo King palette mapped onto the engine's colour keys. The engine
+// hard-codes start offsets per (red/blue/green/yellow), but the player
+// sees them as the four Ludo King corners — so we re-skin:
+//   engine.red    → visual GREEN  (top-left)
+//   engine.blue   → visual YELLOW (top-right)
+//   engine.green  → visual BLUE   (bottom-right)
+//   engine.yellow → visual RED    (bottom-left)
 export const LUDO_EMIRATI_PALETTE = {
-  red: {    // الصقر — Falcon
-    main:   '#C8323A',
-    dark:   '#5E1612',
-    light:  '#F4D6C9',
-    accent: '#8B2A1A',
+  red: {    // visual GREEN
+    main:   '#2ECC40',
+    dark:   '#1F8E2C',
+    light:  '#A6E5A9',
+    accent: '#27AE38',
   },
-  blue: {   // اللؤلؤ — Pearl / sea
-    main:   '#2E6FA8',
-    dark:   '#0E2C4A',
-    light:  '#D9E8F2',
-    accent: '#6FB7D6',
+  blue: {   // visual YELLOW
+    main:   '#F7CA18',
+    dark:   '#A8870A',
+    light:  '#FFEFA8',
+    accent: '#D9B214',
   },
-  green: {  // النخيل — Palm
-    main:   '#3F8E55',
-    dark:   '#1A3D24',
-    light:  '#D6E8C9',
-    accent: '#7BB36A',
+  green: {  // visual BLUE
+    main:   '#3498DB',
+    dark:   '#1F6190',
+    light:  '#A9D3EE',
+    accent: '#2A7AB0',
   },
-  yellow: { // الرمال — Dunes
-    main:   '#D9A441',
-    dark:   '#6E4A12',
-    light:  '#F6E6BE',
-    accent: '#C9A84C',
+  yellow: { // visual RED
+    main:   '#E74C3C',
+    dark:   '#9C2519',
+    light:  '#F5B0A8',
+    accent: '#C7392B',
   },
 } as const;
 

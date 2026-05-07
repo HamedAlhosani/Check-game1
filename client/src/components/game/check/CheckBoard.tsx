@@ -4,7 +4,7 @@ import { GameState, Card, SOCKET_EVENTS } from '@check-game/shared';
 import { socketService } from '../../../services/socket.service';
 import { useAuthStore } from '../../../store/authStore';
 import { useGameStore } from '../../../store/gameStore';
-import { PlayingCard, CARD_BACK_THEMES } from './PlayingCard';
+import { PlayingCard } from './PlayingCard';
 import { ChatPanel } from '../shared/ChatPanel';
 import { GameOverModal } from '../shared/GameOverModal';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -590,9 +590,6 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
   const isElim = player.isEliminated;
   const cardCount = player.cards.filter(Boolean).length;
   const avClickable = !!onAvatarClick && !player.isBot;
-  // Mirror the user's chosen card-back onto opponents' card indicators so
-  // every face-down card on screen shares the same skin.
-  const backTheme = CARD_BACK_THEMES[backId || 'card_classic'] || CARD_BACK_THEMES.card_classic;
   return (
     <div className="relative flex flex-col items-center"
       style={{
@@ -639,29 +636,35 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
         {player.displayName}
       </p>
       <p style={{ fontSize: 12, fontWeight:800, lineHeight:1, color: isTurn ? '#E8C97A' : 'rgba(201,168,76,0.8)' }}>{player.cumulativeScore}</p>
-      {/* 2×2 card indicators — themed to match the user's chosen card back */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1.5, position: 'relative', visibility: hideCards ? 'hidden' : 'visible' }}>
+      {/* 2×2 card indicators — render the actual chosen card back, just scaled
+          down so opponents' face-down cards look identical to the user's. */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap: 2, position: 'relative', visibility: hideCards ? 'hidden' : 'visible' }}>
         {Array.from({ length: Math.min(cardCount, 4) }).map((_, j) => {
           const isSwap = swapPos === j;
+          // PlayingCard at xmini is 36×54 (2:3). We render that size and scale
+          // it visually to fit the narrow strip cell so the back artwork is
+          // preserved instead of a solid box.
+          const VIS_W = 16;
+          const SCALE = VIS_W / 36;
+          const VIS_H = 54 * SCALE;
           return (
-            <div key={j} className="relative flex items-center justify-center" style={{
-              width: 14, height: 20, borderRadius: 2.5, overflow: 'hidden',
-              background: isSwap
-                ? 'rgba(224,64,48,0.25)'
-                : `linear-gradient(135deg, ${backTheme.bg1} 0%, ${backTheme.bg2} 100%)`,
-              border: `1.5px solid ${isSwap ? '#E04030' : isTurn ? 'rgba(201,168,76,0.55)' : `${backTheme.accent}55`}`,
-              boxShadow: isSwap
-                ? '0 0 6px rgba(224,64,48,0.7)'
-                : `inset 0 0 4px ${backTheme.glow}`,
+            <div key={j} className="relative" style={{
+              width: VIS_W, height: VIS_H,
+              overflow: 'visible',
+              boxShadow: isSwap ? '0 0 6px rgba(224,64,48,0.85)' : 'none',
               animation: isSwap ? 'pulse 1s ease-in-out infinite' : undefined,
             }}>
-              {!isSwap && (
-                <div style={{
-                  width: '60%', height: '60%', borderRadius: 1.5,
-                  border: `1px solid ${backTheme.accent}55`,
-                  background: `radial-gradient(circle, ${backTheme.accent}22 0%, transparent 70%)`,
-                }}/>
-              )}
+              <div style={{
+                width: 36, height: 54,
+                transform: `scale(${SCALE})`,
+                transformOrigin: 'top left',
+              }}>
+                {/* Dummy card so PlayingCard takes the face-down branch
+                    (CardBack), not the empty '?' placeholder. */}
+                <PlayingCard card={{ rank: 'A', suit: 'spades', isRevealed: false } as any}
+                  xmini faceDown backId={backId}
+                  highlight={isSwap ? 'burn' : 'none'} />
+              </div>
               {isSwap && (
                 <span className="absolute" style={{
                   left: '50%', top: -10, transform: 'translateX(-50%)',
@@ -836,9 +839,10 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
 
   const myAreaH = 300; // small cards (72w → 108h) 2×2 + box + CHECK button
   // Tuned around the CompactSeat stack: avatar (26) + name (16, 2-line clamp)
-  // + score (12) + 2×2 dots (40) + paddings/gaps. Keep it lean so score and
-  // cards sit high in the seat instead of floating with empty space below.
-  const stripH = isMobile ? 100 : 0;
+  // + score (12) + 2×2 mini card backs (~50, 16×24 with 2px gap between rows)
+  // + paddings/gaps. Keep it lean so score and cards sit high in the seat
+  // instead of floating with empty space below.
+  const stripH = isMobile ? 114 : 0;
   const mobileTableSize = isMobile
     ? Math.min(
         Math.floor(winW * 0.92),

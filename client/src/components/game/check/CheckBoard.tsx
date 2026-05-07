@@ -1794,6 +1794,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
                   scoreFs={isMobile ? 26 : isTablet ? 28 : 32}
                   nameFs={isMobile ? 11 : isTablet ? 13 : 15}
                   opaque={!isMobile}
+                  onAvatarClick={onAvatarClick}
                 />
               </div>
               {!me?.isEliminated && (

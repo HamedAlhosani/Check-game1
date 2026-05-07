@@ -13,7 +13,7 @@ interface Props {
   backId?: string;
 }
 
-const CARD_BACK_THEMES: Record<string, { bg1: string; bg2: string; accent: string; glow: string }> = {
+export const CARD_BACK_THEMES: Record<string, { bg1: string; bg2: string; accent: string; glow: string }> = {
   card_classic:  { bg1: '#080D22', bg2: '#040918', accent: '#C9A84C', glow: 'rgba(201,168,76,0.07)' },
   card_arabian:  { bg1: '#0D0A2A', bg2: '#06040F', accent: '#6B8AFF', glow: 'rgba(107,138,255,0.08)' },
   card_desert:   { bg1: '#2A1208', bg2: '#180800', accent: '#E8903A', glow: 'rgba(232,144,58,0.09)' },

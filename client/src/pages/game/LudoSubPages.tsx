@@ -10,6 +10,7 @@ import { useUiStore } from '../../store/uiStore';
 import { apiClient } from '../../services/api.service';
 import { CharacterArt } from '../../components/shared/CharacterArt';
 import { FrameRing } from '../../components/shared/FrameRing';
+import { StoreItemPreview } from '../../components/game/ludo/StoreItemPreviews';
 
 const SAND = {
   bg1: '#0E0905',
@@ -316,8 +317,8 @@ export function LudoStorePage() {
                   border: `2px solid ${ringColor}66`,
                   boxShadow: isEquipped ? `0 0 22px ${ringColor}99` : `0 4px 12px rgba(0,0,0,0.5)`,
                 }}>
-                {/* Preview swatch — different visual per category */}
-                <ItemPreview item={item} />
+                {/* Per-item visual preview — real dice / board / character */}
+                <StoreItemPreview item={item} />
                 <p className="font-arabic font-bold truncate" style={{ fontSize: 12, color: SAND.cream }}>
                   {item.nameAr}
                 </p>
@@ -571,12 +572,13 @@ export function LudoHistoryPage() {
   );
 }
 
-// Friends, Clans, and Leaderboard live in their own files (full feature
-// parity with the Check versions, sand-themed). Re-export under the
-// original names so /ludo/* routes pick them up.
-export { LudoFriendsPageFull as LudoFriendsPage } from './LudoFriendsPageFull';
-export { LudoClansPageFull as LudoClansPage } from './LudoClansPageFull';
+// Friends, Clans, Leaderboard, Tournaments live in their own files (full
+// feature parity with the Check versions, sand-themed). Re-export under
+// the original names so /ludo/* routes pick them up.
+export { LudoFriendsPageFull     as LudoFriendsPage }     from './LudoFriendsPageFull';
+export { LudoClansPageFull       as LudoClansPage }       from './LudoClansPageFull';
 export { LudoLeaderboardPageFull as LudoLeaderboardPage } from './LudoLeaderboardPageFull';
+export { LudoTournamentsPageFull as LudoTournamentsPage } from './LudoTournamentsPageFull';
 
 // ─── Friends — same data, Ludo chrome + private-room invite shortcut ────────
 interface FriendEntry { uid: string; displayName: string; username: string; avatarId: string; level: number; wins: number; }
@@ -688,7 +690,7 @@ function _LudoClansPage_unused() {
 }
 
 // ─── Tournaments — link to existing tournaments, themed for Ludo ────────────
-export function LudoTournamentsPage() {
+function _LudoTournamentsPage_unused() {
   const lang = useLang();
   const isAr = lang === 'ar';
   const navigate = useNavigate();

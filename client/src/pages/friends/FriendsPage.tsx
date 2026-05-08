@@ -160,22 +160,22 @@ export function FriendsPage() {
 
         {/* Your username card */}
         <div className="rounded-2xl p-4 mb-6 flex items-center justify-between border"
-          style={{ background: 'rgba(212,169,106,0.06)', borderColor: 'rgba(212,169,106,0.2)' }}>
+          style={{ background: 'rgba(229,188,124,0.06)', borderColor: 'rgba(229,188,124,0.2)' }}>
           <div>
-            <p className="font-arabic text-xs mb-1" style={{ color: 'rgba(248,239,213,0.4)' }}>
+            <p className="font-arabic text-xs mb-1" style={{ color: 'rgba(251,243,219,0.4)' }}>
               {lang === 'ar' ? 'رقمك (شاركه مع أصدقائك)' : 'Your number (share with friends)'}
             </p>
-            <p className="font-bold font-mono" style={{ color: '#F8EFD5', fontSize: 26, lineHeight: 1.1, letterSpacing: 2 }}>
+            <p className="font-bold font-mono" style={{ color: '#FBF3DB', fontSize: 26, lineHeight: 1.1, letterSpacing: 2 }}>
               {(profile?.username || '').split('#')[1] || '...'}
             </p>
-            <p className="font-arabic mt-0.5" style={{ color: 'rgba(248,239,213,0.3)', fontSize: 10, direction: 'ltr', textAlign: dir === 'rtl' ? 'right' : 'left' }}>
+            <p className="font-arabic mt-0.5" style={{ color: 'rgba(251,243,219,0.3)', fontSize: 10, direction: 'ltr', textAlign: dir === 'rtl' ? 'right' : 'left' }}>
               {profile?.username || ''}
             </p>
           </div>
           <button
             onClick={copyUsername}
             className="px-3 py-1.5 rounded-xl font-arabic text-sm transition-all"
-            style={{ background: copied ? 'rgba(80,200,120,0.15)' : 'rgba(212,169,106,0.12)', border: `1px solid ${copied ? 'rgba(80,200,120,0.4)' : 'rgba(212,169,106,0.3)'}`, color: copied ? '#50C878' : '#D4A96A' }}>
+            style={{ background: copied ? 'rgba(80,200,120,0.15)' : 'rgba(229,188,124,0.12)', border: `1px solid ${copied ? 'rgba(80,200,120,0.4)' : 'rgba(229,188,124,0.3)'}`, color: copied ? '#50C878' : '#E5BC7C' }}>
             {copied ? `✓ ${t('friends_copied')}` : `📋 ${t('friends_copy')}`}
           </button>
         </div>
@@ -192,11 +192,11 @@ export function FriendsPage() {
               onClick={() => { setTab(tt.id); soundService.playClick(); }}
               className="flex-1 py-2 rounded-lg text-sm font-arabic transition-all"
               style={tab === tt.id ? {
-                background: 'linear-gradient(135deg, rgba(212,169,106,0.25), rgba(212,169,106,0.10))',
-                color: '#F8EFD5', fontWeight: 700,
-                border: '1px solid rgba(212,169,106,0.35)',
+                background: 'linear-gradient(135deg, rgba(229,188,124,0.25), rgba(229,188,124,0.10))',
+                color: '#FBF3DB', fontWeight: 700,
+                border: '1px solid rgba(229,188,124,0.35)',
               } : {
-                color: 'rgba(248,239,213,0.4)', border: '1px solid transparent',
+                color: 'rgba(251,243,219,0.4)', border: '1px solid transparent',
               }}>
               {tt.icon} {tt.label}
             </button>
@@ -210,8 +210,8 @@ export function FriendsPage() {
               {friends.length === 0 ? (
                 <div className="text-center py-16">
                   <p className="text-4xl mb-3">👥</p>
-                  <p className="font-arabic" style={{ color: 'rgba(248,239,213,0.35)', fontSize: 14 }}>{t('friends_empty')}</p>
-                  <p className="font-arabic mt-1" style={{ color: 'rgba(248,239,213,0.2)', fontSize: 12 }}>
+                  <p className="font-arabic" style={{ color: 'rgba(251,243,219,0.35)', fontSize: 14 }}>{t('friends_empty')}</p>
+                  <p className="font-arabic mt-1" style={{ color: 'rgba(251,243,219,0.2)', fontSize: 12 }}>
                     {lang === 'ar' ? 'أضف أصدقاء عبر تبويب "إضافة صديق"' : 'Add friends via the "Add Friend" tab'}
                   </p>
                 </div>
@@ -236,7 +236,7 @@ export function FriendsPage() {
               {requests.length === 0 ? (
                 <div className="text-center py-16">
                   <p className="text-4xl mb-3">📩</p>
-                  <p className="font-arabic" style={{ color: 'rgba(248,239,213,0.35)', fontSize: 14 }}>{t('friends_no_requests')}</p>
+                  <p className="font-arabic" style={{ color: 'rgba(251,243,219,0.35)', fontSize: 14 }}>{t('friends_no_requests')}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -245,8 +245,8 @@ export function FriendsPage() {
                       style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(255,255,255,0.07)' }}>
                       <span className="text-3xl">{AVATAR_EMOJIS[f.avatarId] || '👤'}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="font-arabic font-bold truncate" style={{ color: '#F8EFD5', fontSize: 15 }}>{f.displayName}</p>
-                        <p className="font-arabic text-xs" style={{ color: 'rgba(248,239,213,0.35)', direction: 'ltr' }}>{f.username}</p>
+                        <p className="font-arabic font-bold truncate" style={{ color: '#FBF3DB', fontSize: 15 }}>{f.displayName}</p>
+                        <p className="font-arabic text-xs" style={{ color: 'rgba(251,243,219,0.35)', direction: 'ltr' }}>{f.username}</p>
                       </div>
                       <div className="flex gap-2">
                         <button disabled={busy === f.uid}
@@ -272,9 +272,9 @@ export function FriendsPage() {
           {/* Add Friend */}
           {tab === 'add' && (
             <motion.div key="add" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}>
-              <div className="rounded-2xl p-5 border" style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(212,169,106,0.15)' }}>
-                <p className="font-arabic mb-1 font-bold" style={{ color: '#F8EFD5' }}>{t('friends_add')}</p>
-                <p className="font-arabic text-xs mb-4" style={{ color: 'rgba(248,239,213,0.35)' }}>
+              <div className="rounded-2xl p-5 border" style={{ background: 'rgba(255,255,255,0.03)', borderColor: 'rgba(229,188,124,0.15)' }}>
+                <p className="font-arabic mb-1 font-bold" style={{ color: '#FBF3DB' }}>{t('friends_add')}</p>
+                <p className="font-arabic text-xs mb-4" style={{ color: 'rgba(251,243,219,0.35)' }}>
                   {lang === 'ar'
                     ? 'اكتب رقم صديقك فقط (مثل: 4523)'
                     : 'Just type your friend\'s number (e.g. 4523)'}
@@ -287,13 +287,13 @@ export function FriendsPage() {
                     placeholder={lang === 'ar' ? 'الرقم فقط' : 'Number only'}
                     inputMode="numeric"
                     className="flex-1 rounded-xl px-4 py-2.5 font-bold text-base outline-none"
-                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(248,239,213,0.95)', direction: 'ltr', letterSpacing: 1 }}
+                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.12)', color: 'rgba(251,243,219,0.95)', direction: 'ltr', letterSpacing: 1 }}
                   />
                   <button
                     onClick={handleSendRequest}
                     disabled={loading || !searchQuery.trim()}
                     className="px-4 py-2.5 rounded-xl font-arabic font-bold text-sm transition-all disabled:opacity-40"
-                    style={{ background: 'linear-gradient(135deg, #D4A96A, #8B5E3C)', color: '#1A1208' }}>
+                    style={{ background: 'linear-gradient(135deg, #E5BC7C, #A07338)', color: '#100A05' }}>
                     {loading ? '...' : t('friends_add_btn')}
                   </button>
                 </div>
@@ -316,7 +316,7 @@ export function FriendsPage() {
               onClick={e => e.stopPropagation()}
               className="relative rounded-3xl border w-full"
               style={{
-                background: 'linear-gradient(160deg, #241810 0%, #2A1F12 100%)',
+                background: 'linear-gradient(160deg, #241810 0%, #1F1810 100%)',
                 borderColor: 'rgba(196,92,58,0.45)',
                 maxWidth: 380,
                 padding: '22px 22px 20px',
@@ -324,12 +324,12 @@ export function FriendsPage() {
               }}>
               <div className="text-center mb-4">
                 <div className="text-4xl mb-2">⚠</div>
-                <h2 className="font-arabic font-bold mb-1" style={{ fontSize: 18, color: '#F8EFD5' }}>
+                <h2 className="font-arabic font-bold mb-1" style={{ fontSize: 18, color: '#FBF3DB' }}>
                   {lang === 'ar' ? 'تأكيد الحذف' : 'Confirm Remove'}
                 </h2>
-                <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(248,239,213,0.65)' }}>
+                <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(251,243,219,0.65)' }}>
                   {lang === 'ar' ? 'هل أنت متأكد من حذف' : 'Are you sure you want to remove'}{' '}
-                  <span style={{ color: '#F8EFD5', fontWeight: 700 }}>{confirmRemove.displayName}</span>
+                  <span style={{ color: '#FBF3DB', fontWeight: 700 }}>{confirmRemove.displayName}</span>
                   {lang === 'ar' ? ' من قائمة أصدقائك؟' : ' from your friends?'}
                 </p>
               </div>
@@ -337,7 +337,7 @@ export function FriendsPage() {
                 <button
                   onClick={() => setConfirmRemove(null)}
                   className="flex-1 py-2.5 rounded-xl font-arabic font-bold transition-all border"
-                  style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.12)', color: 'rgba(248,239,213,0.7)' }}>
+                  style={{ background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.12)', color: 'rgba(251,243,219,0.7)' }}>
                   {lang === 'ar' ? 'إلغاء' : 'Cancel'}
                 </button>
                 <button
@@ -375,17 +375,17 @@ function FriendCard({ friend, busy, actionLabel, actionStyle, onAction, lang }: 
     >
       <div className="relative shrink-0" style={{ width: 44, height: 44 }}>
         <div className="w-11 h-11 rounded-full flex items-center justify-center text-2xl"
-          style={{ background: 'rgba(212,169,106,0.08)' }}>
+          style={{ background: 'rgba(229,188,124,0.08)' }}>
           {AVATAR_EMOJIS[friend.avatarId] || '👤'}
         </div>
         <FrameRing size={44} frameId={(friend as any).equippedFrame} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-arabic font-bold truncate" style={{ color: '#F8EFD5', fontSize: 15 }}>{friend.displayName}</p>
+        <p className="font-arabic font-bold truncate" style={{ color: '#FBF3DB', fontSize: 15 }}>{friend.displayName}</p>
         <div className="flex items-center gap-3 mt-0.5">
-          <span className="font-arabic text-xs" style={{ color: 'rgba(248,239,213,0.3)', direction: 'ltr' }}>{friend.username}</span>
-          <span className="font-arabic text-xs" style={{ color: 'rgba(212,169,106,0.5)' }}>{lang === 'ar' ? 'لv' : 'Lv'}{friend.level}</span>
-          {friend.wins !== undefined && <span className="font-arabic text-xs" style={{ color: 'rgba(248,239,213,0.3)' }}>🏆 {friend.wins}</span>}
+          <span className="font-arabic text-xs" style={{ color: 'rgba(251,243,219,0.3)', direction: 'ltr' }}>{friend.username}</span>
+          <span className="font-arabic text-xs" style={{ color: 'rgba(229,188,124,0.5)' }}>{lang === 'ar' ? 'لv' : 'Lv'}{friend.level}</span>
+          {friend.wins !== undefined && <span className="font-arabic text-xs" style={{ color: 'rgba(251,243,219,0.3)' }}>🏆 {friend.wins}</span>}
         </div>
       </div>
       {friend.inGame && (

@@ -84,7 +84,7 @@ export function ClansPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-12 font-arabic" style={{ color: 'rgba(248,239,213,0.45)' }}>...</div>
+          <div className="text-center py-12 font-arabic" style={{ color: 'rgba(251,243,219,0.45)' }}>...</div>
         ) : (
           <>
             {tab === 'browse' && (
@@ -98,7 +98,7 @@ export function ClansPage() {
               <CreateTab lang={lang} myCoins={profile?.coins ?? 0} onCreated={async () => { await refresh(); }}/>
             )}
             {tab === 'create' && myClan && (
-              <p className="text-center font-arabic py-8" style={{ color: 'rgba(248,239,213,0.5)', fontSize: 13 }}>
+              <p className="text-center font-arabic py-8" style={{ color: 'rgba(251,243,219,0.5)', fontSize: 13 }}>
                 {lang === 'ar' ? 'لا تستطيع إنشاء قبيلة وأنت في واحدة' : "You're already in a clan"}
               </p>
             )}
@@ -115,10 +115,10 @@ function Tab2({ label, active, onClick, badge, disabled }: { label: string; acti
     <button onClick={() => !disabled && onClick()} disabled={disabled}
       className="relative flex-1 rounded-xl py-2.5 font-arabic font-bold disabled:opacity-40"
       style={{
-        background: active ? 'rgba(212,169,106,0.20)' : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${active ? 'rgba(212,169,106,0.55)' : 'rgba(255,255,255,0.06)'}`,
-        color: active ? '#F8EFD5' : 'rgba(248,239,213,0.5)',
-        boxShadow: active ? '0 0 12px rgba(212,169,106,0.20)' : 'none',
+        background: active ? 'rgba(229,188,124,0.20)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${active ? 'rgba(229,188,124,0.55)' : 'rgba(255,255,255,0.06)'}`,
+        color: active ? '#FBF3DB' : 'rgba(251,243,219,0.5)',
+        boxShadow: active ? '0 0 12px rgba(229,188,124,0.20)' : 'none',
         fontSize: 13,
       }}>
       {label}
@@ -155,8 +155,8 @@ function InvitesBanner({ invites, lang, onChange }: { invites: ClanSummary[]; la
           <div key={c.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5"
             style={{ background: 'rgba(255,255,255,0.03)' }}>
             <span style={{ fontSize: 22 }}>{c.emblem}</span>
-            <span className="flex-1 font-arabic truncate" style={{ fontSize: 12, color: '#F8EFD5' }}>
-              {c.name} <span className="font-mono" style={{ fontSize: 10, color: 'rgba(212,169,106,0.6)' }}>[{c.tag}]</span>
+            <span className="flex-1 font-arabic truncate" style={{ fontSize: 12, color: '#FBF3DB' }}>
+              {c.name} <span className="font-mono" style={{ fontSize: 10, color: 'rgba(229,188,124,0.6)' }}>[{c.tag}]</span>
             </span>
             <button onClick={() => accept(c)}
               className="rounded-lg px-2.5 py-1 font-arabic font-bold"
@@ -165,7 +165,7 @@ function InvitesBanner({ invites, lang, onChange }: { invites: ClanSummary[]; la
             </button>
             <button onClick={() => decline(c)}
               className="rounded-lg px-2 py-1 font-arabic"
-              style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(248,239,213,0.55)', fontSize: 10 }}>
+              style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(251,243,219,0.55)', fontSize: 10 }}>
               {lang === 'ar' ? 'رفض' : 'Decline'}
             </button>
           </div>
@@ -209,32 +209,32 @@ function BrowseTab({ list, myClanId, myCoins, lang, onRefresh }: {
     <div>
       {/* Search bar */}
       <div className="rounded-2xl p-2.5 mb-3 flex items-center gap-2"
-        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,169,106,0.20)' }}>
-        <span style={{ fontSize: 16, color: 'rgba(212,169,106,0.6)', paddingInlineStart: 8 }}>🔍</span>
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(229,188,124,0.20)' }}>
+        <span style={{ fontSize: 16, color: 'rgba(229,188,124,0.6)', paddingInlineStart: 8 }}>🔍</span>
         <input
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder={lang === 'ar' ? 'ابحث باسم القبيلة أو الرمز' : 'Search by name or tag'}
           className="flex-1 bg-transparent outline-none font-arabic"
-          style={{ color: '#F8EFD5', fontSize: 13 }}
+          style={{ color: '#FBF3DB', fontSize: 13 }}
         />
         {search && (
           <button onClick={() => setSearch('')}
             className="rounded-md w-6 h-6 flex items-center justify-center"
-            style={{ color: 'rgba(248,239,213,0.55)', background: 'rgba(255,255,255,0.05)', fontSize: 14 }}>×</button>
+            style={{ color: 'rgba(251,243,219,0.55)', background: 'rgba(255,255,255,0.05)', fontSize: 14 }}>×</button>
         )}
       </div>
 
-      <p className="font-arabic mb-3 px-1" style={{ fontSize: 11.5, color: 'rgba(248,239,213,0.5)' }}>
+      <p className="font-arabic mb-3 px-1" style={{ fontSize: 11.5, color: 'rgba(251,243,219,0.5)' }}>
         {q
           ? (lang === 'ar' ? `${filtered.length} نتيجة من ${list.length}` : `${filtered.length} of ${list.length} match`)
           : (lang === 'ar' ? `${list.length} قبيلة على المنصة` : `${list.length} clans on the platform`)}
       </p>
       {filtered.length === 0 ? (
         <div className="text-center py-12 rounded-2xl"
-          style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(212,169,106,0.18)' }}>
+          style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(229,188,124,0.18)' }}>
           <p style={{ fontSize: 32 }}>{q ? '🔎' : '🏰'}</p>
-          <p className="font-arabic mt-2" style={{ fontSize: 13, color: 'rgba(248,239,213,0.5)' }}>
+          <p className="font-arabic mt-2" style={{ fontSize: 13, color: 'rgba(251,243,219,0.5)' }}>
             {q
               ? (lang === 'ar' ? `لا قبيلة باسم "${search}"` : `No clans match "${search}"`)
               : (lang === 'ar' ? 'لا قبائل بعد — كن أول مؤسس!' : 'No clans yet — be the first founder!')}
@@ -247,7 +247,7 @@ function BrowseTab({ list, myClanId, myCoins, lang, onRefresh }: {
           ))}
         </div>
       )}
-      <p className="font-arabic mt-4 text-center" style={{ fontSize: 10.5, color: 'rgba(248,239,213,0.4)' }}>
+      <p className="font-arabic mt-4 text-center" style={{ fontSize: 10.5, color: 'rgba(251,243,219,0.4)' }}>
         💎 {lang === 'ar' ? `إنشاء قبيلة جديدة يكلف ${CLAN_CREATE_COST.toLocaleString()} كوينز (لديك ${myCoins.toLocaleString()})` : `Creating a clan costs ${CLAN_CREATE_COST.toLocaleString()} coins (you have ${myCoins.toLocaleString()})`}
       </p>
     </div>
@@ -259,15 +259,15 @@ function ClanCard({ c, isMine, canApply, lang, onApply }: { c: ClanSummary; isMi
   return (
     <div className="rounded-2xl p-3 flex items-center gap-3"
       style={{
-        background: isMine ? 'rgba(212,169,106,0.10)' : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${isMine ? 'rgba(212,169,106,0.45)' : 'rgba(255,255,255,0.06)'}`,
+        background: isMine ? 'rgba(229,188,124,0.10)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${isMine ? 'rgba(229,188,124,0.45)' : 'rgba(255,255,255,0.06)'}`,
       }}>
       <ClanEmblem emblem={c.emblem} size={48}/>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 flex-wrap">
-          <p className="font-arabic font-bold truncate" style={{ fontSize: 14, color: '#F8EFD5' }}>{c.name}</p>
+          <p className="font-arabic font-bold truncate" style={{ fontSize: 14, color: '#FBF3DB' }}>{c.name}</p>
           <span className="font-mono rounded px-1.5"
-            style={{ fontSize: 10, background: 'rgba(212,169,106,0.15)', color: '#F8EFD5', letterSpacing: 1 }}>
+            style={{ fontSize: 10, background: 'rgba(229,188,124,0.15)', color: '#FBF3DB', letterSpacing: 1 }}>
             [{c.tag}]
           </span>
           {isPrivate && (
@@ -278,9 +278,9 @@ function ClanCard({ c, isMine, canApply, lang, onApply }: { c: ClanSummary; isMi
           )}
         </div>
         {c.description && (
-          <p className="font-arabic truncate mt-0.5" style={{ fontSize: 10.5, color: 'rgba(248,239,213,0.5)' }}>{c.description}</p>
+          <p className="font-arabic truncate mt-0.5" style={{ fontSize: 10.5, color: 'rgba(251,243,219,0.5)' }}>{c.description}</p>
         )}
-        <div className="flex items-center gap-3 mt-1 font-arabic" style={{ fontSize: 10.5, color: 'rgba(248,239,213,0.55)' }}>
+        <div className="flex items-center gap-3 mt-1 font-arabic" style={{ fontSize: 10.5, color: 'rgba(251,243,219,0.55)' }}>
           <span>👥 {c.memberCount}/{c.memberLimit}</span>
           <span>🏆 {c.totalWins.toLocaleString()}</span>
           {c.bank > 0 && <span>💰 {c.bank.toLocaleString()}</span>}
@@ -304,19 +304,19 @@ function ClanCard({ c, isMine, canApply, lang, onApply }: { c: ClanSummary; isMi
       ) : canApply && c.memberCount < c.memberLimit ? (
         isPrivate ? (
           <span className="shrink-0 rounded-lg px-2.5 py-1 font-arabic"
-            style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(248,239,213,0.45)', fontSize: 10.5 }}>
+            style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(251,243,219,0.45)', fontSize: 10.5 }}>
             🔒 {lang === 'ar' ? 'بدعوة فقط' : 'Invite only'}
           </span>
         ) : (
           <motion.button whileTap={{ scale: 0.96 }} onClick={onApply}
             className="shrink-0 rounded-lg px-3 py-1.5 font-arabic font-bold"
-            style={{ background: 'linear-gradient(135deg, #D4A96A, #A07830)', color: '#1A1208', fontSize: 11 }}>
+            style={{ background: 'linear-gradient(135deg, #E5BC7C, #A07830)', color: '#100A05', fontSize: 11 }}>
             📨 {lang === 'ar' ? 'تقدّم' : 'Apply'}
           </motion.button>
         )
       ) : c.memberCount >= c.memberLimit ? (
         <span className="shrink-0 rounded-lg px-2.5 py-1 font-arabic"
-          style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(248,239,213,0.4)', fontSize: 10.5 }}>
+          style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(251,243,219,0.4)', fontSize: 10.5 }}>
           {lang === 'ar' ? 'ممتلئة' : 'Full'}
         </span>
       ) : null}
@@ -340,9 +340,9 @@ function MineTab({ clan, myUid, lang, onChanged, onLeft }: {
   if (!clan) {
     return (
       <div className="text-center py-12 rounded-2xl"
-        style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(212,169,106,0.18)' }}>
+        style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(229,188,124,0.18)' }}>
         <p style={{ fontSize: 36 }}>🪑</p>
-        <p className="font-arabic mt-2" style={{ fontSize: 13, color: 'rgba(248,239,213,0.5)' }}>
+        <p className="font-arabic mt-2" style={{ fontSize: 13, color: 'rgba(251,243,219,0.5)' }}>
           {lang === 'ar' ? 'لست في أي قبيلة' : "Not in any clan yet"}
         </p>
       </div>
@@ -413,16 +413,16 @@ function MineTab({ clan, myUid, lang, onChanged, onLeft }: {
         <EditClan clan={clan} lang={lang} onClose={() => setEditing(false)} onSaved={onChanged}/>
       ) : (
         <div className="rounded-2xl p-4 mb-4 text-center"
-          style={{ background: 'linear-gradient(135deg, rgba(212,169,106,0.12), rgba(120,80,20,0.06))', border: '1px solid rgba(212,169,106,0.40)' }}>
+          style={{ background: 'linear-gradient(135deg, rgba(229,188,124,0.12), rgba(120,80,20,0.06))', border: '1px solid rgba(229,188,124,0.40)' }}>
           <ClanEmblem emblem={clan.emblem} size={64}/>
-          <h2 className="font-arabic font-bold mt-2" style={{ fontSize: 22, color: '#F8EFD5' }}>
-            {clan.name} <span className="font-mono" style={{ fontSize: 13, color: 'rgba(212,169,106,0.7)' }}>[{clan.tag}]</span>
+          <h2 className="font-arabic font-bold mt-2" style={{ fontSize: 22, color: '#FBF3DB' }}>
+            {clan.name} <span className="font-mono" style={{ fontSize: 13, color: 'rgba(229,188,124,0.7)' }}>[{clan.tag}]</span>
           </h2>
           {clan.description && (
-            <p className="font-arabic mt-1.5" style={{ fontSize: 12, color: 'rgba(248,239,213,0.65)' }}>{clan.description}</p>
+            <p className="font-arabic mt-1.5" style={{ fontSize: 12, color: 'rgba(251,243,219,0.65)' }}>{clan.description}</p>
           )}
           <div className="flex items-center justify-center gap-3 mt-3 font-arabic flex-wrap"
-            style={{ fontSize: 11.5, color: 'rgba(248,239,213,0.7)' }}>
+            style={{ fontSize: 11.5, color: 'rgba(251,243,219,0.7)' }}>
             <span>👥 {clan.members.length}/{clan.memberLimit}</span>
             <span>🏆 {clan.totalWins.toLocaleString()}</span>
             <span>💰 {(clan.bank || 0).toLocaleString()}</span>
@@ -432,7 +432,7 @@ function MineTab({ clan, myUid, lang, onChanged, onLeft }: {
             <div className="flex gap-2 justify-center mt-3 flex-wrap">
               <button onClick={() => setEditing(true)}
                 className="rounded-lg px-3 py-1.5 font-arabic"
-                style={{ background: 'rgba(212,169,106,0.15)', border: '1px solid rgba(212,169,106,0.35)', color: '#F8EFD5', fontSize: 11 }}>
+                style={{ background: 'rgba(229,188,124,0.15)', border: '1px solid rgba(229,188,124,0.35)', color: '#FBF3DB', fontSize: 11 }}>
                 ✏️ {lang === 'ar' ? 'تعديل' : 'Edit'}
               </button>
               <button onClick={() => setConfirmDelete(true)}
@@ -457,9 +457,9 @@ function MineTab({ clan, myUid, lang, onChanged, onLeft }: {
               <div key={a.uid} className="flex items-center gap-2 rounded-lg px-2 py-1.5"
                 style={{ background: 'rgba(255,255,255,0.03)' }}>
                 <span style={{ fontSize: 18 }}>👤</span>
-                <span className="flex-1 font-arabic truncate" style={{ fontSize: 12, color: '#F8EFD5' }}>
+                <span className="flex-1 font-arabic truncate" style={{ fontSize: 12, color: '#FBF3DB' }}>
                   {a.displayName}
-                  {a.message && <span className="font-arabic" style={{ marginInlineStart: 6, fontSize: 10.5, color: 'rgba(248,239,213,0.55)' }}>"{a.message}"</span>}
+                  {a.message && <span className="font-arabic" style={{ marginInlineStart: 6, fontSize: 10.5, color: 'rgba(251,243,219,0.55)' }}>"{a.message}"</span>}
                 </span>
                 <button onClick={() => accept(a.uid)}
                   className="rounded-lg px-2.5 py-1 font-arabic font-bold"
@@ -468,7 +468,7 @@ function MineTab({ clan, myUid, lang, onChanged, onLeft }: {
                 </button>
                 <button onClick={() => reject(a.uid)}
                   className="rounded-lg px-2 py-1 font-arabic"
-                  style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(248,239,213,0.55)', fontSize: 10 }}>
+                  style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(251,243,219,0.55)', fontSize: 10 }}>
                   {lang === 'ar' ? 'رفض' : 'Reject'}
                 </button>
               </div>
@@ -478,7 +478,7 @@ function MineTab({ clan, myUid, lang, onChanged, onLeft }: {
       )}
 
       {/* Members */}
-      <h3 className="font-arabic font-bold mb-2 px-1" style={{ fontSize: 12, color: 'rgba(212,169,106,0.85)' }}>
+      <h3 className="font-arabic font-bold mb-2 px-1" style={{ fontSize: 12, color: 'rgba(229,188,124,0.85)' }}>
         {lang === 'ar' ? 'الأعضاء' : 'Members'}
       </h3>
       <div className="flex flex-col gap-1.5 mb-4">
@@ -571,16 +571,16 @@ function MemberRow({ m, isMe, isLeader, amOfficer, onPromote, onDemote, onKick, 
   return (
     <div>
       <div className="flex items-center gap-2 rounded-xl px-3 py-2 cursor-pointer"
-        style={{ background: isMe ? 'rgba(212,169,106,0.08)' : 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}
+        style={{ background: isMe ? 'rgba(229,188,124,0.08)' : 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}
         onClick={() => canManage && setOpen(s => !s)}>
         <span style={{ fontSize: 16 }}>{m.role === 'leader' ? '👑' : m.role === 'officer' ? '⚜️' : '👤'}</span>
-        <span className="flex-1 font-arabic truncate" style={{ fontSize: 12.5, color: '#F8EFD5' }}>
+        <span className="flex-1 font-arabic truncate" style={{ fontSize: 12.5, color: '#FBF3DB' }}>
           {isMe ? (lang === 'ar' ? 'أنت' : 'You') : m.displayName}
-          <span className="font-arabic" style={{ marginInlineStart: 6, fontSize: 9.5, color: 'rgba(248,239,213,0.5)' }}>
+          <span className="font-arabic" style={{ marginInlineStart: 6, fontSize: 9.5, color: 'rgba(251,243,219,0.5)' }}>
             · {m.role === 'leader' ? (lang === 'ar' ? 'قائد' : 'leader') : m.role === 'officer' ? (lang === 'ar' ? 'ضابط' : 'officer') : (lang === 'ar' ? 'عضو' : 'member')}
           </span>
         </span>
-        {canManage && <span style={{ fontSize: 10, color: 'rgba(248,239,213,0.4)' }}>{open ? '▼' : '▶'}</span>}
+        {canManage && <span style={{ fontSize: 10, color: 'rgba(251,243,219,0.4)' }}>{open ? '▼' : '▶'}</span>}
       </div>
       {canManage && open && (
         <div className="flex gap-1.5 mt-1.5 mb-1 ms-6 flex-wrap">
@@ -592,13 +592,13 @@ function MemberRow({ m, isMe, isLeader, amOfficer, onPromote, onDemote, onKick, 
           )}
           {canDemote && (
             <button onClick={onDemote} className="rounded-lg px-2.5 py-1 font-arabic"
-              style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(248,239,213,0.65)', border: '1px solid rgba(255,255,255,0.10)', fontSize: 10 }}>
+              style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(251,243,219,0.65)', border: '1px solid rgba(255,255,255,0.10)', fontSize: 10 }}>
               ↓ {lang === 'ar' ? 'إنزال' : 'Demote'}
             </button>
           )}
           {canTransfer && (
             <button onClick={onTransfer} className="rounded-lg px-2.5 py-1 font-arabic"
-              style={{ background: 'rgba(212,169,106,0.15)', color: '#F8EFD5', border: '1px solid rgba(212,169,106,0.40)', fontSize: 10 }}>
+              style={{ background: 'rgba(229,188,124,0.15)', color: '#FBF3DB', border: '1px solid rgba(229,188,124,0.40)', fontSize: 10 }}>
               👑 {lang === 'ar' ? 'نقل قيادة' : 'Transfer'}
             </button>
           )}
@@ -637,19 +637,19 @@ function EditClan({ clan, lang, onClose, onSaved }: { clan: Clan; lang: string; 
 
   return (
     <div className="rounded-2xl p-4 mb-4 space-y-3"
-      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(212,169,106,0.30)' }}>
-      <h3 className="font-arabic font-bold" style={{ fontSize: 15, color: '#F8EFD5' }}>
+      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(229,188,124,0.30)' }}>
+      <h3 className="font-arabic font-bold" style={{ fontSize: 15, color: '#FBF3DB' }}>
         ✏️ {lang === 'ar' ? 'تعديل القبيلة' : 'Edit Clan'}
       </h3>
       <input value={name} onChange={e => setName(e.target.value)} maxLength={24}
         className="w-full px-3 py-2 rounded-lg font-arabic"
-        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(212,169,106,0.25)', color: '#F8EFD5', fontSize: 13 }}/>
+        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(229,188,124,0.25)', color: '#FBF3DB', fontSize: 13 }}/>
       <input value={description} onChange={e => setDescription(e.target.value.slice(0, 200))}
         placeholder={lang === 'ar' ? 'الوصف' : 'Description'}
         className="w-full px-3 py-2 rounded-lg font-arabic"
-        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(212,169,106,0.25)', color: '#F8EFD5', fontSize: 13 }}/>
+        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(229,188,124,0.25)', color: '#FBF3DB', fontSize: 13 }}/>
       <div>
-        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(248,239,213,0.55)' }}>
+        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(251,243,219,0.55)' }}>
           {lang === 'ar' ? 'الشعار' : 'Emblem'}
         </p>
         <div className="grid grid-cols-8 gap-1.5">
@@ -657,42 +657,42 @@ function EditClan({ clan, lang, onClose, onSaved }: { clan: Clan; lang: string; 
             <button key={e} onClick={() => setEmblem(e)}
               className="rounded-lg p-2"
               style={{
-                background: emblem === e ? 'rgba(212,169,106,0.20)' : 'rgba(255,255,255,0.04)',
-                border: `1.5px solid ${emblem === e ? 'rgba(212,169,106,0.65)' : 'rgba(255,255,255,0.08)'}`,
+                background: emblem === e ? 'rgba(229,188,124,0.20)' : 'rgba(255,255,255,0.04)',
+                border: `1.5px solid ${emblem === e ? 'rgba(229,188,124,0.65)' : 'rgba(255,255,255,0.08)'}`,
                 fontSize: 18,
               }}>{e}</button>
           ))}
         </div>
       </div>
       <div>
-        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(248,239,213,0.55)' }}>
+        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(251,243,219,0.55)' }}>
           {lang === 'ar' ? 'الرؤية' : 'Visibility'}
         </p>
         <div className="flex gap-2">
           <button onClick={() => setVisibility('open')}
             className="flex-1 rounded-lg py-2 font-arabic"
             style={{
-              background: visibility === 'open' ? 'rgba(212,169,106,0.20)' : 'rgba(255,255,255,0.04)',
-              border: `1.5px solid ${visibility === 'open' ? 'rgba(212,169,106,0.65)' : 'rgba(255,255,255,0.08)'}`,
-              color: visibility === 'open' ? '#F8EFD5' : 'rgba(248,239,213,0.55)', fontSize: 12,
+              background: visibility === 'open' ? 'rgba(229,188,124,0.20)' : 'rgba(255,255,255,0.04)',
+              border: `1.5px solid ${visibility === 'open' ? 'rgba(229,188,124,0.65)' : 'rgba(255,255,255,0.08)'}`,
+              color: visibility === 'open' ? '#FBF3DB' : 'rgba(251,243,219,0.55)', fontSize: 12,
             }}>🌐 {lang === 'ar' ? 'عامة' : 'Open'}</button>
           <button onClick={() => setVisibility('private')}
             className="flex-1 rounded-lg py-2 font-arabic"
             style={{
-              background: visibility === 'private' ? 'rgba(212,169,106,0.20)' : 'rgba(255,255,255,0.04)',
-              border: `1.5px solid ${visibility === 'private' ? 'rgba(212,169,106,0.65)' : 'rgba(255,255,255,0.08)'}`,
-              color: visibility === 'private' ? '#F8EFD5' : 'rgba(248,239,213,0.55)', fontSize: 12,
+              background: visibility === 'private' ? 'rgba(229,188,124,0.20)' : 'rgba(255,255,255,0.04)',
+              border: `1.5px solid ${visibility === 'private' ? 'rgba(229,188,124,0.65)' : 'rgba(255,255,255,0.08)'}`,
+              color: visibility === 'private' ? '#FBF3DB' : 'rgba(251,243,219,0.55)', fontSize: 12,
             }}>🔒 {lang === 'ar' ? 'خاصة' : 'Private'}</button>
         </div>
       </div>
       <div className="flex gap-2 pt-2">
         <button onClick={onClose} className="flex-1 rounded-xl py-2 font-arabic"
-          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(248,239,213,0.65)', fontSize: 12 }}>
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(251,243,219,0.65)', fontSize: 12 }}>
           {lang === 'ar' ? 'إلغاء' : 'Cancel'}
         </button>
         <motion.button whileTap={{ scale: 0.96 }} onClick={save} disabled={busy}
           className="flex-1 rounded-xl py-2 font-arabic font-bold disabled:opacity-50"
-          style={{ background: 'linear-gradient(135deg, #D4A96A, #A07830)', color: '#1A1208', fontSize: 12 }}>
+          style={{ background: 'linear-gradient(135deg, #E5BC7C, #A07830)', color: '#100A05', fontSize: 12 }}>
           {lang === 'ar' ? 'حفظ' : 'Save'}
         </motion.button>
       </div>
@@ -729,27 +729,27 @@ function CreateTab({ lang, myCoins, onCreated }: { lang: string; myCoins: number
 
   return (
     <div className="rounded-2xl p-4 space-y-4"
-      style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(212,169,106,0.20)' }}>
+      style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(229,188,124,0.20)' }}>
       <div>
-        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(248,239,213,0.55)' }}>
+        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(251,243,219,0.55)' }}>
           {lang === 'ar' ? 'اسم القبيلة (3-24 حرفاً)' : 'Clan Name'}
         </p>
         <input value={name} onChange={e => setName(e.target.value)} maxLength={24}
           placeholder={lang === 'ar' ? 'مثال: صقور الخليج' : 'e.g. Falcons of the Gulf'}
           className="w-full px-3 py-2 rounded-lg font-arabic"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(212,169,106,0.30)', color: '#F8EFD5', fontSize: 13 }}/>
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(229,188,124,0.30)', color: '#FBF3DB', fontSize: 13 }}/>
       </div>
       <div>
-        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(248,239,213,0.55)' }}>
+        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(251,243,219,0.55)' }}>
           {lang === 'ar' ? 'الرمز (2-5 حروف لاتينية)' : 'Tag (2-5 Latin)'}
         </p>
         <input value={tag} onChange={e => setTag(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))} maxLength={5}
           placeholder="FALC"
           className="w-full px-3 py-2 rounded-lg font-mono"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(212,169,106,0.30)', color: '#F8EFD5', fontSize: 14, letterSpacing: 2 }}/>
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(229,188,124,0.30)', color: '#FBF3DB', fontSize: 14, letterSpacing: 2 }}/>
       </div>
       <div>
-        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(248,239,213,0.55)' }}>
+        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(251,243,219,0.55)' }}>
           {lang === 'ar' ? 'الشعار' : 'Emblem'}
         </p>
         <div className="grid grid-cols-8 gap-1.5">
@@ -757,24 +757,24 @@ function CreateTab({ lang, myCoins, onCreated }: { lang: string; myCoins: number
             <button key={e} onClick={() => { setEmblem(e); soundService.playClick(); }}
               className="rounded-lg p-2"
               style={{
-                background: emblem === e ? 'rgba(212,169,106,0.20)' : 'rgba(255,255,255,0.04)',
-                border: `1.5px solid ${emblem === e ? 'rgba(212,169,106,0.65)' : 'rgba(255,255,255,0.08)'}`,
+                background: emblem === e ? 'rgba(229,188,124,0.20)' : 'rgba(255,255,255,0.04)',
+                border: `1.5px solid ${emblem === e ? 'rgba(229,188,124,0.65)' : 'rgba(255,255,255,0.08)'}`,
                 fontSize: 18,
               }}>{e}</button>
           ))}
         </div>
       </div>
       <div>
-        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(248,239,213,0.55)' }}>
+        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(251,243,219,0.55)' }}>
           {lang === 'ar' ? 'الرؤية' : 'Visibility'}
         </p>
         <div className="flex gap-2">
           <button onClick={() => setVisibility('open')}
             className="flex-1 rounded-xl py-2 font-arabic"
             style={{
-              background: visibility === 'open' ? 'rgba(212,169,106,0.20)' : 'rgba(255,255,255,0.04)',
-              border: `1.5px solid ${visibility === 'open' ? 'rgba(212,169,106,0.65)' : 'rgba(255,255,255,0.08)'}`,
-              color: visibility === 'open' ? '#F8EFD5' : 'rgba(248,239,213,0.55)', fontSize: 12.5,
+              background: visibility === 'open' ? 'rgba(229,188,124,0.20)' : 'rgba(255,255,255,0.04)',
+              border: `1.5px solid ${visibility === 'open' ? 'rgba(229,188,124,0.65)' : 'rgba(255,255,255,0.08)'}`,
+              color: visibility === 'open' ? '#FBF3DB' : 'rgba(251,243,219,0.55)', fontSize: 12.5,
             }}>
             🌐 <strong>{lang === 'ar' ? 'عامة' : 'Open'}</strong>
             <div style={{ fontSize: 9.5, opacity: 0.65, marginTop: 2 }}>
@@ -784,9 +784,9 @@ function CreateTab({ lang, myCoins, onCreated }: { lang: string; myCoins: number
           <button onClick={() => setVisibility('private')}
             className="flex-1 rounded-xl py-2 font-arabic"
             style={{
-              background: visibility === 'private' ? 'rgba(212,169,106,0.20)' : 'rgba(255,255,255,0.04)',
-              border: `1.5px solid ${visibility === 'private' ? 'rgba(212,169,106,0.65)' : 'rgba(255,255,255,0.08)'}`,
-              color: visibility === 'private' ? '#F8EFD5' : 'rgba(248,239,213,0.55)', fontSize: 12.5,
+              background: visibility === 'private' ? 'rgba(229,188,124,0.20)' : 'rgba(255,255,255,0.04)',
+              border: `1.5px solid ${visibility === 'private' ? 'rgba(229,188,124,0.65)' : 'rgba(255,255,255,0.08)'}`,
+              color: visibility === 'private' ? '#FBF3DB' : 'rgba(251,243,219,0.55)', fontSize: 12.5,
             }}>
             🔒 <strong>{lang === 'ar' ? 'خاصة' : 'Private'}</strong>
             <div style={{ fontSize: 9.5, opacity: 0.65, marginTop: 2 }}>
@@ -796,20 +796,20 @@ function CreateTab({ lang, myCoins, onCreated }: { lang: string; myCoins: number
         </div>
       </div>
       <div>
-        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(248,239,213,0.55)' }}>
+        <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(251,243,219,0.55)' }}>
           {lang === 'ar' ? 'وصف (اختياري)' : 'Description (optional)'}
         </p>
         <input value={description} onChange={e => setDescription(e.target.value.slice(0, 200))}
           className="w-full px-3 py-2 rounded-lg font-arabic"
-          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(212,169,106,0.30)', color: '#F8EFD5', fontSize: 13 }}/>
+          style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(229,188,124,0.30)', color: '#FBF3DB', fontSize: 13 }}/>
       </div>
 
       <motion.button whileTap={{ scale: 0.97 }} onClick={create}
         disabled={cantAfford || busy || !name.trim() || !tag.trim()}
         className="w-full rounded-2xl py-3 font-arabic font-bold disabled:opacity-50"
         style={{
-          background: cantAfford ? 'rgba(255,255,255,0.04)' : 'linear-gradient(135deg, #D4A96A, #A07830)',
-          color: cantAfford ? 'rgba(248,239,213,0.4)' : '#1A1208',
+          background: cantAfford ? 'rgba(255,255,255,0.04)' : 'linear-gradient(135deg, #E5BC7C, #A07830)',
+          color: cantAfford ? 'rgba(251,243,219,0.4)' : '#100A05',
           fontSize: 14,
         }}>
         {busy ? '...' : cantAfford
@@ -913,7 +913,7 @@ function InviteFriendsModal({ open, clan, lang, onClose, onInvited }: {
           className="relative w-full max-w-md rounded-3xl flex flex-col overflow-hidden"
           style={{
             maxHeight: '88vh',
-            background: 'linear-gradient(180deg, #2C2218 0%, #1A1208 100%)',
+            background: 'linear-gradient(180deg, #231910 0%, #100A05 100%)',
             border: '1px solid rgba(196,149,255,0.40)',
             boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(196,149,255,0.20)',
             direction: lang === 'ar' ? 'rtl' : 'ltr',
@@ -928,9 +928,9 @@ function InviteFriendsModal({ open, clan, lang, onClose, onInvited }: {
               </h2>
               <button onClick={onClose}
                 className="rounded-lg w-8 h-8 flex items-center justify-center text-xl"
-                style={{ color: 'rgba(248,239,213,0.5)', background: 'rgba(255,255,255,0.04)' }}>×</button>
+                style={{ color: 'rgba(251,243,219,0.5)', background: 'rgba(255,255,255,0.04)' }}>×</button>
             </div>
-            <p className="font-arabic" style={{ fontSize: 11.5, color: 'rgba(248,239,213,0.55)' }}>
+            <p className="font-arabic" style={{ fontSize: 11.5, color: 'rgba(251,243,219,0.55)' }}>
               {lang === 'ar'
                 ? 'اختر أصدقاءك من القائمة لإرسال دعوة. تظهر لهم في صفحة القبائل.'
                 : 'Pick friends to send an invite. They\'ll see it on their Clans page.'}
@@ -941,7 +941,7 @@ function InviteFriendsModal({ open, clan, lang, onClose, onInvited }: {
           <div className="flex-1 overflow-y-auto px-3 py-3">
             {filteredFriends.length === 0 ? (
               <div className="text-center py-8 font-arabic"
-                style={{ fontSize: 12.5, color: 'rgba(248,239,213,0.5)' }}>
+                style={{ fontSize: 12.5, color: 'rgba(251,243,219,0.5)' }}>
                 <p style={{ fontSize: 32, marginBottom: 6 }}>👥</p>
                 {friends.length === 0
                   ? (lang === 'ar' ? 'لا أصدقاء بعد — أضف أصدقاء من صفحة الأصدقاء' : 'No friends yet — add some from the Friends page')
@@ -958,10 +958,10 @@ function InviteFriendsModal({ open, clan, lang, onClose, onInvited }: {
                         <CharacterArt id={f.avatarId} size={32}/>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-arabic font-bold truncate" style={{ fontSize: 13, color: '#F8EFD5' }}>
+                        <p className="font-arabic font-bold truncate" style={{ fontSize: 13, color: '#FBF3DB' }}>
                           {f.displayName}
                         </p>
-                        <p className="font-arabic" style={{ fontSize: 10, color: 'rgba(248,239,213,0.5)' }}>
+                        <p className="font-arabic" style={{ fontSize: 10, color: 'rgba(251,243,219,0.5)' }}>
                           ⚡ Lvl {f.level}
                         </p>
                       </div>
@@ -991,7 +991,7 @@ function InviteFriendsModal({ open, clan, lang, onClose, onInvited }: {
 
           {/* Footer hint */}
           <div className="px-4 py-3 border-t font-arabic text-center"
-            style={{ borderColor: 'rgba(196,149,255,0.15)', fontSize: 11, color: 'rgba(248,239,213,0.55)' }}>
+            style={{ borderColor: 'rgba(196,149,255,0.15)', fontSize: 11, color: 'rgba(251,243,219,0.55)' }}>
             💡 {lang === 'ar'
               ? 'الكود يُشاركه القائد كذلك — الأصدقاء يدخلون من تبويب التصفّح'
               : 'Or share your code — friends can join from the Browse tab'}
@@ -1009,13 +1009,13 @@ function ClanEmblem({ emblem, size }: { emblem: string; size: number }) {
     return (
       <img src={emblem.slice(6)} alt=""
         style={{ width: size, height: size, borderRadius: 12, objectFit: 'cover',
-          background: 'rgba(0,0,0,0.30)', border: '1px solid rgba(212,169,106,0.30)' }}/>
+          background: 'rgba(0,0,0,0.30)', border: '1px solid rgba(229,188,124,0.30)' }}/>
     );
   }
   return (
     <div className="flex items-center justify-center rounded-xl shrink-0 mx-auto"
       style={{ width: size, height: size, background: 'rgba(0,0,0,0.30)',
-        border: '1px solid rgba(212,169,106,0.30)', fontSize: Math.round(size * 0.55) }}>
+        border: '1px solid rgba(229,188,124,0.30)', fontSize: Math.round(size * 0.55) }}>
       {emblem}
     </div>
   );

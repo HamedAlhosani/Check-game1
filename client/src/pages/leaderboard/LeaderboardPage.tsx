@@ -95,8 +95,8 @@ export function LeaderboardPage() {
       maxWidth={760}
       right={myRank > 0 ? (
         <div className="rounded-full px-3 py-1.5"
-          style={{ background: 'rgba(212,169,106,0.12)', border: '1.5px solid rgba(212,169,106,0.45)' }}>
-          <span className="font-arabic text-xs font-bold" style={{ color: '#F8EFD5' }}>#{myRank}</span>
+          style={{ background: 'rgba(229,188,124,0.12)', border: '1.5px solid rgba(229,188,124,0.45)' }}>
+          <span className="font-arabic text-xs font-bold" style={{ color: '#FBF3DB' }}>#{myRank}</span>
         </div>
       ) : undefined}
     >
@@ -111,7 +111,7 @@ export function LeaderboardPage() {
         {loading ? (
           <div className="space-y-2">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-16 rounded-xl animate-pulse" style={{ background: 'rgba(212,169,106,0.04)' }} />
+              <div key={i} className="h-16 rounded-xl animate-pulse" style={{ background: 'rgba(229,188,124,0.04)' }} />
             ))}
           </div>
         ) : tab === 'friends' && friends.length === 0 ? (
@@ -119,7 +119,7 @@ export function LeaderboardPage() {
         ) : sorted.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-4xl mb-3">🏜️</p>
-            <p className="font-arabic" style={{ color: 'rgba(248,239,213,0.3)' }}>{t('leaderboard_no_data')}</p>
+            <p className="font-arabic" style={{ color: 'rgba(251,243,219,0.3)' }}>{t('leaderboard_no_data')}</p>
           </div>
         ) : (
           <>
@@ -143,7 +143,7 @@ export function LeaderboardPage() {
                         <CharacterArt id={entry.avatarId} size={56}/>
                       </div>
                       <p className="font-arabic text-xs font-bold text-center max-w-20 truncate"
-                        style={{ color: isMe ? '#D4A96A' : 'rgba(248,239,213,0.8)' }}>
+                        style={{ color: isMe ? '#E5BC7C' : 'rgba(251,243,219,0.8)' }}>
                         {isMe ? meLabel : entry.displayName}
                       </p>
                       <div className={`w-full ${podiumH} rounded-t-xl flex flex-col items-center justify-center gap-0.5`}
@@ -158,7 +158,7 @@ export function LeaderboardPage() {
             )}
 
             {/* Header label */}
-            <p className="font-arabic mb-3 px-1" style={{ fontSize: 11.5, color: 'rgba(248,239,213,0.5)' }}>
+            <p className="font-arabic mb-3 px-1" style={{ fontSize: 11.5, color: 'rgba(251,243,219,0.5)' }}>
               {tab === 'friends'
                 ? (lang === 'ar' ? `${sorted.length} لاعب (أنت + أصدقاؤك)` : `${sorted.length} players (you + friends)`)
                 : (lang === 'ar' ? `${sorted.length} لاعب على المنصة` : `${sorted.length} players on the platform`)}
@@ -179,9 +179,9 @@ export function LeaderboardPage() {
                     transition={{ delay: idx * 0.04 }}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl border"
                     style={isMe ? {
-                      background: 'rgba(212,169,106,0.10)',
-                      borderColor: 'rgba(212,169,106,0.4)',
-                      boxShadow: '0 0 16px rgba(212,169,106,0.08)',
+                      background: 'rgba(229,188,124,0.10)',
+                      borderColor: 'rgba(229,188,124,0.4)',
+                      boxShadow: '0 0 16px rgba(229,188,124,0.08)',
                     } : isTop3 ? {
                       background: mc!.bg,
                       borderColor: mc!.border,
@@ -193,7 +193,7 @@ export function LeaderboardPage() {
                     <div className="w-8 text-center shrink-0">
                       {isTop3
                         ? <span className="text-xl">{['🥇', '🥈', '🥉'][idx]}</span>
-                        : <span className="font-bold text-sm" style={{ color: 'rgba(248,239,213,0.3)' }}>{idx + 1}</span>}
+                        : <span className="font-bold text-sm" style={{ color: 'rgba(251,243,219,0.3)' }}>{idx + 1}</span>}
                     </div>
 
                     <div className="rounded-full overflow-hidden shrink-0"
@@ -203,23 +203,23 @@ export function LeaderboardPage() {
 
                     <div className="flex-1 min-w-0">
                       <p className="font-arabic font-bold truncate"
-                        style={{ fontSize: 14, color: isMe ? '#F8EFD5' : isTop3 ? mc!.text : 'rgba(248,239,213,0.85)' }}>
+                        style={{ fontSize: 14, color: isMe ? '#FBF3DB' : isTop3 ? mc!.text : 'rgba(251,243,219,0.85)' }}>
                         {isMe ? `${entry.displayName} (${meLabel})` : entry.displayName}
                       </p>
-                      <p className="font-arabic text-xs truncate" style={{ color: 'rgba(248,239,213,0.3)' }}>
+                      <p className="font-arabic text-xs truncate" style={{ color: 'rgba(251,243,219,0.3)' }}>
                         {getLevelTitle(entry.level)} · {lang === 'ar' ? 'لv' : 'Lv'}{entry.level}
                       </p>
                     </div>
 
                     <div className="text-center shrink-0 hidden sm:block">
                       <p className="font-bold text-sm" style={{ color: '#50C878' }}>{entry.winRate}%</p>
-                      <p className="font-arabic" style={{ fontSize: 10, color: 'rgba(248,239,213,0.3)' }}>{t('winRate')}</p>
+                      <p className="font-arabic" style={{ fontSize: 10, color: 'rgba(251,243,219,0.3)' }}>{t('winRate')}</p>
                     </div>
 
                     <div className="text-center shrink-0 w-14">
                       <p className="font-bold text-xl leading-none"
-                        style={{ color: isTop3 ? mc!.num : '#D4A96A' }}>{entry.wins}</p>
-                      <p className="font-arabic" style={{ fontSize: 10, color: 'rgba(248,239,213,0.35)' }}>{t('leaderboard_victory')}</p>
+                        style={{ color: isTop3 ? mc!.num : '#E5BC7C' }}>{entry.wins}</p>
+                      <p className="font-arabic" style={{ fontSize: 10, color: 'rgba(251,243,219,0.35)' }}>{t('leaderboard_victory')}</p>
                     </div>
                   </motion.div>
                 );
@@ -250,16 +250,16 @@ function TabBtn({ label, active, onClick, badge }: { label: string; active: bool
     <button onClick={onClick}
       className="relative flex-1 rounded-xl py-2.5 font-arabic font-bold"
       style={{
-        background: active ? 'rgba(212,169,106,0.20)' : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${active ? 'rgba(212,169,106,0.55)' : 'rgba(255,255,255,0.06)'}`,
-        color: active ? '#F8EFD5' : 'rgba(248,239,213,0.5)',
-        boxShadow: active ? '0 0 12px rgba(212,169,106,0.20)' : 'none',
+        background: active ? 'rgba(229,188,124,0.20)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${active ? 'rgba(229,188,124,0.55)' : 'rgba(255,255,255,0.06)'}`,
+        color: active ? '#FBF3DB' : 'rgba(251,243,219,0.5)',
+        boxShadow: active ? '0 0 12px rgba(229,188,124,0.20)' : 'none',
         fontSize: 13,
       }}>
       {label}
       {badge !== undefined && badge > 0 && (
         <span className="ms-2 inline-block rounded-full px-2 font-mono"
-          style={{ background: 'rgba(212,169,106,0.18)', color: '#F8EFD5', fontSize: 10, lineHeight: '17px' }}>
+          style={{ background: 'rgba(229,188,124,0.18)', color: '#FBF3DB', fontSize: 10, lineHeight: '17px' }}>
           {badge}
         </span>
       )}
@@ -272,10 +272,10 @@ function EmptyFriends({ lang, onAdd }: { lang: string; onAdd: () => void }) {
     <div className="text-center py-12 rounded-2xl"
       style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(196,149,255,0.30)' }}>
       <p style={{ fontSize: 48, marginBottom: 8 }}>👥</p>
-      <p className="font-arabic font-bold mb-2" style={{ fontSize: 16, color: '#F8EFD5' }}>
+      <p className="font-arabic font-bold mb-2" style={{ fontSize: 16, color: '#FBF3DB' }}>
         {lang === 'ar' ? 'لا أصدقاء بعد' : 'No friends yet'}
       </p>
-      <p className="font-arabic mb-5" style={{ fontSize: 12.5, color: 'rgba(248,239,213,0.55)', lineHeight: 1.7 }}>
+      <p className="font-arabic mb-5" style={{ fontSize: 12.5, color: 'rgba(251,243,219,0.55)', lineHeight: 1.7 }}>
         {lang === 'ar'
           ? 'أضف أصدقاءك لتتنافسوا على نفس اللوحة'
           : 'Add some friends to compete on the same board'}

@@ -14,29 +14,39 @@ export function Aurora() {
       className="fixed inset-0 pointer-events-none overflow-hidden"
       style={{ zIndex: 0 }}
     >
-      {/* Base wash — deep indigo into nearly-black, with a violet
-          highlight at the very top of the screen. */}
+      {/* Base wash — bayt al-sha'ar deep cocoa with a warm sand halo
+          at the top of the screen and a subtle date-orange glow on
+          the lower horizon (sunset on the dunes). */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 90% 60% at 50% -10%, rgba(74,56,36,0.85) 0%, rgba(20,15,10,0.95) 60%, rgba(10,8,5,1) 100%)',
+            'radial-gradient(ellipse 90% 60% at 50% -10%, rgba(105,80,50,0.85) 0%, rgba(24,18,12,0.95) 55%, rgba(8,6,4,1) 100%)',
         }}
       />
-      {/* Three slow-drifting orbs — violet, magenta, cyan. */}
+      {/* Sunset glow on the lower horizon */}
+      <div
+        className="absolute"
+        style={{
+          left: 0, right: 0, bottom: 0, height: 280,
+          background:
+            'linear-gradient(0deg, rgba(224,140,58,0.18) 0%, rgba(229,188,124,0.08) 35%, rgba(0,0,0,0) 100%)',
+        }}
+      />
+      {/* Three slow-drifting orbs — sand, palm, date. */}
       <div className="aurora-orb" style={{
         top: '-15%', left: '-10%', width: '60vw', height: '60vw',
-        background: 'radial-gradient(circle, rgba(212,169,106,0.25) 0%, rgba(212,169,106,0) 65%)',
+        background: 'radial-gradient(circle, rgba(229,188,124,0.25) 0%, rgba(229,188,124,0) 65%)',
         animation: 'aurora-drift-1 22s ease-in-out infinite',
       }} />
       <div className="aurora-orb" style={{
         top: '20%', right: '-15%', width: '55vw', height: '55vw',
-        background: 'radial-gradient(circle, rgba(92,128,56,0.20) 0%, rgba(92,128,56,0) 65%)',
+        background: 'radial-gradient(circle, rgba(122,168,71,0.20) 0%, rgba(122,168,71,0) 65%)',
         animation: 'aurora-drift-2 28s ease-in-out infinite',
       }} />
       <div className="aurora-orb" style={{
         bottom: '-20%', left: '10%', width: '65vw', height: '65vw',
-        background: 'radial-gradient(circle, rgba(215,122,51,0.16) 0%, rgba(215,122,51,0) 65%)',
+        background: 'radial-gradient(circle, rgba(224,140,58,0.16) 0%, rgba(224,140,58,0) 65%)',
         animation: 'aurora-drift-3 32s ease-in-out infinite',
       }} />
 
@@ -84,9 +94,9 @@ function Dust() {
           style={{
             left: `${p.x}%`, top: `${p.y}%`,
             width: p.s, height: p.s,
-            background: '#F5E8C9',
+            background: '#FAEDC4',
             opacity: p.o,
-            boxShadow: p.s > 1.2 ? '0 0 6px rgba(248,239,213,0.65)' : 'none',
+            boxShadow: p.s > 1.2 ? '0 0 6px rgba(251,243,219,0.65)' : 'none',
             animation: `aurora-twinkle 4s ease-in-out ${p.delay}s infinite`,
           }}
         />

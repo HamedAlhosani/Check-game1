@@ -1,12 +1,11 @@
 /**
- * Aurora — animated gradient backdrop. Three slow-drifting blurred
- * orbs sit behind every page, giving the dark background a living
- * quality without consuming layout space. Pure CSS keyframes; no JS
- * tick, no framer-motion subscription.
+ * Aurora — animated gradient backdrop in the new violet/magenta/cyan
+ * palette. Three slow-drifting blurred orbs, plus a field of pinpoint
+ * stars that twinkle on a staggered timer. Pure CSS keyframes.
  *
  * Drop in once near the root of a page (above all content). It's
- * `pointer-events: none` and `z-index: 0`, so all foreground content
- * renders above it untouched.
+ * `pointer-events: none` and `z-index: 0`, so foreground content
+ * always renders above it untouched.
  */
 export function Aurora() {
   return (
@@ -15,32 +14,33 @@ export function Aurora() {
       className="fixed inset-0 pointer-events-none overflow-hidden"
       style={{ zIndex: 0 }}
     >
-      {/* Base wash */}
+      {/* Base wash — deep indigo into nearly-black, with a violet
+          highlight at the very top of the screen. */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 90% 60% at 50% -10%, rgba(40,28,12,0.85) 0%, rgba(14,9,5,0.95) 60%, rgba(8,5,12,1) 100%)',
+            'radial-gradient(ellipse 90% 60% at 50% -10%, rgba(60,30,120,0.85) 0%, rgba(15,10,40,0.95) 60%, rgba(8,5,20,1) 100%)',
         }}
       />
-      {/* Three slow-drifting orbs */}
+      {/* Three slow-drifting orbs — violet, magenta, cyan. */}
       <div className="aurora-orb" style={{
         top: '-15%', left: '-10%', width: '60vw', height: '60vw',
-        background: 'radial-gradient(circle, rgba(232,201,122,0.20) 0%, rgba(232,201,122,0) 65%)',
+        background: 'radial-gradient(circle, rgba(167,139,250,0.25) 0%, rgba(167,139,250,0) 65%)',
         animation: 'aurora-drift-1 22s ease-in-out infinite',
       }} />
       <div className="aurora-orb" style={{
         top: '20%', right: '-15%', width: '55vw', height: '55vw',
-        background: 'radial-gradient(circle, rgba(196,149,255,0.16) 0%, rgba(196,149,255,0) 65%)',
+        background: 'radial-gradient(circle, rgba(244,114,182,0.20) 0%, rgba(244,114,182,0) 65%)',
         animation: 'aurora-drift-2 28s ease-in-out infinite',
       }} />
       <div className="aurora-orb" style={{
         bottom: '-20%', left: '10%', width: '65vw', height: '65vw',
-        background: 'radial-gradient(circle, rgba(80,200,180,0.10) 0%, rgba(80,200,180,0) 65%)',
+        background: 'radial-gradient(circle, rgba(34,211,238,0.16) 0%, rgba(34,211,238,0) 65%)',
         animation: 'aurora-drift-3 32s ease-in-out infinite',
       }} />
 
-      {/* Static gold dust — tiny pinpoints scattered across the screen */}
+      {/* Pinpoint star field — lavender twinkles. */}
       <Dust />
 
       <style>{`
@@ -68,8 +68,6 @@ export function Aurora() {
 }
 
 function Dust() {
-  // Deterministic pseudo-random scatter. 80 pinpoints, mix of sizes
-  // and brightness — reads as floating gold dust.
   const pts = Array.from({ length: 80 }, (_, i) => ({
     x: ((i * 137) % 100),
     y: ((i * 71) % 100),
@@ -86,9 +84,9 @@ function Dust() {
           style={{
             left: `${p.x}%`, top: `${p.y}%`,
             width: p.s, height: p.s,
-            background: '#F0D58A',
+            background: '#E0D5FF',
             opacity: p.o,
-            boxShadow: p.s > 1.2 ? '0 0 6px rgba(240,213,138,0.55)' : 'none',
+            boxShadow: p.s > 1.2 ? '0 0 6px rgba(224,213,255,0.65)' : 'none',
             animation: `aurora-twinkle 4s ease-in-out ${p.delay}s infinite`,
           }}
         />

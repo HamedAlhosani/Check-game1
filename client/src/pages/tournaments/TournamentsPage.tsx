@@ -92,27 +92,27 @@ export function TournamentsPage() {
         />
         {/* Stats banner — own tournament wins, podiums, total prize money */}
         <div className="rounded-2xl p-4 mb-4"
-          style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.08), rgba(120,80,20,0.04))', border: '1px solid rgba(201,168,76,0.20)' }}>
+          style={{ background: 'linear-gradient(135deg, rgba(167,139,250,0.08), rgba(120,80,20,0.04))', border: '1px solid rgba(167,139,250,0.20)' }}>
           <div className="flex items-center justify-between flex-wrap gap-2">
             <div>
-              <p className="font-arabic font-bold flex items-center gap-2" style={{ fontSize: 14, color: '#E8C97A' }}>
+              <p className="font-arabic font-bold flex items-center gap-2" style={{ fontSize: 14, color: '#F0E9FF' }}>
                 {isCurrentChampion ? '👑' : '🏆'} {profile?.displayName || (lang === 'ar' ? 'أنت' : 'You')}
                 {isCurrentChampion && (
                   <motion.span
                     animate={{ scale: [1, 1.05, 1] }}
                     transition={{ duration: 1.6, repeat: Infinity }}
                     className="rounded-full px-2 py-0.5 font-arabic font-bold"
-                    style={{ background: 'rgba(232,201,122,0.20)', color: '#FFE07A', fontSize: 10 }}>
+                    style={{ background: 'rgba(167,139,250,0.20)', color: '#F0E9FF', fontSize: 10 }}>
                     {lang === 'ar' ? 'بطل اليوم' : 'Champion'}
                   </motion.span>
                 )}
               </p>
-              <p className="font-arabic mt-0.5" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
+              <p className="font-arabic mt-0.5" style={{ fontSize: 11, color: 'rgba(220,210,255,0.55)' }}>
                 💰 {(profile?.coins ?? 0).toLocaleString()} {lang === 'ar' ? 'كوينز' : 'coins'}
               </p>
             </div>
             <div className="flex gap-3">
-              <Stat label={lang === 'ar' ? 'كؤوس' : 'Cups'}    value={tStats.cupsWon || 0}    accent="#E8C97A"/>
+              <Stat label={lang === 'ar' ? 'كؤوس' : 'Cups'}    value={tStats.cupsWon || 0}    accent="#F0E9FF"/>
               <Stat label={lang === 'ar' ? 'منصات' : 'Podiums'} value={tStats.podiums || 0}   accent="#C495FF"/>
               <Stat label={lang === 'ar' ? 'جوائز' : 'Earned'}  value={(tStats.totalPrizeWon || 0).toLocaleString()} accent="#80E0A0" suffix="🪙"/>
             </div>
@@ -149,7 +149,7 @@ function Stat({ label, value, accent, suffix }: { label: string; value: any; acc
       <div className="font-bold font-mono" style={{ fontSize: 16, color: accent }}>
         {value} {suffix}
       </div>
-      <div className="font-arabic" style={{ fontSize: 9.5, color: 'rgba(245,230,200,0.45)' }}>{label}</div>
+      <div className="font-arabic" style={{ fontSize: 9.5, color: 'rgba(220,210,255,0.45)' }}>{label}</div>
     </div>
   );
 }
@@ -159,16 +159,16 @@ function TabButton({ label, active, onClick, badge }: { label: string; active: b
     <button onClick={onClick}
       className="relative flex-1 rounded-xl py-2.5 font-arabic font-bold transition-all"
       style={{
-        background: active ? 'rgba(201,168,76,0.20)' : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${active ? 'rgba(201,168,76,0.55)' : 'rgba(255,255,255,0.06)'}`,
-        color: active ? '#E8C97A' : 'rgba(245,230,200,0.5)',
-        boxShadow: active ? '0 0 12px rgba(201,168,76,0.20)' : 'none',
+        background: active ? 'rgba(167,139,250,0.20)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${active ? 'rgba(167,139,250,0.55)' : 'rgba(255,255,255,0.06)'}`,
+        color: active ? '#F0E9FF' : 'rgba(220,210,255,0.5)',
+        boxShadow: active ? '0 0 12px rgba(167,139,250,0.20)' : 'none',
         fontSize: 13,
       }}>
       {label}
       {badge && (
         <span className="absolute -top-1 -right-1 rounded-full"
-          style={{ width: 8, height: 8, background: '#E04030', border: '1.5px solid #14100A' }}/>
+          style={{ width: 8, height: 8, background: '#E04030', border: '1.5px solid #15102F' }}/>
       )}
     </button>
   );
@@ -189,14 +189,14 @@ function BotsTab({ lang }: { lang: string }) {
   }
 
   return (
-    <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(201,168,76,0.20)' }}>
+    <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(167,139,250,0.20)' }}>
       <div className="flex items-center gap-2 mb-1">
         <span style={{ fontSize: 26 }}>🤖</span>
-        <h2 className="font-arabic font-bold" style={{ fontSize: 17, color: '#E8C97A' }}>
+        <h2 className="font-arabic font-bold" style={{ fontSize: 17, color: '#F0E9FF' }}>
           {lang === 'ar' ? 'كأس البوتات' : 'Bots Cup'}
         </h2>
       </div>
-      <p className="font-arabic mb-4" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.55)' }}>
+      <p className="font-arabic mb-4" style={{ fontSize: 11.5, color: 'rgba(220,210,255,0.55)' }}>
         {lang === 'ar'
           ? 'بطولة ضد البوتات — بدون رسوم دخول، بدء فوري'
           : 'Tournament vs bots — no entry fee, instant start'}
@@ -229,9 +229,9 @@ function BotsTab({ lang }: { lang: string }) {
         <motion.button whileTap={{ scale: 0.97 }} onClick={start}
           className="rounded-2xl py-3 font-arabic font-bold"
           style={{
-            background: 'linear-gradient(135deg, #C9A84C, #A07830)',
-            color: '#0E0905', fontSize: 14,
-            boxShadow: '0 6px 20px rgba(201,168,76,0.45)',
+            background: 'linear-gradient(135deg, #A78BFA, #A07830)',
+            color: '#0A0814', fontSize: 14,
+            boxShadow: '0 6px 20px rgba(167,139,250,0.45)',
           }}>
           🤖 {lang === 'ar' ? 'ابدأ كأس البوتات' : 'Start Bots Cup'}
         </motion.button>
@@ -271,31 +271,31 @@ function OnlineTab({ lang, list, myUid, coins }: { lang: string; list: Tournamen
         <>
           {/* Join by code */}
           <div className="rounded-2xl p-3 mb-4"
-            style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(201,168,76,0.20)' }}>
-            <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.55)' }}>
+            style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(167,139,250,0.20)' }}>
+            <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(220,210,255,0.55)' }}>
               🔑 {lang === 'ar' ? 'بكود بطولة خاصة' : 'Private tournament code'}
             </p>
             <div className="flex gap-2">
               <input value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())}
                 placeholder={lang === 'ar' ? 'الكود' : 'Code'}
                 className="flex-1 px-3 py-2 rounded-lg font-mono"
-                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(201,168,76,0.25)', color: '#E8C97A', fontSize: 13, letterSpacing: 2 }}/>
+                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(167,139,250,0.25)', color: '#F0E9FF', fontSize: 13, letterSpacing: 2 }}/>
               <motion.button whileTap={{ scale: 0.96 }} onClick={joinByCode}
                 className="rounded-lg px-4 font-arabic font-bold"
-                style={{ background: 'rgba(201,168,76,0.18)', color: '#E8C97A', border: '1px solid rgba(201,168,76,0.45)', fontSize: 13 }}>
+                style={{ background: 'rgba(167,139,250,0.18)', color: '#F0E9FF', border: '1px solid rgba(167,139,250,0.45)', fontSize: 13 }}>
                 {lang === 'ar' ? 'انضم' : 'Join'}
               </motion.button>
             </div>
           </div>
 
-          <p className="font-arabic mb-3 px-1" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.5)' }}>
+          <p className="font-arabic mb-3 px-1" style={{ fontSize: 11.5, color: 'rgba(220,210,255,0.5)' }}>
             {lang === 'ar' ? `${list.length} بطولة عامة` : `${list.length} public tournaments`}
           </p>
           {list.length === 0 ? (
             <div className="text-center py-12 rounded-2xl"
-              style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(201,168,76,0.18)' }}>
+              style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(167,139,250,0.18)' }}>
               <p style={{ fontSize: 32, marginBottom: 8 }}>🏆</p>
-              <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(245,230,200,0.5)' }}>
+              <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(220,210,255,0.5)' }}>
                 {lang === 'ar' ? 'لا بطولات الآن — أنشئ واحدة!' : 'No tournaments — create one!'}
               </p>
             </div>
@@ -319,9 +319,9 @@ function SubTab({ label, active, onClick }: { label: string; active: boolean; on
     <button onClick={onClick}
       className="flex-1 rounded-lg py-1.5 font-arabic"
       style={{
-        background: active ? 'rgba(201,168,76,0.12)' : 'transparent',
-        border: `1px solid ${active ? 'rgba(201,168,76,0.40)' : 'rgba(255,255,255,0.06)'}`,
-        color: active ? '#E8C97A' : 'rgba(245,230,200,0.5)', fontSize: 12,
+        background: active ? 'rgba(167,139,250,0.12)' : 'transparent',
+        border: `1px solid ${active ? 'rgba(167,139,250,0.40)' : 'rgba(255,255,255,0.06)'}`,
+        color: active ? '#F0E9FF' : 'rgba(220,210,255,0.5)', fontSize: 12,
       }}>{label}</button>
   );
 }
@@ -335,7 +335,7 @@ function SummaryCard({ t, lang, onJoin, myUid, coins }: { t: TournamentSummary; 
     <div className="rounded-2xl p-3 flex items-center gap-3"
       style={{
         background: 'rgba(255,255,255,0.03)',
-        border: `1px solid ${t.status === 'in_progress' ? 'rgba(232,201,122,0.45)' : 'rgba(201,168,76,0.20)'}`,
+        border: `1px solid ${t.status === 'in_progress' ? 'rgba(167,139,250,0.45)' : 'rgba(167,139,250,0.20)'}`,
       }}>
       <div className="flex items-center justify-center rounded-xl shrink-0"
         style={{ width: 44, height: 44, background: 'rgba(0,0,0,0.25)', fontSize: 22 }}>
@@ -343,7 +343,7 @@ function SummaryCard({ t, lang, onJoin, myUid, coins }: { t: TournamentSummary; 
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline gap-2 flex-wrap">
-          <p className="font-arabic font-bold truncate" style={{ fontSize: 13, color: '#E8C97A' }}>{t.name}</p>
+          <p className="font-arabic font-bold truncate" style={{ fontSize: 13, color: '#F0E9FF' }}>{t.name}</p>
           {t.clanOnlyTag && (
             <span className="font-arabic rounded px-1.5"
               style={{ fontSize: 9.5, background: 'rgba(196,149,255,0.15)', color: '#C495FF', letterSpacing: 0.5 }}>
@@ -352,21 +352,21 @@ function SummaryCard({ t, lang, onJoin, myUid, coins }: { t: TournamentSummary; 
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap mt-0.5 font-arabic"
-          style={{ fontSize: 10.5, color: 'rgba(245,230,200,0.55)' }}>
+          style={{ fontSize: 10.5, color: 'rgba(220,210,255,0.55)' }}>
           <span>👥 {t.size}</span>
           <span>{modeLabel}</span>
-          <span>🪙 <b style={{ color: '#E8C97A' }}>{t.prizePool.toLocaleString()}</b> {lang === 'ar' ? 'جائزة' : 'pool'}</span>
+          <span>🪙 <b style={{ color: '#F0E9FF' }}>{t.prizePool.toLocaleString()}</b> {lang === 'ar' ? 'جائزة' : 'pool'}</span>
           {t.entryFee > 0 && <span style={{ color: 'rgba(255,180,140,0.85)' }}>💸 {t.entryFee.toLocaleString()}</span>}
         </div>
         <div className="mt-1.5 flex items-center gap-2">
           <div className="flex-1" style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>
             <div style={{
               width: `${fillPct}%`, height: '100%',
-              background: 'linear-gradient(90deg, #8B6914, #E8C97A)',
+              background: 'linear-gradient(90deg, #5B21B6, #F0E9FF)',
               transition: 'width .3s ease',
             }}/>
           </div>
-          <span className="font-mono shrink-0" style={{ fontSize: 9.5, color: 'rgba(245,230,200,0.5)' }}>
+          <span className="font-mono shrink-0" style={{ fontSize: 9.5, color: 'rgba(220,210,255,0.5)' }}>
             {t.players}/{t.size}
           </span>
         </div>
@@ -376,8 +376,8 @@ function SummaryCard({ t, lang, onJoin, myUid, coins }: { t: TournamentSummary; 
           disabled={cantAfford}
           className="shrink-0 rounded-lg px-3 py-1.5 font-arabic font-bold disabled:opacity-50"
           style={{
-            background: cantAfford ? 'rgba(255,255,255,0.04)' : 'linear-gradient(135deg, #C9A84C, #A07830)',
-            color: cantAfford ? 'rgba(245,230,200,0.4)' : '#0E0905', fontSize: 11,
+            background: cantAfford ? 'rgba(255,255,255,0.04)' : 'linear-gradient(135deg, #A78BFA, #A07830)',
+            color: cantAfford ? 'rgba(220,210,255,0.4)' : '#0A0814', fontSize: 11,
           }}>
           {cantAfford
             ? (lang === 'ar' ? 'لا يكفي' : 'Need more')
@@ -385,12 +385,12 @@ function SummaryCard({ t, lang, onJoin, myUid, coins }: { t: TournamentSummary; 
         </motion.button>
       ) : t.status === 'in_progress' ? (
         <span className="shrink-0 rounded-lg px-2.5 py-1 font-arabic"
-          style={{ background: 'rgba(232,201,122,0.10)', color: '#E8C97A', fontSize: 10.5 }}>
+          style={{ background: 'rgba(167,139,250,0.10)', color: '#F0E9FF', fontSize: 10.5 }}>
           {lang === 'ar' ? 'قيد اللعب' : 'Live'}
         </span>
       ) : (
         <span className="shrink-0 rounded-lg px-2.5 py-1 font-arabic"
-          style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(245,230,200,0.4)', fontSize: 10.5 }}>
+          style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(220,210,255,0.4)', fontSize: 10.5 }}>
           {isMine ? (lang === 'ar' ? 'بطولتك' : 'Yours') : (lang === 'ar' ? 'منتظر' : 'Waiting')}
         </span>
       )}
@@ -428,26 +428,26 @@ function CreateOnlineForm({ lang, coins, onCreated }: { lang: string; coins: num
   }
 
   return (
-    <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(201,168,76,0.20)' }}>
+    <div className="rounded-2xl p-4" style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(167,139,250,0.20)' }}>
       <div className="flex items-center gap-2 mb-1">
         <span style={{ fontSize: 26 }}>🌐</span>
-        <h2 className="font-arabic font-bold" style={{ fontSize: 17, color: '#E8C97A' }}>
+        <h2 className="font-arabic font-bold" style={{ fontSize: 17, color: '#F0E9FF' }}>
           {lang === 'ar' ? 'بطولة أونلاين جديدة' : 'New Online Tournament'}
         </h2>
       </div>
-      <p className="font-arabic mb-4" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.55)' }}>
+      <p className="font-arabic mb-4" style={{ fontSize: 11.5, color: 'rgba(220,210,255,0.55)' }}>
         {lang === 'ar' ? 'كل لاعب يدفع رسوم دخول · الجائزة من المجموع' : 'Every player pays entry · prize comes from the pot'}
       </p>
 
       <div className="flex flex-col gap-4">
         <div>
-          <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.55)' }}>
+          <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(220,210,255,0.55)' }}>
             {lang === 'ar' ? 'اسم البطولة' : 'Tournament name'}
           </p>
           <input value={name} onChange={e => setName(e.target.value)}
             placeholder={lang === 'ar' ? 'بطولتي (اختياري)' : 'My tournament (optional)'}
             className="w-full px-3 py-2 rounded-lg font-arabic"
-            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,168,76,0.20)', color: '#E8C97A', fontSize: 13 }}/>
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(167,139,250,0.20)', color: '#F0E9FF', fontSize: 13 }}/>
         </div>
 
         <PickerRow title={lang === 'ar' ? 'حجم البطولة' : 'Bracket Size'}
@@ -459,7 +459,7 @@ function CreateOnlineForm({ lang, coins, onCreated }: { lang: string; coins: num
 
         {/* Entry fee tier picker */}
         <div>
-          <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.55)' }}>
+          <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(220,210,255,0.55)' }}>
             💸 {lang === 'ar' ? `رسوم الدخول (لديك ${coins.toLocaleString()})` : `Entry fee (you have ${coins.toLocaleString()})`}
           </p>
           <div className="grid grid-cols-4 gap-1.5">
@@ -472,9 +472,9 @@ function CreateOnlineForm({ lang, coins, onCreated }: { lang: string; coins: num
                   disabled={cant}
                   className="rounded-xl py-2 font-mono font-bold disabled:opacity-40"
                   style={{
-                    background: sel ? 'rgba(201,168,76,0.20)' : 'rgba(255,255,255,0.04)',
-                    color: sel ? '#E8C97A' : 'rgba(245,230,200,0.55)',
-                    border: `1.5px solid ${sel ? 'rgba(201,168,76,0.65)' : 'rgba(255,255,255,0.08)'}`,
+                    background: sel ? 'rgba(167,139,250,0.20)' : 'rgba(255,255,255,0.04)',
+                    color: sel ? '#F0E9FF' : 'rgba(220,210,255,0.55)',
+                    border: `1.5px solid ${sel ? 'rgba(167,139,250,0.65)' : 'rgba(255,255,255,0.08)'}`,
                     fontSize: 11.5,
                   }}>
                   🪙 {fee >= 1000 ? `${fee/1000}k` : fee}
@@ -511,7 +511,7 @@ function CreateOnlineForm({ lang, coins, onCreated }: { lang: string; coins: num
             style={{
               background: clanOnly ? 'rgba(196,149,255,0.15)' : 'rgba(255,255,255,0.04)',
               border: `1.5px solid ${clanOnly ? 'rgba(196,149,255,0.55)' : 'rgba(255,255,255,0.08)'}`,
-              color: clanOnly ? '#C495FF' : 'rgba(245,230,200,0.65)',
+              color: clanOnly ? '#C495FF' : 'rgba(220,210,255,0.65)',
             }}>
             <span style={{ fontSize: 12.5 }}>
               🏰 {lang === 'ar' ? `بطولة قبيلتي [${myClanTag}] فقط` : `Clan-only tournament [${myClanTag}]`}
@@ -535,16 +535,16 @@ function CreateOnlineForm({ lang, coins, onCreated }: { lang: string; coins: num
 
         {/* Live prize pool projection */}
         <div className="rounded-xl p-3"
-          style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.30)' }}>
+          style={{ background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.30)' }}>
           <div className="flex items-center justify-between mb-1">
-            <span className="font-arabic" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.7)' }}>
+            <span className="font-arabic" style={{ fontSize: 11.5, color: 'rgba(220,210,255,0.7)' }}>
               🏆 {lang === 'ar' ? 'الجائزة الكاملة لما تمتلئ' : 'Full prize pool when full'}
             </span>
-            <span className="font-mono font-bold" style={{ fontSize: 18, color: '#E8C97A' }}>
+            <span className="font-mono font-bold" style={{ fontSize: 18, color: '#F0E9FF' }}>
               🪙 {projectedPool.toLocaleString()}
             </span>
           </div>
-          <div className="flex items-center justify-between gap-2 mt-1.5 font-arabic" style={{ fontSize: 10.5, color: 'rgba(245,230,200,0.6)' }}>
+          <div className="flex items-center justify-between gap-2 mt-1.5 font-arabic" style={{ fontSize: 10.5, color: 'rgba(220,210,255,0.6)' }}>
             <span>🥇 {splits[0].toLocaleString()}</span>
             {splits[1] > 0 && <span>🥈 {splits[1].toLocaleString()}</span>}
             {splits[2] > 0 && <span>🥉 {splits[2].toLocaleString()}</span>}
@@ -555,10 +555,10 @@ function CreateOnlineForm({ lang, coins, onCreated }: { lang: string; coins: num
           disabled={cantAfford}
           className="rounded-2xl py-3 font-arabic font-bold disabled:opacity-50"
           style={{
-            background: cantAfford ? 'rgba(255,255,255,0.04)' : 'linear-gradient(135deg, #C9A84C, #A07830)',
-            color: cantAfford ? 'rgba(245,230,200,0.4)' : '#0E0905',
+            background: cantAfford ? 'rgba(255,255,255,0.04)' : 'linear-gradient(135deg, #A78BFA, #A07830)',
+            color: cantAfford ? 'rgba(220,210,255,0.4)' : '#0A0814',
             fontSize: 14,
-            boxShadow: cantAfford ? 'none' : '0 6px 20px rgba(201,168,76,0.45)',
+            boxShadow: cantAfford ? 'none' : '0 6px 20px rgba(167,139,250,0.45)',
           }}>
           {cantAfford
             ? (lang === 'ar' ? 'كوينزك أقل من الرسوم' : 'Not enough coins for entry')
@@ -582,9 +582,9 @@ function MineTab({ tournament, finished, myUid, lang, navigate, onClear }: {
   if (!tournament) {
     return (
       <div className="text-center py-12 rounded-2xl"
-        style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(201,168,76,0.18)' }}>
+        style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(167,139,250,0.18)' }}>
         <p style={{ fontSize: 36, marginBottom: 8 }}>🪑</p>
-        <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(245,230,200,0.55)' }}>
+        <p className="font-arabic" style={{ fontSize: 13, color: 'rgba(220,210,255,0.55)' }}>
           {lang === 'ar' ? 'لست في أي بطولة الآن' : 'Not in any tournament right now'}
         </p>
       </div>
@@ -627,17 +627,17 @@ function ActiveTournament({ tournament, myUid, lang, navigate, onClear }: {
     <div>
       {/* Header card */}
       <div className="rounded-2xl p-4 mb-4"
-        style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.30)' }}>
+        style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.30)' }}>
         <div className="flex items-baseline gap-2 mb-1">
-          <h2 className="font-arabic font-bold" style={{ fontSize: 16, color: '#E8C97A' }}>{tournament.name}</h2>
+          <h2 className="font-arabic font-bold" style={{ fontSize: 16, color: '#F0E9FF' }}>{tournament.name}</h2>
           {tournament.code && (
             <span className="font-mono rounded px-2 py-0.5"
-              style={{ background: 'rgba(201,168,76,0.15)', color: '#E8C97A', fontSize: 10, letterSpacing: 1.5 }}>
+              style={{ background: 'rgba(167,139,250,0.15)', color: '#F0E9FF', fontSize: 10, letterSpacing: 1.5 }}>
               {tournament.code}
             </span>
           )}
         </div>
-        <p className="font-arabic" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
+        <p className="font-arabic" style={{ fontSize: 11, color: 'rgba(220,210,255,0.55)' }}>
           👥 {tournament.players.length}/{tournament.size}
           {' · '}{tournament.matchLength === 'quick' ? '⚡' : tournament.matchLength === 'long' ? '🏛️' : '📊'} {ELIMINATION_SCORE[tournament.matchLength]}{lang === 'ar' ? 'ن' : 'p'}
           {tournament.entryFee > 0 && <> {' · '}💸 {tournament.entryFee.toLocaleString()}</>}
@@ -645,18 +645,18 @@ function ActiveTournament({ tournament, myUid, lang, navigate, onClear }: {
 
         {/* Prize pool — big & bright */}
         <div className="rounded-xl p-3 mt-3"
-          style={{ background: 'rgba(201,168,76,0.12)', border: '1px solid rgba(201,168,76,0.35)' }}>
+          style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.35)' }}>
           <div className="flex items-baseline justify-between">
-            <span className="font-arabic" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.65)' }}>
+            <span className="font-arabic" style={{ fontSize: 11.5, color: 'rgba(220,210,255,0.65)' }}>
               🏆 {lang === 'ar' ? 'مجموع الجوائز' : 'Total Prize Pool'}
             </span>
-            <span className="font-mono font-bold" style={{ fontSize: 22, color: '#E8C97A' }}>
+            <span className="font-mono font-bold" style={{ fontSize: 22, color: '#F0E9FF' }}>
               🪙 {tournament.prizePool.toLocaleString()}
             </span>
           </div>
           {tournament.prizeSplit === 'top3' && tournament.size >= 4 && (
             <div className="flex items-center justify-between gap-2 mt-2 font-arabic"
-              style={{ fontSize: 10.5, color: 'rgba(245,230,200,0.6)' }}>
+              style={{ fontSize: 10.5, color: 'rgba(220,210,255,0.6)' }}>
               <span>🥇 {splits[0].toLocaleString()}</span>
               <span>🥈 {splits[1].toLocaleString()}</span>
               {splits[2] > 0 && <span>🥉 {splits[2].toLocaleString()}</span>}
@@ -672,7 +672,7 @@ function ActiveTournament({ tournament, myUid, lang, navigate, onClear }: {
                 <motion.button whileTap={{ scale: 0.96 }} onClick={startTournament}
                   disabled={tournament.players.length < tournament.size}
                   className="rounded-xl py-2 font-arabic font-bold disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg, #C9A84C, #A07830)', color: '#0E0905', fontSize: 13 }}>
+                  style={{ background: 'linear-gradient(135deg, #A78BFA, #A07830)', color: '#0A0814', fontSize: 13 }}>
                   ▶️ {lang === 'ar'
                     ? (tournament.players.length < tournament.size ? `بانتظار ${tournament.size - tournament.players.length} لاعبين` : 'ابدأ البطولة')
                     : (tournament.players.length < tournament.size ? `Waiting for ${tournament.size - tournament.players.length} players` : 'Start Tournament')}
@@ -680,7 +680,7 @@ function ActiveTournament({ tournament, myUid, lang, navigate, onClear }: {
                 {tournament.players.length < tournament.size && (
                   <button onClick={fillBots}
                     className="rounded-xl py-1.5 font-arabic"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,168,76,0.30)', color: 'rgba(232,201,122,0.85)', fontSize: 11.5 }}>
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(167,139,250,0.30)', color: 'rgba(167,139,250,0.85)', fontSize: 11.5 }}>
                     🤖 {lang === 'ar' ? 'املأ الباقي بوتات' : 'Fill remaining seats with bots'}
                   </button>
                 )}
@@ -695,7 +695,7 @@ function ActiveTournament({ tournament, myUid, lang, navigate, onClear }: {
         ) : inProgress ? (
           <motion.button whileTap={{ scale: 0.96 }} onClick={returnToMatch}
             className="mt-3 w-full rounded-xl py-2 font-arabic font-bold"
-            style={{ background: 'linear-gradient(135deg, #C9A84C, #A07830)', color: '#0E0905', fontSize: 13 }}>
+            style={{ background: 'linear-gradient(135deg, #A78BFA, #A07830)', color: '#0A0814', fontSize: 13 }}>
             ▶️ {lang === 'ar' ? 'العودة إلى المباراة' : 'Return to match'}
           </motion.button>
         ) : eliminated ? (
@@ -707,7 +707,7 @@ function ActiveTournament({ tournament, myUid, lang, navigate, onClear }: {
           <ForfeitCountdown tournament={tournament} onStart={startNextMatch} lang={lang}/>
         ) : (
           <p className="mt-3 rounded-xl py-2 px-3 font-arabic text-center"
-            style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(245,230,200,0.55)', fontSize: 12 }}>
+            style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(220,210,255,0.55)', fontSize: 12 }}>
             ⏳ {lang === 'ar' ? 'بانتظار باقي المباريات' : 'Waiting for other matches'}
           </p>
         )}
@@ -755,11 +755,11 @@ function ForfeitCountdown({ tournament, onStart, lang }: { tournament: Tournamen
   return (
     <motion.button whileTap={{ scale: 0.96 }} onClick={onStart}
       className="mt-3 w-full rounded-xl py-2 font-arabic font-bold flex items-center justify-center gap-2"
-      style={{ background: 'linear-gradient(135deg, #C9A84C, #A07830)', color: '#0E0905', fontSize: 13 }}>
+      style={{ background: 'linear-gradient(135deg, #A78BFA, #A07830)', color: '#0A0814', fontSize: 13 }}>
       ▶️ {lang === 'ar' ? 'ابدأ مباراتك التالية' : 'Start your next match'}
       {showTimer && remaining! > 0 && (
         <span className="rounded-full px-2 py-0.5 font-mono"
-          style={{ background: 'rgba(20,16,10,0.30)', color: '#0E0905', fontSize: 10 }}>
+          style={{ background: 'rgba(20,16,10,0.30)', color: '#0A0814', fontSize: 10 }}>
           ⏱ {remaining}s
         </span>
       )}
@@ -770,7 +770,7 @@ function ForfeitCountdown({ tournament, onStart, lang }: { tournament: Tournamen
 function PlayersList({ tournament, myUid, lang }: { tournament: TournamentState; myUid?: string; lang: string }) {
   return (
     <div>
-      <h3 className="font-arabic font-bold mb-2 px-1" style={{ fontSize: 12, color: 'rgba(201,168,76,0.85)' }}>
+      <h3 className="font-arabic font-bold mb-2 px-1" style={{ fontSize: 12, color: 'rgba(167,139,250,0.85)' }}>
         {lang === 'ar' ? `اللاعبون (${tournament.players.length}/${tournament.size})` : `Players (${tournament.players.length}/${tournament.size})`}
       </h3>
       <div className="flex flex-col gap-1.5">
@@ -784,17 +784,17 @@ function PlayersList({ tournament, myUid, lang }: { tournament: TournamentState;
               className="flex items-center gap-2 rounded-xl px-3 py-2"
               style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <span style={{ fontSize: 18 }}>{AVATAR_EMOJIS[p.avatarId] || '👤'}</span>
-              <span className="font-arabic flex-1 truncate" style={{ fontSize: 12.5, color: '#E8C97A' }}>
+              <span className="font-arabic flex-1 truncate" style={{ fontSize: 12.5, color: '#F0E9FF' }}>
                 {p.uid === myUid ? (lang === 'ar' ? 'أنت' : 'You') : p.displayName}
-                {p.uid === tournament.hostUid && <span style={{ marginInlineStart: 6, fontSize: 9.5, color: 'rgba(245,230,200,0.5)' }}>👑</span>}
-                {p.isBot && <span style={{ marginInlineStart: 6, fontSize: 9.5, color: 'rgba(245,230,200,0.5)' }}>🤖</span>}
+                {p.uid === tournament.hostUid && <span style={{ marginInlineStart: 6, fontSize: 9.5, color: 'rgba(220,210,255,0.5)' }}>👑</span>}
+                {p.isBot && <span style={{ marginInlineStart: 6, fontSize: 9.5, color: 'rgba(220,210,255,0.5)' }}>🤖</span>}
               </span>
             </motion.div>
           ))}
         </AnimatePresence>
         {Array.from({ length: tournament.size - tournament.players.length }).map((_, i) => (
           <div key={`empty-${i}`} className="flex items-center gap-2 rounded-xl px-3 py-2 font-arabic"
-            style={{ background: 'rgba(255,255,255,0.015)', border: '1px dashed rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.3)', fontSize: 12 }}>
+            style={{ background: 'rgba(255,255,255,0.015)', border: '1px dashed rgba(255,255,255,0.08)', color: 'rgba(220,210,255,0.3)', fontSize: 12 }}>
             — {lang === 'ar' ? 'مقعد فارغ' : 'Empty seat'}
           </div>
         ))}
@@ -811,14 +811,14 @@ function BracketView({ tournament, myUid, lang }: { tournament: TournamentState;
     <div className="flex flex-col gap-4">
       {liveCount > 0 && (
         <div className="rounded-xl px-3 py-2 font-arabic flex items-center gap-2"
-          style={{ background: 'rgba(232,201,122,0.10)', border: '1px solid rgba(232,201,122,0.30)', fontSize: 11.5, color: '#E8C97A' }}>
+          style={{ background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.30)', fontSize: 11.5, color: '#F0E9FF' }}>
           <motion.span animate={{ opacity: [1, 0.4, 1] }} transition={{ duration: 1.4, repeat: Infinity }}>🔴</motion.span>
           {lang === 'ar' ? `${liveCount} ${liveCount === 1 ? 'مباراة قيد اللعب الآن' : 'مباريات قيد اللعب الآن'}` : `${liveCount} match${liveCount === 1 ? '' : 'es'} live now`}
         </div>
       )}
       {rounds.map(rd => (
         <div key={rd.round}>
-          <h3 className="font-arabic font-bold mb-2 px-1" style={{ fontSize: 12, color: 'rgba(201,168,76,0.85)' }}>
+          <h3 className="font-arabic font-bold mb-2 px-1" style={{ fontSize: 12, color: 'rgba(167,139,250,0.85)' }}>
             {lang === 'ar' ? rd.labelAr : rd.labelEn}
           </h3>
           <div className="flex flex-col gap-2">
@@ -845,15 +845,15 @@ function BracketCard({ match, playersByUid, myUid, lang }: {
   return (
     <div className="rounded-2xl overflow-hidden"
       style={{
-        background: isCurrent ? 'rgba(232,201,122,0.10)' : 'rgba(255,255,255,0.025)',
-        border: `1px solid ${isCurrent ? 'rgba(232,201,122,0.55)' : 'rgba(255,255,255,0.06)'}`,
+        background: isCurrent ? 'rgba(167,139,250,0.10)' : 'rgba(255,255,255,0.025)',
+        border: `1px solid ${isCurrent ? 'rgba(167,139,250,0.55)' : 'rgba(255,255,255,0.06)'}`,
       }}>
       <Slot p={p1} winner={winnerUid === match.p1Uid} loser={!!winnerUid && winnerUid !== match.p1Uid} myUid={myUid} lang={lang}/>
       <div style={{ height: 1, background: 'rgba(255,255,255,0.05)' }}/>
       <Slot p={p2} winner={winnerUid === match.p2Uid} loser={!!winnerUid && winnerUid !== match.p2Uid} myUid={myUid} lang={lang}/>
       {isCurrent && (
         <div className="px-3 py-1 font-arabic text-center flex items-center justify-center gap-1"
-          style={{ background: 'rgba(232,201,122,0.10)', fontSize: 9.5, color: '#E8C97A', letterSpacing: 0.5 }}>
+          style={{ background: 'rgba(167,139,250,0.10)', fontSize: 9.5, color: '#F0E9FF', letterSpacing: 0.5 }}>
           <motion.span animate={{ opacity: [1, 0.3, 1] }} transition={{ duration: 1.2, repeat: Infinity }}>🔴</motion.span>
           {lang === 'ar' ? 'قيد اللعب' : 'Live'}
         </div>
@@ -867,12 +867,12 @@ function Slot({ p, winner, loser, myUid, lang }: { p: any; winner: boolean; lose
   const empty = !p;
   return (
     <div className="flex items-center gap-2 px-3 py-2"
-      style={{ background: winner ? 'rgba(201,168,76,0.10)' : 'transparent', opacity: loser ? 0.5 : 1 }}>
+      style={{ background: winner ? 'rgba(167,139,250,0.10)' : 'transparent', opacity: loser ? 0.5 : 1 }}>
       <span style={{ fontSize: 18 }}>{empty ? '—' : (AVATAR_EMOJIS[p.avatarId] || '👤')}</span>
       <span className="flex-1 font-arabic truncate"
         style={{
           fontSize: 12.5,
-          color: winner ? '#E8C97A' : isMe ? 'rgba(201,168,76,0.85)' : 'rgba(245,230,200,0.65)',
+          color: winner ? '#F0E9FF' : isMe ? 'rgba(167,139,250,0.85)' : 'rgba(220,210,255,0.65)',
           fontWeight: winner || isMe ? 700 : 400,
         }}>
         {empty ? (lang === 'ar' ? 'في انتظار الفائز' : 'TBD')
@@ -897,10 +897,10 @@ function FinishedCard({ finished, lang, onClear }: { finished: any; lang: string
     <div className="relative rounded-2xl p-6 text-center overflow-hidden"
       style={{
         background: isChampion
-          ? 'linear-gradient(135deg, rgba(232,201,122,0.18) 0%, rgba(168,124,58,0.10) 100%)'
+          ? 'linear-gradient(135deg, rgba(167,139,250,0.18) 0%, rgba(168,124,58,0.10) 100%)'
           : 'rgba(255,255,255,0.025)',
-        border: `1px solid ${isChampion ? 'rgba(232,201,122,0.55)' : 'rgba(201,168,76,0.20)'}`,
-        boxShadow: isChampion ? '0 0 36px rgba(232,201,122,0.30)' : 'none',
+        border: `1px solid ${isChampion ? 'rgba(167,139,250,0.55)' : 'rgba(167,139,250,0.20)'}`,
+        boxShadow: isChampion ? '0 0 36px rgba(167,139,250,0.30)' : 'none',
       }}>
       {isChampion && <Confetti count={80}/>}
       <motion.div
@@ -909,7 +909,7 @@ function FinishedCard({ finished, lang, onClear }: { finished: any; lang: string
         style={{ fontSize: 76, marginBottom: 8, position: 'relative', zIndex: 6 }}>
         {isChampion ? '🏆' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '🎖️'}
       </motion.div>
-      <h2 className="font-arabic font-bold mb-1" style={{ fontSize: 24, color: '#E8C97A', position: 'relative', zIndex: 6 }}>
+      <h2 className="font-arabic font-bold mb-1" style={{ fontSize: 24, color: '#F0E9FF', position: 'relative', zIndex: 6 }}>
         {isChampion ? (lang === 'ar' ? 'بطل الكأس!' : 'Champion!')
           : rank === 2 ? (lang === 'ar' ? 'وصيف البطل' : 'Runner-up')
           : rank === 3 ? (lang === 'ar' ? 'المركز الثالث' : 'Third place')
@@ -918,14 +918,14 @@ function FinishedCard({ finished, lang, onClear }: { finished: any; lang: string
       {finished.prizeCoins > 0 && (
         <div className="rounded-2xl px-5 py-3 mb-4 inline-block"
           style={{
-            background: 'rgba(201,168,76,0.12)',
-            border: '1px solid rgba(201,168,76,0.40)',
+            background: 'rgba(167,139,250,0.12)',
+            border: '1px solid rgba(167,139,250,0.40)',
             position: 'relative', zIndex: 6,
           }}>
-          <p className="font-arabic" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
+          <p className="font-arabic" style={{ fontSize: 11, color: 'rgba(220,210,255,0.55)' }}>
             {lang === 'ar' ? 'أُضيفت إلى رصيدك' : 'Added to your balance'}
           </p>
-          <p className="font-bold font-mono" style={{ fontSize: 26, color: '#E8C97A' }}>
+          <p className="font-bold font-mono" style={{ fontSize: 26, color: '#F0E9FF' }}>
             🪙 +{finished.prizeCoins.toLocaleString()}
           </p>
         </div>
@@ -933,7 +933,7 @@ function FinishedCard({ finished, lang, onClear }: { finished: any; lang: string
       <div style={{ position: 'relative', zIndex: 6 }}>
         <button onClick={onClear}
           className="rounded-xl px-5 py-2 font-arabic font-bold"
-          style={{ background: 'linear-gradient(135deg, #C9A84C, #A07830)', color: '#0E0905', fontSize: 13 }}>
+          style={{ background: 'linear-gradient(135deg, #A78BFA, #A07830)', color: '#0A0814', fontSize: 13 }}>
           {lang === 'ar' ? 'إخفاء' : 'Dismiss'}
         </button>
       </div>
@@ -950,7 +950,7 @@ function PickerRow({ title, options, value, onChange }: {
 }) {
   return (
     <div>
-      <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.55)' }}>{title}</p>
+      <p className="font-arabic mb-1.5" style={{ fontSize: 11.5, color: 'rgba(220,210,255,0.55)' }}>{title}</p>
       <div className="flex gap-2">
         {options.map(o => {
           const sel = value === o.id;
@@ -960,9 +960,9 @@ function PickerRow({ title, options, value, onChange }: {
               className="flex-1 rounded-xl font-arabic font-bold"
               style={{
                 padding: '8px 4px',
-                background: sel ? 'rgba(201,168,76,0.20)' : 'rgba(255,255,255,0.04)',
-                color: sel ? '#E8C97A' : 'rgba(245,230,200,0.55)',
-                border: `1.5px solid ${sel ? 'rgba(201,168,76,0.7)' : 'rgba(255,255,255,0.08)'}`,
+                background: sel ? 'rgba(167,139,250,0.20)' : 'rgba(255,255,255,0.04)',
+                color: sel ? '#F0E9FF' : 'rgba(220,210,255,0.55)',
+                border: `1.5px solid ${sel ? 'rgba(167,139,250,0.7)' : 'rgba(255,255,255,0.08)'}`,
                 fontSize: 12,
               }}>
               <div>{o.label}</div>
@@ -978,9 +978,9 @@ function PickerRow({ title, options, value, onChange }: {
 function PrizeBanner({ label, amount }: { label: string; amount: number }) {
   return (
     <div className="rounded-xl p-3 flex items-center justify-between"
-      style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.30)' }}>
-      <span className="font-arabic" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.7)' }}>🏆 {label}</span>
-      <span className="font-mono font-bold" style={{ fontSize: 18, color: '#E8C97A' }}>
+      style={{ background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.30)' }}>
+      <span className="font-arabic" style={{ fontSize: 11.5, color: 'rgba(220,210,255,0.7)' }}>🏆 {label}</span>
+      <span className="font-mono font-bold" style={{ fontSize: 18, color: '#F0E9FF' }}>
         🪙 {amount.toLocaleString()}
       </span>
     </div>

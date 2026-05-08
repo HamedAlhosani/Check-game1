@@ -247,6 +247,156 @@ function MissionsStrip({ onOpen, lang, profileXp, profileWins, profileGames, pro
   );
 }
 
+// ── Rewards Hub ──────────────────────────────────────────────────────────────
+// All four "small reward" surfaces — Daily Reward, Missions, Wheel, Chests —
+// gathered into one tile grid so the home page reads as one place to check
+// for stuff to claim, instead of four scattered nav-bar pings + an in-card
+// strip. Each tile pulses gold when there's something actionable behind it.
+function RewardsHub({
+  lang, keysCount,
+  onOpenDaily, onOpenMissions, onOpenWheel, onOpenChests,
+  // Used as a refetch trigger for the missions tile.
+  profileXp, profileWins, profileGames, profileStreak,
+}: {
+  lang: string;
+  keysCount: number;
+  onOpenDaily: () => void;
+  onOpenMissions: () => void;
+  onOpenWheel: () => void;
+  onOpenChests: () => void;
+  profileXp: number; profileWins: number; profileGames: number; profileStreak: number;
+}) {
+  const [dailyClaimable, setDailyClaimable] = useState<boolean>(false);
+  const [wheelSpinnable, setWheelSpinnable] = useState<boolean>(false);
+  const [missionsClaimable, setMissionsClaimable] = useState<number>(0);
+
+  useEffect(() => {
+    apiClient.get<{ canClaim: boolean }>('/api/daily/status')
+      .then(r => setDailyClaimable(r.canClaim)).catch(() => {});
+    apiClient.get<{ canSpin: boolean }>('/api/wheel/status')
+      .then(r => setWheelSpinnable(r.canSpin)).catch(() => {});
+  }, []);
+
+  // Missions claimable count refreshes whenever any profile activity changes.
+  useEffect(() => {
+    apiClient.get<{
+      missions: { items: { complete: boolean; claimed: boolean }[] };
+      achievements: { complete: boolean; claimed: boolean }[];
+      levelRewards: { reached: boolean; claimed: boolean }[];
+    }>('/api/progression').then(r => {
+      const c =
+        r.missions.items.filter(m => m.complete && !m.claimed).length +
+        r.achievements.filter(x => x.complete && !x.claimed).length +
+        r.levelRewards.filter(x => x.reached && !x.claimed).length;
+      setMissionsClaimable(c);
+    }).catch(() => {});
+  }, [profileXp, profileWins, profileGames, profileStreak]);
+
+  const tiles: {
+    key: string;
+    icon: string;
+    label: string;
+    onClick: () => void;
+    hot: boolean;
+    badge?: { text: string; tone: 'red' | 'gold' | 'purple' };
+  }[] = [
+    {
+      key: 'daily',
+      icon: dailyClaimable ? '🎁' : '📦',
+      label: lang === 'ar' ? 'الهدية اليومية' : 'Daily',
+      onClick: onOpenDaily,
+      hot: dailyClaimable,
+      badge: dailyClaimable ? { text: lang === 'ar' ? 'جاهزة' : 'ready', tone: 'red' } : undefined,
+    },
+    {
+      key: 'missions',
+      icon: '🎯',
+      label: lang === 'ar' ? 'المهام' : 'Missions',
+      onClick: onOpenMissions,
+      hot: missionsClaimable > 0,
+      badge: missionsClaimable > 0
+        ? { text: `${missionsClaimable}`, tone: 'red' }
+        : undefined,
+    },
+    {
+      key: 'wheel',
+      icon: wheelSpinnable ? '🎡' : '🎰',
+      label: lang === 'ar' ? 'عجلة الحظ' : 'Wheel',
+      onClick: onOpenWheel,
+      hot: wheelSpinnable,
+      badge: wheelSpinnable ? { text: lang === 'ar' ? 'لفّة' : 'spin', tone: 'gold' } : undefined,
+    },
+    {
+      key: 'chests',
+      icon: '🎁',
+      label: lang === 'ar' ? 'الصناديق' : 'Chests',
+      onClick: onOpenChests,
+      hot: keysCount > 0,
+      badge: keysCount > 0 ? { text: `${keysCount} 🗝️`, tone: 'purple' } : undefined,
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5">
+      {tiles.map(t => (
+        <motion.button
+          key={t.key}
+          whileHover={{ scale: 1.03, y: -2 }}
+          whileTap={{ scale: 0.96 }}
+          onClick={t.onClick}
+          className="relative rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all"
+          style={{
+            padding: '14px 10px 12px',
+            background: t.hot
+              ? 'linear-gradient(160deg, rgba(232,201,122,0.18) 0%, rgba(40,28,12,0.95) 100%)'
+              : 'linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(20,16,10,0.85) 100%)',
+            border: `1.5px solid ${t.hot ? 'rgba(232,201,122,0.55)' : 'rgba(201,168,76,0.18)'}`,
+            boxShadow: t.hot
+              ? '0 4px 16px rgba(0,0,0,0.45), 0 0 18px rgba(232,201,122,0.25)'
+              : '0 2px 10px rgba(0,0,0,0.30)',
+            cursor: 'pointer',
+          }}>
+          <div
+            className="rounded-xl flex items-center justify-center"
+            style={{
+              width: 44, height: 44,
+              background: t.hot
+                ? 'radial-gradient(circle at 30% 30%, rgba(255,224,122,0.45), rgba(168,124,58,0.20) 70%)'
+                : 'rgba(0,0,0,0.30)',
+              border: `1px solid ${t.hot ? 'rgba(232,201,122,0.55)' : 'rgba(255,255,255,0.06)'}`,
+              fontSize: 24,
+            }}>
+            {t.icon}
+          </div>
+          <p className="font-arabic font-bold"
+            style={{ fontSize: 12, color: t.hot ? '#E8C97A' : 'rgba(245,230,200,0.78)', lineHeight: 1.1 }}>
+            {t.label}
+          </p>
+          {t.badge && (
+            <motion.span
+              animate={t.badge.tone === 'red' ? { scale: [1, 1.08, 1] } : {}}
+              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+              className="absolute rounded-full font-bold flex items-center justify-center"
+              style={{
+                top: 6, insetInlineEnd: 6,
+                fontSize: 9, lineHeight: 1,
+                padding: '3px 6px',
+                background:
+                  t.badge.tone === 'red'    ? '#E04030' :
+                  t.badge.tone === 'gold'   ? '#E8C97A' :
+                                              '#C495FF',
+                color: t.badge.tone === 'gold' ? '#0E0905' : '#fff',
+                border: '1.5px solid #14100A',
+              }}>
+              {t.badge.text}
+            </motion.span>
+          )}
+        </motion.button>
+      ))}
+    </div>
+  );
+}
+
 // ── Avatar ────────────────────────────────────────────────────────────────────
 const AV_COLORS = ['#C9A84C','#4A90D9','#50C878','#E74C3C','#9B59B6','#E67E22','#1ABC9C','#E91E63'];
 const HOME_AVATAR_EMOJIS: Record<string, string> = {
@@ -1255,32 +1405,6 @@ export function HomePage() {
         </Link>
         <div className="flex items-center gap-2">
           <LangToggle />
-          {/* Daily reward — moved out of the games area into the top nav */}
-          <DailyRewardNavButton onOpen={() => setShowDaily(true)} lang={lang} />
-          <WheelNavButton onOpen={() => setShowWheel(true)} lang={lang} />
-          {/* Chests button — shows key count */}
-          <motion.button
-            whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.92 }}
-            onClick={() => setShowChests(true)}
-            className="relative rounded-xl flex items-center justify-center"
-            title={lang === 'ar' ? 'صناديق الكنز' : 'Treasure Chests'}
-            style={{
-              width: 36, height: 34,
-              background: ((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.18)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.55)' : 'rgba(255,255,255,0.08)'}`,
-              boxShadow: ((profile as any)?.keys || 0) > 0 ? '0 0 14px rgba(196,149,255,0.30)' : 'none',
-              cursor: 'pointer',
-            }}>
-            <span style={{ fontSize: 18, lineHeight: 1 }}>🎁</span>
-            {((profile as any)?.keys || 0) > 0 && (
-              <span className="absolute rounded-full font-bold"
-                style={{
-                  top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px',
-                  background: '#C495FF', color: '#fff', fontSize: 9, lineHeight: '16px',
-                  border: '1.5px solid #14100A',
-                }}>{(profile as any)?.keys || 0}</span>
-            )}
-          </motion.button>
           {/* Coins */}
           <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5"
             style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)' }}>
@@ -1355,15 +1479,21 @@ export function HomePage() {
                 <XpBar xp={xp} lang={lang} onClick={() => { setProgressInitialTab('levels'); setShowProgress(true); }}/>
               </div>
             </div>
-
-            {/* Missions strip — sits below the XP bar, full width */}
-            <MissionsStrip
-              onOpen={() => { setProgressInitialTab('missions'); setShowProgress(true); }}
-              lang={lang}
-              profileXp={xp} profileWins={wins} profileGames={games}
-              profileStreak={profile.stats?.currentStreak ?? 0}
-            />
           </motion.div>
+        )}
+
+        {/* Rewards Hub — Daily / Missions / Wheel / Chests in one place */}
+        {profile && !currentRoom && (
+          <RewardsHub
+            lang={lang}
+            keysCount={(profile as any)?.keys || 0}
+            onOpenDaily={() => setShowDaily(true)}
+            onOpenMissions={() => { setProgressInitialTab('missions'); setShowProgress(true); }}
+            onOpenWheel={() => setShowWheel(true)}
+            onOpenChests={() => setShowChests(true)}
+            profileXp={xp} profileWins={wins} profileGames={games}
+            profileStreak={profile.stats?.currentStreak ?? 0}
+          />
         )}
 
         {/* Tournament strip — prominent CTA below the profile card */}

@@ -247,6 +247,392 @@ function MissionsStrip({ onOpen, lang, profileXp, profileWins, profileGames, pro
   );
 }
 
+// Single small stat chip used inside the profile banner.
+function StatChip({ icon, value, label }: { icon: string; value: number; label: string }) {
+  return (
+    <div className="rounded-xl flex flex-col items-center justify-center"
+      style={{
+        minWidth: 52, padding: '4px 8px',
+        background: 'rgba(0,0,0,0.30)',
+        border: '1px solid rgba(201,168,76,0.20)',
+      }}>
+      <span style={{ fontSize: 12, lineHeight: 1 }}>{icon}</span>
+      <span className="font-bold" style={{ fontSize: 13, color: '#E8C97A', lineHeight: 1.05, marginTop: 1 }}>
+        {value}
+      </span>
+      <span className="font-arabic" style={{ fontSize: 8.5, color: 'rgba(245,230,200,0.45)', lineHeight: 1, marginTop: 1 }}>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+// ── Quick-actions triad ─────────────────────────────────────────────────────
+// Replaces the old TournamentStrip + Rules/Clans button row with a single
+// 3-tile band. New shape: square cards stacked vertically (icon on top,
+// title centered) instead of a horizontal chevron strip. Tournaments
+// shows a pulsing "live" pip when the user has an active bracket.
+function QuickActionsTriad({
+  lang, clanTag, onOpenTournaments, onOpenClans, onOpenRules,
+}: {
+  lang: string;
+  clanTag?: string | null;
+  onOpenTournaments: () => void;
+  onOpenClans: () => void;
+  onOpenRules: () => void;
+}) {
+  const tournamentState = useTournamentStore(s => s.state);
+  const tournamentLive = !!tournamentState && tournamentState.status === 'in_progress';
+
+  const tiles: {
+    key: string;
+    icon: string;
+    title: string;
+    sub: string;
+    onClick: () => void;
+    live?: boolean;
+    accent: 'gold' | 'purple' | 'sand';
+  }[] = [
+    {
+      key: 'tournaments',
+      icon: '🏆',
+      title: lang === 'ar' ? 'البطولات' : 'Tournaments',
+      sub: tournamentLive
+        ? (lang === 'ar' ? 'بطولة جارية' : 'Live now')
+        : (lang === 'ar' ? 'اربح جوائز' : 'Win prizes'),
+      onClick: onOpenTournaments,
+      live: tournamentLive,
+      accent: 'gold',
+    },
+    {
+      key: 'clans',
+      icon: '🏰',
+      title: clanTag
+        ? (lang === 'ar' ? `[${clanTag}]` : `[${clanTag}]`)
+        : (lang === 'ar' ? 'القبائل' : 'Clans'),
+      sub: clanTag
+        ? (lang === 'ar' ? 'قبيلتك' : 'Your clan')
+        : (lang === 'ar' ? 'انضم لقبيلة' : 'Join one'),
+      onClick: onOpenClans,
+      accent: 'purple',
+    },
+    {
+      key: 'rules',
+      icon: '📖',
+      title: lang === 'ar' ? 'القوانين' : 'Rules',
+      sub: lang === 'ar' ? 'كيف تلعب' : 'How to play',
+      onClick: onOpenRules,
+      accent: 'sand',
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-2.5 mb-5">
+      {tiles.map(t => {
+        const accent =
+          t.accent === 'gold'   ? { bg1: 'rgba(232,201,122,0.18)', bg2: 'rgba(120,80,20,0.10)', border: 'rgba(232,201,122,0.55)', text: '#E8C97A', glow: 'rgba(232,201,122,0.25)' } :
+          t.accent === 'purple' ? { bg1: 'rgba(196,149,255,0.16)', bg2: 'rgba(80,40,120,0.10)',  border: 'rgba(196,149,255,0.55)', text: '#C495FF', glow: 'rgba(196,149,255,0.20)' } :
+                                  { bg1: 'rgba(245,230,200,0.10)', bg2: 'rgba(40,28,12,0.85)',   border: 'rgba(201,168,76,0.30)', text: 'rgba(245,230,200,0.85)', glow: 'rgba(0,0,0,0.30)' };
+        return (
+          <motion.button
+            key={t.key}
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={t.onClick}
+            className="relative rounded-2xl flex flex-col items-center justify-center gap-1.5 transition-all"
+            style={{
+              padding: '14px 8px 12px',
+              minHeight: 96,
+              background: `linear-gradient(160deg, ${accent.bg1} 0%, ${accent.bg2} 100%)`,
+              border: `1.5px solid ${accent.border}`,
+              boxShadow: `0 4px 14px rgba(0,0,0,0.40), 0 0 18px ${accent.glow}`,
+              cursor: 'pointer',
+            }}>
+            <div className="rounded-2xl flex items-center justify-center"
+              style={{
+                width: 44, height: 44,
+                background: `radial-gradient(circle at 30% 30%, ${accent.bg1.replace('0.16','0.45').replace('0.18','0.45').replace('0.10','0.45')}, transparent 70%)`,
+                border: `1px solid ${accent.border}`,
+                fontSize: 24,
+              }}>
+              {t.icon}
+            </div>
+            <p className="font-arabic font-bold leading-none"
+              style={{ fontSize: 12.5, color: accent.text }}>
+              {t.title}
+            </p>
+            <p className="font-arabic leading-none"
+              style={{ fontSize: 10, color: 'rgba(245,230,200,0.5)' }}>
+              {t.sub}
+            </p>
+            {t.live && (
+              <motion.span
+                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.5, 1] }}
+                transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute rounded-full"
+                style={{ top: 8, insetInlineEnd: 8, width: 8, height: 8, background: '#E04030', boxShadow: '0 0 6px #E04030' }}/>
+            )}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Unified Rewards launcher ────────────────────────────────────────────────
+// One button at the top right of the nav that bundles every "small reward"
+// surface (Daily, Missions, Wheel, Chests) behind a single tap. The button
+// shows a single combined badge — total number of things waiting to be
+// claimed — so the player knows whether to open it without having to.
+function RewardsLauncher({
+  lang, keysCount,
+  onOpenDaily, onOpenMissions, onOpenWheel, onOpenChests,
+  // Used as a refetch trigger for missions.
+  profileXp, profileWins, profileGames, profileStreak,
+}: {
+  lang: string;
+  keysCount: number;
+  onOpenDaily: () => void;
+  onOpenMissions: () => void;
+  onOpenWheel: () => void;
+  onOpenChests: () => void;
+  profileXp: number; profileWins: number; profileGames: number; profileStreak: number;
+}) {
+  const [open, setOpen] = useState(false);
+  const [dailyClaimable, setDailyClaimable] = useState(false);
+  const [wheelSpinnable, setWheelSpinnable] = useState(false);
+  const [missionsClaimable, setMissionsClaimable] = useState(0);
+
+  useEffect(() => {
+    apiClient.get<{ canClaim: boolean }>('/api/daily/status')
+      .then(r => setDailyClaimable(r.canClaim)).catch(() => {});
+    apiClient.get<{ canSpin: boolean }>('/api/wheel/status')
+      .then(r => setWheelSpinnable(r.canSpin)).catch(() => {});
+  }, [open]);
+
+  useEffect(() => {
+    apiClient.get<{
+      missions: { items: { complete: boolean; claimed: boolean }[] };
+      achievements: { complete: boolean; claimed: boolean }[];
+      levelRewards: { reached: boolean; claimed: boolean }[];
+    }>('/api/progression').then(r => {
+      const c =
+        r.missions.items.filter(m => m.complete && !m.claimed).length +
+        r.achievements.filter(x => x.complete && !x.claimed).length +
+        r.levelRewards.filter(x => x.reached && !x.claimed).length;
+      setMissionsClaimable(c);
+    }).catch(() => {});
+  }, [profileXp, profileWins, profileGames, profileStreak, open]);
+
+  const totalReady =
+    (dailyClaimable ? 1 : 0) +
+    (wheelSpinnable ? 1 : 0) +
+    missionsClaimable +
+    keysCount;
+  const hot = totalReady > 0;
+
+  function fire(fn: () => void) {
+    setOpen(false);
+    // Defer one tick so the panel exit animation can start before the
+    // target modal mounts on top.
+    requestAnimationFrame(() => fn());
+  }
+
+  const rows: {
+    key: string;
+    icon: string;
+    title: string;
+    sub: string;
+    onClick: () => void;
+    hot: boolean;
+    badge?: { text: string; tone: 'red' | 'gold' | 'purple' };
+  }[] = [
+    {
+      key: 'daily',
+      icon: '🎁',
+      title: lang === 'ar' ? 'الهدية اليومية' : 'Daily Reward',
+      sub: dailyClaimable
+        ? (lang === 'ar' ? 'هديتك جاهزة الحين' : 'Your gift is waiting')
+        : (lang === 'ar' ? 'ارجع غداً' : 'Come back tomorrow'),
+      onClick: () => fire(onOpenDaily),
+      hot: dailyClaimable,
+      badge: dailyClaimable ? { text: lang === 'ar' ? 'جاهزة' : 'ready', tone: 'red' } : undefined,
+    },
+    {
+      key: 'missions',
+      icon: '🎯',
+      title: lang === 'ar' ? 'المهام والإنجازات' : 'Missions & Achievements',
+      sub: missionsClaimable > 0
+        ? (lang === 'ar' ? `${missionsClaimable} جاهزة للاستلام` : `${missionsClaimable} ready to claim`)
+        : (lang === 'ar' ? 'العب لتقدّم المهام' : 'Play to advance missions'),
+      onClick: () => fire(onOpenMissions),
+      hot: missionsClaimable > 0,
+      badge: missionsClaimable > 0
+        ? { text: `${missionsClaimable}`, tone: 'red' } : undefined,
+    },
+    {
+      key: 'wheel',
+      icon: '🎡',
+      title: lang === 'ar' ? 'عجلة الحظ' : 'Lucky Wheel',
+      sub: wheelSpinnable
+        ? (lang === 'ar' ? 'لفّتك مجانية متاحة' : 'Free spin available')
+        : (lang === 'ar' ? 'انتهت اللفّة، انتظر التالية' : 'No spins right now'),
+      onClick: () => fire(onOpenWheel),
+      hot: wheelSpinnable,
+      badge: wheelSpinnable ? { text: lang === 'ar' ? 'لفّة' : 'spin', tone: 'gold' } : undefined,
+    },
+    {
+      key: 'chests',
+      icon: '🗝️',
+      title: lang === 'ar' ? 'صناديق الكنز' : 'Treasure Chests',
+      sub: keysCount > 0
+        ? (lang === 'ar' ? `معك ${keysCount} مفتاح` : `${keysCount} key${keysCount > 1 ? 's' : ''}`)
+        : (lang === 'ar' ? 'اربح مفاتيح من الألعاب' : 'Win keys from games'),
+      onClick: () => fire(onOpenChests),
+      hot: keysCount > 0,
+      badge: keysCount > 0 ? { text: `${keysCount}`, tone: 'purple' } : undefined,
+    },
+  ];
+
+  return (
+    <>
+      {/* Trigger — a single coin-shaped button. Pulse-glows when something
+          is waiting; otherwise sits quietly in the nav row. */}
+      <motion.button
+        whileHover={{ scale: 1.06 }} whileTap={{ scale: 0.93 }}
+        onClick={() => setOpen(o => !o)}
+        className="relative rounded-full flex items-center justify-center"
+        title={lang === 'ar' ? 'الجوائز' : 'Rewards'}
+        aria-label={lang === 'ar' ? 'الجوائز' : 'Rewards'}
+        style={{
+          width: 38, height: 38,
+          background: hot
+            ? 'radial-gradient(circle at 30% 30%, rgba(255,224,122,0.45), rgba(168,124,58,0.55) 70%)'
+            : 'radial-gradient(circle at 30% 30%, rgba(201,168,76,0.20), rgba(60,40,16,0.45) 70%)',
+          border: `1.5px solid ${hot ? 'rgba(255,224,122,0.85)' : 'rgba(201,168,76,0.40)'}`,
+          boxShadow: hot
+            ? '0 0 18px rgba(255,224,122,0.55), inset 0 -2px 6px rgba(0,0,0,0.45)'
+            : 'inset 0 -2px 6px rgba(0,0,0,0.45)',
+          cursor: 'pointer',
+        }}>
+        <span style={{ fontSize: 20, lineHeight: 1 }}>🎁</span>
+        {totalReady > 0 && (
+          <motion.span
+            animate={{ scale: [1, 1.10, 1] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute rounded-full font-bold flex items-center justify-center"
+            style={{
+              top: -4, insetInlineEnd: -4, minWidth: 18, height: 18, padding: '0 5px',
+              background: '#E04030', color: '#fff', fontSize: 10, lineHeight: 1,
+              border: '2px solid #14100A',
+            }}>
+            {totalReady}
+          </motion.span>
+        )}
+      </motion.button>
+
+      {/* Panel */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="rl-bg"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[55] flex items-start justify-center p-3"
+            style={{ background: 'rgba(8,4,0,0.70)', backdropFilter: 'blur(6px)' }}
+            onClick={() => setOpen(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.92, y: -18, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: -10, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+              onClick={e => e.stopPropagation()}
+              className="rounded-[28px] w-full"
+              style={{
+                background: 'linear-gradient(170deg, rgba(40,28,12,0.98) 0%, rgba(14,9,5,0.98) 100%)',
+                border: '1.5px solid rgba(201,168,76,0.35)',
+                boxShadow: '0 30px 80px rgba(0,0,0,0.85), 0 0 60px rgba(201,168,76,0.22)',
+                maxWidth: 460,
+                marginTop: 60,
+                padding: 16,
+              }}>
+              <div className="flex items-center justify-between mb-3 px-1">
+                <h3 className="font-arabic font-bold flex items-center gap-2"
+                  style={{ fontSize: 15, color: '#E8C97A' }}>
+                  <span style={{ fontSize: 18 }}>🎁</span>
+                  {lang === 'ar' ? 'مركز الجوائز' : 'Rewards'}
+                </h3>
+                <button onClick={() => setOpen(false)}
+                  className="text-sand/40 hover:text-sand text-xl w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white/5"
+                  aria-label={lang === 'ar' ? 'إغلاق' : 'Close'}>×</button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                {rows.map(r => (
+                  <motion.button
+                    key={r.key}
+                    whileHover={{ x: lang === 'ar' ? -3 : 3 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={r.onClick}
+                    className="rounded-2xl flex items-center gap-3 px-3 py-3 text-start transition-all"
+                    style={{
+                      background: r.hot
+                        ? 'linear-gradient(90deg, rgba(232,201,122,0.20) 0%, rgba(40,28,12,0.85) 100%)'
+                        : 'linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(20,16,10,0.85) 100%)',
+                      border: `1.5px solid ${r.hot ? 'rgba(232,201,122,0.55)' : 'rgba(201,168,76,0.18)'}`,
+                      boxShadow: r.hot ? '0 0 16px rgba(232,201,122,0.20)' : 'none',
+                      cursor: 'pointer',
+                    }}>
+                    <div className="rounded-2xl flex items-center justify-center shrink-0"
+                      style={{
+                        width: 48, height: 48,
+                        background: r.hot
+                          ? 'radial-gradient(circle at 30% 30%, rgba(255,224,122,0.45), rgba(168,124,58,0.20) 70%)'
+                          : 'rgba(0,0,0,0.30)',
+                        border: `1px solid ${r.hot ? 'rgba(232,201,122,0.55)' : 'rgba(255,255,255,0.06)'}`,
+                        fontSize: 24,
+                      }}>
+                      {r.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-arabic font-bold truncate"
+                          style={{ fontSize: 13, color: r.hot ? '#E8C97A' : 'rgba(232,201,122,0.85)' }}>
+                          {r.title}
+                        </p>
+                        {r.badge && (
+                          <span className="rounded-full font-bold flex items-center justify-center"
+                            style={{
+                              fontSize: 9, lineHeight: 1, padding: '3px 6px',
+                              background:
+                                r.badge.tone === 'red'    ? '#E04030' :
+                                r.badge.tone === 'gold'   ? '#E8C97A' :
+                                                            '#C495FF',
+                              color: r.badge.tone === 'gold' ? '#0E0905' : '#fff',
+                            }}>
+                            {r.badge.text}
+                          </span>
+                        )}
+                      </div>
+                      <p className="font-arabic mt-0.5 truncate"
+                        style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
+                        {r.sub}
+                      </p>
+                    </div>
+                    <span className="shrink-0" style={{
+                      fontSize: 18, color: r.hot ? '#E8C97A' : 'rgba(245,230,200,0.45)',
+                    }}>{lang === 'ar' ? '‹' : '›'}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
 // ── Rewards Hub ──────────────────────────────────────────────────────────────
 // All four "small reward" surfaces — Daily Reward, Missions, Wheel, Chests —
 // gathered into one tile grid so the home page reads as one place to check
@@ -1405,6 +1791,20 @@ export function HomePage() {
         </Link>
         <div className="flex items-center gap-2">
           <LangToggle />
+          {/* Unified rewards launcher — bundles Daily / Missions / Wheel /
+              Chests behind a single tap */}
+          {profile && (
+            <RewardsLauncher
+              lang={lang}
+              keysCount={(profile as any)?.keys || 0}
+              onOpenDaily={() => setShowDaily(true)}
+              onOpenMissions={() => { setProgressInitialTab('missions'); setShowProgress(true); }}
+              onOpenWheel={() => setShowWheel(true)}
+              onOpenChests={() => setShowChests(true)}
+              profileXp={xp} profileWins={wins} profileGames={games}
+              profileStreak={profile.stats?.currentStreak ?? 0}
+            />
+          )}
           {/* Coins */}
           <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5"
             style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)' }}>
@@ -1442,96 +1842,83 @@ export function HomePage() {
 
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 16px 40px' }}>
 
-        {/* ── Profile card ── */}
+        {/* ── Profile banner ── New shape: a wide pill banner with the
+            avatar set in a circular medallion on the leading edge, name
+            + title beside it, then three stat chips (W / G / 🔥) on the
+            trailing edge, and the XP bar running flush along the
+            bottom. Different proportions from the old square card —
+            slimmer top-to-bottom, cleaner left-to-right rhythm. */}
         {profile && (
           <motion.div
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl p-4 mb-5"
-            style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.10) 0%, rgba(16,10,30,0.95) 100%)', border: '1px solid rgba(201,168,76,0.2)', boxShadow: '0 0 24px rgba(201,168,76,0.08)' }}
+            className="relative mb-5 overflow-hidden"
+            style={{
+              borderRadius: '999px 24px 24px 999px',
+              background: 'linear-gradient(95deg, rgba(201,168,76,0.16) 0%, rgba(40,28,12,0.92) 45%, rgba(16,10,5,0.92) 100%)',
+              border: '1.5px solid rgba(201,168,76,0.32)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.45), 0 0 32px rgba(201,168,76,0.12)',
+              padding: '10px 18px 14px 10px',
+            }}
           >
-            <div className="flex items-center gap-4">
-              <Link to="/profile" style={{ textDecoration: 'none' }}>
-                <div className="relative">
+            <div className="flex items-center gap-3">
+              <Link to="/profile" style={{ textDecoration: 'none' }} className="relative shrink-0">
+                <div
+                  className="rounded-full flex items-center justify-center"
+                  style={{
+                    width: 64, height: 64,
+                    background: 'radial-gradient(circle at 30% 30%, rgba(232,201,122,0.45), rgba(60,40,16,0.40) 70%)',
+                    border: '2px solid rgba(232,201,122,0.65)',
+                    boxShadow: '0 0 16px rgba(232,201,122,0.30), inset 0 -3px 8px rgba(0,0,0,0.35)',
+                    padding: 4,
+                  }}>
                   <AvatarCircle id={profile.avatarId} name={profile.displayName} size={52} frameId={(profile.equippedItems as any)?.avatarFrame}/>
-                  <div className="absolute -bottom-0.5 -right-0.5 rounded-full px-1.5"
-                    style={{ background: '#C9A84C', fontSize: 9, color: '#0E0905', fontWeight: 800, lineHeight: '16px' }}>
-                    {level}
-                  </div>
+                </div>
+                <div className="absolute rounded-full font-bold flex items-center justify-center"
+                  style={{
+                    bottom: -2, insetInlineEnd: -2, minWidth: 22, height: 22,
+                    background: 'linear-gradient(135deg, #E8C97A, #8B6914)',
+                    fontSize: 11, color: '#0E0905', fontWeight: 800,
+                    border: '2px solid #14100A',
+                    padding: '0 5px',
+                  }}>
+                  {level}
                 </div>
               </Link>
               <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-2">
-                  <h2 className="font-arabic font-bold truncate" style={{ fontSize: 17, color: '#E8C97A' }}>{profile.displayName}</h2>
-                  <span className="font-arabic" style={{ fontSize: 11, color: 'rgba(201,168,76,0.55)' }}>{levelTitle(level, lang)}</span>
-                </div>
-                <div className="flex gap-4 my-1.5">
-                  <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>
-                    <span style={{ color: '#C9A84C', fontWeight: 700 }}>{wins}</span> {t('wins')}
-                  </span>
-                  <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>
-                    <span style={{ color: '#C9A84C', fontWeight: 700 }}>{games}</span> {t('games')}
-                  </span>
-                  <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>
-                    🔥 <span style={{ color: '#C9A84C', fontWeight: 700 }}>{profile.stats?.currentStreak ?? 0}</span>
-                  </span>
-                </div>
-                <XpBar xp={xp} lang={lang} onClick={() => { setProgressInitialTab('levels'); setShowProgress(true); }}/>
+                <h2 className="font-arabic font-bold truncate" style={{ fontSize: 16, color: '#E8C97A', lineHeight: 1.15 }}>{profile.displayName}</h2>
+                <p className="font-arabic truncate" style={{ fontSize: 10.5, color: 'rgba(201,168,76,0.55)', marginTop: 1 }}>{levelTitle(level, lang)}</p>
               </div>
+              <div className="hidden xs:flex sm:flex flex-row items-stretch gap-1.5 shrink-0">
+                <StatChip icon="🏆" value={wins}  label={t('wins')}/>
+                <StatChip icon="🎮" value={games} label={t('games')}/>
+                <StatChip icon="🔥" value={profile.stats?.currentStreak ?? 0} label={lang === 'ar' ? 'سلسلة' : 'streak'}/>
+              </div>
+            </div>
+            <div className="mt-2.5 flex sm:hidden gap-1.5">
+              <StatChip icon="🏆" value={wins}  label={t('wins')}/>
+              <StatChip icon="🎮" value={games} label={t('games')}/>
+              <StatChip icon="🔥" value={profile.stats?.currentStreak ?? 0} label={lang === 'ar' ? 'سلسلة' : 'streak'}/>
+            </div>
+            <div className="mt-2.5">
+              <XpBar xp={xp} lang={lang} onClick={() => { setProgressInitialTab('levels'); setShowProgress(true); }}/>
             </div>
           </motion.div>
         )}
 
-        {/* Rewards Hub — Daily / Missions / Wheel / Chests in one place */}
+        {/* Quick-actions row — Tournaments / Clans / Rules in three equal
+            hex-cornered tiles, replacing the old chevron strip + side-by-side
+            buttons. New geometry: square-ish tiles with the icon big on top
+            and the label underneath, plus a "live" pulse on Tournaments
+            when one is active. */}
         {profile && !currentRoom && (
-          <RewardsHub
+          <QuickActionsTriad
             lang={lang}
-            keysCount={(profile as any)?.keys || 0}
-            onOpenDaily={() => setShowDaily(true)}
-            onOpenMissions={() => { setProgressInitialTab('missions'); setShowProgress(true); }}
-            onOpenWheel={() => setShowWheel(true)}
-            onOpenChests={() => setShowChests(true)}
-            profileXp={xp} profileWins={wins} profileGames={games}
-            profileStreak={profile.stats?.currentStreak ?? 0}
+            clanTag={profile?.clanTag}
+            onOpenRules={() => setShowRules(true)}
+            onOpenClans={() => { soundService.playClick(); navigate('/clans'); }}
+            onOpenTournaments={() => { soundService.playClick(); navigate('/tournaments'); }}
           />
-        )}
-
-        {/* Tournament strip — prominent CTA below the profile card */}
-        {profile && !currentRoom && (
-          <TournamentStrip lang={lang} onOpen={() => { soundService.playClick(); navigate('/tournaments'); }}/>
-        )}
-
-        {/* Rules + Clans — moved here so they sit right under Tournaments,
-            grouped as the "stuff" band of the home page. */}
-        {profile && !currentRoom && (
-          <div className="mb-5 flex items-center justify-center gap-2.5 flex-wrap">
-            <motion.button
-              whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-              onClick={() => setShowRules(true)}
-              className="font-arabic font-bold rounded-xl px-4 py-2 flex items-center gap-2"
-              style={{
-                background: 'linear-gradient(135deg, rgba(201,168,76,0.18) 0%, rgba(120,80,20,0.12) 100%)',
-                border: '1.5px solid rgba(201,168,76,0.55)',
-                color: '#E8C97A', fontSize: 13,
-                boxShadow: '0 4px 14px rgba(0,0,0,0.35), 0 0 16px rgba(201,168,76,0.2)',
-              }}>
-              📖 {lang === 'ar' ? 'القوانين' : 'Rules'}
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-              onClick={() => { soundService.playClick(); navigate('/clans'); }}
-              className="font-arabic font-bold rounded-xl px-4 py-2 flex items-center gap-2"
-              style={{
-                background: 'linear-gradient(135deg, rgba(196,149,255,0.18) 0%, rgba(120,80,168,0.10) 100%)',
-                border: '1.5px solid rgba(196,149,255,0.55)',
-                color: '#C495FF', fontSize: 13,
-                boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
-              }}>
-              🏰 {lang === 'ar'
-                ? (profile?.clanTag ? `قبيلتي [${profile.clanTag}]` : 'القبائل')
-                : (profile?.clanTag ? `My Clan [${profile.clanTag}]` : 'Clans')}
-            </motion.button>
-          </div>
         )}
 
         {currentRoom ? (

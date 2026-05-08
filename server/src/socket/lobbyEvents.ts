@@ -53,7 +53,8 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
       payload.gameType || 'check',
       equippedFrame,
       payload.maxPlayers || 10,
-      payload.gameMode || 'standard'
+      payload.gameMode || 'standard',
+      !!payload.tutorial
     );
 
     socket.join(room.roomId);

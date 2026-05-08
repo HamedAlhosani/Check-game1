@@ -152,6 +152,9 @@ export interface CreateRoomPayload {
   gameType: import('./game.types').GameType;
   maxPlayers?: number;
   gameMode?: import('./game.types').GameMode;
+  /** Tutorial mode: server skips all auto-timers so the player can read coach
+   *  bubbles at their own pace. Set only by the in-game tutorial launcher. */
+  tutorial?: boolean;
 }
 
 export interface SwapDrawnPayload {

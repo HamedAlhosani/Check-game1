@@ -63,6 +63,9 @@ export interface GameState {
   dealTurnCount: number;
   eliminationScore?: number;
   gameMode?: GameMode;
+  /** Tutorial flag — server-side timers are disabled when true so the
+   *  player can read on-screen coach bubbles at their own pace. */
+  tutorial?: boolean;
 }
 
 export interface RoundScore {

@@ -84,6 +84,7 @@ export function TutorialPage() {
       botDifficulty: 'easy',
       gameType: 'check',
       gameMode: 'quick',
+      tutorial: true,
     });
   };
 

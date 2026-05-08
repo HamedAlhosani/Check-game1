@@ -1378,7 +1378,7 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
       <p className="text-sand/50 font-arabic text-sm mb-4">الورقتان السفليتان</p>
       {me && (
         <div className="flex flex-col items-center gap-3">
-          <TimerBar endAt={gameState.peekPhaseEndAt} maxMs={8000} w={200} />
+          {!gameState.tutorial && <TimerBar endAt={gameState.peekPhaseEndAt} maxMs={8000} w={200} />}
           <div className="rounded-2xl border border-gold/30 bg-white/5 p-5 flex gap-4">
             <PlayingCard card={me.cards[2] ? { ...me.cards[2], isRevealed: true } : null} />
             <PlayingCard card={me.cards[3] ? { ...me.cards[3], isRevealed: true } : null} />
@@ -2030,7 +2030,7 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
         <div className="flex items-stretch gap-1.5 pointer-events-auto flex-wrap">
           <MiniBadge label="راوند" value={gameState.roundNumber} valueColor="#E8C97A" borderColor="rgba(201,168,76,0.3)" big={!isMobile && !isTablet}/>
           <MiniBadge label="لفة" value={lapCount} valueColor={lapCount >= 4 ? '#7AE08A' : '#E8C97A'} borderColor={lapCount >= 4 ? 'rgba(80,200,120,0.5)' : 'rgba(201,168,76,0.3)'} labelColor={lapCount >= 4 ? 'rgba(122,224,138,0.7)' : 'rgba(201,168,76,0.55)'} big={!isMobile && !isTablet}/>
-          <TurnTimerBadge endAt={gameState.turnEndAt} big={!isMobile && !isTablet}/>
+          {!gameState.tutorial && <TurnTimerBadge endAt={gameState.turnEndAt} big={!isMobile && !isTablet}/>}
           {(() => {
             const turnPlayer = gameState.players.find(p => p.uid === gameState.currentTurnUid);
             if (!turnPlayer || (gameState.phase !== 'PLAYING' && gameState.phase !== 'CHECK_CALLED')) return null;
@@ -2905,8 +2905,10 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
 
       {/* Interactive tutorial coach — only mounts when the player launched
           the practice match from the Tutorial page. Reads gameState live
-          and pops a step-by-step bubble for each new teachable moment. */}
-      {!spectator && isTutorialActive() && (
+          and pops a step-by-step bubble for each new teachable moment.
+          Also re-mounts after a refresh thanks to the server-side
+          gameState.tutorial flag persisting across reconnects. */}
+      {!spectator && isTutorialActive(gameState.tutorial) && (
         <TutorialCoach gameState={gameState} meUid={user?.uid ?? null} drawnCard={drawnCard} />
       )}
     </div>

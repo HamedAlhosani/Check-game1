@@ -62,6 +62,10 @@ export class GameEngine {
   // ── Game-mode config ────────────────────────────────────────────────────────
   private eliminationScore: number;
   private gameMode: GameMode;
+  /** Tutorial mode — auto-timers disabled so the player can read on-screen
+   *  coach bubbles without being rushed. Active turns still progress on
+   *  player action; they just never time-out. */
+  private tutorial: boolean;
 
   // ── Replay data — per-round summary captured during scoring ────────────────
   private rounds: MatchRound[] = [];
@@ -73,7 +77,7 @@ export class GameEngine {
     roomId: string,
     players: { uid: string; displayName: string; avatarId: string; isBot: boolean; equippedFrame?: string }[],
     emit: GameEventEmitter,
-    config?: { eliminationScore?: number; gameMode?: GameMode }
+    config?: { eliminationScore?: number; gameMode?: GameMode; tutorial?: boolean }
   ) {
     this.gameId = uuidv4();
     this.roomId = roomId;
@@ -81,6 +85,7 @@ export class GameEngine {
     this.emit = emit;
     this.eliminationScore = config?.eliminationScore ?? 100;
     this.gameMode = config?.gameMode ?? 'standard';
+    this.tutorial = !!config?.tutorial;
 
     this.players = players.map((p, i) => ({
       ...p,
@@ -96,7 +101,10 @@ export class GameEngine {
   start(): void {
     this.dealCards();
     this.phase = 'PEEK_PHASE';
-    this.peekPhaseEndAt = Date.now() + PEEK_DURATION_MS;
+    // Tutorial: leave peekPhaseEndAt null so the client doesn't render a
+    // countdown bar. The phase ends once the player taps the peek bubble's
+    // "فهمت" → onPeekComplete is called for them.
+    this.peekPhaseEndAt = this.tutorial ? null : Date.now() + PEEK_DURATION_MS;
     this.broadcastState();
 
     // Send each player their two bottom cards privately (all cards are face-down now)
@@ -104,8 +112,10 @@ export class GameEngine {
       this.emitToHuman('game:peek_own', { cards: [{ card: p.cards[2], position: 2 }, { card: p.cards[3], position: 3 }] }, p.uid);
     }
 
-    const timer = setTimeout(() => this.endPeekPhase(), PEEK_DURATION_MS);
-    this.timers.push(timer);
+    if (!this.tutorial) {
+      const timer = setTimeout(() => this.endPeekPhase(), PEEK_DURATION_MS);
+      this.timers.push(timer);
+    }
   }
 
   private dealCards(): void {
@@ -147,9 +157,13 @@ export class GameEngine {
     const player = this.activePlayers()[this.currentTurnIndex % this.activePlayers().length];
     if (!player) return;
 
-    this.turnEndAt = Date.now() + TURN_DURATION_MS;
+    // Tutorial: leave turnEndAt null for human turns so no countdown shows
+    // and no smart-auto-play fires. Bot turns still need their normal
+    // safety net or the room hangs forever waiting for them to act.
+    const skipHumanTimer = this.tutorial && !player.isBot;
+    this.turnEndAt = skipHumanTimer ? null : Date.now() + TURN_DURATION_MS;
     this.broadcastState();
-    this.emit('game:turn_start', { uid: player.uid, timeoutMs: TURN_DURATION_MS });
+    this.emit('game:turn_start', { uid: player.uid, timeoutMs: skipHumanTimer ? 0 : TURN_DURATION_MS });
 
     // Bot-specific short safety net. The normal flow drives bots from the
     // socket-layer 400ms poll within ~700ms, but races (a stale decision
@@ -166,13 +180,15 @@ export class GameEngine {
       this.timers.push(botFallback);
     }
 
-    const timer = setTimeout(() => {
-      // Smart auto-play instead of dumb draw-and-burn — uses bot logic so
-      // AFK humans still play sensibly (burn matching from discard, take a
-      // good card from the ground, swap drawn for worst hand card, etc.).
-      this.smartAutoPlay(player.uid);
-    }, TURN_DURATION_MS);
-    this.timers.push(timer);
+    if (!skipHumanTimer) {
+      const timer = setTimeout(() => {
+        // Smart auto-play instead of dumb draw-and-burn — uses bot logic so
+        // AFK humans still play sensibly (burn matching from discard, take a
+        // good card from the ground, swap drawn for worst hand card, etc.).
+        this.smartAutoPlay(player.uid);
+      }, TURN_DURATION_MS);
+      this.timers.push(timer);
+    }
   }
 
   /**
@@ -332,12 +348,14 @@ export class GameEngine {
     this.emitToHuman('game:king_choice', { cards: this.kingChoiceCards }, uid);
     this.broadcastState();
 
-    const timer = setTimeout(() => {
-      if (this.phase === 'KING_CHOICE' && this.specialActionUid === uid) {
-        this.onKingBurn(uid);
-      }
-    }, 20000);
-    this.timers.push(timer);
+    if (!this.tutorial) {
+      const timer = setTimeout(() => {
+        if (this.phase === 'KING_CHOICE' && this.specialActionUid === uid) {
+          this.onKingBurn(uid);
+        }
+      }, 20000);
+      this.timers.push(timer);
+    }
   }
 
   private applyJSpecial(uid: string, jCard: Card): void {
@@ -350,16 +368,18 @@ export class GameEngine {
     this.emit('game:card_discarded', { uid, card: jCard, fromKingPenalty: false });
     this.broadcastState();
 
-    const timer = setTimeout(() => {
-      if (this.phase === 'SPECIAL_J' && this.specialActionUid === uid) {
-        this.specialActionUid = null;
-        this.specialActionType = null;
-        this.pendingSpecialCard = null;
-        this.phase = this.checkCallerId ? 'CHECK_CALLED' : 'PLAYING';
-        this.advanceTurn();
-      }
-    }, SPECIAL_ACTION_TIMEOUT_MS);
-    this.timers.push(timer);
+    if (!this.tutorial) {
+      const timer = setTimeout(() => {
+        if (this.phase === 'SPECIAL_J' && this.specialActionUid === uid) {
+          this.specialActionUid = null;
+          this.specialActionType = null;
+          this.pendingSpecialCard = null;
+          this.phase = this.checkCallerId ? 'CHECK_CALLED' : 'PLAYING';
+          this.advanceTurn();
+        }
+      }, SPECIAL_ACTION_TIMEOUT_MS);
+      this.timers.push(timer);
+    }
   }
 
   private applyQSpecial(uid: string, qCard: Card): void {
@@ -372,16 +392,18 @@ export class GameEngine {
     this.emit('game:card_discarded', { uid, card: qCard, fromKingPenalty: false });
     this.broadcastState();
 
-    const timer = setTimeout(() => {
-      if (this.phase === 'SPECIAL_Q' && this.specialActionUid === uid) {
-        this.specialActionUid = null;
-        this.specialActionType = null;
-        this.pendingSpecialCard = null;
-        this.phase = this.checkCallerId ? 'CHECK_CALLED' : 'PLAYING';
-        this.advanceTurn();
-      }
-    }, SPECIAL_ACTION_TIMEOUT_MS);
-    this.timers.push(timer);
+    if (!this.tutorial) {
+      const timer = setTimeout(() => {
+        if (this.phase === 'SPECIAL_Q' && this.specialActionUid === uid) {
+          this.specialActionUid = null;
+          this.specialActionType = null;
+          this.pendingSpecialCard = null;
+          this.phase = this.checkCallerId ? 'CHECK_CALLED' : 'PLAYING';
+          this.advanceTurn();
+        }
+      }, SPECIAL_ACTION_TIMEOUT_MS);
+      this.timers.push(timer);
+    }
   }
 
   onKingSwap(uid: string, choiceIndex: number, handPosition: number): boolean {
@@ -857,15 +879,17 @@ export class GameEngine {
     this.turnActedUid = null;
     this.dealCards();
     this.phase = 'PEEK_PHASE';
-    this.peekPhaseEndAt = Date.now() + PEEK_DURATION_MS;
+    this.peekPhaseEndAt = this.tutorial ? null : Date.now() + PEEK_DURATION_MS;
     this.broadcastState();
 
     for (const p of this.players.filter(p2 => !p2.isEliminated)) {
       this.emitToHuman('game:peek_own', { cards: [{ card: p.cards[2], position: 2 }, { card: p.cards[3], position: 3 }] }, p.uid);
     }
 
-    const timer = setTimeout(() => this.endPeekPhase(), PEEK_DURATION_MS);
-    this.timers.push(timer);
+    if (!this.tutorial) {
+      const timer = setTimeout(() => this.endPeekPhase(), PEEK_DURATION_MS);
+      this.timers.push(timer);
+    }
   }
 
   private endGame(winnerId: string | null): void {
@@ -940,6 +964,7 @@ export class GameEngine {
       dealTurnCount: this.dealTurnCount,
       eliminationScore: this.eliminationScore,
       gameMode: this.gameMode,
+      tutorial: this.tutorial,
     };
   }
 

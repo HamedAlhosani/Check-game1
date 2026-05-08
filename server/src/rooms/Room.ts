@@ -38,6 +38,9 @@ export class Room {
   gameType: GameType;
   gameMode: GameMode;
   maxPlayers: number;
+  /** When true the GameEngine skips its auto-timers (peek/turn/burn/special)
+   *  so a tutorial player can read coach bubbles at their own pace. */
+  tutorial: boolean = false;
 
   constructor(
     roomId: string,

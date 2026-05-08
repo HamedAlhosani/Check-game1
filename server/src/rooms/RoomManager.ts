@@ -32,10 +32,12 @@ export class RoomManager {
     gameType: GameType = 'check',
     equippedFrame = 'frame_default',
     maxPlayers = 10,
-    gameMode: GameMode = 'standard'
+    gameMode: GameMode = 'standard',
+    tutorial = false
   ): Room {
     const roomId = uuidv4();
     const room = new Room(roomId, name, type, hostUid, hostName, hostAvatar, gameType, equippedFrame, maxPlayers, gameMode);
+    room.tutorial = tutorial;
 
     if (botCount > 0) {
       room.addBots(Math.min(botCount, 10), botDifficulty);
@@ -165,7 +167,7 @@ export class RoomManager {
       }
       default: {
         const eliminationScore = ELIMINATION_SCORE[room.gameMode];
-        const e = new GameEngine(roomId, players, emit, { eliminationScore, gameMode: room.gameMode });
+        const e = new GameEngine(roomId, players, emit, { eliminationScore, gameMode: room.gameMode, tutorial: room.tutorial });
         engine = e;
         const bots = room.players.filter(p => p.isBot)
           .map(p => new BotPlayer(p.uid, p.botDifficulty || 'medium'));

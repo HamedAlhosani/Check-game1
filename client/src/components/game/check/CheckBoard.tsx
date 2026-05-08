@@ -696,7 +696,7 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
 }, samePlayerSeat);
 
 // ─── Mini seat for circular orbit (2×2 real cards) ───────────────────────────
-const MiniSeat = memo(function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob, swapPos, backId, onAvatarClick }: any) {
+const MiniSeat = memo(function MiniSeat({ player, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, isMob, swapPos, backId, onAvatarClick, spectator = false }: any) {
   const isTurn = player.isTurn;
   const isElim = player.isEliminated;
   const w = isMob ? 96 : 118;

@@ -97,3 +97,17 @@
   background-clip: text;
   animation: goldShimmer 4s linear infinite;
 }
+
+/* Mode badge bob — pure CSS so the bouncing 🤖/🌍/🔒 icon on the
+   home Bots/Online/Private card doesn't drive a JS-per-frame repaint.
+   Composited transform only, never touches paint or layout. */
+@keyframes modeBadgeBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+.mode-badge-bob {
+  animation: modeBadgeBob 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mode-badge-bob { animation: none; }
+}

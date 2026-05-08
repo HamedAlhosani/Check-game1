@@ -8,6 +8,7 @@ import { SOCKET_EVENTS } from '@check-game/shared';
 import { roomManager } from '../rooms/RoomManager';
 import { GameEngine } from '../game/GameEngine';
 import { BotPlayer } from '../game/BotPlayer';
+import { notifyFriendsOfStatusChange } from './notifications';
 
 export function setupSocketHandlers(io: Server): void {
   io.on('connection', (socket: AuthenticatedSocket) => {
@@ -25,7 +26,12 @@ export function setupSocketHandlers(io: Server): void {
 
       authenticated = true;
       // Per-user room used to deliver targeted notifications (friend requests, etc.)
-      if (socket.uid) socket.join(`user:${socket.uid}`);
+      if (socket.uid) {
+        const wasOnline = io.sockets.adapter.rooms.get(`user:${socket.uid}`)?.size ?? 0;
+        socket.join(`user:${socket.uid}`);
+        // First socket for this uid → tell friends to refresh online dot
+        if (wasOnline === 0) notifyFriendsOfStatusChange(socket.uid);
+      }
       socket.emit('auth:ok', { uid: socket.uid });
 
       registerLobbyEvents(io, socket);
@@ -36,6 +42,12 @@ export function setupSocketHandlers(io: Server): void {
 
     socket.on('disconnect', () => {
       if (!socket.uid) return;
+      // After this socket leaves, if no other socket holds the user-room
+      // open, the uid just went offline → tell friends.
+      const room = io.sockets.adapter.rooms.get(`user:${socket.uid}`);
+      const remaining = (room?.size ?? 0) - (room?.has(socket.id) ? 1 : 0);
+      if (remaining <= 0) notifyFriendsOfStatusChange(socket.uid);
+
       const roomId = roomManager.getRoomForSocket(socket.id);
       roomManager.removeSocket(socket.id);
       if (!roomId) return;

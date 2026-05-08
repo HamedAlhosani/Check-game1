@@ -29,6 +29,7 @@ const loadHistory       = () => import('./pages/history/HistoryPage');
 const loadCardsPreview  = () => import('./pages/cards-preview/CardsPreviewPage');
 const loadTournaments   = () => import('./pages/tournaments/TournamentsPage');
 const loadClans         = () => import('./pages/clans/ClansPage');
+const loadTutorial      = () => import('./pages/tutorial/TutorialPage');
 
 const RegisterPage      = lazy(() => loadRegister().then(m => ({ default: m.RegisterPage })));
 const ProfilePage       = lazy(() => loadProfile().then(m => ({ default: m.ProfilePage })));
@@ -40,6 +41,7 @@ const HistoryPage       = lazy(() => loadHistory().then(m => ({ default: m.Histo
 const CardsPreviewPage  = lazy(() => loadCardsPreview().then(m => ({ default: m.CardsPreviewPage })));
 const TournamentsPage   = lazy(() => loadTournaments().then(m => ({ default: m.TournamentsPage })));
 const ClansPage         = lazy(() => loadClans().then(m => ({ default: m.ClansPage })));
+const TutorialPage      = lazy(() => loadTutorial().then(m => ({ default: m.TutorialPage })));
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { setUser, setProfile, setLoading } = useAuthStore();
@@ -186,6 +188,7 @@ function PrefetchOnIdle() {
       loadProfile(); loadStore(); loadLeaderboard();
       loadFriends(); loadHistory(); loadCardsPreview();
       loadUserProfile(); loadRegister(); loadTournaments(); loadClans();
+      loadTutorial();
     });
   }, []);
   return null;
@@ -254,6 +257,7 @@ export function App() {
             <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
             <Route path="/tournaments" element={<ProtectedRoute><TournamentsPage /></ProtectedRoute>} />
             <Route path="/clans" element={<ProtectedRoute><ClansPage /></ProtectedRoute>} />
+            <Route path="/tutorial" element={<ProtectedRoute><TutorialPage /></ProtectedRoute>} />
             <Route path="/cards-preview" element={<CardsPreviewPage />} />
             <Route path="*" element={<FallbackRoute />} />
           </Routes>

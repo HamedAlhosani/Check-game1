@@ -13,6 +13,13 @@ export function notifyUser(uid: string, event: string, data: unknown): void {
   ioRef.to(`user:${uid}`).emit(event, data);
 }
 
+/** True if `uid` currently has at least one live socket bound to its user-room. */
+export function isUidOnline(uid: string): boolean {
+  if (!ioRef) return false;
+  const room = ioRef.sockets.adapter.rooms.get(`user:${uid}`);
+  return !!room && room.size > 0;
+}
+
 /**
  * Tell every friend of `uid` that this user's friend-list-relevant state
  * changed (currently: started or finished a game). Friends pages re-fetch

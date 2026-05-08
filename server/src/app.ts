@@ -45,7 +45,7 @@ import {
   inviteToClan, declineInvite, acceptInvite,
   kickMember, setRole, transferLeader,
 } from './services/clanService';
-import { notifyUser } from './socket/notifications';
+import { notifyUser, isUidOnline } from './socket/notifications';
 import { roomManager } from './rooms/RoomManager';
 
 const app = express();
@@ -672,6 +672,7 @@ app.get('/api/friends', requireAuth, wrap(async (req, res) => {
   const enriched = friends.map(f => ({
     ...f,
     inGame: roomManager.getCurrentGameForUid(f.uid),
+    online: isUidOnline(f.uid),
   }));
   res.json(enriched);
 }));

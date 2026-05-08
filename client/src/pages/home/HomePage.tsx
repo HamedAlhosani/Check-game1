@@ -1255,13 +1255,14 @@ function GiantPlayingCard({ mode, children }: { mode: GameMode; children: React.
       className="relative overflow-hidden"
       style={{
         // Glass slab with the mode accent providing a soft tinted halo.
+        // Solid gradient — no backdrop-filter (per perf prefs: blurring a
+        // backdrop while a child icon bobs forces a full-card repaint every
+        // frame and was the main lag source on the Bots/Online/Private card).
         background: `
           radial-gradient(ellipse 100% 60% at 50% 0%, ${t.glow} 0%, transparent 55%),
-          linear-gradient(160deg, rgba(40,28,12,0.55) 0%, rgba(14,9,5,0.55) 100%)
+          linear-gradient(160deg, #2A1C0E 0%, #0E0905 100%)
         `,
         border: `1.5px solid ${t.accent}66`,
-        backdropFilter: 'blur(16px) saturate(120%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(120%)',
         boxShadow: `0 18px 44px rgba(0,0,0,0.55), 0 0 36px ${t.glow}, inset 0 1px 0 rgba(255,255,255,0.06)`,
         // Polygon-cut corners — the new shape language across the app.
         clipPath:
@@ -1405,21 +1406,21 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
           run normally inside GiantPlayingCard. */}
       <div>
         <GiantPlayingCard mode={mode} key={mode}>
-          {/* Mode badge + title */}
+          {/* Mode badge + title — pure CSS bob (no framer-motion / no JS
+              per frame) so the icon doesn't trigger a parent repaint cascade. */}
           <div className="flex flex-col items-center mb-5">
-            <motion.div
-              animate={{ y: [0, -3, 0] }}
-              transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-              className="rounded-full flex items-center justify-center mb-3"
+            <div
+              className="rounded-full flex items-center justify-center mb-3 mode-badge-bob"
               style={{
                 width: 78, height: 78,
                 background: `radial-gradient(circle at 32% 28%, rgba(255,255,255,0.25), transparent 55%), ${theme.bg2}`,
                 border: `2px solid ${theme.accent}`,
                 boxShadow: `0 0 26px ${theme.glow}, inset 0 -10px 22px rgba(0,0,0,0.5)`,
                 fontSize: 38, lineHeight: 1,
+                willChange: 'transform',
               }}>
               {theme.icon}
-            </motion.div>
+            </div>
             <p className="font-arabic font-bold" style={{ fontSize: 24, color: '#fff', textShadow: `0 2px 14px ${theme.glow}` }}>
               {theme.label[lang === 'ar' ? 'ar' : 'en']}
             </p>
@@ -1963,11 +1964,11 @@ export function HomePage() {
               onClick={() => { soundService.playClick(); navigate('/clans'); }}
             />
             <BentoTile
-              icon="📖"
-              title={lang === 'ar' ? 'القوانين' : 'Rules'}
-              sub={lang === 'ar' ? 'كيف تلعب' : 'How to play'}
+              icon="🎓"
+              title={lang === 'ar' ? 'تعلم اللعبة' : 'Learn'}
+              sub={lang === 'ar' ? 'دليل شامل' : 'Full guide'}
               accent="green"
-              onClick={() => setShowRules(true)}
+              onClick={() => { soundService.playClick(); navigate('/tutorial'); }}
             />
           </div>
         )}

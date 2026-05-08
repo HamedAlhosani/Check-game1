@@ -29,6 +29,8 @@ interface FriendInfo {
   wins?: number;
   /** Set when the friend is in a public match — drives the "Watch" handle. */
   inGame?: { gameId: string; gameType: string } | null;
+  /** True if the friend currently has at least one live socket. */
+  online?: boolean;
 }
 
 type Tab = 'friends' | 'requests' | 'add';
@@ -379,11 +381,27 @@ function FriendCard({ friend, busy, actionLabel, actionStyle, onAction, lang }: 
           {AVATAR_EMOJIS[friend.avatarId] || '👤'}
         </div>
         <FrameRing size={44} frameId={(friend as any).equippedFrame} />
+        {/* Presence dot — green = online, gray = offline */}
+        <span
+          aria-label={friend.online ? (lang === 'ar' ? 'متصل' : 'online') : (lang === 'ar' ? 'غير متصل' : 'offline')}
+          style={{
+            position: 'absolute', right: -1, bottom: -1,
+            width: 12, height: 12, borderRadius: '50%',
+            background: friend.online ? '#3CCB7F' : '#6B6B6B',
+            border: '2px solid #100A05',
+            boxShadow: friend.online ? '0 0 6px rgba(60,203,127,0.7)' : 'none',
+          }}
+        />
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-arabic font-bold truncate" style={{ color: '#FBF3DB', fontSize: 15 }}>{friend.displayName}</p>
         <div className="flex items-center gap-3 mt-0.5">
-          <span className="font-arabic text-xs" style={{ color: 'rgba(251,243,219,0.3)', direction: 'ltr' }}>{friend.username}</span>
+          <span className="font-arabic text-xs" style={{
+            color: friend.online ? 'rgba(60,203,127,0.85)' : 'rgba(251,243,219,0.3)',
+            fontWeight: friend.online ? 600 : 400,
+          }}>
+            {friend.online ? (lang === 'ar' ? '● متصل' : '● online') : (lang === 'ar' ? 'غير متصل' : 'offline')}
+          </span>
           <span className="font-arabic text-xs" style={{ color: 'rgba(229,188,124,0.5)' }}>{lang === 'ar' ? 'لv' : 'Lv'}{friend.level}</span>
           {friend.wins !== undefined && <span className="font-arabic text-xs" style={{ color: 'rgba(251,243,219,0.3)' }}>🏆 {friend.wins}</span>}
         </div>

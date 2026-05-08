@@ -14,6 +14,7 @@ import { CharacterArt } from '../../shared/CharacterArt';
 import { RoundStartCinematic, ReshuffleAnimation } from './GameCinematics';
 import { RulesModal } from '../../shared/RulesModal';
 import { TutorialCoach, isTutorialActive } from './TutorialCoach';
+import { CheckWinShareModal, ShareOpponent } from './CheckWinShareModal';
 import { ProfileModal } from '../../shared/ProfileModal';
 
 interface Props { gameId: string; roomId: string; gameState: GameState; spectator?: boolean; }
@@ -933,6 +934,14 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
   const peekMinTimerRef = useRef<number | null>(null);
   const [showAfk, setShowAfk] = useState(false);
   const [roundScoreData, setRoundScoreData] = useState<any>(null);
+  // Sticks around after the round-over modal auto-closes — driven by the
+  // user explicitly tapping "شارك" in the scoreboard.
+  const [shareData, setShareData] = useState<{
+    callerName: string;
+    callerCumulative: number;
+    opponents: ShareOpponent[];
+    roundNumber: number;
+  } | null>(null);
   const [kingChoiceCards, setKingChoiceCards] = useState<Card[] | null>(null);
   const [kingSelectedIdx, setKingSelectedIdx] = useState<number | null>(null);
   const [pendingBurnPos, setPendingBurnPos] = useState<number | null>(null);
@@ -2356,6 +2365,45 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
                   );
                 })}
               </div>
+              {/* Share-your-CHECK button: shows only when the local player
+                  called CHECK and was the alone-lowest hand (clean win).
+                  Captures the data into shareData so the share modal stays
+                  open even after the round-over modal auto-closes. */}
+              {roundScoreData.checkOutcome === 'win'
+                && roundScoreData.checkCallerId === user?.uid && (
+                <button
+                  onClick={() => {
+                    soundService.playClick();
+                    const opponents: ShareOpponent[] = gameState.players
+                      .filter(p => p.uid !== user?.uid && !p.isEliminated)
+                      .map(p => ({
+                        uid: p.uid,
+                        displayName: p.displayName,
+                        handSum: roundScoreData.scores?.[p.uid] ?? 0,
+                        cumulative: roundScoreData.cumulative?.[p.uid] ?? p.cumulativeScore,
+                      }));
+                    const callerCumulative = roundScoreData.cumulative?.[user!.uid] ?? 0;
+                    const callerName = me?.displayName || '';
+                    setShareData({
+                      callerName,
+                      callerCumulative,
+                      opponents,
+                      roundNumber: roundScoreData.roundNumber,
+                    });
+                  }}
+                  className="w-full py-2 rounded-xl font-arabic font-bold transition-all"
+                  style={{
+                    background: 'linear-gradient(135deg, #FFE07A, #A07338)',
+                    color: '#100A05',
+                    border: '1.5px solid rgba(255,224,122,0.7)',
+                    boxShadow: '0 0 16px rgba(255,224,122,0.40)',
+                    fontSize: 14,
+                    cursor: 'pointer',
+                  }}
+                >
+                  🎉 شارك انتصارك
+                </button>
+              )}
               <p className="text-sand/30 font-arabic text-xs">الجولة التالية تبدأ تلقائياً...</p>
             </div>
           </motion.div>
@@ -2910,6 +2958,20 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
           gameState.tutorial flag persisting across reconnects. */}
       {!spectator && isTutorialActive(gameState.tutorial) && (
         <TutorialCoach gameState={gameState} meUid={user?.uid ?? null} drawnCard={drawnCard} />
+      )}
+
+      {/* Share-your-CHECK celebratory modal — opened by the round-over
+          scoreboard's "شارك انتصارك" button when the local player just
+          won a clean CHECK. */}
+      {shareData && (
+        <CheckWinShareModal
+          open={!!shareData}
+          onClose={() => setShareData(null)}
+          callerName={shareData.callerName}
+          callerCumulative={shareData.callerCumulative}
+          opponents={shareData.opponents}
+          roundNumber={shareData.roundNumber}
+        />
       )}
     </div>
   );

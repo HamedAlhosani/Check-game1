@@ -820,6 +820,9 @@ export class GameEngine {
       checkPenalty: result.checkPenalty,
       checkCallerId: this.checkCallerId,
       lowestUid: result.lowestUid,
+      // Categorical CHECK outcome — drives the "Share your CHECK!" button on
+      // the round-over scoreboard for clean wins ('win'). Null = no CHECK.
+      checkOutcome: result.checkOutcome,
     });
 
     // ── Epic moment detection ────────────────────────────────────────────

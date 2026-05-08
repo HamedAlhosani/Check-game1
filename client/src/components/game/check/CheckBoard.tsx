@@ -13,6 +13,7 @@ import { FrameRing } from '../../shared/FrameRing';
 import { CharacterArt } from '../../shared/CharacterArt';
 import { RoundStartCinematic, ReshuffleAnimation } from './GameCinematics';
 import { RulesModal } from '../../shared/RulesModal';
+import { TutorialCoach, isTutorialActive } from './TutorialCoach';
 import { ProfileModal } from '../../shared/ProfileModal';
 
 interface Props { gameId: string; roomId: string; gameState: GameState; spectator?: boolean; }
@@ -2901,6 +2902,13 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
           <ReshuffleAnimation onComplete={() => setShowReshuffle(false)}/>
         )}
       </AnimatePresence>
+
+      {/* Interactive tutorial coach — only mounts when the player launched
+          the practice match from the Tutorial page. Reads gameState live
+          and pops a step-by-step bubble for each new teachable moment. */}
+      {!spectator && isTutorialActive() && (
+        <TutorialCoach gameState={gameState} meUid={user?.uid ?? null} drawnCard={drawnCard} />
+      )}
     </div>
   );
 }

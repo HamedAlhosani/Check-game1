@@ -23,6 +23,7 @@ import type { GameMode as MatchLength, TournamentState } from '@check-game/share
 import { ELIMINATION_SCORE } from '@check-game/shared';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { apiClient } from '../../services/api.service';
+import { FloatingDock, BentoTile } from '../../components/shared/PageShell';
 
 type GameMode = 'online' | 'private' | 'bots';
 
@@ -1779,68 +1780,79 @@ export function HomePage() {
   const games = profile?.stats?.totalGames ?? 0;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #1A1408 0%, #14100A 50%, #0E0905 100%)', direction: dir, overflowX: 'hidden' }} className="pb-16 sm:pb-0">
+    <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at top, #1A1408 0%, #0E0905 60%, #08050A 100%)', direction: dir, overflowX: 'hidden', paddingBottom: 96 }}>
 
-      {/* ── Top nav bar ── */}
-      <nav className="sticky top-0 z-40 flex items-center justify-between px-4 py-2.5"
-        style={{ background: 'rgba(20,16,10,0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(201,168,76,0.12)' }}>
-        <Link to="/" className="flex items-center gap-2 shrink-0">
-          <img src="/assets/og-image.png" alt="Check"
-            style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', boxShadow: '0 0 14px rgba(201,168,76,0.35)', border: '1px solid rgba(201,168,76,0.4)' }}/>
-          <span className="font-display tracking-widest hidden sm:inline" style={{ fontSize: 18, color: '#C9A84C', textShadow: '0 0 16px rgba(201,168,76,0.4)' }}>CHECK</span>
-        </Link>
-        <div className="flex items-center gap-2">
-          <LangToggle />
-          {/* Unified rewards launcher — bundles Daily / Missions / Wheel /
-              Chests behind a single tap */}
-          {profile && (
-            <RewardsLauncher
-              lang={lang}
-              keysCount={(profile as any)?.keys || 0}
-              onOpenDaily={() => setShowDaily(true)}
-              onOpenMissions={() => { setProgressInitialTab('missions'); setShowProgress(true); }}
-              onOpenWheel={() => setShowWheel(true)}
-              onOpenChests={() => setShowChests(true)}
-              profileXp={xp} profileWins={wins} profileGames={games}
-              profileStreak={profile.stats?.currentStreak ?? 0}
-            />
-          )}
-          {/* Coins */}
-          <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5"
-            style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)' }}>
-            <span style={{ fontSize: 15 }}>🪙</span>
-            <span className="font-bold" style={{ fontSize: 13, color: '#E8C97A' }}>{coins.toLocaleString()}</span>
+      {/* ── Curved hero band — replaces the old flat top nav ── */}
+      <div className="relative" style={{
+        background: 'linear-gradient(180deg, rgba(60,40,12,0.85) 0%, rgba(40,28,12,0.85) 60%, rgba(20,14,8,0.85) 100%)',
+        paddingTop: 14, paddingBottom: 36, marginBottom: -14,
+      }}>
+        <div aria-hidden style={{ position: 'absolute', top: 0, left: '8%', right: '8%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(232,201,122,0.55), transparent)' }} />
+
+        <div className="flex items-center justify-between gap-3 px-4 pt-2 relative z-10">
+          {/* Left: language toggle */}
+          <div className="flex items-center gap-2 shrink-0">
+            <LangToggle />
           </div>
-          {/* Desktop nav links — hidden on mobile */}
-          <div className="hidden sm:flex items-center gap-2">
-            <Link to="/" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
-              🏠 {lang === 'ar' ? 'الصفحة الرئيسية' : 'Home'}
-            </Link>
-            <Link to="/store" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
-              🏪 {lang === 'ar' ? 'المتجر' : 'Store'}
-            </Link>
-            <Link to="/friends" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
-              👥 {lang === 'ar' ? 'أصدقاء' : 'Friends'}
-            </Link>
-            <Link to="/history" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
-              📋 {lang === 'ar' ? 'سجل' : 'History'}
-            </Link>
-            <Link to="/leaderboard" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
-              🏆 {lang === 'ar' ? 'التصنيف' : 'Ranks'}
-            </Link>
-            <Link to="/profile">
-              {profile && <AvatarCircle id={profile.avatarId} name={profile.displayName} size={32} frameId={(profile.equippedItems as any)?.avatarFrame}/>}
-            </Link>
+
+          {/* Center: huge wordmark */}
+          <Link to="/" className="flex flex-col items-center justify-center gap-0">
+            <span className="font-display tracking-widest"
+              style={{
+                fontSize: 26, color: '#E8C97A',
+                letterSpacing: '0.20em', lineHeight: 1,
+                textShadow: '0 2px 12px rgba(232,201,122,0.45), 0 0 28px rgba(201,168,76,0.30)',
+              }}>
+              CHECK
+            </span>
+            {profile && (
+              <span className="font-arabic mt-0.5" style={{ fontSize: 10, color: 'rgba(245,230,200,0.45)' }}>
+                {lang === 'ar' ? `أهلاً, ${profile.displayName}` : `Hi, ${profile.displayName}`}
+              </span>
+            )}
+          </Link>
+
+          {/* Right: coin pill + rewards launcher (kept as floating circle) */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1 rounded-full px-2.5 py-1"
+              style={{
+                background: 'linear-gradient(135deg, rgba(232,201,122,0.20), rgba(201,168,76,0.10))',
+                border: '1.5px solid rgba(232,201,122,0.55)',
+                boxShadow: 'inset 0 -2px 6px rgba(0,0,0,0.45), 0 0 12px rgba(232,201,122,0.20)',
+              }}>
+              <span style={{ fontSize: 14 }}>🪙</span>
+              <span className="font-bold" style={{ fontSize: 12, color: '#E8C97A' }}>{coins.toLocaleString()}</span>
+            </div>
+            {profile && (
+              <RewardsLauncher
+                lang={lang}
+                keysCount={(profile as any)?.keys || 0}
+                onOpenDaily={() => setShowDaily(true)}
+                onOpenMissions={() => { setProgressInitialTab('missions'); setShowProgress(true); }}
+                onOpenWheel={() => setShowWheel(true)}
+                onOpenChests={() => setShowChests(true)}
+                profileXp={xp} profileWins={wins} profileGames={games}
+                profileStreak={profile.stats?.currentStreak ?? 0}
+              />
+            )}
           </div>
         </div>
-      </nav>
 
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: '20px 16px 40px' }}>
+        {/* Curved bottom edge */}
+        <svg aria-hidden viewBox="0 0 1440 60" preserveAspectRatio="none"
+          className="block w-full" style={{ height: 36, marginBottom: -1 }}>
+          <defs>
+            <linearGradient id="hp-curve" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stopColor="#3C2A0C" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#1A1408" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path d="M0,0 L1440,0 L1440,30 Q1080,60 720,42 Q360,24 0,46 Z" fill="url(#hp-curve)" />
+          <path d="M0,46 Q360,24 720,42 Q1080,60 1440,30" stroke="rgba(232,201,122,0.55)" strokeWidth="1" fill="none" />
+        </svg>
+      </div>
+
+      <div style={{ maxWidth: 680, margin: '0 auto', padding: '8px 16px 24px' }}>
 
         {/* ── Profile banner ── New shape: a wide pill banner with the
             avatar set in a circular medallion on the leading edge, name
@@ -1906,19 +1918,31 @@ export function HomePage() {
           </motion.div>
         )}
 
-        {/* Quick-actions row — Tournaments / Clans / Rules in three equal
-            hex-cornered tiles, replacing the old chevron strip + side-by-side
-            buttons. New geometry: square-ish tiles with the icon big on top
-            and the label underneath, plus a "live" pulse on Tournaments
-            when one is active. */}
+        {/* Quick-actions hex tiles — true polygon shapes, full-width grid */}
         {profile && !currentRoom && (
-          <QuickActionsTriad
-            lang={lang}
-            clanTag={profile?.clanTag}
-            onOpenRules={() => setShowRules(true)}
-            onOpenClans={() => { soundService.playClick(); navigate('/clans'); }}
-            onOpenTournaments={() => { soundService.playClick(); navigate('/tournaments'); }}
-          />
+          <div className="grid grid-cols-3 gap-2.5 mb-5">
+            <BentoTile
+              icon="🏆"
+              title={lang === 'ar' ? 'البطولات' : 'Cups'}
+              sub={lang === 'ar' ? 'اربح جوائز' : 'Win prizes'}
+              accent="gold"
+              onClick={() => { soundService.playClick(); navigate('/tournaments'); }}
+            />
+            <BentoTile
+              icon="🏰"
+              title={profile?.clanTag ? `[${profile.clanTag}]` : (lang === 'ar' ? 'القبائل' : 'Clans')}
+              sub={profile?.clanTag ? (lang === 'ar' ? 'قبيلتك' : 'Your clan') : (lang === 'ar' ? 'انضم' : 'Join')}
+              accent="purple"
+              onClick={() => { soundService.playClick(); navigate('/clans'); }}
+            />
+            <BentoTile
+              icon="📖"
+              title={lang === 'ar' ? 'القوانين' : 'Rules'}
+              sub={lang === 'ar' ? 'كيف تلعب' : 'How to play'}
+              accent="green"
+              onClick={() => setShowRules(true)}
+            />
+          </div>
         )}
 
         {currentRoom ? (
@@ -1963,24 +1987,7 @@ export function HomePage() {
       {searching && <SearchingModal onCancel={handleCancelSearch} lang={lang}/>}
       {botLoading && <BotLoadingOverlay lang={lang}/>}
 
-      {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex sm:hidden items-center border-t"
-        style={{ background: 'rgba(20,16,10,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)', height: 56 }}>
-        {[
-          { to: '/home', icon: '🏠', label: lang === 'ar' ? 'الرئيسية' : 'Home' },
-          { to: '/store', icon: '🏪', label: lang === 'ar' ? 'المتجر' : 'Store' },
-          { to: '/leaderboard', icon: '🏆', label: lang === 'ar' ? 'التصنيف' : 'Rank' },
-          { to: '/friends', icon: '👥', label: lang === 'ar' ? 'أصدقاء' : 'Friends' },
-          { to: '/profile', icon: '👤', label: lang === 'ar' ? 'حسابي' : 'Profile' },
-        ].map(item => (
-          <Link key={item.to} to={item.to}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all"
-            style={{ color: 'rgba(245,230,200,0.5)', fontSize: 10 }}>
-            <span style={{ fontSize: 20 }}>{item.icon}</span>
-            <span className="font-arabic">{item.label}</span>
-          </Link>
-        ))}
-      </nav>
+      <FloatingDock lang={lang} />
     </div>
   );
 }

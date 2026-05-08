@@ -7,7 +7,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useUiStore } from '../../store/uiStore';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { useLang } from '../../i18n/useT';
-import { LangToggle } from '../../components/shared/LangToggle';
+import { PageShell } from '../../components/shared/PageShell';
 import { Confetti } from '../../components/shared/Confetti';
 import { ConfirmModal } from '../../components/shared/ConfirmModal';
 import { apiClient } from '../../services/api.service';
@@ -78,23 +78,12 @@ export function TournamentsPage() {
   const isCurrentChampion = tStats.lastCupAt && (Date.now() - tStats.lastCupAt) < 24 * 60 * 60 * 1000;
 
   return (
-    <div className="min-h-screen pb-16 sm:pb-0" style={{ background: 'linear-gradient(180deg, #14100A 0%, #0E0905 100%)', direction: dir }}>
-      {/* Header */}
-      <nav className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b"
-        style={{ background: 'rgba(20,16,10,0.95)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)' }}>
-        <button onClick={() => navigate('/home')}
-          className="flex items-center gap-2"
-          style={{ color: 'rgba(245,230,200,0.55)' }}>
-          <span style={{ fontSize: 20 }}>{lang === 'ar' ? '←' : '→'}</span>
-          <span className="font-arabic">{lang === 'ar' ? 'الرئيسية' : 'Home'}</span>
-        </button>
-        <h1 className="font-display tracking-widest" style={{ fontSize: 18, color: '#E8C97A' }}>
-          🏆 {lang === 'ar' ? 'البطولات' : 'TOURNAMENTS'}
-        </h1>
-        <LangToggle />
-      </nav>
-
-      <div className="max-w-2xl mx-auto px-4 py-5">
+    <PageShell
+      title={`🏆 ${lang === 'ar' ? 'البطولات' : 'TOURNAMENTS'}`}
+      lang={lang}
+      maxWidth={760}
+    >
+      <div className="pb-16 sm:pb-0">
         {/* Stats banner — own tournament wins, podiums, total prize money */}
         <div className="rounded-2xl p-4 mb-4"
           style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.08), rgba(120,80,20,0.04))', border: '1px solid rgba(201,168,76,0.20)' }}>
@@ -144,7 +133,7 @@ export function TournamentsPage() {
           />
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }
 

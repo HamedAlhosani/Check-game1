@@ -6,7 +6,7 @@ import { useUiStore } from '../../store/uiStore';
 import { apiClient } from '../../services/api.service';
 import { soundService } from '../../services/sound.service';
 import { useT, useLang } from '../../i18n/useT';
-import { LangToggle } from '../../components/shared/LangToggle';
+import { PageShell } from '../../components/shared/PageShell';
 import { socketService } from '../../services/socket.service';
 import { SOCKET_EVENTS } from '@check-game/shared';
 import { FrameRing } from '../../components/shared/FrameRing';
@@ -156,19 +156,7 @@ export function FriendsPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #1A1408 0%, #0E0905 100%)', direction: dir }}>
-      {/* Nav */}
-      <nav className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 border-b border-white/5"
-        style={{ background: 'rgba(7,4,16,0.95)', backdropFilter: 'blur(12px)' }}>
-        <button onClick={() => navigate('/home')} className="flex items-center gap-2 text-sand/50 hover:text-gold transition-colors">
-          <span className="text-xl">{lang === 'ar' ? '←' : '→'}</span>
-          <span className="font-arabic text-sm">{t('back')}</span>
-        </button>
-        <h1 className="font-display text-xl tracking-widest" style={{ color: '#C9A84C' }}>{t('friends_title')}</h1>
-        <LangToggle />
-      </nav>
-
-      <div className="max-w-lg mx-auto px-4 py-6">
+    <PageShell title={t('friends_title')} lang={lang}>
 
         {/* Your username card */}
         <div className="rounded-2xl p-4 mb-6 flex items-center justify-between border"
@@ -313,7 +301,6 @@ export function FriendsPage() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
       {/* ── Remove friend confirmation modal ── */}
       <AnimatePresence>
@@ -364,7 +351,7 @@ export function FriendsPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </PageShell>
   );
 }
 

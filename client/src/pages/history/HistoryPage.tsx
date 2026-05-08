@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../services/api.service';
 import { useT, useLang } from '../../i18n/useT';
-import { LangToggle } from '../../components/shared/LangToggle';
+import { PageShell, ShellCard } from '../../components/shared/PageShell';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { CharacterArt } from '../../components/shared/CharacterArt';
 import { ProfileModal } from '../../components/shared/ProfileModal';
@@ -19,7 +19,6 @@ const GAME_LABELS_EN: Record<string, string> = { check: 'Check', ludo: 'Ludo', d
 export function HistoryPage() {
   const t = useT();
   const lang = useLang();
-  const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
   const navigate = useNavigate();
   const { profile } = useAuthStore();
@@ -56,52 +55,35 @@ export function HistoryPage() {
   const GAME_LABELS = lang === 'ar' ? GAME_LABELS_AR : GAME_LABELS_EN;
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #1A1408 0%, #0E0905 100%)', direction: dir }}>
-      {/* Nav */}
-      <nav className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 border-b border-white/5"
-        style={{ background: 'rgba(6,4,15,0.95)', backdropFilter: 'blur(12px)' }}>
-        <button onClick={() => navigate('/home')} className="flex items-center gap-2 text-sand/50 hover:text-gold transition-colors">
-          <span className="text-xl">{lang === 'ar' ? '←' : '→'}</span>
-          <span className="font-arabic text-sm">{t('back')}</span>
-        </button>
-        <h1 className="font-display text-xl tracking-widest" style={{ color: '#C9A84C' }}>{t('history_title')}</h1>
-        <LangToggle />
-      </nav>
-
-      <div className="max-w-lg mx-auto px-4 py-6">
-        {loading ? (
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-28 rounded-2xl animate-pulse" style={{ background: 'rgba(201,168,76,0.04)' }} />
-            ))}
-          </div>
-        ) : records.length === 0 ? (
-          <div className="text-center py-20">
-            <p className="text-5xl mb-4">🃏</p>
-            <p className="font-arabic font-bold text-lg" style={{ color: 'rgba(245,230,200,0.5)' }}>{t('history_no_games')}</p>
-            <p className="font-arabic text-sm mt-2" style={{ color: 'rgba(245,230,200,0.25)' }}>
-              {lang === 'ar' ? 'العب مبارياتك وستظهر هنا' : 'Play games and they will appear here'}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {records.map((rec, i) => {
-              const isWin = rec.winnerId === myUid;
-              const sortedPlayers = [...rec.players].sort((a, b) => a.score - b.score);
-
-              return (
-                <motion.div
-                  key={rec.gameId + i}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.06 }}
-                  className="rounded-2xl overflow-hidden border"
-                  style={{
-                    borderColor: isWin ? 'rgba(201,168,76,0.3)' : 'rgba(255,255,255,0.06)',
-                    background: isWin ? 'rgba(201,168,76,0.05)' : 'rgba(255,255,255,0.025)',
-                  }}
-                >
-                  {/* Header */}
+    <PageShell title={t('history_title')} lang={lang}>
+      {loading ? (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="h-28 animate-pulse" style={{ background: 'rgba(201,168,76,0.04)', borderRadius: '22px 6px 22px 6px' }} />
+          ))}
+        </div>
+      ) : records.length === 0 ? (
+        <div className="text-center py-20">
+          <p className="text-5xl mb-4">🃏</p>
+          <p className="font-arabic font-bold text-lg" style={{ color: 'rgba(245,230,200,0.5)' }}>{t('history_no_games')}</p>
+          <p className="font-arabic text-sm mt-2" style={{ color: 'rgba(245,230,200,0.25)' }}>
+            {lang === 'ar' ? 'العب مبارياتك وستظهر هنا' : 'Play games and they will appear here'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {records.map((rec, i) => {
+            const isWin = rec.winnerId === myUid;
+            const sortedPlayers = [...rec.players].sort((a, b) => a.score - b.score);
+            return (
+              <motion.div
+                key={rec.gameId + i}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+              >
+                <ShellCard glow={isWin}>
+                  {/* Header strip */}
                   <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b"
                     style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
                     <div className="flex items-center gap-2">
@@ -110,7 +92,7 @@ export function HistoryPage() {
                       </span>
                       {rec.players.length > 0 && (
                         <span className="text-xs font-arabic" style={{ color: 'rgba(245,230,200,0.3)' }}>
-                          • {rec.players.length} {lang === 'ar' ? 'لاعبين' : 'players'}
+                          · {rec.players.length} {lang === 'ar' ? 'لاعبين' : 'players'}
                         </span>
                       )}
                     </div>
@@ -166,7 +148,6 @@ export function HistoryPage() {
                       })}
                     </div>
 
-                    {/* Replay button — only on rich Check matches */}
                     {rec.gameType === 'check' && rec.rounds && rec.rounds.length > 0 && (
                       <button
                         onClick={() => setReplayRecord(rec)}
@@ -186,12 +167,12 @@ export function HistoryPage() {
                       </button>
                     )}
                   </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+                </ShellCard>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
 
       <ReplayModal
         open={!!replayRecord}
@@ -202,6 +183,6 @@ export function HistoryPage() {
       />
 
       <ProfileModal uid={profileUid} onClose={() => setProfileUid(null)} />
-    </div>
+    </PageShell>
   );
 }

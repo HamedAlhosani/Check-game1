@@ -6,7 +6,7 @@ import { useUiStore } from '../../store/uiStore';
 import { apiClient } from '../../services/api.service';
 import { soundService } from '../../services/sound.service';
 import { useLang } from '../../i18n/useT';
-import { LangToggle } from '../../components/shared/LangToggle';
+import { PageShell } from '../../components/shared/PageShell';
 import { ConfirmModal } from '../../components/shared/ConfirmModal';
 import { CharacterArt } from '../../components/shared/CharacterArt';
 import type { Clan, ClanSummary, ClanMember, ClanRole, UserProfile, ClanVisibility } from '@check-game/shared';
@@ -60,21 +60,12 @@ export function ClansPage() {
   }, []);
 
   return (
-    <div className="min-h-screen pb-16 sm:pb-0" style={{ background: 'linear-gradient(180deg, #14100A 0%, #0E0905 100%)', direction: dir }}>
-      <nav className="sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b"
-        style={{ background: 'rgba(20,16,10,0.95)', backdropFilter: 'blur(12px)', borderColor: 'rgba(201,168,76,0.15)' }}>
-        <button onClick={() => navigate('/home')} className="flex items-center gap-2"
-          style={{ color: 'rgba(245,230,200,0.55)' }}>
-          <span style={{ fontSize: 20 }}>{lang === 'ar' ? '←' : '→'}</span>
-          <span className="font-arabic">{lang === 'ar' ? 'الرئيسية' : 'Home'}</span>
-        </button>
-        <h1 className="font-display tracking-widest" style={{ fontSize: 18, color: '#E8C97A' }}>
-          🏰 {lang === 'ar' ? 'القبائل' : 'CLANS'}
-        </h1>
-        <LangToggle />
-      </nav>
-
-      <div className="max-w-2xl mx-auto px-4 py-5">
+    <PageShell
+      title={`🏰 ${lang === 'ar' ? 'القبائل' : 'CLANS'}`}
+      lang={lang}
+      maxWidth={760}
+    >
+      <div className="pb-16 sm:pb-0">
         {/* Invites banner — appears whenever someone invited the player */}
         {invites.length > 0 && !myClan && (
           <InvitesBanner invites={invites} lang={lang} onChange={refresh}/>
@@ -108,7 +99,7 @@ export function ClansPage() {
           </>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }
 

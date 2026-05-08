@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { apiClient } from '../../services/api.service';
 import { useAuthStore } from '../../store/authStore';
 import { useT, useLang } from '../../i18n/useT';
-import { LangToggle } from '../../components/shared/LangToggle';
+import { PageShell } from '../../components/shared/PageShell';
 import { CharacterArt } from '../../components/shared/CharacterArt';
 import { LeaderboardEntry } from '@check-game/shared';
 
@@ -89,31 +89,19 @@ export function LeaderboardPage() {
   const meLabel = lang === 'ar' ? 'أنت' : 'You';
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #14100A 0%, #1A1408 45%, #0E0905 100%)', direction: dir }}>
-
-      {/* Nav */}
-      <nav className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 border-b border-white/5"
-        style={{ background: 'rgba(20,14,8,0.96)', backdropFilter: 'blur(14px)' }}>
-        <button onClick={() => navigate('/home')} className="flex items-center gap-2"
-          style={{ color: 'rgba(245,230,200,0.45)' }}>
-          <span className="text-xl">{lang === 'ar' ? '←' : '→'}</span>
-          <span className="font-arabic text-sm">{t('back')}</span>
-        </button>
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">🏆</span>
-          <h1 className="font-display text-lg tracking-widest" style={{ color: '#C9A84C' }}>{t('leaderboard_title')}</h1>
+    <PageShell
+      title={t('leaderboard_title')}
+      lang={lang}
+      maxWidth={760}
+      right={myRank > 0 ? (
+        <div className="rounded-full px-3 py-1.5"
+          style={{ background: 'rgba(201,168,76,0.12)', border: '1.5px solid rgba(201,168,76,0.45)' }}>
+          <span className="font-arabic text-xs font-bold" style={{ color: '#E8C97A' }}>#{myRank}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <LangToggle />
-          {myRank > 0 ? (
-            <div className="rounded-xl px-3 py-1 border" style={{ background: 'rgba(201,168,76,0.08)', borderColor: 'rgba(201,168,76,0.2)' }}>
-              <span className="font-arabic text-xs" style={{ color: '#C9A84C' }}>#{myRank}</span>
-            </div>
-          ) : <div className="w-12" />}
-        </div>
-      </nav>
-
-      <div className="max-w-2xl mx-auto px-4 py-5">
+      ) : undefined}
+    >
+      <div>
+        {/* Tabs */}
         {/* Tabs */}
         <div className="flex gap-1.5 mb-5">
           <TabBtn label={lang === 'ar' ? '🌍 عالمي' : '🌍 World'}    active={tab === 'world'}    onClick={() => setTab('world')}/>
@@ -253,7 +241,7 @@ export function LeaderboardPage() {
           </>
         )}
       </div>
-    </div>
+    </PageShell>
   );
 }
 

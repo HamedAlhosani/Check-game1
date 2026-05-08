@@ -9,7 +9,7 @@ import { changePassword, logout } from '../../services/auth.service';
 import { useUiStore } from '../../store/uiStore';
 import { soundService } from '../../services/sound.service';
 import { useT, useLang } from '../../i18n/useT';
-import { LangToggle } from '../../components/shared/LangToggle';
+import { PageShell } from '../../components/shared/PageShell';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { ReferralCard } from '../../components/shared/ReferralCard';
 import { CharacterArt } from '../../components/shared/CharacterArt';
@@ -137,30 +137,19 @@ export function ProfilePage() {
     : (LEVEL_TITLES_EN[level - 1] || LEVEL_TITLES_EN[0]);
 
   return (
-    <div className="min-h-screen pb-16 sm:pb-0" style={{ background: 'linear-gradient(180deg, #14100A 0%, #1A1408 45%, #0E0905 100%)', direction: dir }}>
-
-      {/* Nav */}
-      <nav className="sticky top-0 z-40 flex items-center justify-between px-5 py-3 border-b border-white/5"
-        style={{ background: 'rgba(22,16,10,0.96)', backdropFilter: 'blur(14px)' }}>
-        <button onClick={() => navigate('/home')} className="flex items-center gap-2 transition-colors"
-          style={{ color: 'rgba(245,230,200,0.45)' }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#C9A84C')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(245,230,200,0.45)')}>
-          <span className="text-xl">{lang === 'ar' ? '←' : '→'}</span>
-          <span className="font-arabic text-sm">{t('back')}</span>
-        </button>
-        <h1 className="font-display text-lg tracking-widest" style={{ color: '#C9A84C' }}>{t('profile_title')}</h1>
-        <div className="flex items-center gap-2">
-          <LangToggle />
-          <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 border border-gold/20"
-            style={{ background: 'rgba(201,168,76,0.06)' }}>
-            <span className="text-sm">🪙</span>
-            <span className="font-bold font-mono text-sm" style={{ color: '#E8C97A' }}>{profile.coins ?? 0}</span>
-          </div>
+    <PageShell
+      title={t('profile_title')}
+      lang={lang}
+      maxWidth={760}
+      right={
+        <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
+          style={{ background: 'rgba(201,168,76,0.10)', border: '1.5px solid rgba(201,168,76,0.45)' }}>
+          <span className="text-sm">🪙</span>
+          <span className="font-bold font-mono text-sm" style={{ color: '#E8C97A' }}>{profile.coins ?? 0}</span>
         </div>
-      </nav>
-
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      }
+    >
+      <div className="pb-16 sm:pb-0">
 
         {/* Hero card */}
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
@@ -434,7 +423,6 @@ export function ProfilePage() {
             {lang === 'ar' ? 'تسجيل الخروج' : 'Log Out'}
           </button>
         </div>
-      </div>
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex sm:hidden items-center border-t"
@@ -454,6 +442,7 @@ export function ProfilePage() {
           </Link>
         ))}
       </nav>
-    </div>
+      </div>
+    </PageShell>
   );
 }

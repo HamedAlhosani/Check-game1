@@ -14,40 +14,56 @@ export function Aurora() {
       className="fixed inset-0 pointer-events-none overflow-hidden"
       style={{ zIndex: 0 }}
     >
-      {/* Base wash — bayt al-sha'ar deep cocoa with a warm sand halo
-          at the top of the screen and a subtle date-orange glow on
-          the lower horizon (sunset on the dunes). */}
+      {/* Two-layer base wash — keeps the warm sand halo visible at the
+          top no matter the viewport aspect ratio. On portrait phones
+          the radial does the heavy lifting; on landscape desktops the
+          linear takes over so the top-of-screen warmth doesn't get
+          stretched too thin. */}
       <div
         className="absolute inset-0"
         style={{
-          background:
-            'radial-gradient(ellipse 90% 60% at 50% -10%, rgba(105,80,50,0.85) 0%, rgba(24,18,12,0.95) 55%, rgba(8,6,4,1) 100%)',
+          background: `
+            radial-gradient(ellipse 70vmin 50vmin at 50% 0%, rgba(105,80,50,0.85) 0%, rgba(24,18,12,0.95) 70%, rgba(8,6,4,1) 100%),
+            linear-gradient(180deg, rgba(60,42,26,0.55) 0%, rgba(8,6,4,1) 80%)
+          `,
         }}
       />
-      {/* Sunset glow on the lower horizon */}
+      {/* Sunset glow on the lower horizon — scaled to viewport height so
+          it reads as a meaningful band on tall desktop monitors instead
+          of a thin 280px strip. */}
       <div
         className="absolute"
         style={{
-          left: 0, right: 0, bottom: 0, height: 280,
+          left: 0, right: 0, bottom: 0, height: '40vh', minHeight: 240,
           background:
-            'linear-gradient(0deg, rgba(224,140,58,0.18) 0%, rgba(229,188,124,0.08) 35%, rgba(0,0,0,0) 100%)',
+            'linear-gradient(0deg, rgba(224,140,58,0.20) 0%, rgba(229,188,124,0.10) 30%, rgba(0,0,0,0) 100%)',
         }}
       />
-      {/* Three slow-drifting orbs — sand, palm, date. */}
+      {/* Three slow-drifting orbs — sand, palm, date. Sized in vmax so
+          they always read as large atmospheric blobs on either portrait
+          or landscape, and spread across the screen so a wide desktop
+          doesn't leave the right half empty. */}
       <div className="aurora-orb" style={{
-        top: '-15%', left: '-10%', width: '60vw', height: '60vw',
-        background: 'radial-gradient(circle, rgba(229,188,124,0.25) 0%, rgba(229,188,124,0) 65%)',
+        top: '-20%', left: '-10%', width: '85vmax', height: '85vmax',
+        background: 'radial-gradient(circle, rgba(229,188,124,0.28) 0%, rgba(229,188,124,0) 60%)',
         animation: 'aurora-drift-1 22s ease-in-out infinite',
       }} />
       <div className="aurora-orb" style={{
-        top: '20%', right: '-15%', width: '55vw', height: '55vw',
-        background: 'radial-gradient(circle, rgba(122,168,71,0.20) 0%, rgba(122,168,71,0) 65%)',
+        top: '10%', right: '-25%', width: '75vmax', height: '75vmax',
+        background: 'radial-gradient(circle, rgba(122,168,71,0.22) 0%, rgba(122,168,71,0) 60%)',
         animation: 'aurora-drift-2 28s ease-in-out infinite',
       }} />
       <div className="aurora-orb" style={{
-        bottom: '-20%', left: '10%', width: '65vw', height: '65vw',
-        background: 'radial-gradient(circle, rgba(224,140,58,0.16) 0%, rgba(224,140,58,0) 65%)',
+        bottom: '-30%', left: '20%', width: '90vmax', height: '90vmax',
+        background: 'radial-gradient(circle, rgba(224,140,58,0.18) 0%, rgba(224,140,58,0) 60%)',
         animation: 'aurora-drift-3 32s ease-in-out infinite',
+      }} />
+      {/* Center warm glow — fills the middle of wide desktop viewports
+          so the orbs along the corners aren't carrying the whole load. */}
+      <div className="aurora-orb" style={{
+        top: '30%', left: '30%', width: '60vmax', height: '60vmax',
+        background: 'radial-gradient(circle, rgba(229,188,124,0.10) 0%, rgba(229,188,124,0) 65%)',
+        animation: 'aurora-drift-1 36s ease-in-out infinite reverse',
       }} />
 
       {/* Pinpoint star field — lavender twinkles. */}

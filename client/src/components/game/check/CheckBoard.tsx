@@ -508,7 +508,10 @@ function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = fals
               transition={{ duration: 0.15, ease: 'easeOut' }}
               className="relative"
             >
-              <PlayingCard card={c} faceDown={spectator ? false : !c?.isRevealed} small={!mini} mini={mini}
+              <PlayingCard
+                card={spectator && c ? { ...c, isRevealed: true } : c}
+                faceDown={spectator ? false : !c?.isRevealed}
+                small={!mini} mini={mini}
                 backId={backId}
                 highlight={isSpecialJ ? 'burn' : 'none'}
                 onClick={isSpecialJ && selectedPos !== null ? () => onSpecialSwap(player.uid, i) : undefined} />
@@ -667,7 +670,7 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
                     Dummy card so PlayingCard takes the face-down branch
                     (CardBack), not the empty '?' placeholder. */}
                 <PlayingCard
-                  card={spectator && c ? c : ({ rank: 'A', suit: 'spades', isRevealed: false } as any)}
+                  card={spectator && c ? { ...c, isRevealed: true } : ({ rank: 'A', suit: 'spades', isRevealed: false } as any)}
                   xmini
                   faceDown={!spectator}
                   backId={backId}
@@ -747,7 +750,10 @@ const MiniSeat = memo(function MiniSeat({ player, isSpecialJ, selectedPos, onSpe
       }}>
         {player.cards.map((c: any, i: number) => c !== null ? (
           <div key={i} className="relative">
-            <PlayingCard card={c} faceDown={spectator ? false : !c?.isRevealed} xmini backId={backId}
+            <PlayingCard
+              card={spectator && c ? { ...c, isRevealed: true } : c}
+              faceDown={spectator ? false : !c?.isRevealed}
+              xmini backId={backId}
               highlight={isSpecialJ && selectedPos !== null ? 'burn' : 'none'} />
             {swapPos === i && <SwapArrowBadge />}
           </div>
@@ -2356,8 +2362,8 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
       </AnimatePresence>
 
       <AnimatePresence>
-        {showIntro && <IntroOverlay />}
-        {showPeek && !showIntro && <PeekOverlay />}
+        {showIntro && !spectator && <IntroOverlay />}
+        {showPeek && !showIntro && !spectator && <PeekOverlay />}
         {showExitConfirm && <ExitOverlay />}
         {showScoreboard && <ScoreboardModal />}
       </AnimatePresence>

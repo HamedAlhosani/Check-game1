@@ -43,10 +43,12 @@ const config: Config = {
         // Used by the redesigned screens; legacy dark-gold tokens above
         // stay so any unmigrated screen still renders correctly.
         pearl: {
-          DEFAULT: '#FFFDF7',     // app background
-          surface: '#FFFFFF',     // cards / sheets
-          mute: '#F4EEDF',        // hover / pressed surface
-          line: '#E8DFC8',        // hairlines
+          // Warm cream / desert-pearl tones — softer than pure white,
+          // gentler on the eye, still reads "light theme".
+          DEFAULT: '#F4ECD8',     // app background
+          surface: '#FBF5E5',     // cards / sheets
+          mute: '#EFE3C9',        // hover / pressed surface
+          line: '#D9C9A0',        // hairlines
         },
         ink: {
           DEFAULT: '#1F1A12',     // primary text
@@ -134,9 +136,9 @@ const config: Config = {
         'desert-gradient': 'linear-gradient(180deg, #0E0905 0%, #14100A 30%, #1A1408 60%, #200E04 85%, #160A04 100%)',
         'gold-shimmer': 'linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent)',
         'card-texture': "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0 L60 15 L60 45 L30 60 L0 45 L0 15 Z' fill='none' stroke='%23C9A84C' stroke-width='0.5' opacity='0.08'/%3E%3C/svg%3E\")",
-        // Light theme: subtle dawn sky over a sand wash. Used as the
-        // main app background under the palm + skyline silhouettes.
-        'pearl-sky': 'linear-gradient(180deg, #F5F8FB 0%, #F8F1DF 55%, #F1E6C5 100%)',
+        // Light theme: warm cream-to-sand wash. Used as the main app
+        // background under the palm + skyline silhouettes.
+        'pearl-sky': 'linear-gradient(180deg, #F8F2E0 0%, #F2E8D0 55%, #E8D9AE 100%)',
       },
     },
   },

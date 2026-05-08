@@ -1250,7 +1250,7 @@ export function HomePage() {
 
       {/* ── Top nav bar ── */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-4 py-2.5"
-        style={{ background: 'rgba(255,253,247,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(232,223,200,0.85)' }}>
+        style={{ background: 'rgba(248,242,224,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(217,201,160,0.65)' }}>
         <Link to="/" className="flex items-center gap-2 shrink-0">
           <img src="/assets/og-image.png" alt="Check"
             style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', boxShadow: '0 0 14px rgba(201,168,76,0.35)', border: '1px solid rgba(201,168,76,0.4)' }}/>
@@ -1269,8 +1269,8 @@ export function HomePage() {
             title={lang === 'ar' ? 'صناديق الكنز' : 'Treasure Chests'}
             style={{
               width: 36, height: 34,
-              background: ((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.18)' : 'rgba(255,253,247,0.7)',
-              border: `1px solid ${((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.55)' : 'rgba(232,223,200,0.85)'}`,
+              background: ((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.18)' : 'rgba(251,245,229,0.85)',
+              border: `1px solid ${((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.55)' : 'rgba(217,201,160,0.75)'}`,
               boxShadow: ((profile as any)?.keys || 0) > 0 ? '0 0 14px rgba(196,149,255,0.30)' : 'none',
               cursor: 'pointer',
             }}>
@@ -1286,30 +1286,30 @@ export function HomePage() {
           </motion.button>
           {/* Coins */}
           <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5"
-            style={{ background: 'rgba(248,235,194,0.85)', border: '1px solid rgba(201,168,76,0.45)' }}>
+            style={{ background: 'rgba(248,235,194,0.92)', border: '1px solid rgba(201,168,76,0.50)' }}>
             <span style={{ fontSize: 15 }}>🪙</span>
             <span className="font-bold" style={{ fontSize: 13, color: '#8B6914' }}>{coins.toLocaleString()}</span>
           </div>
           {/* Desktop nav links — hidden on mobile */}
           <div className="hidden sm:flex items-center gap-2">
             <Link to="/" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,253,247,0.7)', border: '1px solid rgba(232,223,200,0.85)', color: '#5C5240', fontSize: 12 }}>
+              style={{ background: 'rgba(251,245,229,0.85)', border: '1px solid rgba(217,201,160,0.75)', color: '#5C5240', fontSize: 12 }}>
               🏠 {lang === 'ar' ? 'الصفحة الرئيسية' : 'Home'}
             </Link>
             <Link to="/store" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,253,247,0.7)', border: '1px solid rgba(232,223,200,0.85)', color: '#5C5240', fontSize: 12 }}>
+              style={{ background: 'rgba(251,245,229,0.85)', border: '1px solid rgba(217,201,160,0.75)', color: '#5C5240', fontSize: 12 }}>
               🏪 {lang === 'ar' ? 'المتجر' : 'Store'}
             </Link>
             <Link to="/friends" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,253,247,0.7)', border: '1px solid rgba(232,223,200,0.85)', color: '#5C5240', fontSize: 12 }}>
+              style={{ background: 'rgba(251,245,229,0.85)', border: '1px solid rgba(217,201,160,0.75)', color: '#5C5240', fontSize: 12 }}>
               👥 {lang === 'ar' ? 'أصدقاء' : 'Friends'}
             </Link>
             <Link to="/history" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,253,247,0.7)', border: '1px solid rgba(232,223,200,0.85)', color: '#5C5240', fontSize: 12 }}>
+              style={{ background: 'rgba(251,245,229,0.85)', border: '1px solid rgba(217,201,160,0.75)', color: '#5C5240', fontSize: 12 }}>
               📋 {lang === 'ar' ? 'سجل' : 'History'}
             </Link>
             <Link to="/leaderboard" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,253,247,0.7)', border: '1px solid rgba(232,223,200,0.85)', color: '#5C5240', fontSize: 12 }}>
+              style={{ background: 'rgba(251,245,229,0.85)', border: '1px solid rgba(217,201,160,0.75)', color: '#5C5240', fontSize: 12 }}>
               🏆 {lang === 'ar' ? 'التصنيف' : 'Ranks'}
             </Link>
             <Link to="/profile">
@@ -1327,14 +1327,14 @@ export function HomePage() {
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             className="rounded-2xl p-4 mb-5"
-            style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(232,223,200,0.95)', boxShadow: '0 8px 24px rgba(85,60,20,0.10)' }}
+            style={{ background: 'rgba(251,245,229,0.96)', border: '1px solid rgba(217,201,160,0.85)', boxShadow: '0 8px 24px rgba(85,60,20,0.12)' }}
           >
             <div className="flex items-center gap-4">
               <Link to="/profile" style={{ textDecoration: 'none' }}>
                 <div className="relative">
                   <AvatarCircle id={profile.avatarId} name={profile.displayName} size={52} frameId={(profile.equippedItems as any)?.avatarFrame}/>
                   <div className="absolute -bottom-0.5 -right-0.5 rounded-full px-1.5"
-                    style={{ background: '#C9A84C', fontSize: 9, color: '#FFFDF7', fontWeight: 800, lineHeight: '16px' }}>
+                    style={{ background: '#C9A84C', fontSize: 9, color: '#FBF5E5', fontWeight: 800, lineHeight: '16px' }}>
                     {level}
                   </div>
                 </div>

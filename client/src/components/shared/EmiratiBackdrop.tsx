@@ -32,13 +32,14 @@ export function EmiratiBackdrop({ intensity = 1 }: BackdropProps) {
       className="fixed inset-0 pointer-events-none overflow-hidden"
       style={{ zIndex: 0 }}
     >
-      {/* Sky / sand wash — kept very light so foreground white surfaces
-          have something to read against. */}
+      {/* Sky / sand wash — warm cream that turns to richer sand near the
+          horizon. Kept gentle so foreground cream surfaces stay legible
+          and nothing in the layout fights for the user's eye. */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(180deg, #FAFCFE 0%, #FBF5E6 60%, #F5E8C7 90%, #ECD9A5 100%)',
+            'linear-gradient(180deg, #F8F2E0 0%, #F4ECD3 55%, #E8D7A8 90%, #D8C188 100%)',
         }}
       />
 

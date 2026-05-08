@@ -2830,7 +2830,14 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         <GameOverModal open={true} winnerId={gameOverData.winnerId}
           finalScores={gameOverData.finalScores} players={gameState.players}
           currentUid={user?.uid}
-          onPlayAgain={() => navigate('/lobby/check')} />
+          onPlayAgain={() => navigate('/home', {
+            state: {
+              autoPlay: {
+                playerCount: gameState.players.length,
+                matchLength: gameState.gameMode || 'standard',
+              },
+            },
+          })} />
       )}
 
       {/* Epic moment commentary banner — slides in from the top with a

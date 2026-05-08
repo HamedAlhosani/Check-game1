@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SOCKET_EVENTS, RoomState, GameType } from '@check-game/shared';
 import { socketService } from '../../services/socket.service';
@@ -1013,6 +1013,7 @@ export function HomePage() {
   const lang = useLang();
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
   const navigate = useNavigate();
+  const location = useLocation();
   const { profile } = useAuthStore();
   const { rooms, setRooms, currentRoom, setCurrentRoom } = useLobbyStore();
   const { addToast } = useUiStore();
@@ -1191,8 +1192,49 @@ export function HomePage() {
         maxPlayers: cfg.playerCount,
         gameMode: cfg.matchLength,
       });
+      // Remember this config so Play-Again from a finished game can
+      // re-enter matchmaking with the same settings.
+      try {
+        localStorage.setItem('check.lastMatchCfg', JSON.stringify({
+          playerCount: cfg.playerCount,
+          bet: cfg.bet,
+          matchLength: cfg.matchLength,
+        }));
+      } catch {}
     }
   };
+
+  // ── Auto-search after Play-Again ─────────────────────────────────────────
+  // CheckBoard's Game-Over modal navigates here with state.autoPlay so the
+  // user goes straight back into matchmaking without re-picking bet/players.
+  // We pull the bet from localStorage (the last value the player chose); the
+  // player count + match length come from the previous game's GameState.
+  useEffect(() => {
+    const ap = (location.state as any)?.autoPlay;
+    if (!ap) return;
+    // Clear the state so a back-button or page refresh doesn't re-trigger.
+    navigate(location.pathname, { replace: true, state: null });
+    let cfg: { playerCount: number; bet: number; matchLength: MatchLength };
+    try {
+      const last = JSON.parse(localStorage.getItem('check.lastMatchCfg') || 'null');
+      cfg = {
+        playerCount: ap.playerCount ?? last?.playerCount ?? 4,
+        bet:         last?.bet ?? 50,
+        matchLength: ap.matchLength ?? last?.matchLength ?? 'standard',
+      };
+    } catch {
+      cfg = { playerCount: ap.playerCount ?? 4, bet: 50, matchLength: ap.matchLength ?? 'standard' };
+    }
+    // Cap bet at the player's current coin balance — otherwise the server
+    // rejects the room and the user lands on Home with no feedback.
+    const coinsNow = profile?.coins ?? 0;
+    if (cfg.bet > coinsNow) {
+      const tiers = [50, 100, 250, 500, 1000, 2500].filter(v => v <= coinsNow);
+      cfg.bet = tiers.length ? tiers[tiers.length - 1] : 0;
+    }
+    setMode('online');
+    handleCreate({ type: 'online', ...cfg });
+  }, []);
 
   const coins = profile?.coins ?? 0;
   const level = profile?.ranking?.level ?? 1;

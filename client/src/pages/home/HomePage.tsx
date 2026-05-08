@@ -1250,12 +1250,8 @@ function DifficultyCards({ value, onChange, lang }: {
 function GiantPlayingCard({ mode, children }: { mode: GameMode; children: React.ReactNode }) {
   const t = MODE_THEMES[mode];
   return (
-    <motion.div
+    <div
       key={mode}
-      initial={{ opacity: 0, y: 14, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0,  scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.97 }}
-      transition={{ type: 'spring', stiffness: 280, damping: 28 }}
       className="relative overflow-hidden"
       style={{
         // Glass slab with the mode accent providing a soft tinted halo.
@@ -1294,7 +1290,7 @@ function GiantPlayingCard({ mode, children }: { mode: GameMode; children: React.
       <div className="relative" style={{ padding: '36px 22px 32px' }}>
         {children}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -1403,10 +1399,11 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
       {/* Mode switcher ABOVE the giant card */}
       <ModeChips mode={mode} onSelect={setMode} lang={lang} />
 
-      {/* The giant playing card — no AnimatePresence wait so switching
-          modes flips immediately instead of waiting for the previous
-          exit animation. */}
-      <AnimatePresence>
+      {/* The giant playing card — no AnimatePresence/motion transition
+          on the mode swap so flipping bots/private/online is truly
+          instantaneous. The hover/idle inner micro-animations still
+          run normally inside GiantPlayingCard. */}
+      <div>
         <GiantPlayingCard mode={mode} key={mode}>
           {/* Mode badge + title */}
           <div className="flex flex-col items-center mb-5">
@@ -1462,7 +1459,7 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
             )}
           </div>
         </GiantPlayingCard>
-      </AnimatePresence>
+      </div>
 
       {/* Big neon CTA — polygon-cut, gradient fill, glowing edge ring,
           subtle moving sheen. Different shape from the standard

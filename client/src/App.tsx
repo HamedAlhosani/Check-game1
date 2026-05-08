@@ -15,6 +15,7 @@ import { CheckGamePage } from './pages/game/CheckGamePage';
 import { CheckSpectatePage } from './pages/game/CheckSpectatePage';
 import { ToastContainer } from './components/shared/ToastContainer';
 import { RulesModal } from './components/shared/RulesModal';
+import { hapticService } from './services/haptic.service';
 
 // Secondary pages — code-split. Loaded on first navigation.
 // We also keep references to the dynamic-import factories so we can prefetch
@@ -217,6 +218,8 @@ function FirstWinBonusGate() {
     const sock = socketService.connect();
     const onBonus = (data: { baseCoins: number; bonusCoins: number }) => {
       addToast(`🌅 أول فوز اليوم! +${data.bonusCoins} كوينز إضافية`, 'success', 6000);
+      // Tactile cue so the bonus feels rewarding even before the toast loads.
+      hapticService.reward();
       // Reflect the bonus on the local coin balance so the header counter
       // updates without a profile refetch.
       if (profile) setProfile({ ...profile, coins: (profile.coins || 0) + data.bonusCoins });

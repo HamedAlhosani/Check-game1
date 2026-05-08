@@ -1024,12 +1024,55 @@ export async function declineOrRemoveFriend(uid: string, otherUid: string): Prom
   return { ok: true };
 }
 
+// ── Head-to-head records ─────────────────────────────────────────────────────
+// Stored as a sparse object on the user profile: { [opponentUid]: { wins, losses, ties, opponentName, opponentAvatar, lastPlayedAt } }
+// Updated post-match for every present non-bot pair. Surfaced on the friends
+// list so users see their record vs each friend at a glance.
+
+export interface H2HEntry {
+  wins: number;
+  losses: number;
+  ties: number;
+  opponentName?: string;
+  opponentAvatar?: string;
+  lastPlayedAt?: number;
+}
+
+export function creditH2H(
+  uid: string,
+  opponentUid: string,
+  outcome: 'win' | 'loss' | 'tie',
+  opponentName?: string,
+  opponentAvatar?: string,
+): void {
+  if (uid === opponentUid) return;
+  const p: any = users.get(uid);
+  if (!p) return;
+  if (!p.h2h) p.h2h = {};
+  const cur: H2HEntry = p.h2h[opponentUid] || { wins: 0, losses: 0, ties: 0 };
+  if (outcome === 'win')  cur.wins++;
+  if (outcome === 'loss') cur.losses++;
+  if (outcome === 'tie')  cur.ties++;
+  if (opponentName)   cur.opponentName = opponentName;
+  if (opponentAvatar) cur.opponentAvatar = opponentAvatar;
+  cur.lastPlayedAt = Date.now();
+  p.h2h[opponentUid] = cur;
+  saveUsers();
+}
+
+export function getH2HFor(uid: string, opponentUid: string): H2HEntry | null {
+  const p: any = users.get(uid);
+  if (!p?.h2h) return null;
+  return p.h2h[opponentUid] || null;
+}
+
 export async function getFriendsList(uid: string): Promise<any[]> {
   const me = users.get(uid);
   if (!me || !me.friends) return [];
   return (me.friends as string[]).map((fUid: string) => {
     const f = users.get(fUid);
     if (!f) return null;
+    const h2h = (me as any).h2h?.[fUid] || null;
     return {
       uid: f.uid,
       displayName: f.displayName,
@@ -1039,6 +1082,9 @@ export async function getFriendsList(uid: string): Promise<any[]> {
       level: f.ranking?.level ?? 1,
       wins: f.stats?.totalWins ?? 0,
       currentStreak: f.stats?.currentStreak ?? 0,
+      // Head-to-head from the requester's perspective (their wins / losses
+      // / ties against this friend across all match types).
+      h2h: h2h ? { wins: h2h.wins || 0, losses: h2h.losses || 0, ties: h2h.ties || 0 } : null,
     };
   }).filter(Boolean);
 }

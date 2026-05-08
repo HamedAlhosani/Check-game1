@@ -6,7 +6,7 @@ import { BotPlayer } from '../game/BotPlayer';
 import { LudoEngine } from '../game/ludo/LudoEngine';
 import { DominoEngine } from '../game/domino/DominoEngine';
 import { JacaroEngine } from '../game/jackaro/JacaroEngine';
-import { recordGameResult, saveMatchHistory } from '../services/firestoreService';
+import { recordGameResult, saveMatchHistory, creditH2H } from '../services/firestoreService';
 import { tournamentManager } from '../rooms/TournamentManager';
 import { notifyFriendsOfStatusChange } from './notifications';
 import {
@@ -105,6 +105,10 @@ export function startGameSession(io: Server, roomId: string): void {
           players: realPlayers.map(p => ({ uid: p.uid, displayName: p.displayName, avatarId: p.avatarId, equippedFrame: (p as any).equippedFrame, score: p.cumulativeScore })),
           winnerId,
         }).catch(() => null);
+        // Head-to-head: for every pair of humans at the table, credit the
+        // winner against each loser. Skips the engagement-edge cases the
+        // win/loss recorder above also skips.
+        recordH2H(realPlayers, engine, winningUids);
       }
     }
   };
@@ -226,6 +230,11 @@ export function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEn
           }
         }).catch(() => null);
         notifyFriendsOfStatusChange(p.uid);
+      }
+      // Same H2H pass for the bot-poll path so private/online matches both
+      // contribute to friend-vs-friend records.
+      if (realPlayers.length > 0) {
+        recordH2H(realPlayers, engine, winningUids);
       }
       if (realPlayers.length > 0) {
         // Capture both human and bot players in the record so the replay
@@ -574,6 +583,33 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
         if (idx !== -1) bots.splice(idx, 1);
       }
       socket.emit(SOCKET_EVENTS.SYSTEM_RECONNECT_STATE, (engine as any).getPublicState());
+    }
+  }
+}
+
+/**
+ * Head-to-head recorder. For every pair of present, non-forfeited human
+ * players in the table, credit the winner against each loser. Skips bots,
+ * disconnected-and-replaced seats (same forfeit rule recordGameResult uses),
+ * and self-pairs. Cheap — at most n*(n-1)/2 entries per match.
+ */
+function recordH2H(
+  players: { uid: string; displayName: string; avatarId: string }[],
+  engine: any,
+  winningUids: Set<string>,
+): void {
+  const eligible = players.filter(p => !engine.isReplacedByBot(p.uid));
+  for (let i = 0; i < eligible.length; i++) {
+    for (let j = 0; j < eligible.length; j++) {
+      if (i === j) continue;
+      const a = eligible[i];
+      const b = eligible[j];
+      // Outcome from A's perspective vs B.
+      const aWon = winningUids.has(a.uid) && !winningUids.has(b.uid);
+      const aLost = !winningUids.has(a.uid) && winningUids.has(b.uid);
+      // If both won (2v2 teammates) or both lost, treat as a tie for
+      // h2h purposes — the rivalry is between opponents, not partners.
+      try { creditH2H(a.uid, b.uid, aWon ? 'win' : aLost ? 'loss' : 'tie', b.displayName, b.avatarId); } catch { /* noop */ }
     }
   }
 }

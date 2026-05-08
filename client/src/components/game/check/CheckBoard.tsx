@@ -9,6 +9,7 @@ import { ChatPanel } from '../shared/ChatPanel';
 import { GameOverModal } from '../shared/GameOverModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { soundService } from '../../../services/sound.service';
+import { hapticService } from '../../../services/haptic.service';
 import { FrameRing } from '../../shared/FrameRing';
 import { CharacterArt } from '../../shared/CharacterArt';
 import { RoundStartCinematic, ReshuffleAnimation } from './GameCinematics';
@@ -1006,13 +1007,28 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
       }
     });
     socket.on(SOCKET_EVENTS.GAME_CARD_DRAWN, (data: any) => { if (data.card) { setDrawnCard(data.card); soundService.playCardDraw(); } actedRef.current = true; });
-    socket.on(SOCKET_EVENTS.GAME_OVER, (data: any) => { setGameOverData(data); soundService.playWin(); });
+    socket.on(SOCKET_EVENTS.GAME_OVER, (data: any) => {
+      setGameOverData(data);
+      soundService.playWin();
+      // Haptic: positive buzz if I won, longer rumble if I lost.
+      if (data?.winnerId === user?.uid) hapticService.win();
+      else                              hapticService.loss();
+    });
     socket.on(SOCKET_EVENTS.GAME_CHECK_CALLED, (data: any) => {
       // Server includes caller's avatarId in the broadcast so every player in the
       // room hears the same character voice — independent of any stale local state.
       soundService.playCheckVoice(data?.callerAvatarId);
+      hapticService.checkCall();
     });
-    socket.on(SOCKET_EVENTS.GAME_BURN_INVALID, () => { soundService.playError(); });
+    socket.on(SOCKET_EVENTS.GAME_BURN_INVALID, () => {
+      soundService.playError();
+      hapticService.burnBad();
+    });
+    socket.on(SOCKET_EVENTS.GAME_CARD_BURNED, (data: any) => {
+      // Successful burn — short snappy double-buzz, only for the player who
+      // actually burned (other tables don't feel the burn).
+      if (data?.success && data?.uid === user?.uid) hapticService.burnGood();
+    });
     socket.on(SOCKET_EVENTS.GAME_EPIC_MOMENT, (data: any) => {
       // Capture key OUTSIDE the timeout — Date.now() inside the callback would
       // run at fire time, never matching the original key, so the banner never
@@ -1061,6 +1077,7 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
       socket.off(SOCKET_EVENTS.GAME_SWAP_EXECUTED);
       socket.off(SOCKET_EVENTS.GAME_CHECK_CALLED);
       socket.off(SOCKET_EVENTS.GAME_BURN_INVALID);
+      socket.off(SOCKET_EVENTS.GAME_CARD_BURNED);
       socket.off(SOCKET_EVENTS.GAME_EPIC_MOMENT);
       socket.off(SOCKET_EVENTS.GAME_DECK_RESHUFFLED);
       // Reset game state so a new game starts fresh
@@ -1195,7 +1212,7 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
           socket?.emit(SOCKET_EVENTS.GAME_BOT_TAKEOVER, { gameId });
         }
       }
-      if (cur === user?.uid) { actedRef.current = false; drawingRef.current = false; soundService.playTurnStart(); }
+      if (cur === user?.uid) { actedRef.current = false; drawingRef.current = false; soundService.playTurnStart(); hapticService.yourTurn(); }
       prevTurnRef.current = cur;
       setPendingBurnPos(null);
       setDiscardSelected(false);

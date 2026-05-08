@@ -33,6 +33,8 @@ interface FriendInfo {
   online?: boolean;
   /** Consecutive Check wins — drives the 🔥 streak badge when ≥ 3. */
   currentStreak?: number;
+  /** Head-to-head from the viewer's perspective. */
+  h2h?: { wins: number; losses: number; ties: number } | null;
 }
 
 type Tab = 'friends' | 'requests' | 'add';
@@ -416,6 +418,21 @@ function FriendCard({ friend, busy, actionLabel, actionStyle, onAction, lang }: 
               title={`${friend.currentStreak} ${lang === 'ar' ? 'فوز متتابع' : 'win streak'}`}
             >
               🔥 {friend.currentStreak}
+            </span>
+          )}
+          {friend.h2h && (friend.h2h.wins + friend.h2h.losses + friend.h2h.ties) > 0 && (
+            <span
+              className="font-arabic text-xs"
+              title={`${friend.h2h.wins}W ${friend.h2h.losses}L ${friend.h2h.ties}T`}
+              style={{
+                color: friend.h2h.wins > friend.h2h.losses
+                  ? 'rgba(80,200,120,0.85)'
+                  : friend.h2h.wins < friend.h2h.losses
+                    ? 'rgba(224,112,64,0.85)'
+                    : 'rgba(251,243,219,0.55)',
+                fontWeight: 600,
+              }}>
+              ⚔ {friend.h2h.wins}–{friend.h2h.losses}
             </span>
           )}
         </div>

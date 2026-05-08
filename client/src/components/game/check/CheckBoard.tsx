@@ -15,7 +15,7 @@ import { RoundStartCinematic, ReshuffleAnimation } from './GameCinematics';
 import { RulesModal } from '../../shared/RulesModal';
 import { ProfileModal } from '../../shared/ProfileModal';
 
-interface Props { gameId: string; roomId: string; gameState: GameState; }
+interface Props { gameId: string; roomId: string; gameState: GameState; spectator?: boolean; }
 
 // ─── Timer Bar ────────────────────────────────────────────────────────────────
 function TimerBar({ endAt, active, maxMs = 30000, w = 48 }: { endAt: number | null; active?: boolean; maxMs?: number; w?: number }) {
@@ -781,7 +781,7 @@ function CircularOpponents({ opponents, tableRadius, isMobile, gameState, isSpec
 }
 
 // ─── CheckBoard ───────────────────────────────────────────────────────────────
-export function CheckBoard({ gameId, roomId, gameState }: Props) {
+export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Props) {
   const { user, profile } = useAuthStore();
   const boardThemeId = (profile?.equippedItems as any)?.boardTheme || 'board_classic';
   const cardBackId = (profile?.equippedItems as any)?.cardBack || 'card_classic';
@@ -2830,7 +2830,7 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
         <GameOverModal open={true} winnerId={gameOverData.winnerId}
           finalScores={gameOverData.finalScores} players={gameState.players}
           currentUid={user?.uid}
-          onPlayAgain={() => navigate('/home', {
+          onPlayAgain={spectator ? undefined : () => navigate('/home', {
             state: {
               autoPlay: {
                 playerCount: gameState.players.length,
@@ -2838,6 +2838,22 @@ export function CheckBoard({ gameId, roomId, gameState }: Props) {
               },
             },
           })} />
+      )}
+
+      {spectator && (
+        <div className="fixed top-2 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
+          <div className="rounded-full font-arabic font-bold flex items-center gap-2 px-3 py-1.5"
+            style={{
+              background: 'linear-gradient(135deg, rgba(64,164,232,0.85), rgba(157,216,232,0.85))',
+              border: '1px solid rgba(157,216,232,0.85)',
+              color: '#0E0905',
+              fontSize: 12,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
+            }}>
+            <span style={{ fontSize: 14 }}>👁️</span>
+            <span>وضع المشاهدة</span>
+          </div>
+        </div>
       )}
 
       {/* Epic moment commentary banner — slides in from the top with a

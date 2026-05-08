@@ -98,6 +98,25 @@ export class RoomManager {
     return undefined;
   }
 
+  /**
+   * Returns the live game a uid is seated in, suitable for presenting a
+   * "spectate" handle to a friend. Only public rooms are exposed — private
+   * rooms (invite code) keep their privacy and aren't surfaced to friends.
+   */
+  getCurrentGameForUid(uid: string): { gameId: string; gameType: GameType } | null {
+    for (const room of this.rooms.values()) {
+      if (
+        room.status === 'in_progress' &&
+        room.type === 'public' &&
+        room.gameId &&
+        room.players.some(p => p.uid === uid && !p.isBot)
+      ) {
+        return { gameId: room.gameId, gameType: room.gameType };
+      }
+    }
+    return null;
+  }
+
   removeSocket(socketId: string): void {
     this.socketToRoom.delete(socketId);
   }

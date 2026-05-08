@@ -46,6 +46,7 @@ import {
   kickMember, setRole, transferLeader,
 } from './services/clanService';
 import { notifyUser } from './socket/notifications';
+import { roomManager } from './rooms/RoomManager';
 
 const app = express();
 app.use(cors({
@@ -665,7 +666,14 @@ app.post('/api/daily/freeze', requireAuth, wrap(async (req, res) => {
 app.get('/api/friends', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const friends = await getFriendsList(uid);
-  res.json(friends);
+  // Enrich with live "is currently in a public game" info so the client can
+  // surface a "watch" handle. Private games stay private — the lookup
+  // filters them out.
+  const enriched = friends.map(f => ({
+    ...f,
+    inGame: roomManager.getCurrentGameForUid(f.uid),
+  }));
+  res.json(enriched);
 }));
 
 app.get('/api/friends/requests', requireAuth, wrap(async (req, res) => {

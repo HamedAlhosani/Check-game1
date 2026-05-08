@@ -12,6 +12,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { LandingPage } from './pages/landing/LandingPage';
 import { HomePage } from './pages/home/HomePage';
 import { CheckGamePage } from './pages/game/CheckGamePage';
+import { CheckSpectatePage } from './pages/game/CheckSpectatePage';
 import { ToastContainer } from './components/shared/ToastContainer';
 import { RulesModal } from './components/shared/RulesModal';
 
@@ -244,6 +245,7 @@ export function App() {
             <Route path="/register" element={<PublicOnly><RegisterPage /></PublicOnly>} />
             <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
             <Route path="/game/check/:gameId" element={<ProtectedRoute><CheckGamePage /></ProtectedRoute>} />
+            <Route path="/watch/check/:gameId" element={<ProtectedRoute><CheckSpectatePage /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
             <Route path="/user/:uid" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
             <Route path="/leaderboard" element={<ProtectedRoute><LeaderboardPage /></ProtectedRoute>} />

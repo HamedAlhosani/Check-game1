@@ -66,6 +66,8 @@ export const SOCKET_EVENTS = {
   GAME_RECLAIM_SEAT: 'game:reclaim_seat',
   GAME_AUTOPLAY: 'game:autoplay',
   GAME_BOT_TAKEOVER: 'game:bot_takeover',
+  GAME_SPECTATE: 'game:spectate',
+  GAME_SPECTATE_LEAVE: 'game:spectate_leave',
 
   // Lobby - Server → Client
   LOBBY_ROOM_LIST: 'lobby:room_list',

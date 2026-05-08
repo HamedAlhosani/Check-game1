@@ -469,6 +469,40 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     if (idx !== -1) bots.splice(idx, 1);
   });
 
+  // Spectate a friend's public game. The socket joins the game's room so
+  // it receives the same state broadcasts seated players do — but we
+  // intentionally do NOT call roomManager.trackSocket, so a spectator
+  // disconnect can't trip the player-abandonment logic.
+  socket.on(SOCKET_EVENTS.GAME_SPECTATE, (payload: { gameId: string }) => {
+    if (!socket.uid) return;
+    const engine = roomManager.getGame(payload.gameId) as GameEngine | undefined;
+    if (!engine) {
+      socket.emit(SOCKET_EVENTS.LOBBY_ERROR, { message: 'Game not found' });
+      return;
+    }
+    // Only allow spectating PUBLIC matches. Private invite-code rooms stay
+    // closed even from a friend's friends list.
+    const room = roomManager.getRoom(engine.roomId);
+    if (!room || room.type !== 'public') {
+      socket.emit(SOCKET_EVENTS.LOBBY_ERROR, { message: 'This game is private' });
+      return;
+    }
+    // Refuse if the requester is actually one of the seated players —
+    // they should reconnect, not spectate themselves.
+    if (room.players.some(p => p.uid === socket.uid && !p.isBot)) {
+      socket.emit(SOCKET_EVENTS.LOBBY_ERROR, { message: 'You are a player in this game' });
+      return;
+    }
+    socket.join(engine.roomId);
+    socket.emit(SOCKET_EVENTS.SYSTEM_RECONNECT_STATE, (engine as any).getPublicState());
+  });
+
+  socket.on(SOCKET_EVENTS.GAME_SPECTATE_LEAVE, (payload: { gameId: string }) => {
+    const engine = roomManager.getGame(payload.gameId) as GameEngine | undefined;
+    if (!engine) return;
+    socket.leave(engine.roomId);
+  });
+
   // Reconnect: find room by socket ID (normal) or by UID (after page refresh)
   const roomId = roomManager.getRoomForSocket(socket.id) ??
     (socket.uid ? roomManager.getRoomForUid(socket.uid) : undefined);

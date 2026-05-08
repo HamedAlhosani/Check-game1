@@ -27,6 +27,8 @@ interface FriendInfo {
   avatarId: string;
   level: number;
   wins?: number;
+  /** Set when the friend is in a public match — drives the "Watch" handle. */
+  inGame?: { gameId: string; gameType: string } | null;
 }
 
 type Tab = 'friends' | 'requests' | 'add';
@@ -399,6 +401,22 @@ function FriendCard({ friend, busy, actionLabel, actionStyle, onAction, lang }: 
           {friend.wins !== undefined && <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.3)' }}>🏆 {friend.wins}</span>}
         </div>
       </div>
+      {friend.inGame && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/watch/${friend.inGame!.gameType}/${friend.inGame!.gameId}`);
+          }}
+          className="px-3 py-1.5 rounded-lg font-arabic text-xs transition-all flex items-center gap-1"
+          style={{
+            background: 'rgba(80,200,120,0.15)',
+            border: '1px solid rgba(80,200,120,0.45)',
+            color: '#7AC74F',
+          }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#7AC74F', boxShadow: '0 0 6px #7AC74F' }} />
+          {lang === 'ar' ? '👁 شاهد' : '👁 Watch'}
+        </button>
+      )}
       <button disabled={busy} onClick={(e) => { e.stopPropagation(); onAction(); }}
         className="px-3 py-1.5 rounded-lg font-arabic text-xs transition-all disabled:opacity-50"
         style={{ background: actionStyle.color, border: `1px solid ${actionStyle.border}`, color: actionStyle.textColor }}>

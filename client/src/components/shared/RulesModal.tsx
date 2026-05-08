@@ -107,17 +107,40 @@ export function RulesModal({ open, onClose }: Props) {
 
   return (
     <Modal open={open} title="قوانين لعبة Check 🃏" size="xl">
-      <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-1 mb-5">
+      <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1 mb-5">
         {SECTIONS.map((sec, i) => (
-          <div key={i} className="bg-night/50 rounded-xl p-4 border border-gold/10">
-            <h3 className="font-arabic font-bold text-gold mb-3 flex items-center gap-2">
-              <span className="text-lg">{sec.icon}</span>
+          <div
+            key={i}
+            className="relative overflow-hidden"
+            style={{
+              padding: '16px 16px 14px',
+              background: 'linear-gradient(160deg, rgba(40,28,12,0.55) 0%, rgba(14,9,5,0.55) 100%)',
+              border: '1.5px solid rgba(232,201,122,0.30)',
+              backdropFilter: 'blur(12px) saturate(120%)',
+              WebkitBackdropFilter: 'blur(12px) saturate(120%)',
+              boxShadow: '0 6px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
+              clipPath:
+                'polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px)',
+            }}>
+            {/* Top metallic sheen */}
+            <span aria-hidden style={{
+              position: 'absolute', top: 6, left: 18, right: 18, height: 1,
+              background: 'linear-gradient(90deg, transparent, rgba(232,201,122,0.55), transparent)',
+            }} />
+            <h3 className="font-display tracking-wider mb-3 flex items-center gap-2"
+              style={{
+                fontSize: 14, color: '#FFE9B0',
+                letterSpacing: '0.10em',
+                textShadow: '0 0 12px rgba(232,201,122,0.45)',
+              }}>
+              <span style={{ fontSize: 18 }}>{sec.icon}</span>
               {sec.title}
             </h3>
             <ul className="space-y-1.5">
               {sec.items.map((rule, j) => (
-                <li key={j} className="flex items-start gap-2 text-sand-light text-sm font-arabic leading-relaxed">
-                  <span className="text-gold/60 mt-1 shrink-0 text-xs">◆</span>
+                <li key={j} className="flex items-start gap-2 font-arabic leading-relaxed"
+                  style={{ fontSize: 13, color: 'rgba(245,230,200,0.85)' }}>
+                  <span style={{ color: 'rgba(232,201,122,0.65)', marginTop: 4, fontSize: 8 }} className="shrink-0">◆</span>
                   {rule}
                 </li>
               ))}

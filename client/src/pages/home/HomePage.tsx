@@ -1403,8 +1403,10 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
       {/* Mode switcher ABOVE the giant card */}
       <ModeChips mode={mode} onSelect={setMode} lang={lang} />
 
-      {/* The giant playing card */}
-      <AnimatePresence mode="wait">
+      {/* The giant playing card — no AnimatePresence wait so switching
+          modes flips immediately instead of waiting for the previous
+          exit animation. */}
+      <AnimatePresence>
         <GiantPlayingCard mode={mode} key={mode}>
           {/* Mode badge + title */}
           <div className="flex flex-col items-center mb-5">

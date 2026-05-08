@@ -143,9 +143,9 @@ export function ProfilePage() {
       maxWidth={760}
       right={
         <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
-          style={{ background: 'rgba(167,139,250,0.10)', border: '1.5px solid rgba(167,139,250,0.45)' }}>
+          style={{ background: 'rgba(212,169,106,0.10)', border: '1.5px solid rgba(212,169,106,0.45)' }}>
           <span className="text-sm">🪙</span>
-          <span className="font-bold font-mono text-sm" style={{ color: '#F0E9FF' }}>{profile.coins ?? 0}</span>
+          <span className="font-bold font-mono text-sm" style={{ color: '#F8EFD5' }}>{profile.coins ?? 0}</span>
         </div>
       }
     >
@@ -161,9 +161,9 @@ export function ProfilePage() {
                   className="rounded-full flex items-center justify-center"
                   style={{
                     width: 108, height: 108,
-                    background: 'radial-gradient(circle at 30% 30%, rgba(167,139,250,0.55), rgba(40,28,12,0.55) 70%)',
-                    border: '2px solid rgba(167,139,250,0.75)',
-                    boxShadow: '0 0 28px rgba(167,139,250,0.45), inset 0 -4px 12px rgba(0,0,0,0.45)',
+                    background: 'radial-gradient(circle at 30% 30%, rgba(212,169,106,0.55), rgba(40,28,12,0.55) 70%)',
+                    border: '2px solid rgba(212,169,106,0.75)',
+                    boxShadow: '0 0 28px rgba(212,169,106,0.45), inset 0 -4px 12px rgba(0,0,0,0.45)',
                     padding: 6,
                   }}>
                   <CharacterArt id={profile.avatarId} size={92}/>
@@ -172,10 +172,10 @@ export function ProfilePage() {
                 <div className="absolute rounded-full font-bold flex items-center justify-center"
                   style={{
                     bottom: -4, insetInlineEnd: -4, minWidth: 32, height: 32,
-                    background: 'linear-gradient(135deg, #F0E9FF, #A78BFA)',
-                    fontSize: 14, color: '#0A0814', fontWeight: 800,
-                    border: '2.5px solid #15102F', padding: '0 7px',
-                    boxShadow: '0 0 14px rgba(167,139,250,0.65)',
+                    background: 'linear-gradient(135deg, #F8EFD5, #D4A96A)',
+                    fontSize: 14, color: '#1A1208', fontWeight: 800,
+                    border: '2.5px solid #2A1F12', padding: '0 7px',
+                    boxShadow: '0 0 14px rgba(212,169,106,0.65)',
                   }}>
                   {level}
                 </div>
@@ -184,30 +184,30 @@ export function ProfilePage() {
               <div className="flex-1 min-w-0 w-full sm:w-auto text-center sm:text-start">
                 <h1 className="font-display tracking-wider truncate"
                   style={{
-                    fontSize: 26, color: '#F0E9FF',
+                    fontSize: 26, color: '#F8EFD5',
                     letterSpacing: '0.06em', lineHeight: 1.05,
-                    textShadow: '0 0 16px rgba(167,139,250,0.55)',
+                    textShadow: '0 0 16px rgba(212,169,106,0.55)',
                   }}>
                   {profile.displayName}
                 </h1>
-                <p className="font-arabic mt-1" style={{ fontSize: 11, color: 'rgba(220,210,255,0.55)' }}>
+                <p className="font-arabic mt-1" style={{ fontSize: 11, color: 'rgba(248,239,213,0.55)' }}>
                   ⟡ {levelTitle} · {t('level')} {level}
                 </p>
-                <p className="text-xs mt-0.5" style={{ color: 'rgba(220,210,255,0.30)', direction: 'ltr' }}>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(248,239,213,0.30)', direction: 'ltr' }}>
                   {profile.username || ''}
                 </p>
 
                 <div className="mt-3">
-                  <div className="flex justify-between font-arabic text-xs mb-1" style={{ color: 'rgba(220,210,255,0.50)' }}>
+                  <div className="flex justify-between font-arabic text-xs mb-1" style={{ color: 'rgba(248,239,213,0.50)' }}>
                     <span>{xp % 200} / 200 XP</span>
                     <span>{t('level')} {level + 1} {lang === 'ar' ? '←' : '→'}</span>
                   </div>
-                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.20)' }}>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(212,169,106,0.10)', border: '1px solid rgba(212,169,106,0.20)' }}>
                     <div style={{
                       width: `${xpPct}%`, height: '100%',
-                      background: 'linear-gradient(90deg, #5B21B6 0%, #F0E9FF 100%)',
+                      background: 'linear-gradient(90deg, #8B5E3C 0%, #F8EFD5 100%)',
                       borderRadius: 999, transition: 'width .7s ease',
-                      boxShadow: '0 0 10px rgba(167,139,250,0.65)',
+                      boxShadow: '0 0 10px rgba(212,169,106,0.65)',
                     }} />
                   </div>
                 </div>
@@ -216,7 +216,7 @@ export function ProfilePage() {
 
             {/* Big neon stat triad */}
             <div className="grid grid-cols-3 gap-2 mt-5 pt-4"
-              style={{ borderTop: '1px solid rgba(167,139,250,0.20)' }}>
+              style={{ borderTop: '1px solid rgba(212,169,106,0.20)' }}>
               <NeonStat icon="🏆" value={stats.totalWins}     label={lang === 'ar' ? 'فوز'   : 'wins'}    accent="gold"/>
               <NeonStat icon="🎮" value={stats.totalGames}    label={lang === 'ar' ? 'لعبة'  : 'games'}   accent="cyan"/>
               <NeonStat icon="🔥" value={stats.currentStreak} label={lang === 'ar' ? 'سلسلة' : 'streak'}  accent="red"/>
@@ -227,10 +227,10 @@ export function ProfilePage() {
         {/* Quick links */}
         <div className="grid grid-cols-2 gap-2 mb-5">
           {[
-            { path: '/', label: lang === 'ar' ? '🏠 الصفحة الرئيسية' : '🏠 Home', bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.12)', color: 'rgba(220,210,255,0.75)' },
+            { path: '/', label: lang === 'ar' ? '🏠 الصفحة الرئيسية' : '🏠 Home', bg: 'rgba(255,255,255,0.05)', border: 'rgba(255,255,255,0.12)', color: 'rgba(248,239,213,0.75)' },
             { path: '/friends', label: t('profile_go_friends'), bg: 'rgba(80,140,220,0.08)', border: 'rgba(80,140,220,0.25)', color: 'rgba(130,180,245,0.9)' },
             { path: '/history', label: t('profile_go_history'), bg: 'rgba(80,200,120,0.08)', border: 'rgba(80,200,120,0.25)', color: 'rgba(100,210,140,0.9)' },
-            { path: '/leaderboard', label: t('profile_go_leaderboard'), bg: 'rgba(167,139,250,0.08)', border: 'rgba(167,139,250,0.25)', color: 'rgba(167,139,250,0.9)' },
+            { path: '/leaderboard', label: t('profile_go_leaderboard'), bg: 'rgba(212,169,106,0.08)', border: 'rgba(212,169,106,0.25)', color: 'rgba(212,169,106,0.9)' },
           ].map(l => (
             <button key={l.path} onClick={() => navigate(l.path)}
               className="py-2.5 rounded-xl font-arabic text-xs font-bold transition-all border flex flex-col items-center gap-1"
@@ -243,7 +243,7 @@ export function ProfilePage() {
         {/* Stats cards */}
         <div className="grid grid-cols-3 gap-2 mb-5">
           {[
-            { label: lang === 'ar' ? 'انتصارات Check' : 'Check Wins', value: stats.checkWins, icon: '🃏', color: '#A78BFA' },
+            { label: lang === 'ar' ? 'انتصارات Check' : 'Check Wins', value: stats.checkWins, icon: '🃏', color: '#D4A96A' },
             { label: lang === 'ar' ? 'إجمالي الفوز' : 'Total Wins', value: stats.totalWins, icon: '🏆', color: '#FFD700' },
             { label: lang === 'ar' ? 'أفضل سلسلة' : 'Best Streak', value: stats.currentStreak, icon: '🔥', color: '#E07040' },
           ].map(s => (
@@ -251,7 +251,7 @@ export function ProfilePage() {
               style={{ background: 'rgba(255,255,255,0.025)', borderColor: 'rgba(255,255,255,0.07)' }}>
               <span className="text-xl sm:text-2xl">{s.icon}</span>
               <p className="font-bold text-lg sm:text-xl mt-1" style={{ color: s.color }}>{s.value || 0}</p>
-              <p className="font-arabic text-xs mt-0.5" style={{ color: 'rgba(220,210,255,0.35)', fontSize: 10 }}>{s.label}</p>
+              <p className="font-arabic text-xs mt-0.5" style={{ color: 'rgba(248,239,213,0.35)', fontSize: 10 }}>{s.label}</p>
             </div>
           ))}
         </div>
@@ -267,10 +267,10 @@ export function ProfilePage() {
             <button key={tt.id} onClick={() => { setTab(tt.id); soundService.playClick(); }}
               className="flex-1 py-2 rounded-lg font-arabic text-xs transition-all"
               style={tab === tt.id ? {
-                background: 'linear-gradient(135deg, rgba(167,139,250,0.25), rgba(167,139,250,0.10))',
-                color: '#F0E9FF', fontWeight: 700,
-                border: '1px solid rgba(167,139,250,0.35)',
-              } : { color: 'rgba(220,210,255,0.4)', border: '1px solid transparent' }}>
+                background: 'linear-gradient(135deg, rgba(212,169,106,0.25), rgba(212,169,106,0.10))',
+                color: '#F8EFD5', fontWeight: 700,
+                border: '1px solid rgba(212,169,106,0.35)',
+              } : { color: 'rgba(248,239,213,0.4)', border: '1px solid transparent' }}>
               {tt.icon} {tt.label}
             </button>
           ))}
@@ -296,10 +296,10 @@ export function ProfilePage() {
             className="rounded-2xl p-5 border"
             style={{ background: 'rgba(255,255,255,0.025)', borderColor: 'rgba(255,255,255,0.07)' }}>
             <div className="flex items-center justify-between mb-4">
-              <p className="font-arabic text-sm" style={{ color: 'rgba(220,210,255,0.45)' }}>
+              <p className="font-arabic text-sm" style={{ color: 'rgba(248,239,213,0.45)' }}>
                 {lang === 'ar' ? 'شخصيتان مجانيتان — الباقي من المتجر' : '2 free characters — rest from the store'}
               </p>
-              <Link to="/store" className="font-arabic text-xs transition-all" style={{ color: '#A78BFA' }}>
+              <Link to="/store" className="font-arabic text-xs transition-all" style={{ color: '#D4A96A' }}>
                 {t('profile_go_store')}
               </Link>
             </div>
@@ -312,9 +312,9 @@ export function ProfilePage() {
                     onClick={() => isOwned ? saveAvatar(char.id) : navigate('/store')}
                     className="relative rounded-xl py-3 px-2 flex flex-col items-center gap-1.5 transition-all border"
                     style={isActive ? {
-                      borderColor: 'rgba(167,139,250,0.7)',
-                      background: 'rgba(167,139,250,0.10)',
-                      boxShadow: '0 0 12px rgba(167,139,250,0.15)',
+                      borderColor: 'rgba(212,169,106,0.7)',
+                      background: 'rgba(212,169,106,0.10)',
+                      boxShadow: '0 0 12px rgba(212,169,106,0.15)',
                     } : isOwned ? {
                       borderColor: 'rgba(255,255,255,0.1)',
                       background: 'rgba(255,255,255,0.03)',
@@ -327,11 +327,11 @@ export function ProfilePage() {
                       {!isOwned && <span className="absolute -bottom-1 -right-1 text-xs">🔒</span>}
                     </div>
                     <span className="font-arabic text-center leading-tight"
-                      style={{ fontSize: 11, color: isActive ? '#A78BFA' : isOwned ? 'rgba(220,210,255,0.65)' : 'rgba(220,210,255,0.28)' }}>
+                      style={{ fontSize: 11, color: isActive ? '#D4A96A' : isOwned ? 'rgba(248,239,213,0.65)' : 'rgba(248,239,213,0.28)' }}>
                       {lang === 'ar' ? char.nameAr : char.nameEn}
                     </span>
-                    {isActive && <span style={{ fontSize: 10, color: '#A78BFA', fontWeight: 700 }}>✓ {lang === 'ar' ? 'مُفعَّل' : 'Active'}</span>}
-                    {!isOwned && <span className="font-arabic" style={{ fontSize: 10, color: 'rgba(167,139,250,0.5)' }}>🪙 {char.price.toLocaleString()}</span>}
+                    {isActive && <span style={{ fontSize: 10, color: '#D4A96A', fontWeight: 700 }}>✓ {lang === 'ar' ? 'مُفعَّل' : 'Active'}</span>}
+                    {!isOwned && <span className="font-arabic" style={{ fontSize: 10, color: 'rgba(212,169,106,0.5)' }}>🪙 {char.price.toLocaleString()}</span>}
                   </button>
                 );
               })}
@@ -356,21 +356,21 @@ export function ProfilePage() {
           <motion.div key="settings" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             className="rounded-2xl p-5 space-y-4 border"
             style={{ background: 'rgba(255,255,255,0.025)', borderColor: 'rgba(255,255,255,0.07)' }}>
-            <p className="font-arabic font-bold text-base" style={{ color: '#F0E9FF' }}>
+            <p className="font-arabic font-bold text-base" style={{ color: '#F8EFD5' }}>
               {lang === 'ar' ? '🔊 الصوت' : '🔊 Sound'}
             </p>
 
             {/* Mute toggle */}
             <div className="flex items-center justify-between rounded-2xl px-4 py-3.5"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <span className="font-arabic text-sm" style={{ color: 'rgba(220,210,255,0.75)' }}>
+              <span className="font-arabic text-sm" style={{ color: 'rgba(248,239,213,0.75)' }}>
                 {soundOn ? (lang === 'ar' ? '🔊 الصوت مفعّل' : '🔊 Sound On') : (lang === 'ar' ? '🔇 الصوت معطّل' : '🔇 Sound Off')}
               </span>
               <button
                 onClick={() => { const n = !soundOn; soundService.setEnabled(n); setSoundOn(n); }}
                 style={{
                   width: 50, height: 28, borderRadius: 14, position: 'relative',
-                  background: soundOn ? '#A78BFA' : 'rgba(255,255,255,0.15)',
+                  background: soundOn ? '#D4A96A' : 'rgba(255,255,255,0.15)',
                   border: 'none', cursor: 'pointer', transition: 'background 0.25s',
                 }}>
                 <div style={{
@@ -385,23 +385,23 @@ export function ProfilePage() {
             <div className="flex flex-col gap-3 rounded-2xl px-4 py-3.5"
               style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', opacity: soundOn ? 1 : 0.35 }}>
               <div className="flex items-center justify-between">
-                <span className="font-arabic text-sm" style={{ color: 'rgba(220,210,255,0.75)' }}>
+                <span className="font-arabic text-sm" style={{ color: 'rgba(248,239,213,0.75)' }}>
                   {lang === 'ar' ? '🎚️ مستوى الصوت' : '🎚️ Volume'}
                 </span>
-                <span className="font-bold font-mono text-sm" style={{ color: '#A78BFA' }}>{Math.round(volume * 100)}%</span>
+                <span className="font-bold font-mono text-sm" style={{ color: '#D4A96A' }}>{Math.round(volume * 100)}%</span>
               </div>
               <input type="range" min={0} max={100} value={Math.round(volume * 100)}
                 disabled={!soundOn}
                 onChange={e => { const v = Number(e.target.value) / 100; soundService.setVolume(v); setVolumeState(v); }}
-                className="w-full" style={{ accentColor: '#A78BFA', height: 4 }} />
-              <div className="flex justify-between font-arabic" style={{ fontSize: 10, color: 'rgba(220,210,255,0.25)' }}>
+                className="w-full" style={{ accentColor: '#D4A96A', height: 4 }} />
+              <div className="flex justify-between font-arabic" style={{ fontSize: 10, color: 'rgba(248,239,213,0.25)' }}>
                 <span>{lang === 'ar' ? 'صامت' : 'Mute'}</span>
                 <span>{lang === 'ar' ? 'أقصى' : 'Max'}</span>
               </div>
             </div>
 
             {/* Equipped items display */}
-            <p className="font-arabic font-bold text-base pt-2" style={{ color: '#F0E9FF' }}>
+            <p className="font-arabic font-bold text-base pt-2" style={{ color: '#F8EFD5' }}>
               {lang === 'ar' ? '🎴 العناصر المجهّزة' : '🎴 Equipped Items'}
             </p>
             {(['cardBack', 'avatarFrame', 'boardTheme'] as const).map(cat => {
@@ -414,14 +414,14 @@ export function ProfilePage() {
               return (
                 <div key={cat} className="flex items-center justify-between rounded-xl px-4 py-3"
                   style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span className="font-arabic text-sm" style={{ color: 'rgba(220,210,255,0.65)' }}>
+                  <span className="font-arabic text-sm" style={{ color: 'rgba(248,239,213,0.65)' }}>
                     {lang === 'ar' ? catNames[cat].ar : catNames[cat].en}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="font-arabic text-xs" style={{ color: '#A78BFA' }}>{equipped || '—'}</span>
+                    <span className="font-arabic text-xs" style={{ color: '#D4A96A' }}>{equipped || '—'}</span>
                     <button onClick={() => navigate('/store')}
                       className="font-arabic text-xs px-2 py-1 rounded-lg"
-                      style={{ background: 'rgba(167,139,250,0.12)', color: '#F0E9FF', border: '1px solid rgba(167,139,250,0.25)' }}>
+                      style={{ background: 'rgba(212,169,106,0.12)', color: '#F8EFD5', border: '1px solid rgba(212,169,106,0.25)' }}>
                       {lang === 'ar' ? 'تغيير' : 'Change'}
                     </button>
                   </div>
@@ -450,7 +450,7 @@ export function ProfilePage() {
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex sm:hidden items-center border-t"
-        style={{ background: 'rgba(20,16,10,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(167,139,250,0.15)', height: 56 }}>
+        style={{ background: 'rgba(20,16,10,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(212,169,106,0.15)', height: 56 }}>
         {[
           { to: '/home', icon: '🏠', label: lang === 'ar' ? 'الرئيسية' : 'Home' },
           { to: '/store', icon: '🏪', label: lang === 'ar' ? 'المتجر' : 'Store' },
@@ -460,7 +460,7 @@ export function ProfilePage() {
         ].map(item => (
           <Link key={item.to} to={item.to}
             className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all"
-            style={{ color: 'rgba(220,210,255,0.5)', fontSize: 10 }}>
+            style={{ color: 'rgba(248,239,213,0.5)', fontSize: 10 }}>
             <span style={{ fontSize: 20 }}>{item.icon}</span>
             <span className="font-arabic">{item.label}</span>
           </Link>

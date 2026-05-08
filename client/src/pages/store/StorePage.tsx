@@ -187,9 +187,9 @@ export function StorePage() {
       maxWidth={960}
       right={
         <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5"
-          style={{ background: 'rgba(167,139,250,0.10)', border: '1.5px solid rgba(167,139,250,0.45)' }}>
+          style={{ background: 'rgba(212,169,106,0.10)', border: '1.5px solid rgba(212,169,106,0.45)' }}>
           <span className="text-sm">🪙</span>
-          <span className="font-bold font-mono text-sm" style={{ color: '#F0E9FF' }}>{profile?.coins ?? 0}</span>
+          <span className="font-bold font-mono text-sm" style={{ color: '#F8EFD5' }}>{profile?.coins ?? 0}</span>
         </div>
       }
     >
@@ -201,7 +201,7 @@ export function StorePage() {
           className="flex gap-1 mb-6 p-1 overflow-x-auto scrollbar-hide"
           style={{
             background: 'linear-gradient(180deg, rgba(40,28,12,0.55), rgba(14,9,5,0.55))',
-            border: '1px solid rgba(167,139,250,0.28)',
+            border: '1px solid rgba(212,169,106,0.28)',
             borderRadius: 999,
             backdropFilter: 'blur(14px) saturate(120%)',
             WebkitBackdropFilter: 'blur(14px) saturate(120%)',
@@ -220,11 +220,11 @@ export function StorePage() {
                   padding: '8px 14px',
                   borderRadius: 999,
                   background: sel
-                    ? `radial-gradient(circle at 50% 35%, ${isRecharge ? 'rgba(80,200,120,0.30)' : 'rgba(167,139,250,0.30)'}, transparent 75%)`
+                    ? `radial-gradient(circle at 50% 35%, ${isRecharge ? 'rgba(80,200,120,0.30)' : 'rgba(212,169,106,0.30)'}, transparent 75%)`
                     : 'transparent',
                   color: sel
-                    ? (isRecharge ? '#7AC74F' : '#F0E9FF')
-                    : 'rgba(220,210,255,0.55)',
+                    ? (isRecharge ? '#7AC74F' : '#F8EFD5')
+                    : 'rgba(248,239,213,0.55)',
                   fontSize: 12,
                   flexShrink: 0,
                   cursor: 'pointer',
@@ -238,8 +238,8 @@ export function StorePage() {
                     style={{
                       bottom: 4, left: '50%', transform: 'translateX(-50%)',
                       width: 22, height: 2, borderRadius: 999,
-                      background: isRecharge ? '#7AC74F' : '#F0E9FF',
-                      boxShadow: `0 0 8px ${isRecharge ? 'rgba(80,200,120,0.85)' : 'rgba(167,139,250,0.85)'}`,
+                      background: isRecharge ? '#7AC74F' : '#F8EFD5',
+                      boxShadow: `0 0 8px ${isRecharge ? 'rgba(80,200,120,0.85)' : 'rgba(212,169,106,0.85)'}`,
                     }}
                   />
                 )}
@@ -270,7 +270,7 @@ export function StorePage() {
             {loading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className="h-52 rounded-2xl animate-pulse" style={{ background: 'rgba(167,139,250,0.04)' }} />
+                  <div key={i} className="h-52 rounded-2xl animate-pulse" style={{ background: 'rgba(212,169,106,0.04)' }} />
                 ))}
               </div>
             ) : (
@@ -323,7 +323,7 @@ export function StorePage() {
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex sm:hidden items-center border-t"
-        style={{ background: 'rgba(20,16,10,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(167,139,250,0.15)', height: 56 }}>
+        style={{ background: 'rgba(20,16,10,0.97)', backdropFilter: 'blur(12px)', borderColor: 'rgba(212,169,106,0.15)', height: 56 }}>
         {[
           { to: '/home', icon: '🏠', label: lang === 'ar' ? 'الرئيسية' : 'Home' },
           { to: '/store', icon: '🏪', label: lang === 'ar' ? 'المتجر' : 'Store' },
@@ -333,7 +333,7 @@ export function StorePage() {
         ].map(item => (
           <Link key={item.to} to={item.to}
             className="flex-1 flex flex-col items-center justify-center gap-0.5 transition-all"
-            style={{ color: 'rgba(220,210,255,0.5)', fontSize: 10 }}>
+            style={{ color: 'rgba(248,239,213,0.5)', fontSize: 10 }}>
             <span style={{ fontSize: 20 }}>{item.icon}</span>
             <span className="font-arabic">{item.label}</span>
           </Link>
@@ -384,7 +384,7 @@ function CharacterGrid({
                   : isOwned
                     ? 'border-gold/30 hover:border-gold/60'
                     : 'border-white/8 hover:border-white/20'}`}
-              style={isActive ? { boxShadow: '0 0 20px rgba(167,139,250,0.25)', background: 'rgba(167,139,250,0.05)' } : { background: 'rgba(10,18,32,0.7)' }}
+              style={isActive ? { boxShadow: '0 0 20px rgba(212,169,106,0.25)', background: 'rgba(212,169,106,0.05)' } : { background: 'rgba(10,18,32,0.7)' }}
             >
               <div className={`h-32 flex items-center justify-center relative ${item.preview.bg}`}>
                 <CharacterArt id={item.id} size={92}/>
@@ -432,8 +432,8 @@ function CharacterGrid({
                       disabled={!!isBusy || !canAfford}
                       className="w-full py-1.5 rounded-lg text-xs font-arabic transition-all disabled:opacity-40 flex items-center justify-center gap-1"
                       style={canAfford
-                        ? { background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.4)', color: '#A78BFA' }
-                        : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(220,210,255,0.35)' }}
+                        ? { background: 'rgba(212,169,106,0.15)', border: '1px solid rgba(212,169,106,0.4)', color: '#D4A96A' }
+                        : { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(248,239,213,0.35)' }}
                     >
                       {isBusy ? '...' : (
                         <>
@@ -508,7 +508,7 @@ function ItemCard({
               onClick={() => onBuy(item)}
               disabled={isBusy || coins < item.price}
               className="w-full py-1.5 rounded-lg text-xs font-arabic transition-all disabled:opacity-40 flex items-center justify-center gap-1"
-              style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.35)', color: '#A78BFA' }}
+              style={{ background: 'rgba(212,169,106,0.12)', border: '1px solid rgba(212,169,106,0.35)', color: '#D4A96A' }}
             >
               {isBusy ? '...' : (
                 <>
@@ -548,15 +548,15 @@ function RechargeTab({ t, lang }: { onRecharge: (packageId: string) => void; bus
       {/* Coming-soon banner — explains the real-money store is in development. */}
       <div className="rounded-2xl p-5 mb-6 border text-center"
         style={{
-          background: 'linear-gradient(135deg, rgba(167,139,250,0.10) 0%, rgba(120,80,20,0.06) 100%)',
-          borderColor: 'rgba(167,139,250,0.40)',
-          boxShadow: '0 0 24px rgba(167,139,250,0.10)',
+          background: 'linear-gradient(135deg, rgba(212,169,106,0.10) 0%, rgba(120,80,20,0.06) 100%)',
+          borderColor: 'rgba(212,169,106,0.40)',
+          boxShadow: '0 0 24px rgba(212,169,106,0.10)',
         }}>
         <div className="text-3xl mb-2">🚧</div>
-        <p className="font-arabic font-bold text-base mb-1.5" style={{ color: '#F0E9FF' }}>
+        <p className="font-arabic font-bold text-base mb-1.5" style={{ color: '#F8EFD5' }}>
           {lang === 'ar' ? 'متجر الكوينز الحقيقي قريباً' : 'Real coin store coming soon'}
         </p>
-        <p className="font-arabic" style={{ fontSize: 12, color: 'rgba(220,210,255,0.55)', lineHeight: 1.7 }}>
+        <p className="font-arabic" style={{ fontSize: 12, color: 'rgba(248,239,213,0.55)', lineHeight: 1.7 }}>
           {lang === 'ar'
             ? 'نشتغل على فتح الدفع الحقيقي قريباً. حالياً تقدر تكسب الكوينز من اللعب والمكافآت اليومية والمهام بدون أي فلوس.'
             : 'We\'re working on enabling real payments. For now, earn coins by playing, daily rewards, and completing missions — no money needed.'}
@@ -570,7 +570,7 @@ function RechargeTab({ t, lang }: { onRecharge: (packageId: string) => void; bus
             className={`relative rounded-2xl p-5 border
               ${pkg.popular ? 'border-gold/35' : 'border-gold/15'}`}
             style={pkg.popular
-              ? { background: 'rgba(167,139,250,0.05)' }
+              ? { background: 'rgba(212,169,106,0.05)' }
               : { background: 'rgba(10,18,32,0.55)' }}
           >
             {pkg.popular && (
@@ -582,7 +582,7 @@ function RechargeTab({ t, lang }: { onRecharge: (packageId: string) => void; bus
             <div className="text-center mb-4">
               <div className="flex items-center justify-center gap-2 mb-1">
                 <span className="text-2xl opacity-70">🪙</span>
-                <span className="text-2xl font-bold font-mono" style={{ color: 'rgba(167,139,250,0.7)' }}>
+                <span className="text-2xl font-bold font-mono" style={{ color: 'rgba(212,169,106,0.7)' }}>
                   {(pkg.coins + pkg.bonus).toLocaleString()}
                 </span>
               </div>
@@ -601,8 +601,8 @@ function RechargeTab({ t, lang }: { onRecharge: (packageId: string) => void; bus
               className="w-full py-2.5 rounded-xl font-arabic font-bold text-sm cursor-not-allowed"
               style={{
                 background: 'rgba(255,255,255,0.04)',
-                border: '1px dashed rgba(167,139,250,0.30)',
-                color: 'rgba(167,139,250,0.55)',
+                border: '1px dashed rgba(212,169,106,0.30)',
+                color: 'rgba(212,169,106,0.55)',
               }}
             >
               🔜 {lang === 'ar' ? 'قريباً' : 'Coming soon'}
@@ -619,7 +619,7 @@ function RechargeTab({ t, lang }: { onRecharge: (packageId: string) => void; bus
 
 // ── Card back theme colors ────────────────────────────────────────────────────
 const CARD_BACK_STORE: Record<string, { bg1: string; bg2: string; accent: string }> = {
-  card_classic: { bg1: '#080D22', bg2: '#040918', accent: '#A78BFA' },
+  card_classic: { bg1: '#080D22', bg2: '#040918', accent: '#D4A96A' },
   card_arabian: { bg1: '#0D0A2A', bg2: '#06040F', accent: '#6B8AFF' },
   card_desert:  { bg1: '#2A1208', bg2: '#180800', accent: '#E8903A' },
   card_pearl:   { bg1: '#1C1E24', bg2: '#0E1018', accent: '#D0D8E8' },
@@ -711,18 +711,18 @@ function BoardThemeMini({ id, size = 'lg' }: { id: string; size?: 'md' | 'lg' })
       {/* Rim */}
       <circle cx={cx} cy={cx} r={r + rim} fill={`url(#sb-rim-${uid})`}/>
       {/* Rim ring highlight */}
-      <circle cx={cx} cy={cx} r={r + rim} fill="none" stroke="rgba(167,139,250,0.18)" strokeWidth="0.8"/>
+      <circle cx={cx} cy={cx} r={r + rim} fill="none" stroke="rgba(212,169,106,0.18)" strokeWidth="0.8"/>
       {/* Felt */}
       <circle cx={cx} cy={cx} r={r} fill={`url(#sb-felt-${uid})`}/>
       {/* Felt inner sheen */}
       <circle cx={cx - r*0.12} cy={cx - r*0.18} r={r * 0.55} fill="rgba(255,255,255,0.025)"/>
       {/* Inner dashed ring */}
-      <circle cx={cx} cy={cx} r={r * 0.78} fill="none" stroke="rgba(167,139,250,0.13)" strokeWidth="0.5" strokeDasharray="2 2"/>
+      <circle cx={cx} cy={cx} r={r * 0.78} fill="none" stroke="rgba(212,169,106,0.13)" strokeWidth="0.5" strokeDasharray="2 2"/>
       {/* CHECK watermark */}
-      <text x={cx} y={cx + 2.5} textAnchor="middle" fill="rgba(167,139,250,0.12)" fontSize={size === 'lg' ? 7 : 5} fontFamily="Georgia, serif" fontWeight="bold" letterSpacing="2">CHECK</text>
+      <text x={cx} y={cx + 2.5} textAnchor="middle" fill="rgba(212,169,106,0.12)" fontSize={size === 'lg' ? 7 : 5} fontFamily="Georgia, serif" fontWeight="bold" letterSpacing="2">CHECK</text>
       {/* Deck dot */}
-      <circle cx={cx - 7} cy={cx} r="3.5" fill="rgba(0,0,0,0.35)" stroke="rgba(167,139,250,0.25)" strokeWidth="0.6"/>
-      <circle cx={cx + 7} cy={cx} r="3.5" fill="rgba(255,255,255,0.08)" stroke="rgba(167,139,250,0.18)" strokeWidth="0.6"/>
+      <circle cx={cx - 7} cy={cx} r="3.5" fill="rgba(0,0,0,0.35)" stroke="rgba(212,169,106,0.25)" strokeWidth="0.6"/>
+      <circle cx={cx + 7} cy={cx} r="3.5" fill="rgba(255,255,255,0.08)" stroke="rgba(212,169,106,0.18)" strokeWidth="0.6"/>
     </svg>
   );
 }
@@ -738,7 +738,7 @@ function SkinPreviewIcon({ item, size = 'md' }: { item: StoreItem; size?: 'md' |
     return (
       <div className={`${wh} relative rounded-full flex items-center justify-center`}
         style={{ background: 'rgba(20,16,10,0.7)' }}>
-        <span className="font-bold font-arabic" style={{ color: '#F0E9FF', fontSize: size === 'lg' ? 32 : 18 }}>ل</span>
+        <span className="font-bold font-arabic" style={{ color: '#F8EFD5', fontSize: size === 'lg' ? 32 : 18 }}>ل</span>
         <FrameRing frameId={item.id} size={px} />
       </div>
     );
@@ -788,7 +788,7 @@ function ItemPreviewModal({ item, isOwned, isEquipped, coins, busy, onBuy, onEqu
       <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
       <div
         className="relative rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-gold/25"
-        style={{ background: '#1B0E3A' }}
+        style={{ background: '#2C2218' }}
         onClick={e => e.stopPropagation()}
       >
         <button onClick={onClose} className="absolute top-3 left-3 text-sand/40 hover:text-sand text-xl w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5">×</button>

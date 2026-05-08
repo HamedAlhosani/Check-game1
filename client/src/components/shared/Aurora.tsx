@@ -20,23 +20,23 @@ export function Aurora() {
         className="absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 90% 60% at 50% -10%, rgba(60,30,120,0.85) 0%, rgba(15,10,40,0.95) 60%, rgba(8,5,20,1) 100%)',
+            'radial-gradient(ellipse 90% 60% at 50% -10%, rgba(74,56,36,0.85) 0%, rgba(20,15,10,0.95) 60%, rgba(10,8,5,1) 100%)',
         }}
       />
       {/* Three slow-drifting orbs — violet, magenta, cyan. */}
       <div className="aurora-orb" style={{
         top: '-15%', left: '-10%', width: '60vw', height: '60vw',
-        background: 'radial-gradient(circle, rgba(167,139,250,0.25) 0%, rgba(167,139,250,0) 65%)',
+        background: 'radial-gradient(circle, rgba(212,169,106,0.25) 0%, rgba(212,169,106,0) 65%)',
         animation: 'aurora-drift-1 22s ease-in-out infinite',
       }} />
       <div className="aurora-orb" style={{
         top: '20%', right: '-15%', width: '55vw', height: '55vw',
-        background: 'radial-gradient(circle, rgba(244,114,182,0.20) 0%, rgba(244,114,182,0) 65%)',
+        background: 'radial-gradient(circle, rgba(92,128,56,0.20) 0%, rgba(92,128,56,0) 65%)',
         animation: 'aurora-drift-2 28s ease-in-out infinite',
       }} />
       <div className="aurora-orb" style={{
         bottom: '-20%', left: '10%', width: '65vw', height: '65vw',
-        background: 'radial-gradient(circle, rgba(34,211,238,0.16) 0%, rgba(34,211,238,0) 65%)',
+        background: 'radial-gradient(circle, rgba(215,122,51,0.16) 0%, rgba(215,122,51,0) 65%)',
         animation: 'aurora-drift-3 32s ease-in-out infinite',
       }} />
 
@@ -84,9 +84,9 @@ function Dust() {
           style={{
             left: `${p.x}%`, top: `${p.y}%`,
             width: p.s, height: p.s,
-            background: '#E0D5FF',
+            background: '#F5E8C9',
             opacity: p.o,
-            boxShadow: p.s > 1.2 ? '0 0 6px rgba(224,213,255,0.65)' : 'none',
+            boxShadow: p.s > 1.2 ? '0 0 6px rgba(248,239,213,0.65)' : 'none',
             animation: `aurora-twinkle 4s ease-in-out ${p.delay}s infinite`,
           }}
         />

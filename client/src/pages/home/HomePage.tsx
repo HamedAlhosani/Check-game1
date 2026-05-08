@@ -43,15 +43,15 @@ function DailyRewardNavButton({ onOpen, lang }: { onOpen: () => void; lang: stri
       style={{
         width: 36,
         height: 34,
-        background: canClaim ? 'rgba(167,139,250,0.18)' : 'rgba(255,255,255,0.04)',
-        border: `1px solid ${canClaim ? 'rgba(167,139,250,0.55)' : 'rgba(255,255,255,0.08)'}`,
-        boxShadow: canClaim ? '0 0 14px rgba(167,139,250,0.35)' : 'none',
+        background: canClaim ? 'rgba(212,169,106,0.18)' : 'rgba(255,255,255,0.04)',
+        border: `1px solid ${canClaim ? 'rgba(212,169,106,0.55)' : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: canClaim ? '0 0 14px rgba(212,169,106,0.35)' : 'none',
         cursor: 'pointer',
       }}>
       <span style={{ fontSize: 18, lineHeight: 1 }}>{canClaim ? '🎁' : '📦'}</span>
       {canClaim && (
         <span className="absolute rounded-full animate-pulse"
-          style={{ top: -3, right: -3, width: 9, height: 9, background: '#E04030', border: '1.5px solid #15102F' }} />
+          style={{ top: -3, right: -3, width: 9, height: 9, background: '#E04030', border: '1.5px solid #2A1F12' }} />
       )}
     </motion.button>
   );
@@ -72,15 +72,15 @@ function WheelNavButton({ onOpen, lang }: { onOpen: () => void; lang: string }) 
       title={lang === 'ar' ? 'عجلة الحظ' : 'Lucky Wheel'}
       style={{
         width: 36, height: 34,
-        background: canSpin ? 'rgba(167,139,250,0.20)' : 'rgba(255,255,255,0.04)',
-        border: `1px solid ${canSpin ? 'rgba(167,139,250,0.55)' : 'rgba(255,255,255,0.08)'}`,
-        boxShadow: canSpin ? '0 0 14px rgba(167,139,250,0.35)' : 'none',
+        background: canSpin ? 'rgba(212,169,106,0.20)' : 'rgba(255,255,255,0.04)',
+        border: `1px solid ${canSpin ? 'rgba(212,169,106,0.55)' : 'rgba(255,255,255,0.08)'}`,
+        boxShadow: canSpin ? '0 0 14px rgba(212,169,106,0.35)' : 'none',
         cursor: 'pointer',
       }}>
       <span style={{ fontSize: 18, lineHeight: 1 }}>{canSpin ? '🎡' : '🎰'}</span>
       {canSpin && (
         <span className="absolute rounded-full animate-pulse"
-          style={{ top: -3, right: -3, width: 9, height: 9, background: '#F0E9FF', border: '1.5px solid #15102F' }}/>
+          style={{ top: -3, right: -3, width: 9, height: 9, background: '#F8EFD5', border: '1.5px solid #2A1F12' }}/>
       )}
     </motion.button>
   );
@@ -108,10 +108,10 @@ function TournamentStrip({ lang, onOpen }: { lang: string; onOpen: () => void })
       className="w-full mb-5 rounded-2xl flex items-center gap-3 px-4 py-3 transition-all"
       style={{
         background: active
-          ? 'linear-gradient(90deg, rgba(167,139,250,0.22) 0%, rgba(168,124,58,0.14) 100%)'
-          : 'linear-gradient(90deg, rgba(167,139,250,0.14) 0%, rgba(168,124,58,0.06) 100%)',
-        border: `1.5px solid ${active ? 'rgba(167,139,250,0.65)' : 'rgba(167,139,250,0.40)'}`,
-        boxShadow: '0 4px 18px rgba(0,0,0,0.35), 0 0 22px rgba(167,139,250,0.20)',
+          ? 'linear-gradient(90deg, rgba(212,169,106,0.22) 0%, rgba(168,124,58,0.14) 100%)'
+          : 'linear-gradient(90deg, rgba(212,169,106,0.14) 0%, rgba(168,124,58,0.06) 100%)',
+        border: `1.5px solid ${active ? 'rgba(212,169,106,0.65)' : 'rgba(212,169,106,0.40)'}`,
+        boxShadow: '0 4px 18px rgba(0,0,0,0.35), 0 0 22px rgba(212,169,106,0.20)',
         cursor: 'pointer',
       }}>
       {/* Trophy icon */}
@@ -119,13 +119,13 @@ function TournamentStrip({ lang, onOpen }: { lang: string; onOpen: () => void })
         style={{
           width: 44, height: 44,
           background: 'radial-gradient(circle at 30% 30%, rgba(255,224,122,0.45), rgba(168,124,58,0.20) 70%)',
-          border: '1px solid rgba(167,139,250,0.55)',
+          border: '1px solid rgba(212,169,106,0.55)',
           fontSize: 26,
         }}>🏆</div>
 
       <div className="flex-1 min-w-0 text-start">
         <div className="font-arabic font-bold flex items-center gap-2"
-          style={{ fontSize: 15, color: '#F0E9FF' }}>
+          style={{ fontSize: 15, color: '#F8EFD5' }}>
           {lang === 'ar' ? 'البطولات' : 'Tournaments'}
           {active && (
             <motion.span
@@ -142,12 +142,12 @@ function TournamentStrip({ lang, onOpen }: { lang: string; onOpen: () => void })
           )}
         </div>
         <p className="font-arabic mt-0.5"
-          style={{ fontSize: 11.5, color: 'rgba(220,210,255,0.65)' }}>
+          style={{ fontSize: 11.5, color: 'rgba(248,239,213,0.65)' }}>
           {subtitle}
         </p>
       </div>
 
-      <span className="shrink-0" style={{ fontSize: 18, color: '#F0E9FF' }}>
+      <span className="shrink-0" style={{ fontSize: 18, color: '#F8EFD5' }}>
         {lang === 'ar' ? '‹' : '›'}
       </span>
     </motion.button>
@@ -191,25 +191,25 @@ function MissionsStrip({ onOpen, lang, profileXp, profileWins, profileGames, pro
       className="w-full mt-3 rounded-xl flex items-center gap-3 px-3 py-2.5 transition-all"
       style={{
         background: hot
-          ? 'linear-gradient(90deg, rgba(167,139,250,0.18) 0%, rgba(167,139,250,0.08) 100%)'
-          : 'linear-gradient(90deg, rgba(167,139,250,0.06) 0%, rgba(255,255,255,0.02) 100%)',
-        border: `1px solid ${hot ? 'rgba(167,139,250,0.55)' : 'rgba(167,139,250,0.18)'}`,
-        boxShadow: hot ? '0 0 16px rgba(167,139,250,0.30)' : 'none',
+          ? 'linear-gradient(90deg, rgba(212,169,106,0.18) 0%, rgba(212,169,106,0.08) 100%)'
+          : 'linear-gradient(90deg, rgba(212,169,106,0.06) 0%, rgba(255,255,255,0.02) 100%)',
+        border: `1px solid ${hot ? 'rgba(212,169,106,0.55)' : 'rgba(212,169,106,0.18)'}`,
+        boxShadow: hot ? '0 0 16px rgba(212,169,106,0.30)' : 'none',
         cursor: 'pointer',
       }}>
       {/* Icon */}
       <div className="rounded-lg flex items-center justify-center shrink-0"
         style={{
           width: 32, height: 32,
-          background: hot ? 'rgba(167,139,250,0.25)' : 'rgba(0,0,0,0.20)',
-          border: '1px solid rgba(167,139,250,0.25)',
+          background: hot ? 'rgba(212,169,106,0.25)' : 'rgba(0,0,0,0.20)',
+          border: '1px solid rgba(212,169,106,0.25)',
           fontSize: 18,
         }}>🎯</div>
 
       {/* Title + progress */}
       <div className="flex-1 min-w-0 text-start">
         <div className="font-arabic font-bold flex items-center gap-2"
-          style={{ fontSize: 12.5, color: hot ? '#F0E9FF' : 'rgba(167,139,250,0.85)' }}>
+          style={{ fontSize: 12.5, color: hot ? '#F8EFD5' : 'rgba(212,169,106,0.85)' }}>
           {lang === 'ar' ? 'المهام والإنجازات' : 'Missions & Achievements'}
           {claimable > 0 && (
             <motion.span
@@ -231,12 +231,12 @@ function MissionsStrip({ onOpen, lang, profileXp, profileWins, profileGames, pro
             <div style={{
               width: `${(done / Math.max(1, total)) * 100}%`,
               height: '100%',
-              background: 'linear-gradient(90deg, #5B21B6, #F0E9FF)',
+              background: 'linear-gradient(90deg, #8B5E3C, #F8EFD5)',
               transition: 'width .35s ease',
             }}/>
           </div>
           <span className="font-mono shrink-0"
-            style={{ fontSize: 9.5, color: 'rgba(220,210,255,0.5)' }}>
+            style={{ fontSize: 9.5, color: 'rgba(248,239,213,0.5)' }}>
             {done}/{total} {lang === 'ar' ? 'مهام اليوم' : 'today'}
           </span>
         </div>
@@ -244,7 +244,7 @@ function MissionsStrip({ onOpen, lang, profileXp, profileWins, profileGames, pro
 
       {/* Chevron */}
       <span className="shrink-0" style={{
-        fontSize: 16, color: hot ? '#F0E9FF' : 'rgba(220,210,255,0.45)',
+        fontSize: 16, color: hot ? '#F8EFD5' : 'rgba(248,239,213,0.45)',
       }}>{lang === 'ar' ? '‹' : '›'}</span>
     </motion.button>
   );
@@ -257,13 +257,13 @@ function StatChip({ icon, value, label }: { icon: string; value: number; label: 
       style={{
         minWidth: 52, padding: '4px 8px',
         background: 'rgba(0,0,0,0.30)',
-        border: '1px solid rgba(167,139,250,0.20)',
+        border: '1px solid rgba(212,169,106,0.20)',
       }}>
       <span style={{ fontSize: 12, lineHeight: 1 }}>{icon}</span>
-      <span className="font-bold" style={{ fontSize: 13, color: '#F0E9FF', lineHeight: 1.05, marginTop: 1 }}>
+      <span className="font-bold" style={{ fontSize: 13, color: '#F8EFD5', lineHeight: 1.05, marginTop: 1 }}>
         {value}
       </span>
-      <span className="font-arabic" style={{ fontSize: 8.5, color: 'rgba(220,210,255,0.45)', lineHeight: 1, marginTop: 1 }}>
+      <span className="font-arabic" style={{ fontSize: 8.5, color: 'rgba(248,239,213,0.45)', lineHeight: 1, marginTop: 1 }}>
         {label}
       </span>
     </div>
@@ -333,9 +333,9 @@ function QuickActionsTriad({
     <div className="grid grid-cols-3 gap-2.5 mb-5">
       {tiles.map(t => {
         const accent =
-          t.accent === 'gold'   ? { bg1: 'rgba(167,139,250,0.18)', bg2: 'rgba(120,80,20,0.10)', border: 'rgba(167,139,250,0.55)', text: '#F0E9FF', glow: 'rgba(167,139,250,0.25)' } :
+          t.accent === 'gold'   ? { bg1: 'rgba(212,169,106,0.18)', bg2: 'rgba(120,80,20,0.10)', border: 'rgba(212,169,106,0.55)', text: '#F8EFD5', glow: 'rgba(212,169,106,0.25)' } :
           t.accent === 'purple' ? { bg1: 'rgba(196,149,255,0.16)', bg2: 'rgba(80,40,120,0.10)',  border: 'rgba(196,149,255,0.55)', text: '#C495FF', glow: 'rgba(196,149,255,0.20)' } :
-                                  { bg1: 'rgba(220,210,255,0.10)', bg2: 'rgba(40,28,12,0.85)',   border: 'rgba(167,139,250,0.30)', text: 'rgba(220,210,255,0.85)', glow: 'rgba(0,0,0,0.30)' };
+                                  { bg1: 'rgba(248,239,213,0.10)', bg2: 'rgba(40,28,12,0.85)',   border: 'rgba(212,169,106,0.30)', text: 'rgba(248,239,213,0.85)', glow: 'rgba(0,0,0,0.30)' };
         return (
           <motion.button
             key={t.key}
@@ -365,7 +365,7 @@ function QuickActionsTriad({
               {t.title}
             </p>
             <p className="font-arabic leading-none"
-              style={{ fontSize: 10, color: 'rgba(220,210,255,0.5)' }}>
+              style={{ fontSize: 10, color: 'rgba(248,239,213,0.5)' }}>
               {t.sub}
             </p>
             {t.live && (
@@ -511,8 +511,8 @@ function RewardsLauncher({
           width: 38, height: 38,
           background: hot
             ? 'radial-gradient(circle at 30% 30%, rgba(255,224,122,0.45), rgba(168,124,58,0.55) 70%)'
-            : 'radial-gradient(circle at 30% 30%, rgba(167,139,250,0.20), rgba(60,40,16,0.45) 70%)',
-          border: `1.5px solid ${hot ? 'rgba(255,224,122,0.85)' : 'rgba(167,139,250,0.40)'}`,
+            : 'radial-gradient(circle at 30% 30%, rgba(212,169,106,0.20), rgba(60,40,16,0.45) 70%)',
+          border: `1.5px solid ${hot ? 'rgba(255,224,122,0.85)' : 'rgba(212,169,106,0.40)'}`,
           boxShadow: hot
             ? '0 0 18px rgba(255,224,122,0.55), inset 0 -2px 6px rgba(0,0,0,0.45)'
             : 'inset 0 -2px 6px rgba(0,0,0,0.45)',
@@ -527,7 +527,7 @@ function RewardsLauncher({
             style={{
               top: -4, insetInlineEnd: -4, minWidth: 18, height: 18, padding: '0 5px',
               background: '#E04030', color: '#fff', fontSize: 10, lineHeight: 1,
-              border: '2px solid #15102F',
+              border: '2px solid #2A1F12',
             }}>
             {totalReady}
           </motion.span>
@@ -555,15 +555,15 @@ function RewardsLauncher({
               className="rounded-[28px] w-full"
               style={{
                 background: 'linear-gradient(170deg, rgba(40,28,12,0.98) 0%, rgba(14,9,5,0.98) 100%)',
-                border: '1.5px solid rgba(167,139,250,0.35)',
-                boxShadow: '0 30px 80px rgba(0,0,0,0.85), 0 0 60px rgba(167,139,250,0.22)',
+                border: '1.5px solid rgba(212,169,106,0.35)',
+                boxShadow: '0 30px 80px rgba(0,0,0,0.85), 0 0 60px rgba(212,169,106,0.22)',
                 maxWidth: 460,
                 marginTop: 60,
                 padding: 16,
               }}>
               <div className="flex items-center justify-between mb-3 px-1">
                 <h3 className="font-arabic font-bold flex items-center gap-2"
-                  style={{ fontSize: 15, color: '#F0E9FF' }}>
+                  style={{ fontSize: 15, color: '#F8EFD5' }}>
                   <span style={{ fontSize: 18 }}>🎁</span>
                   {lang === 'ar' ? 'مركز الجوائز' : 'Rewards'}
                 </h3>
@@ -582,10 +582,10 @@ function RewardsLauncher({
                     className="rounded-2xl flex items-center gap-3 px-3 py-3 text-start transition-all"
                     style={{
                       background: r.hot
-                        ? 'linear-gradient(90deg, rgba(167,139,250,0.20) 0%, rgba(40,28,12,0.85) 100%)'
+                        ? 'linear-gradient(90deg, rgba(212,169,106,0.20) 0%, rgba(40,28,12,0.85) 100%)'
                         : 'linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(20,16,10,0.85) 100%)',
-                      border: `1.5px solid ${r.hot ? 'rgba(167,139,250,0.55)' : 'rgba(167,139,250,0.18)'}`,
-                      boxShadow: r.hot ? '0 0 16px rgba(167,139,250,0.20)' : 'none',
+                      border: `1.5px solid ${r.hot ? 'rgba(212,169,106,0.55)' : 'rgba(212,169,106,0.18)'}`,
+                      boxShadow: r.hot ? '0 0 16px rgba(212,169,106,0.20)' : 'none',
                       cursor: 'pointer',
                     }}>
                     <div className="rounded-2xl flex items-center justify-center shrink-0"
@@ -594,7 +594,7 @@ function RewardsLauncher({
                         background: r.hot
                           ? 'radial-gradient(circle at 30% 30%, rgba(255,224,122,0.45), rgba(168,124,58,0.20) 70%)'
                           : 'rgba(0,0,0,0.30)',
-                        border: `1px solid ${r.hot ? 'rgba(167,139,250,0.55)' : 'rgba(255,255,255,0.06)'}`,
+                        border: `1px solid ${r.hot ? 'rgba(212,169,106,0.55)' : 'rgba(255,255,255,0.06)'}`,
                         fontSize: 24,
                       }}>
                       {r.icon}
@@ -602,7 +602,7 @@ function RewardsLauncher({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-arabic font-bold truncate"
-                          style={{ fontSize: 13, color: r.hot ? '#F0E9FF' : 'rgba(167,139,250,0.85)' }}>
+                          style={{ fontSize: 13, color: r.hot ? '#F8EFD5' : 'rgba(212,169,106,0.85)' }}>
                           {r.title}
                         </p>
                         {r.badge && (
@@ -611,21 +611,21 @@ function RewardsLauncher({
                               fontSize: 9, lineHeight: 1, padding: '3px 6px',
                               background:
                                 r.badge.tone === 'red'    ? '#E04030' :
-                                r.badge.tone === 'gold'   ? '#F0E9FF' :
+                                r.badge.tone === 'gold'   ? '#F8EFD5' :
                                                             '#C495FF',
-                              color: r.badge.tone === 'gold' ? '#0A0814' : '#fff',
+                              color: r.badge.tone === 'gold' ? '#1A1208' : '#fff',
                             }}>
                             {r.badge.text}
                           </span>
                         )}
                       </div>
                       <p className="font-arabic mt-0.5 truncate"
-                        style={{ fontSize: 11, color: 'rgba(220,210,255,0.55)' }}>
+                        style={{ fontSize: 11, color: 'rgba(248,239,213,0.55)' }}>
                         {r.sub}
                       </p>
                     </div>
                     <span className="shrink-0" style={{
-                      fontSize: 18, color: r.hot ? '#F0E9FF' : 'rgba(220,210,255,0.45)',
+                      fontSize: 18, color: r.hot ? '#F8EFD5' : 'rgba(248,239,213,0.45)',
                     }}>{lang === 'ar' ? '‹' : '›'}</span>
                   </motion.button>
                 ))}
@@ -741,11 +741,11 @@ function RewardsHub({
           style={{
             padding: '14px 10px 12px',
             background: t.hot
-              ? 'linear-gradient(160deg, rgba(167,139,250,0.18) 0%, rgba(40,28,12,0.95) 100%)'
+              ? 'linear-gradient(160deg, rgba(212,169,106,0.18) 0%, rgba(40,28,12,0.95) 100%)'
               : 'linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(20,16,10,0.85) 100%)',
-            border: `1.5px solid ${t.hot ? 'rgba(167,139,250,0.55)' : 'rgba(167,139,250,0.18)'}`,
+            border: `1.5px solid ${t.hot ? 'rgba(212,169,106,0.55)' : 'rgba(212,169,106,0.18)'}`,
             boxShadow: t.hot
-              ? '0 4px 16px rgba(0,0,0,0.45), 0 0 18px rgba(167,139,250,0.25)'
+              ? '0 4px 16px rgba(0,0,0,0.45), 0 0 18px rgba(212,169,106,0.25)'
               : '0 2px 10px rgba(0,0,0,0.30)',
             cursor: 'pointer',
           }}>
@@ -756,13 +756,13 @@ function RewardsHub({
               background: t.hot
                 ? 'radial-gradient(circle at 30% 30%, rgba(255,224,122,0.45), rgba(168,124,58,0.20) 70%)'
                 : 'rgba(0,0,0,0.30)',
-              border: `1px solid ${t.hot ? 'rgba(167,139,250,0.55)' : 'rgba(255,255,255,0.06)'}`,
+              border: `1px solid ${t.hot ? 'rgba(212,169,106,0.55)' : 'rgba(255,255,255,0.06)'}`,
               fontSize: 24,
             }}>
             {t.icon}
           </div>
           <p className="font-arabic font-bold"
-            style={{ fontSize: 12, color: t.hot ? '#F0E9FF' : 'rgba(220,210,255,0.78)', lineHeight: 1.1 }}>
+            style={{ fontSize: 12, color: t.hot ? '#F8EFD5' : 'rgba(248,239,213,0.78)', lineHeight: 1.1 }}>
             {t.label}
           </p>
           {t.badge && (
@@ -776,10 +776,10 @@ function RewardsHub({
                 padding: '3px 6px',
                 background:
                   t.badge.tone === 'red'    ? '#E04030' :
-                  t.badge.tone === 'gold'   ? '#F0E9FF' :
+                  t.badge.tone === 'gold'   ? '#F8EFD5' :
                                               '#C495FF',
-                color: t.badge.tone === 'gold' ? '#0A0814' : '#fff',
-                border: '1.5px solid #15102F',
+                color: t.badge.tone === 'gold' ? '#1A1208' : '#fff',
+                border: '1.5px solid #2A1F12',
               }}>
               {t.badge.text}
             </motion.span>
@@ -791,7 +791,7 @@ function RewardsHub({
 }
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
-const AV_COLORS = ['#A78BFA','#4A90D9','#50C878','#E74C3C','#9B59B6','#E67E22','#1ABC9C','#E91E63'];
+const AV_COLORS = ['#D4A96A','#4A90D9','#50C878','#E74C3C','#9B59B6','#E67E22','#1ABC9C','#E91E63'];
 const HOME_AVATAR_EMOJIS: Record<string, string> = {
   avatar_1: '👳', avatar_2: '🧕', avatar_3: '👴', avatar_4: '🧔',
   avatar_5: '👩', avatar_6: '👨', avatar_7: '🧑', avatar_8: '👵',
@@ -829,16 +829,16 @@ function XpBar({ xp, lang, onClick }: { xp: number; lang?: string; onClick?: () 
         cursor: onClick ? 'pointer' : 'default',
         position: 'relative',
       }}>
-      <div style={{ height: 6, borderRadius: 4, background: 'rgba(167,139,250,0.12)', overflow: 'hidden', width: '100%', border: '1px solid rgba(167,139,250,0.15)' }}>
-        <div style={{ width: `${Math.max(2, pct)}%`, height: '100%', background: 'linear-gradient(90deg, #5B21B6, #F0E9FF, #F0E9FF)', borderRadius: 4, transition: 'width .5s ease', boxShadow: '0 0 8px rgba(167,139,250,0.5)' }}/>
+      <div style={{ height: 6, borderRadius: 4, background: 'rgba(212,169,106,0.12)', overflow: 'hidden', width: '100%', border: '1px solid rgba(212,169,106,0.15)' }}>
+        <div style={{ width: `${Math.max(2, pct)}%`, height: '100%', background: 'linear-gradient(90deg, #8B5E3C, #F8EFD5, #F8EFD5)', borderRadius: 4, transition: 'width .5s ease', boxShadow: '0 0 8px rgba(212,169,106,0.5)' }}/>
       </div>
       <span className="font-mono"
         style={{
-          fontSize: 9, color: 'rgba(220,210,255,0.5)',
+          fontSize: 9, color: 'rgba(248,239,213,0.5)',
           marginTop: 2, display: 'block',
         }}>
         {xpInLevel.toLocaleString()} / {xpForNextLevel.toLocaleString()} XP
-        {onClick && <span style={{ marginInlineStart: 6, color: 'rgba(167,139,250,0.6)' }}>
+        {onClick && <span style={{ marginInlineStart: 6, color: 'rgba(212,169,106,0.6)' }}>
           · {lang === 'ar' ? 'اضغط للتقدم' : 'tap for progress'}
         </span>}
       </span>
@@ -875,16 +875,16 @@ const GAME_KIND_META: Record<GameType, { icon: string; ar: string; en: string; t
     icon: '🃏',
     ar: 'تشيك', en: 'Check',
     tagline: { ar: 'لعبة الورق الإماراتية', en: 'Emirati card game' },
-    accent: '#F0E9FF',
-    bg: 'linear-gradient(135deg, #2A1F12 0%, #15102F 100%)',
-    glow: 'rgba(167,139,250,0.45)',
+    accent: '#F8EFD5',
+    bg: 'linear-gradient(135deg, #2A1F12 0%, #2A1F12 100%)',
+    glow: 'rgba(212,169,106,0.45)',
   },
   ludo: {
     icon: '🎲',
     ar: 'لودو', en: 'Ludo',
     tagline: { ar: 'سباق على الرمال', en: 'Race on the sands' },
     accent: '#D9A441',
-    bg: 'linear-gradient(135deg, #2A1808 0%, #15102F 100%)',
+    bg: 'linear-gradient(135deg, #2A1808 0%, #2A1F12 100%)',
     glow: 'rgba(217,164,65,0.45)',
   },
   domino:  { icon: '🁢', ar: 'دومنو', en: 'Domino', tagline: { ar: '', en: '' }, accent: '#9C8AFF', bg: '', glow: 'rgba(156,138,255,0.4)' },
@@ -896,7 +896,7 @@ function GamePicker({ gameKind, onSelect, lang }: { gameKind: GameType; onSelect
   const isAr = lang === 'ar';
   return (
     <div className="flex flex-col gap-2">
-      <p className="font-arabic text-center" style={{ fontSize: 11, color: 'rgba(220,210,255,0.45)', letterSpacing: 1 }}>
+      <p className="font-arabic text-center" style={{ fontSize: 11, color: 'rgba(248,239,213,0.45)', letterSpacing: 1 }}>
         {isAr ? 'اختر اللعبة' : 'Choose the game'}
       </p>
       <div className="grid grid-cols-2 gap-2.5">
@@ -929,10 +929,10 @@ function GamePicker({ gameKind, onSelect, lang }: { gameKind: GameType; onSelect
               )}
               <div className="relative flex flex-col items-center gap-1">
                 <span style={{ fontSize: 32, lineHeight: 1, filter: isSel ? `drop-shadow(0 0 12px ${m.glow})` : 'none' }}>{m.icon}</span>
-                <span className="font-bold" style={{ fontSize: 16, color: isSel ? m.accent : 'rgba(220,210,255,0.85)' }}>
+                <span className="font-bold" style={{ fontSize: 16, color: isSel ? m.accent : 'rgba(248,239,213,0.85)' }}>
                   {isAr ? m.ar : m.en}
                 </span>
-                <span style={{ fontSize: 10, color: isSel ? `${m.accent}AA` : 'rgba(220,210,255,0.35)' }}>
+                <span style={{ fontSize: 10, color: isSel ? `${m.accent}AA` : 'rgba(248,239,213,0.35)' }}>
                   {isAr ? m.tagline.ar : m.tagline.en}
                 </span>
               </div>
@@ -955,7 +955,7 @@ function ModeChips({ mode, onSelect, lang }: { mode: GameMode; onSelect: (m: Gam
       className="grid grid-cols-3 gap-1 p-1"
       style={{
         background: 'linear-gradient(180deg, rgba(40,28,12,0.55), rgba(14,9,5,0.55))',
-        border: '1px solid rgba(167,139,250,0.28)',
+        border: '1px solid rgba(212,169,106,0.28)',
         borderRadius: 999,
         backdropFilter: 'blur(14px) saturate(120%)',
         WebkitBackdropFilter: 'blur(14px) saturate(120%)',
@@ -975,7 +975,7 @@ function ModeChips({ mode, onSelect, lang }: { mode: GameMode; onSelect: (m: Gam
               background: isSel
                 ? `radial-gradient(circle at 50% 35%, ${t.glow}, rgba(40,28,12,0.4) 75%)`
                 : 'transparent',
-              color: isSel ? t.accent : 'rgba(220,210,255,0.65)',
+              color: isSel ? t.accent : 'rgba(248,239,213,0.65)',
               fontSize: 11.5,
               cursor: 'pointer',
               transition: 'color .2s',
@@ -1002,7 +1002,7 @@ function ModeChips({ mode, onSelect, lang }: { mode: GameMode; onSelect: (m: Gam
 }
 
 // ── Avatar stepper: − [4 / 10  👤👤👤👤·····] + ──────────────────────────────
-const SEAT_COLORS = ['#A78BFA','#4A90D9','#50C878','#E74C3C','#9B59B6','#E67E22','#1ABC9C','#E91E63','#3DB7B7','#FF6B7A'];
+const SEAT_COLORS = ['#D4A96A','#4A90D9','#50C878','#E74C3C','#9B59B6','#E67E22','#1ABC9C','#E91E63','#3DB7B7','#FF6B7A'];
 function PlayerStepper({ value, onChange, min, max, accent, lang, label }: {
   value: number; onChange: (n: number) => void; min: number; max: number;
   accent: string; lang: string; label: string;
@@ -1011,7 +1011,7 @@ function PlayerStepper({ value, onChange, min, max, accent, lang, label }: {
   const inc = () => { if (value < max) { onChange(value + 1); soundService.playClick(); } };
   return (
     <div className="w-full flex flex-col items-center gap-3">
-      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(220,210,255,0.55)' }}>{label}</span>
+      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(248,239,213,0.55)' }}>{label}</span>
 
       {/* Stepper row */}
       <div className="flex items-center gap-3 w-full" style={{ maxWidth: 280 }}>
@@ -1041,7 +1041,7 @@ function PlayerStepper({ value, onChange, min, max, accent, lang, label }: {
             style={{ fontSize: 44, color: accent, textShadow: `0 0 18px ${accent}AA` }}>
             {value}
           </motion.span>
-          <span className="font-arabic" style={{ fontSize: 10, color: 'rgba(220,210,255,0.4)', marginTop: 2 }}>
+          <span className="font-arabic" style={{ fontSize: 10, color: 'rgba(248,239,213,0.4)', marginTop: 2 }}>
             {lang === 'ar' ? `من ${max}` : `of ${max}`}
           </span>
         </div>
@@ -1133,7 +1133,7 @@ function CoinStepper({ value, onChange, accent, max, lang }: {
 
   return (
     <div className="w-full flex flex-col items-center gap-3">
-      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(220,210,255,0.55)' }}>
+      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(248,239,213,0.55)' }}>
         {lang === 'ar' ? 'الكوينز للعبة' : 'Coins for game'}
       </span>
 
@@ -1165,7 +1165,7 @@ function CoinStepper({ value, onChange, accent, max, lang }: {
             {value.toLocaleString()}
             <span style={{ fontSize: 18 }}>🪙</span>
           </motion.div>
-          <span className="font-arabic mt-1" style={{ fontSize: 10, color: 'rgba(220,210,255,0.4)' }}>
+          <span className="font-arabic mt-1" style={{ fontSize: 10, color: 'rgba(248,239,213,0.4)' }}>
             {lang === 'ar' ? `مستوى ${idx + 1} من ${COIN_STEPS.length}` : `step ${idx + 1} of ${COIN_STEPS.length}`}
           </span>
         </div>
@@ -1191,7 +1191,7 @@ function CoinStepper({ value, onChange, accent, max, lang }: {
             style={{ height: '100%', background: `linear-gradient(90deg, ${accent}AA, ${accent})`,
                      boxShadow: `0 0 10px ${accent}77` }}/>
         </div>
-        <div className="flex justify-between font-mono mt-1" style={{ fontSize: 9, color: 'rgba(220,210,255,0.35)' }}>
+        <div className="flex justify-between font-mono mt-1" style={{ fontSize: 9, color: 'rgba(248,239,213,0.35)' }}>
           <span>50</span><span>50K</span>
         </div>
       </div>
@@ -1205,12 +1205,12 @@ function DifficultyCards({ value, onChange, lang }: {
 }) {
   const opts = [
     { v: 'easy' as const,   ar: 'سهل',   en: 'Easy',   color: '#7AE08A' },
-    { v: 'medium' as const, ar: 'متوسط', en: 'Medium', color: '#F0E9FF' },
+    { v: 'medium' as const, ar: 'متوسط', en: 'Medium', color: '#F8EFD5' },
     { v: 'hard' as const,   ar: 'صعب',   en: 'Hard',   color: '#E04030' },
   ];
   return (
     <div className="w-full flex flex-col gap-2 items-center">
-      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(220,210,255,0.55)' }}>
+      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(248,239,213,0.55)' }}>
         {lang === 'ar' ? 'مستوى البوتات' : 'Bot difficulty'}
       </span>
       <div className="grid grid-cols-3 gap-2.5 w-full" style={{ maxWidth: 320 }}>
@@ -1232,7 +1232,7 @@ function DifficultyCards({ value, onChange, lang }: {
             >
               <span className="font-arabic font-bold" style={{
                 fontSize: 20,
-                color: sel ? o.color : 'rgba(220,210,255,0.85)',
+                color: sel ? o.color : 'rgba(248,239,213,0.85)',
                 textShadow: sel ? `0 0 12px ${o.color}99` : 'none',
                 letterSpacing: 1,
               }}>
@@ -1311,7 +1311,7 @@ function MatchLengthPicker({ value, onChange, accent, lang }: {
   ];
   return (
     <div className="w-full flex flex-col items-center gap-2">
-      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(220,210,255,0.55)' }}>
+      <span className="font-arabic" style={{ fontSize: 12, color: 'rgba(248,239,213,0.55)' }}>
         {lang === 'ar' ? 'طول المباراة' : 'Match Length'}
       </span>
       <div className="flex gap-2 w-full" style={{ maxWidth: 320 }}>
@@ -1326,7 +1326,7 @@ function MatchLengthPicker({ value, onChange, accent, lang }: {
               style={{
                 padding: '10px 6px',
                 background: sel ? `${accent}26` : 'rgba(255,255,255,0.04)',
-                color: sel ? accent : 'rgba(220,210,255,0.55)',
+                color: sel ? accent : 'rgba(248,239,213,0.55)',
                 border: `1.5px solid ${sel ? `${accent}99` : 'rgba(255,255,255,0.08)'}`,
                 boxShadow: sel ? `0 0 14px ${accent}55` : 'none',
                 fontSize: 13, lineHeight: 1.25,
@@ -1477,7 +1477,7 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
           background: isOk
             ? `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}DD 50%, ${theme.bg1} 100%)`
             : 'rgba(255,255,255,0.05)',
-          color: isOk ? '#0A0814' : 'rgba(255,255,255,0.25)',
+          color: isOk ? '#1A1208' : 'rgba(255,255,255,0.25)',
           border: `2px solid ${isOk ? theme.accent : 'rgba(255,255,255,0.08)'}`,
           boxShadow: isOk
             ? `0 16px 36px rgba(0,0,0,0.55), 0 0 36px ${theme.glow}, inset 0 -4px 14px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.18)`
@@ -1523,7 +1523,7 @@ function SearchingModal({ onCancel, lang }: { onCancel: () => void; lang: string
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center gap-6 rounded-3xl p-10 border"
-        style={{ background: 'rgba(20,16,10,0.97)', borderColor: 'rgba(167,139,250,0.2)', minWidth: 300 }}
+        style={{ background: 'rgba(20,16,10,0.97)', borderColor: 'rgba(212,169,106,0.2)', minWidth: 300 }}
       >
         {/* Pulsing rings */}
         <div className="relative flex items-center justify-center" style={{ width: 90, height: 90 }}>
@@ -1533,24 +1533,24 @@ function SearchingModal({ onCancel, lang }: { onCancel: () => void; lang: string
               animate={{ scale: [scale, scale + 0.3, scale], opacity: [0.4, 0.1, 0.4] }}
               transition={{ duration: 2, delay: i * 0.4, repeat: Infinity, ease: 'easeInOut' }}
               className="absolute rounded-full border"
-              style={{ width: 44, height: 44, borderColor: 'rgba(167,139,250,0.5)' }}
+              style={{ width: 44, height: 44, borderColor: 'rgba(212,169,106,0.5)' }}
             />
           ))}
           <span style={{ fontSize: 32, position: 'relative', zIndex: 1 }}>🌍</span>
         </div>
 
         <div className="text-center">
-          <p className="font-arabic font-bold text-lg mb-1" style={{ color: '#F0E9FF' }}>
+          <p className="font-arabic font-bold text-lg mb-1" style={{ color: '#F8EFD5' }}>
             {lang === 'ar' ? 'جاري البحث عن لاعبين...' : 'Searching for players...'}
           </p>
-          <p className="font-arabic text-sm" style={{ color: 'rgba(220,210,255,0.4)' }}>
+          <p className="font-arabic text-sm" style={{ color: 'rgba(248,239,213,0.4)' }}>
             {lang === 'ar' ? 'سيبدأ المباراة بمجرد اكتمال اللاعبين' : 'Match starts once players are found'}
           </p>
         </div>
 
         {/* Timer */}
-        <div className="rounded-2xl px-8 py-3 border" style={{ background: 'rgba(167,139,250,0.06)', borderColor: 'rgba(167,139,250,0.15)' }}>
-          <p className="font-mono text-3xl font-bold" style={{ color: '#A78BFA', letterSpacing: 4 }}>
+        <div className="rounded-2xl px-8 py-3 border" style={{ background: 'rgba(212,169,106,0.06)', borderColor: 'rgba(212,169,106,0.15)' }}>
+          <p className="font-mono text-3xl font-bold" style={{ color: '#D4A96A', letterSpacing: 4 }}>
             {mm}:{ss}
           </p>
         </div>
@@ -1574,18 +1574,18 @@ function BotLoadingOverlay({ lang }: { lang: string }) {
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="flex flex-col items-center gap-6 rounded-3xl p-10 border"
-        style={{ background: 'rgba(20,16,10,0.97)', borderColor: 'rgba(167,139,250,0.2)', minWidth: 280 }}
+        style={{ background: 'rgba(20,16,10,0.97)', borderColor: 'rgba(212,169,106,0.2)', minWidth: 280 }}
       >
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1.2, repeat: Infinity, ease: 'linear' }}
-          style={{ width: 56, height: 56, borderRadius: '50%', border: '3px solid rgba(167,139,250,0.15)', borderTopColor: '#A78BFA' }}
+          style={{ width: 56, height: 56, borderRadius: '50%', border: '3px solid rgba(212,169,106,0.15)', borderTopColor: '#D4A96A' }}
         />
         <div className="text-center">
-          <p className="font-arabic font-bold text-lg mb-1" style={{ color: '#F0E9FF' }}>
+          <p className="font-arabic font-bold text-lg mb-1" style={{ color: '#F8EFD5' }}>
             {lang === 'ar' ? '🤖 جاري تحضير اللعبة...' : '🤖 Preparing the game...'}
           </p>
-          <p className="font-arabic text-sm" style={{ color: 'rgba(220,210,255,0.4)' }}>
+          <p className="font-arabic text-sm" style={{ color: 'rgba(248,239,213,0.4)' }}>
             {lang === 'ar' ? 'ستبدأ اللعبة خلال لحظات' : 'Game will start in a moment'}
           </p>
         </div>
@@ -1848,14 +1848,14 @@ export function HomePage() {
           <Link to="/" className="flex flex-col items-center justify-center gap-0">
             <span className="font-display tracking-widest"
               style={{
-                fontSize: 26, color: '#F0E9FF',
+                fontSize: 26, color: '#F8EFD5',
                 letterSpacing: '0.20em', lineHeight: 1,
-                textShadow: '0 2px 12px rgba(167,139,250,0.45), 0 0 28px rgba(167,139,250,0.30)',
+                textShadow: '0 2px 12px rgba(212,169,106,0.45), 0 0 28px rgba(212,169,106,0.30)',
               }}>
               CHECK
             </span>
             {profile && (
-              <span className="font-arabic mt-0.5" style={{ fontSize: 10, color: 'rgba(220,210,255,0.45)' }}>
+              <span className="font-arabic mt-0.5" style={{ fontSize: 10, color: 'rgba(248,239,213,0.45)' }}>
                 {lang === 'ar' ? `أهلاً, ${profile.displayName}` : `Hi, ${profile.displayName}`}
               </span>
             )}
@@ -1865,12 +1865,12 @@ export function HomePage() {
           <div className="flex items-center gap-2 shrink-0">
             <div className="flex items-center gap-1 rounded-full px-2.5 py-1"
               style={{
-                background: 'linear-gradient(135deg, rgba(167,139,250,0.20), rgba(167,139,250,0.10))',
-                border: '1.5px solid rgba(167,139,250,0.55)',
-                boxShadow: 'inset 0 -2px 6px rgba(0,0,0,0.45), 0 0 12px rgba(167,139,250,0.20)',
+                background: 'linear-gradient(135deg, rgba(212,169,106,0.20), rgba(212,169,106,0.10))',
+                border: '1.5px solid rgba(212,169,106,0.55)',
+                boxShadow: 'inset 0 -2px 6px rgba(0,0,0,0.45), 0 0 12px rgba(212,169,106,0.20)',
               }}>
               <span style={{ fontSize: 14 }}>🪙</span>
-              <span className="font-bold" style={{ fontSize: 12, color: '#F0E9FF' }}>{coins.toLocaleString()}</span>
+              <span className="font-bold" style={{ fontSize: 12, color: '#F8EFD5' }}>{coins.toLocaleString()}</span>
             </div>
             {profile && (
               <RewardsLauncher
@@ -1901,9 +1901,9 @@ export function HomePage() {
                   <div className="rounded-full flex items-center justify-center"
                     style={{
                       width: 72, height: 72,
-                      background: 'radial-gradient(circle at 30% 30%, rgba(167,139,250,0.55), rgba(40,28,12,0.55) 70%)',
-                      border: '2px solid rgba(167,139,250,0.75)',
-                      boxShadow: '0 0 22px rgba(167,139,250,0.45), inset 0 -3px 10px rgba(0,0,0,0.45)',
+                      background: 'radial-gradient(circle at 30% 30%, rgba(212,169,106,0.55), rgba(40,28,12,0.55) 70%)',
+                      border: '2px solid rgba(212,169,106,0.75)',
+                      boxShadow: '0 0 22px rgba(212,169,106,0.45), inset 0 -3px 10px rgba(0,0,0,0.45)',
                       padding: 4,
                     }}>
                     <AvatarCircle id={profile.avatarId} name={profile.displayName} size={58} frameId={(profile.equippedItems as any)?.avatarFrame}/>
@@ -1911,11 +1911,11 @@ export function HomePage() {
                   <div className="absolute rounded-full font-bold flex items-center justify-center"
                     style={{
                       bottom: -4, insetInlineEnd: -4, minWidth: 26, height: 26,
-                      background: 'linear-gradient(135deg, #F0E9FF, #A78BFA)',
-                      fontSize: 12, color: '#0A0814', fontWeight: 800,
-                      border: '2px solid #15102F',
+                      background: 'linear-gradient(135deg, #F8EFD5, #D4A96A)',
+                      fontSize: 12, color: '#1A1208', fontWeight: 800,
+                      border: '2px solid #2A1F12',
                       padding: '0 6px',
-                      boxShadow: '0 0 14px rgba(167,139,250,0.65)',
+                      boxShadow: '0 0 14px rgba(212,169,106,0.65)',
                     }}>
                     {level}
                   </div>
@@ -1923,11 +1923,11 @@ export function HomePage() {
                 <div className="flex-1 min-w-0">
                   <h2 className="font-display tracking-wider truncate"
                     style={{
-                      fontSize: 22, color: '#F0E9FF',
+                      fontSize: 22, color: '#F8EFD5',
                       letterSpacing: '0.06em', lineHeight: 1.05,
-                      textShadow: '0 0 14px rgba(167,139,250,0.45)',
+                      textShadow: '0 0 14px rgba(212,169,106,0.45)',
                     }}>{profile.displayName}</h2>
-                  <p className="font-arabic truncate mt-1" style={{ fontSize: 11, color: 'rgba(220,210,255,0.55)' }}>
+                  <p className="font-arabic truncate mt-1" style={{ fontSize: 11, color: 'rgba(248,239,213,0.55)' }}>
                     ⟡ {levelTitle(level, lang)}
                   </p>
                 </div>
@@ -1979,11 +1979,11 @@ export function HomePage() {
             {/* ── Game title ── */}
             <div className="text-center mb-5">
               <div className="flex items-center justify-center gap-3 mb-1">
-                <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(167,139,250,0.3))' }}/>
-                <span className="font-display tracking-widest" style={{ fontSize: 22, color: '#A78BFA' }}>CHECK</span>
-                <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(167,139,250,0.3))' }}/>
+                <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(212,169,106,0.3))' }}/>
+                <span className="font-display tracking-widest" style={{ fontSize: 22, color: '#D4A96A' }}>CHECK</span>
+                <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(212,169,106,0.3))' }}/>
               </div>
-              <p className="font-arabic" style={{ fontSize: 12, color: 'rgba(220,210,255,0.3)' }}>{t('home_subtitle')}</p>
+              <p className="font-arabic" style={{ fontSize: 12, color: 'rgba(248,239,213,0.3)' }}>{t('home_subtitle')}</p>
             </div>
 
             {/* ── Single morphing PlayBox (tabs + visual config + CTA) ── */}
@@ -1994,7 +1994,7 @@ export function HomePage() {
               {mode === 'private' && (
                 <button onClick={() => setShowJoin(true)}
                   className="font-arabic text-sm transition-all"
-                  style={{ color: 'rgba(220,210,255,0.45)', textDecoration: 'underline', textDecorationColor: 'rgba(220,210,255,0.2)' }}>
+                  style={{ color: 'rgba(248,239,213,0.45)', textDecoration: 'underline', textDecorationColor: 'rgba(248,239,213,0.2)' }}>
                   🔑 {lang === 'ar' ? 'انضم بكود غرفة خاصة' : 'Join with room code'}
                 </button>
               )}

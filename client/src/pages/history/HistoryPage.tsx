@@ -59,14 +59,14 @@ export function HistoryPage() {
       {loading ? (
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-28 animate-pulse" style={{ background: 'rgba(167,139,250,0.04)', borderRadius: '22px 6px 22px 6px' }} />
+            <div key={i} className="h-28 animate-pulse" style={{ background: 'rgba(212,169,106,0.04)', borderRadius: '22px 6px 22px 6px' }} />
           ))}
         </div>
       ) : records.length === 0 ? (
         <div className="text-center py-20">
           <p className="text-5xl mb-4">🃏</p>
-          <p className="font-arabic font-bold text-lg" style={{ color: 'rgba(220,210,255,0.5)' }}>{t('history_no_games')}</p>
-          <p className="font-arabic text-sm mt-2" style={{ color: 'rgba(220,210,255,0.25)' }}>
+          <p className="font-arabic font-bold text-lg" style={{ color: 'rgba(248,239,213,0.5)' }}>{t('history_no_games')}</p>
+          <p className="font-arabic text-sm mt-2" style={{ color: 'rgba(248,239,213,0.25)' }}>
             {lang === 'ar' ? 'العب مبارياتك وستظهر هنا' : 'Play games and they will appear here'}
           </p>
         </div>
@@ -87,11 +87,11 @@ export function HistoryPage() {
                   <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b"
                     style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
                     <div className="flex items-center gap-2">
-                      <span className="font-display text-sm tracking-widest" style={{ color: 'rgba(167,139,250,0.7)' }}>
+                      <span className="font-display text-sm tracking-widest" style={{ color: 'rgba(212,169,106,0.7)' }}>
                         {GAME_LABELS[rec.gameType] || rec.gameType}
                       </span>
                       {rec.players.length > 0 && (
-                        <span className="text-xs font-arabic" style={{ color: 'rgba(220,210,255,0.3)' }}>
+                        <span className="text-xs font-arabic" style={{ color: 'rgba(248,239,213,0.3)' }}>
                           · {rec.players.length} {lang === 'ar' ? 'لاعبين' : 'players'}
                         </span>
                       )}
@@ -104,7 +104,7 @@ export function HistoryPage() {
                           {isWin ? `🏆 ${t('history_win')}` : `← ${t('history_loss')}`}
                         </span>
                       )}
-                      <span className="text-xs font-arabic" style={{ color: 'rgba(220,210,255,0.25)' }}>
+                      <span className="text-xs font-arabic" style={{ color: 'rgba(248,239,213,0.25)' }}>
                         {timeAgo(rec.playedAt)}
                       </span>
                     </div>
@@ -125,8 +125,8 @@ export function HistoryPage() {
                             disabled={!clickable}
                             className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-start ${clickable ? 'active:scale-[0.97] hover:brightness-110' : 'cursor-default'} transition`}
                             style={{
-                              background: isThisWinner ? 'rgba(167,139,250,0.12)' : 'rgba(255,255,255,0.03)',
-                              border: `1px solid ${isMe ? 'rgba(167,139,250,0.4)' : isThisWinner ? 'rgba(167,139,250,0.2)' : 'rgba(255,255,255,0.07)'}`,
+                              background: isThisWinner ? 'rgba(212,169,106,0.12)' : 'rgba(255,255,255,0.03)',
+                              border: `1px solid ${isMe ? 'rgba(212,169,106,0.4)' : isThisWinner ? 'rgba(212,169,106,0.2)' : 'rgba(255,255,255,0.07)'}`,
                             }}>
                             <div className="relative shrink-0" style={{ width: 28, height: 28 }}>
                               <CharacterArt id={p.avatarId} size={28} />
@@ -134,12 +134,12 @@ export function HistoryPage() {
                             </div>
                             <div>
                               <p className="font-arabic text-xs font-bold leading-tight"
-                                style={{ color: isThisWinner ? '#F0E9FF' : isMe ? 'rgba(167,139,250,0.8)' : 'rgba(220,210,255,0.6)' }}>
+                                style={{ color: isThisWinner ? '#F8EFD5' : isMe ? 'rgba(212,169,106,0.8)' : 'rgba(248,239,213,0.6)' }}>
                                 {isMe ? meLabel : p.displayName}
                                 {isThisWinner && ' 🏆'}
                               </p>
                               <p className="font-mono text-xs leading-tight"
-                                style={{ color: isThisWinner ? 'rgba(167,139,250,0.6)' : 'rgba(220,210,255,0.3)' }}>
+                                style={{ color: isThisWinner ? 'rgba(212,169,106,0.6)' : 'rgba(248,239,213,0.3)' }}>
                                 {p.score} {lang === 'ar' ? 'نقطة' : 'pts'}
                               </p>
                             </div>
@@ -154,14 +154,14 @@ export function HistoryPage() {
                         className="w-full rounded-lg flex items-center justify-center gap-2 font-arabic font-bold transition-all"
                         style={{
                           padding: '6px 10px',
-                          background: 'rgba(167,139,250,0.10)',
-                          border: '1px solid rgba(167,139,250,0.30)',
-                          color: '#F0E9FF',
+                          background: 'rgba(212,169,106,0.10)',
+                          border: '1px solid rgba(212,169,106,0.30)',
+                          color: '#F8EFD5',
                           fontSize: 12,
                           cursor: 'pointer',
                         }}>
                         📺 {lang === 'ar' ? 'إعادة المباراة' : 'Replay match'}
-                        <span style={{ fontSize: 10, color: 'rgba(220,210,255,0.55)', fontWeight: 400 }}>
+                        <span style={{ fontSize: 10, color: 'rgba(248,239,213,0.55)', fontWeight: 400 }}>
                           · {rec.rounds.length} {lang === 'ar' ? 'جولات' : 'rounds'}
                         </span>
                       </button>

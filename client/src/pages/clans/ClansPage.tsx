@@ -445,6 +445,9 @@ function MineTab({ clan, myUid, lang, onChanged, onLeft }: {
         </div>
       )}
 
+      {/* Weekly Clan War — live matchup, scores, time-left */}
+      <ClanWarBanner clanId={clan.id} lang={lang} />
+
       {/* Pending applications — officers see them */}
       {isOfficer && clan.applications.length > 0 && (
         <div className="rounded-2xl p-3 mb-4"
@@ -1020,3 +1023,143 @@ function ClanEmblem({ emblem, size }: { emblem: string; size: number }) {
     </div>
   );
 }
+
+// ─── Clan War banner ─────────────────────────────────────────────────────
+// Reads /api/clans/war/me on a slow poll. Shows the live matchup (your
+// clan vs the rival), each side's score, and time left in the week.
+// Hidden when you're not in a clan or no rival is available yet.
+
+interface ClanWarSidePayload {
+  clanId: string;
+  clanName: string;
+  clanTag: string;
+  emblem: string;
+  memberCount: number;
+  score: number;
+}
+
+interface ClanWarPayload {
+  id: string;
+  weekKey: string;
+  weekStartedAt: number;
+  weekEndsAt: number;
+  scope: 'check' | 'ludo';
+  clan1: ClanWarSidePayload;
+  clan2: ClanWarSidePayload;
+  outcome: 'pending' | 'clan1' | 'clan2' | 'tie';
+  prizePerMember: number;
+}
+
+function ClanWarBanner({ clanId, lang }: { clanId: string; lang: string }) {
+  const [war, setWar] = useState<ClanWarPayload | null>(null);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    let cancelled = false;
+    async function tick() {
+      try {
+        const res = await apiClient.get<{ war: ClanWarPayload | null }>('/api/clans/war/me');
+        if (!cancelled) setWar(res.war);
+      } catch { /* noop */ }
+    }
+    tick();
+    const id = setInterval(tick, 5000);
+    const t = setInterval(() => setNow(Date.now()), 60_000);
+    return () => { cancelled = true; clearInterval(id); clearInterval(t); };
+  }, [clanId]);
+
+  if (!war) {
+    return (
+      <div className="rounded-2xl p-3 mb-4 text-center"
+        style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(229,188,124,0.20)' }}>
+        <p className="font-arabic" style={{ fontSize: 12, color: 'rgba(251,243,219,0.50)' }}>
+          ⚔️ {lang === 'ar' ? 'لا توجد قبيلة منافسة بعد — راح يطلع لك خصم لما قبيلة ثانية تتوفر' : 'No rival yet — pairing will start once another clan is eligible'}
+        </p>
+      </div>
+    );
+  }
+
+  const myIsClan1 = war.clan1.clanId === clanId;
+  const me = myIsClan1 ? war.clan1 : war.clan2;
+  const them = myIsClan1 ? war.clan2 : war.clan1;
+  const winning = me.score > them.score;
+  const tied = me.score === them.score;
+  const msLeft = Math.max(0, war.weekEndsAt - now);
+  const daysLeft = Math.floor(msLeft / (24 * 60 * 60 * 1000));
+  const hoursLeft = Math.floor((msLeft % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+
+  return (
+    <div className="rounded-2xl p-4 mb-4 relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, rgba(196,92,58,0.18), rgba(120,40,20,0.10))',
+        border: `1px solid ${winning ? 'rgba(80,200,120,0.45)' : tied ? 'rgba(229,188,124,0.40)' : 'rgba(196,92,58,0.45)'}`,
+        boxShadow: winning ? '0 0 20px rgba(80,200,120,0.20)' : 'none',
+      }}>
+      <div className="flex items-center justify-between mb-2">
+        <p className="font-arabic font-bold" style={{ fontSize: 13, color: '#FFB347' }}>
+          ⚔️ {lang === 'ar' ? 'حرب القبائل — هذا الأسبوع' : 'Clan War — this week'}
+        </p>
+        <p className="font-arabic" style={{ fontSize: 11, color: 'rgba(251,243,219,0.55)' }}>
+          {daysLeft > 0
+            ? (lang === 'ar' ? `${daysLeft}ي ${hoursLeft}س متبقية` : `${daysLeft}d ${hoursLeft}h left`)
+            : (lang === 'ar' ? `${hoursLeft} ساعة متبقية` : `${hoursLeft}h left`)}
+        </p>
+      </div>
+      <div className="grid grid-cols-3 items-center gap-2">
+        <ClanWarSideCard side={me} highlight winning={winning} tied={tied} lang={lang} mine />
+        <div className="text-center">
+          <p className="font-arabic" style={{ fontSize: 10, color: 'rgba(251,243,219,0.40)' }}>
+            {lang === 'ar' ? 'النقاط' : 'Score'}
+          </p>
+          <p className="font-bold font-mono" style={{ fontSize: 22, color: '#FBF3DB' }}>
+            {me.score} <span style={{ color: 'rgba(251,243,219,0.40)' }}>—</span> {them.score}
+          </p>
+          <p className="font-arabic mt-0.5" style={{ fontSize: 10, color: 'rgba(251,243,219,0.50)' }}>
+            {tied
+              ? (lang === 'ar' ? 'تعادل' : 'tied')
+              : winning
+                ? (lang === 'ar' ? 'متقدّمة 🔥' : 'leading 🔥')
+                : (lang === 'ar' ? 'متخلفة' : 'behind')}
+          </p>
+        </div>
+        <ClanWarSideCard side={them} highlight={false} winning={false} tied={tied} lang={lang} mine={false} />
+      </div>
+      <p className="font-arabic text-center mt-2" style={{ fontSize: 10.5, color: 'rgba(251,243,219,0.45)' }}>
+        {lang === 'ar'
+          ? 'كل فوز عضو في قبيلتك = +١ نقطة. القبيلة الفائزة تاخذ ٢٠٠ كوينز لكل عضو.'
+          : 'Each member win = +1 point. Winning clan splits 200 coins per member.'}
+      </p>
+    </div>
+  );
+}
+
+function ClanWarSideCard({ side, highlight, winning, tied, lang, mine }: {
+  side: ClanWarSidePayload;
+  highlight: boolean;
+  winning: boolean;
+  tied: boolean;
+  lang: string;
+  mine: boolean;
+}) {
+  return (
+    <div className="rounded-xl p-2 text-center"
+      style={{
+        background: highlight
+          ? (winning ? 'rgba(80,200,120,0.10)' : tied ? 'rgba(229,188,124,0.08)' : 'rgba(196,92,58,0.08)')
+          : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${highlight
+          ? (winning ? 'rgba(80,200,120,0.40)' : tied ? 'rgba(229,188,124,0.30)' : 'rgba(196,92,58,0.35)')
+          : 'rgba(255,255,255,0.06)'}`,
+      }}>
+      <div style={{ fontSize: 24, lineHeight: 1 }}>{side.emblem}</div>
+      <p className="font-arabic font-bold truncate mt-1" style={{ fontSize: 11, color: '#FBF3DB' }}>
+        {side.clanName}
+      </p>
+      <p className="font-mono" style={{ fontSize: 9, color: 'rgba(229,188,124,0.65)' }}>[{side.clanTag}]</p>
+      <p className="font-arabic mt-0.5" style={{ fontSize: 9, color: 'rgba(251,243,219,0.45)' }}>
+        {mine ? (lang === 'ar' ? 'قبيلتك' : 'your clan') : `${side.memberCount} ${lang === 'ar' ? 'عضو' : 'members'}`}
+      </p>
+    </div>
+  );
+}
+

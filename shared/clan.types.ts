@@ -80,3 +80,46 @@ export const DEFAULT_CLAN_LIMIT = 30;
 export const CLAN_CREATE_COST = 5000;
 
 export const CLAN_EMBLEMS = ['🦅', '🐪', '🌴', '⚔️', '🌙', '⭐', '🦁', '🔥', '💎', '🏛️', '🌊', '🏆', '☄️', '🛡️', '👑', '⚡'];
+
+// ── Clan Wars (weekly) ───────────────────────────────────────────────────────
+// Two clans of comparable size are paired Mon→Sun (UTC). Every Check win a
+// member scores during that week adds 1 point to their clan's war total.
+// At week-end the higher-scoring clan splits a coin prize across ALL its
+// members (active or not). Ties split the pot evenly between both clans.
+
+/** Coin prize per member for a clan-war win. The pot is FIXED per member so
+ *  bigger clans don't unfairly get bigger pots — this keeps small clans
+ *  competitive. */
+export const CLAN_WAR_PRIZE_PER_MEMBER = 200;
+/** Tied clans both pay a smaller per-member consolation prize. */
+export const CLAN_WAR_TIE_PRIZE_PER_MEMBER = 50;
+/** Minimum members a clan needs to be eligible for matchmaking. */
+export const CLAN_WAR_MIN_MEMBERS = 2;
+
+export type ClanWarOutcome = 'pending' | 'clan1' | 'clan2' | 'tie';
+
+export interface ClanWarSide {
+  clanId: string;
+  clanName: string;
+  clanTag: string;
+  emblem: string;
+  memberCount: number;
+  /** Points scored this week — sum of member Check wins. */
+  score: number;
+}
+
+export interface ClanWar {
+  id: string;
+  /** ISO Monday→Sunday week key, e.g. "2026-W19". One war per pair per week. */
+  weekKey: string;
+  /** UTC midnight of Monday that started this week. */
+  weekStartedAt: number;
+  /** UTC midnight of next Monday — when the war auto-resolves. */
+  weekEndsAt: number;
+  scope: ClanScope;
+  clan1: ClanWarSide;
+  clan2: ClanWarSide;
+  outcome: ClanWarOutcome;
+  /** Coins paid per winning member when the war closed. 0 while pending. */
+  prizePerMember: number;
+}

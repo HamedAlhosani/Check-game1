@@ -18,6 +18,7 @@ const FILES = {
   leaderboard: path.join(DATA_DIR, 'leaderboard.json'),
   history: path.join(DATA_DIR, 'history.json'),
   clans: path.join(DATA_DIR, 'clans.json'),
+  clanWars: path.join(DATA_DIR, 'clan-wars.json'),
 };
 
 export const users = new Map<string, any>(
@@ -38,8 +39,13 @@ export const clans = new Map<string, any>(
   Object.entries(load<Record<string, any>>(FILES.clans, {}))
 );
 
+export const clanWars = new Map<string, any>(
+  Object.entries(load<Record<string, any>>(FILES.clanWars, {}))
+);
+
 export const saveUsers = () => save(FILES.users, Object.fromEntries(users));
 export const saveCredentials = () => save(FILES.credentials, Object.fromEntries(credentials));
 export const saveLeaderboard = () => save(FILES.leaderboard, Object.fromEntries(leaderboard));
 export const saveHistory = () => save(FILES.history, history);
 export const saveClans = () => save(FILES.clans, Object.fromEntries(clans));
+export const saveClanWars = () => save(FILES.clanWars, Object.fromEntries(clanWars));

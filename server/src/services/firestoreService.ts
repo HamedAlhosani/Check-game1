@@ -6,6 +6,7 @@ import {
   CHESTS, ChestTier,
 } from '@check-game/shared';
 import { users, leaderboard, history, saveUsers, saveLeaderboard, saveHistory } from '../data/store';
+import { creditClanWarWin } from './clanWarService';
 
 const XP_PER_WIN = 100;
 const XP_PER_GAME = 20;
@@ -181,6 +182,12 @@ export async function recordGameResult(
       (p as any).lastFirstWinBonusDay = today;
       firstWinOfDay = true;
     }
+  }
+
+  // ── Clan-war contribution: every Check win adds 1 point to the player's
+  //    clan in the active weekly war (if any).
+  if (isWinner && gameType === 'check') {
+    try { creditClanWarWin(uid, 'check'); } catch { /* never block recordGameResult */ }
   }
 
   p.stats = stats;

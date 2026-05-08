@@ -497,6 +497,18 @@ app.get('/api/clans/me', requireAuth, wrap(async (req, res) => {
   res.json({ clan: getMyClan(uid), invites: getMyInvites(uid) });
 }));
 
+// ── Weekly Clan War status for the current player's clan ────────────────────
+app.get('/api/clans/war/me', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const me = (await import('./services/firestoreService')).getUserProfile;
+  const profile = await me(uid);
+  const clanId = (profile as any)?.clanId;
+  if (!clanId) return res.json({ war: null });
+  const { getCurrentWar } = await import('./services/clanWarService');
+  const war = getCurrentWar(clanId);
+  res.json({ war });
+}));
+
 app.get('/api/clans/:id', requireAuth, wrap(async (req, res) => {
   const c = getClan(req.params.id);
   if (!c) return res.status(404).json({ error: 'Not found' });

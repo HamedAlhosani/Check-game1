@@ -6,6 +6,7 @@ import { useUiStore } from '../../store/uiStore';
 import { soundService } from '../../services/sound.service';
 import { useLang } from '../../i18n/useT';
 import { UserProfile } from '@check-game/shared';
+import { ConfirmModal } from './ConfirmModal';
 
 interface DailyReward {
   coins: number;
@@ -21,6 +22,9 @@ interface StatusResp {
   rewards: DailyReward[];
   streak: number;
   longestStreak: number;
+  /** When > 0, the player can pay `freezeCost` gems to restore this streak. */
+  recoverableStreak: number;
+  freezeCost: number;
 }
 interface ClaimResp {
   ok: true;
@@ -35,13 +39,15 @@ interface ClaimResp {
 export function DailyRewardModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const lang = useLang();
   const isAr = lang === 'ar';
-  const { setProfile } = useAuthStore();
+  const { profile, setProfile } = useAuthStore();
   const { addToast } = useUiStore();
   const [status, setStatus] = useState<StatusResp | null>(null);
   const [stage, setStage] = useState<'idle' | 'ad' | 'claiming' | 'done'>('idle');
   const [adSecs, setAdSecs] = useState(5);
   const [granted, setGranted] = useState<DailyReward | null>(null);
   const [claimedStreak, setClaimedStreak] = useState<number>(0);
+  const [confirmFreeze, setConfirmFreeze] = useState(false);
+  const [freezing, setFreezing] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -49,6 +55,26 @@ export function DailyRewardModal({ open, onClose }: { open: boolean; onClose: ()
     setGranted(null);
     apiClient.get<StatusResp>('/api/daily/status').then(setStatus).catch(() => {});
   }, [open]);
+
+  async function handleFreeze() {
+    setConfirmFreeze(false);
+    setFreezing(true);
+    try {
+      const res = await apiClient.post<{ ok: true; streak: number; gems: number; profile: UserProfile }>(
+        '/api/daily/freeze', {}
+      );
+      if (res.profile) setProfile(res.profile);
+      addToast(isAr ? `🔥 تم إنقاذ السلسلة (${res.streak})` : `🔥 streak saved (${res.streak})`, 'success');
+      // Refresh status so the recoverable banner disappears and the day
+      // index reflects the resumed schedule.
+      const next = await apiClient.get<StatusResp>('/api/daily/status');
+      setStatus(next);
+    } catch (e: any) {
+      addToast(e?.message || 'error', 'error');
+    } finally {
+      setFreezing(false);
+    }
+  }
 
   useEffect(() => {
     if (stage !== 'ad') return;
@@ -106,7 +132,10 @@ export function DailyRewardModal({ open, onClose }: { open: boolean; onClose: ()
             <CalendarView
               status={status}
               isAr={isAr}
+              userGems={profile?.gems ?? 0}
               onClaim={() => setStage('ad')}
+              onFreeze={() => setConfirmFreeze(true)}
+              freezing={freezing}
             />
           )}
 
@@ -142,12 +171,39 @@ export function DailyRewardModal({ open, onClose }: { open: boolean; onClose: ()
           )}
         </motion.div>
       </motion.div>
+
+      {status && status.recoverableStreak > 0 && (
+        <ConfirmModal
+          open={confirmFreeze}
+          title={isAr ? '🔥 إنقاذ السلسلة' : '🔥 Save your streak'}
+          message={isAr
+            ? `استبدل ${status.freezeCost} 💎 لإسترجاع سلسلة الـ ${status.recoverableStreak} يوم؟`
+            : `Spend ${status.freezeCost} 💎 to restore your ${status.recoverableStreak}-day streak?`}
+          confirmLabel={isAr ? `نعم · ${status.freezeCost} 💎` : `Yes · ${status.freezeCost} 💎`}
+          cancelLabel={isAr ? 'إلغاء' : 'Cancel'}
+          tone="gold"
+          lang={lang}
+          onConfirm={handleFreeze}
+          onCancel={() => setConfirmFreeze(false)}
+        />
+      )}
     </AnimatePresence>
   );
 }
 
 // ─── Calendar — 30 cells laid out 5 × 6 ──────────────────────────────────────
-function CalendarView({ status, isAr, onClaim }: { status: StatusResp; isAr: boolean; onClaim: () => void }) {
+function CalendarView({
+  status, isAr, userGems, onClaim, onFreeze, freezing,
+}: {
+  status: StatusResp;
+  isAr: boolean;
+  userGems: number;
+  onClaim: () => void;
+  onFreeze: () => void;
+  freezing: boolean;
+}) {
+  const showFreeze = status.recoverableStreak > 0;
+  const canAfford = userGems >= status.freezeCost;
   return (
     <>
       <div className="text-center mb-3">
@@ -256,6 +312,32 @@ function CalendarView({ status, isAr, onClaim }: { status: StatusResp; isAr: boo
         })}
       </div>
 
+      {showFreeze && (
+        <motion.button
+          initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+          whileHover={canAfford && !freezing ? { scale: 1.02 } : undefined}
+          whileTap={canAfford && !freezing ? { scale: 0.97 } : undefined}
+          disabled={!canAfford || freezing}
+          onClick={onFreeze}
+          className="w-full py-2.5 rounded-xl font-arabic font-bold mb-2 flex items-center justify-center gap-2"
+          style={{
+            background: canAfford
+              ? 'linear-gradient(135deg, rgba(64,164,232,0.25), rgba(157,216,232,0.10))'
+              : 'rgba(255,255,255,0.04)',
+            border: `1.5px solid ${canAfford ? 'rgba(157,216,232,0.55)' : 'rgba(255,255,255,0.10)'}`,
+            color: canAfford ? '#9DD8E8' : 'rgba(245,230,200,0.40)',
+            cursor: canAfford && !freezing ? 'pointer' : 'not-allowed',
+            fontSize: 14,
+          }}>
+          <span style={{ fontSize: 18 }}>❄️</span>
+          {freezing
+            ? (isAr ? 'جاري الإنقاذ…' : 'Saving…')
+            : (isAr
+              ? `أنقذ سلسلة الـ ${status.recoverableStreak} يوم · ${status.freezeCost} 💎`
+              : `Save your ${status.recoverableStreak}-day streak · ${status.freezeCost} 💎`)}
+        </motion.button>
+      )}
+
       {status.canClaim ? (
         <motion.button
           whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
@@ -269,13 +351,47 @@ function CalendarView({ status, isAr, onClaim }: { status: StatusResp; isAr: boo
           {isAr ? `استلم جائزة اليوم ${status.day + 1}` : `Claim day ${status.day + 1} reward`}
         </motion.button>
       ) : (
-        <div className="w-full py-3 rounded-xl text-center font-arabic text-sm"
-          style={{ background: 'rgba(255,255,255,0.04)', color: 'rgba(245,230,200,0.5)' }}>
-          {isAr ? 'تم استلام هدية اليوم · ارجع غداً للحفاظ على السلسلة' : 'Today\'s claim done · come back tomorrow to keep the streak'}
-        </div>
+        <NextClaimCountdown isAr={isAr} />
       )}
     </>
   );
+}
+
+// ─── Live countdown until next UTC midnight ──────────────────────────────────
+function NextClaimCountdown({ isAr }: { isAr: boolean }) {
+  const [remaining, setRemaining] = useState(() => msUntilNextUtcMidnight());
+  useEffect(() => {
+    const t = setInterval(() => setRemaining(msUntilNextUtcMidnight()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const hh = Math.floor(remaining / 3_600_000);
+  const mm = Math.floor((remaining % 3_600_000) / 60_000);
+  const ss = Math.floor((remaining % 60_000) / 1000);
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  return (
+    <div className="w-full py-3 rounded-xl text-center"
+      style={{
+        background: 'linear-gradient(135deg, rgba(122,199,79,0.10), rgba(201,168,76,0.04))',
+        border: '1px solid rgba(122,199,79,0.30)',
+      }}>
+      <div className="font-arabic" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)', marginBottom: 2 }}>
+        {isAr ? 'الهدية القادمة بعد' : 'Next reward in'}
+      </div>
+      <div className="font-mono font-bold tracking-wider" style={{ fontSize: 22, color: '#7AC74F' }}>
+        {pad(hh)}:{pad(mm)}:{pad(ss)}
+      </div>
+    </div>
+  );
+}
+
+function msUntilNextUtcMidnight(): number {
+  const now = new Date();
+  const next = Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 1, 0, 0, 0, 0,
+  );
+  return Math.max(0, next - now.getTime());
 }
 
 // ─── Done view ───────────────────────────────────────────────────────────────

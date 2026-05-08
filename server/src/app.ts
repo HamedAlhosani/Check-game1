@@ -19,6 +19,7 @@ import {
   rechargeCoins,
   getDailyReward,
   claimDailyReward,
+  freezeStreak,
   getProgression,
   claimMission,
   claimAchievement,
@@ -640,7 +641,23 @@ app.post('/api/daily/claim', requireAuth, wrap(async (req, res) => {
   const result = await claimDailyReward(uid);
   if (!result.ok) return res.status(400).json({ error: result.error });
   const profile = await getUserProfile(uid);
-  res.json({ ok: true, coins: result.coins, granted: result.granted, nextDay: result.nextDay, profile });
+  res.json({
+    ok: true,
+    coins: result.coins,
+    granted: result.granted,
+    nextDay: result.nextDay,
+    streak: result.streak,
+    longestStreak: result.longestStreak,
+    profile,
+  });
+}));
+
+app.post('/api/daily/freeze', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const result = await freezeStreak(uid);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const profile = await getUserProfile(uid);
+  res.json({ ok: true, streak: result.streak, gems: result.gems, profile });
 }));
 
 // ── Friends ────────────────────────────────────────────────────────────────────

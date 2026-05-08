@@ -721,6 +721,10 @@ function dayKey(d = new Date()): string {
   return `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}-${d.getUTCDate()}`;
 }
 
+// Cost of rescuing a broken streak with gems. Only applies when exactly
+// one day was missed — anything wider and the player has to start over.
+export const STREAK_FREEZE_COST = 50;
+
 export async function getDailyReward(uid: string): Promise<{
   day: number;
   canClaim: boolean;
@@ -728,18 +732,32 @@ export async function getDailyReward(uid: string): Promise<{
   rewards: typeof DAILY_REWARDS;
   streak: number;
   longestStreak: number;
+  /** Streak that can still be rescued by paying STREAK_FREEZE_COST gems. */
+  recoverableStreak: number;
+  freezeCost: number;
 }> {
   const p = users.get(uid) as any;
   if (!p) {
-    return { day: 0, canClaim: false, lastClaimDay: null, rewards: DAILY_REWARDS, streak: 0, longestStreak: 0 };
+    return {
+      day: 0, canClaim: false, lastClaimDay: null, rewards: DAILY_REWARDS,
+      streak: 0, longestStreak: 0, recoverableStreak: 0, freezeCost: STREAK_FREEZE_COST,
+    };
   }
   const today = dayKey();
   const yesterday = previousDayKey();
+  const dayBefore = previousDayKey(2);
   const lastClaimDay: string | null = p.dailyLastClaimDay || null;
   let dayIdx: number = p.dailyDayIndex ?? 0;
   let streak: number = p.dailyStreak ?? 0;
+  let recoverableStreak = 0;
   // If we missed a day, the streak resets the next time we look.
   if (lastClaimDay && lastClaimDay !== today && lastClaimDay !== yesterday) {
+    // Offer a freeze ONLY when exactly one day was missed and the player
+    // had something worth saving (>=2 day streak — saving a 1-day streak
+    // for 50 gems is a bad deal we shouldn't let them make).
+    if (lastClaimDay === dayBefore && streak >= 2) {
+      recoverableStreak = streak;
+    }
     dayIdx = 0;
     streak = 0;
   }
@@ -751,7 +769,44 @@ export async function getDailyReward(uid: string): Promise<{
     rewards: DAILY_REWARDS,
     streak,
     longestStreak: p.dailyLongestStreak ?? streak,
+    recoverableStreak,
+    freezeCost: STREAK_FREEZE_COST,
   };
+}
+
+export async function freezeStreak(uid: string): Promise<{
+  ok: boolean;
+  error?: string;
+  streak?: number;
+  gems?: number;
+}> {
+  const p = users.get(uid) as any;
+  if (!p) return { ok: false, error: 'User not found' };
+  const today = dayKey();
+  const yesterday = previousDayKey();
+  const dayBefore = previousDayKey(2);
+  const lastClaimDay: string | null = p.dailyLastClaimDay || null;
+  const streak: number = p.dailyStreak ?? 0;
+
+  if (!lastClaimDay) return { ok: false, error: 'No streak to save' };
+  if (lastClaimDay === today || lastClaimDay === yesterday) {
+    return { ok: false, error: 'Streak is already safe' };
+  }
+  if (lastClaimDay !== dayBefore) {
+    return { ok: false, error: 'Streak is too old to recover' };
+  }
+  if (streak < 2) return { ok: false, error: 'No streak to save' };
+  if ((p.gems || 0) < STREAK_FREEZE_COST) {
+    return { ok: false, error: 'Not enough gems' };
+  }
+
+  p.gems = (p.gems || 0) - STREAK_FREEZE_COST;
+  // Pretend the player claimed yesterday — storage keeps dailyStreak and
+  // dailyDayIndex intact, so the next claim continues from where they left
+  // off.
+  p.dailyLastClaimDay = yesterday;
+  saveUsers();
+  return { ok: true, streak, gems: p.gems };
 }
 
 export async function claimDailyReward(uid: string): Promise<{
@@ -817,9 +872,9 @@ export async function claimDailyReward(uid: string): Promise<{
   };
 }
 
-function previousDayKey(): string {
+function previousDayKey(offset = 1): string {
   const d = new Date();
-  d.setUTCDate(d.getUTCDate() - 1);
+  d.setUTCDate(d.getUTCDate() - offset);
   return dayKey(d);
 }
 

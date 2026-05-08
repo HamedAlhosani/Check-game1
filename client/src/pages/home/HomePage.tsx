@@ -946,22 +946,49 @@ function GamePicker({ gameKind, onSelect, lang }: { gameKind: GameType; onSelect
 function ModeChips({ mode, onSelect, lang }: { mode: GameMode; onSelect: (m: GameMode) => void; lang: string }) {
   const order: GameMode[] = ['online', 'private', 'bots'];
   return (
-    <div className="flex gap-2 justify-center">
+    <div
+      className="grid grid-cols-3 gap-1 p-1"
+      style={{
+        background: 'linear-gradient(180deg, rgba(40,28,12,0.55), rgba(14,9,5,0.55))',
+        border: '1px solid rgba(232,201,122,0.28)',
+        borderRadius: 999,
+        backdropFilter: 'blur(14px) saturate(120%)',
+        WebkitBackdropFilter: 'blur(14px) saturate(120%)',
+        boxShadow: '0 4px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
+      }}>
       {order.map(m => {
         const isSel = mode === m; const t = MODE_THEMES[m];
         return (
-          <motion.button key={m} whileTap={{ scale: 0.92 }} onClick={() => { onSelect(m); soundService.playClick(); }}
-            className="rounded-full font-arabic font-bold flex items-center gap-1.5"
+          <motion.button
+            key={m}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => { onSelect(m); soundService.playClick(); }}
+            className="relative font-arabic font-bold flex items-center justify-center gap-1.5"
             style={{
-              padding: isSel ? '6px 14px' : '5px 11px',
-              background: isSel ? `${t.accent}` : 'rgba(255,255,255,0.07)',
-              color: isSel ? '#0E0905' : 'rgba(245,230,200,0.7)',
-              border: `1.5px solid ${isSel ? t.accent : 'rgba(255,255,255,0.12)'}`,
-              boxShadow: isSel ? `0 0 16px ${t.glow}` : 'none',
-              fontSize: 11, transition: 'all .2s', cursor: 'pointer',
+              padding: '8px 6px',
+              borderRadius: 999,
+              background: isSel
+                ? `radial-gradient(circle at 50% 35%, ${t.glow}, rgba(40,28,12,0.4) 75%)`
+                : 'transparent',
+              color: isSel ? t.accent : 'rgba(245,230,200,0.65)',
+              fontSize: 11.5,
+              cursor: 'pointer',
+              transition: 'color .2s',
             }}>
-            <span style={{ fontSize: 13 }}>{t.icon}</span>
+            <span style={{ fontSize: 14 }}>{t.icon}</span>
             {t.label[lang === 'ar' ? 'ar' : 'en']}
+            {isSel && (
+              <motion.span
+                layoutId="mode-chip-pip"
+                className="absolute"
+                style={{
+                  bottom: 4, left: '50%', transform: 'translateX(-50%)',
+                  width: 22, height: 2, borderRadius: 999,
+                  background: t.accent,
+                  boxShadow: `0 0 8px ${t.glow}`,
+                }}
+              />
+            )}
           </motion.button>
         );
       })}
@@ -1220,26 +1247,38 @@ function GiantPlayingCard({ mode, children }: { mode: GameMode; children: React.
   return (
     <motion.div
       key={mode}
-      initial={{ opacity: 0, rotateY: -22, scale: 0.94 }}
-      animate={{ opacity: 1, rotateY: 0, scale: 1 }}
-      exit={{ opacity: 0, rotateY: 22, scale: 0.94 }}
-      transition={{ type: 'spring', stiffness: 240, damping: 26 }}
-      className="relative rounded-[28px] overflow-hidden"
+      initial={{ opacity: 0, y: 14, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0,  scale: 1 }}
+      exit={{ opacity: 0, y: -10, scale: 0.97 }}
+      transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+      className="relative overflow-hidden"
       style={{
+        // Glass slab with the mode accent providing a soft tinted halo.
         background: `
-          radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.10) 0%, transparent 55%),
-          linear-gradient(165deg, ${t.bg1} 0%, ${t.bg2} 100%)
+          radial-gradient(ellipse 100% 60% at 50% 0%, ${t.glow} 0%, transparent 55%),
+          linear-gradient(160deg, rgba(40,28,12,0.55) 0%, rgba(14,9,5,0.55) 100%)
         `,
-        border: `3px solid ${t.accent}`,
-        boxShadow: `0 24px 60px rgba(0,0,0,0.7), 0 0 50px ${t.glow}, inset 0 1px 0 rgba(255,255,255,0.10), inset 0 0 0 6px ${t.bg2}`,
-        // Slight 3D tilt on hover via parent
+        border: `1.5px solid ${t.accent}66`,
+        backdropFilter: 'blur(16px) saturate(120%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(120%)',
+        boxShadow: `0 18px 44px rgba(0,0,0,0.55), 0 0 36px ${t.glow}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+        // Polygon-cut corners — the new shape language across the app.
+        clipPath:
+          'polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px), 0 20px)',
       }}
     >
-      {/* Inner border (real-card 'pip line') */}
-      <div className="absolute pointer-events-none rounded-[20px]"
-        style={{ inset: 14, border: `1px solid ${t.accent}33` }} />
-
-      {/* Big faint suit watermark BEHIND the content */}
+      {/* Top metallic sheen */}
+      <span aria-hidden style={{
+        position: 'absolute', top: 8, left: 24, right: 24, height: 1,
+        background: `linear-gradient(90deg, transparent, ${t.glow}, transparent)`,
+      }} />
+      {/* Bottom metallic sheen */}
+      <span aria-hidden style={{
+        position: 'absolute', bottom: 8, left: 24, right: 24, height: 1,
+        background: `linear-gradient(90deg, transparent, ${t.glow}, transparent)`,
+        opacity: 0.6,
+      }} />
+      {/* Faint suit watermark */}
       <span aria-hidden="true" style={{
         position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 280, lineHeight: 1, color: `${t.accent}10`, pointerEvents: 'none',
@@ -1247,19 +1286,7 @@ function GiantPlayingCard({ mode, children }: { mode: GameMode; children: React.
       }}>
         {t.suit}
       </span>
-
-      {/* Geometric Emirati arabesque accents — top + bottom edge ribbons */}
-      <svg style={{ position: 'absolute', top: 0, insetInlineStart: 0, insetInlineEnd: 0, width: '100%', height: 14, pointerEvents: 'none', opacity: 0.45 }} viewBox="0 0 200 14" preserveAspectRatio="none">
-        <path d="M0 7 L8 0 L16 7 L24 0 L32 7 L40 0 L48 7 L56 0 L64 7 L72 0 L80 7 L88 0 L96 7 L104 0 L112 7 L120 0 L128 7 L136 0 L144 7 L152 0 L160 7 L168 0 L176 7 L184 0 L192 7 L200 0"
-          stroke={t.accent} strokeWidth="0.5" fill="none" />
-      </svg>
-      <svg style={{ position: 'absolute', bottom: 0, insetInlineStart: 0, insetInlineEnd: 0, width: '100%', height: 14, pointerEvents: 'none', opacity: 0.45, transform: 'scaleY(-1)' }} viewBox="0 0 200 14" preserveAspectRatio="none">
-        <path d="M0 7 L8 0 L16 7 L24 0 L32 7 L40 0 L48 7 L56 0 L64 7 L72 0 L80 7 L88 0 L96 7 L104 0 L112 7 L120 0 L128 7 L136 0 L144 7 L152 0 L160 7 L168 0 L176 7 L184 0 L192 7 L200 0"
-          stroke={t.accent} strokeWidth="0.5" fill="none" />
-      </svg>
-
-      {/* Content */}
-      <div className="relative" style={{ padding: '48px 22px 48px' }}>
+      <div className="relative" style={{ padding: '36px 22px 32px' }}>
         {children}
       </div>
     </motion.div>
@@ -1430,30 +1457,48 @@ function PlayBox({ mode, setMode, coins, onCreate, lang }: {
         </GiantPlayingCard>
       </AnimatePresence>
 
-      {/* Bottom: huge play button */}
+      {/* Big neon CTA — polygon-cut, gradient fill, glowing edge ring,
+          subtle moving sheen. Different shape from the standard
+          rounded-rectangle button used everywhere else. */}
       <motion.button
         whileHover={isOk ? { scale: 1.02, y: -2 } : {}}
         whileTap={isOk ? { scale: 0.97 } : {}}
         onClick={handleCreate}
         disabled={!isOk}
-        className="w-full font-arabic font-bold rounded-2xl"
+        className="relative w-full font-arabic font-bold overflow-hidden"
         style={{
-          padding: '18px 24px',
-          fontSize: 19,
-          letterSpacing: 1.5,
+          padding: '20px 24px',
+          fontSize: 20,
+          letterSpacing: 2,
           background: isOk
             ? `linear-gradient(135deg, ${theme.accent} 0%, ${theme.accent}DD 50%, ${theme.bg1} 100%)`
             : 'rgba(255,255,255,0.05)',
           color: isOk ? '#0E0905' : 'rgba(255,255,255,0.25)',
           border: `2px solid ${isOk ? theme.accent : 'rgba(255,255,255,0.08)'}`,
           boxShadow: isOk
-            ? `0 12px 32px rgba(0,0,0,0.5), 0 0 28px ${theme.glow}`
+            ? `0 16px 36px rgba(0,0,0,0.55), 0 0 36px ${theme.glow}, inset 0 -4px 14px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.18)`
             : 'none',
           cursor: isOk ? 'pointer' : 'not-allowed',
           textShadow: isOk ? '0 1px 2px rgba(0,0,0,0.25)' : 'none',
+          // Polygon CTA so the button shape matches the new
+          // BentoTile + GiantPlayingCard geometry.
+          clipPath:
+            'polygon(18px 0, calc(100% - 18px) 0, 100% 50%, calc(100% - 18px) 100%, 18px 100%, 0 50%)',
         }}
       >
-        ▶ {ctaLabel}
+        {isOk && (
+          <motion.span
+            aria-hidden
+            initial={{ x: '-120%' }}
+            animate={{ x: '220%' }}
+            transition={{ duration: 2.6, repeat: Infinity, ease: 'linear' }}
+            style={{
+              position: 'absolute', top: 0, bottom: 0, width: '60%',
+              background: 'linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.30) 50%, transparent 100%)',
+            }}
+          />
+        )}
+        <span className="relative z-10">▶ {ctaLabel}</span>
       </motion.button>
     </div>
   );

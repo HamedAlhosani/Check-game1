@@ -9,7 +9,7 @@ import { changePassword, logout } from '../../services/auth.service';
 import { useUiStore } from '../../store/uiStore';
 import { soundService } from '../../services/sound.service';
 import { useT, useLang } from '../../i18n/useT';
-import { PageShell } from '../../components/shared/PageShell';
+import { PageShell, GlassCard, NeonStat } from '../../components/shared/PageShell';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { ReferralCard } from '../../components/shared/ReferralCard';
 import { CharacterArt } from '../../components/shared/CharacterArt';
@@ -151,53 +151,77 @@ export function ProfilePage() {
     >
       <div className="pb-16 sm:pb-0">
 
-        {/* Hero card */}
-        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl p-5 mb-5 flex flex-col sm:flex-row items-center gap-5 border"
-          style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.08) 0%, rgba(20,16,10,0.95) 100%)', borderColor: 'rgba(201,168,76,0.22)', boxShadow: '0 4px 40px rgba(0,0,0,0.5)' }}>
-
-          <div className="relative shrink-0" style={{ width: 96, height: 96 }}>
-            <CharacterArt id={profile.avatarId} size={96}/>
-            <FrameRing size={96} frameId={(profile.equippedItems as any)?.avatarFrame} />
-            <div className="absolute -bottom-1 -right-1 rounded-full w-6 h-6 flex items-center justify-center z-10"
-              style={{ background: 'linear-gradient(135deg, #C9A84C, #8B6914)', fontSize: 10, color: '#04080F', fontWeight: 800 }}>
-              {level}
-            </div>
-          </div>
-
-          <div className="flex-1 min-w-0 w-full sm:w-auto text-center sm:text-start">
-            <h1 className="font-arabic font-bold truncate mb-0.5" style={{ fontSize: 22, color: '#E8C97A' }}>
-              {profile.displayName}
-            </h1>
-            <p className="text-xs mb-0.5" style={{ color: 'rgba(245,230,200,0.3)', direction: 'ltr' }}>
-              {profile.username || ''}
-            </p>
-            <p className="font-arabic text-sm mb-3" style={{ color: 'rgba(201,168,76,0.55)' }}>
-              {levelTitle} — {t('level')} {level}
-            </p>
-
-            <div className="flex gap-4 mb-3 flex-wrap justify-center sm:justify-start">
-              {[
-                { v: stats.totalWins, l: t('wins'), c: '#C9A84C' },
-                { v: stats.totalGames, l: t('games'), c: 'rgba(245,230,200,0.55)' },
-                { v: stats.currentStreak, l: '🔥', c: '#E07040' },
-              ].map(s => (
-                <span key={s.l} className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.35)' }}>
-                  <span className="font-bold text-sm" style={{ color: s.c }}>{s.v}</span> {s.l}
-                </span>
-              ))}
-            </div>
-
-            <div>
-              <div className="flex justify-between font-arabic text-xs mb-1" style={{ color: 'rgba(245,230,200,0.25)' }}>
-                <span>{xp % 200} / 200 XP</span>
-                <span>{t('level')} {level + 1} {lang === 'ar' ? '←' : '→'}</span>
+        {/* Hero glass panel — bigger avatar medallion + display-font name +
+            neon numerals for the three signature stats. */}
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-5">
+          <GlassCard glow style={{ padding: '20px 18px' }}>
+            <div className="flex flex-col sm:flex-row items-center gap-5">
+              <div className="relative shrink-0" style={{ width: 108, height: 108 }}>
+                <div
+                  className="rounded-full flex items-center justify-center"
+                  style={{
+                    width: 108, height: 108,
+                    background: 'radial-gradient(circle at 30% 30%, rgba(232,201,122,0.55), rgba(40,28,12,0.55) 70%)',
+                    border: '2px solid rgba(232,201,122,0.75)',
+                    boxShadow: '0 0 28px rgba(232,201,122,0.45), inset 0 -4px 12px rgba(0,0,0,0.45)',
+                    padding: 6,
+                  }}>
+                  <CharacterArt id={profile.avatarId} size={92}/>
+                </div>
+                <FrameRing size={108} frameId={(profile.equippedItems as any)?.avatarFrame} />
+                <div className="absolute rounded-full font-bold flex items-center justify-center"
+                  style={{
+                    bottom: -4, insetInlineEnd: -4, minWidth: 32, height: 32,
+                    background: 'linear-gradient(135deg, #FFE9B0, #C9A84C)',
+                    fontSize: 14, color: '#0E0905', fontWeight: 800,
+                    border: '2.5px solid #14100A', padding: '0 7px',
+                    boxShadow: '0 0 14px rgba(232,201,122,0.65)',
+                  }}>
+                  {level}
+                </div>
               </div>
-              <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(201,168,76,0.10)' }}>
-                <div style={{ width: `${xpPct}%`, height: '100%', background: 'linear-gradient(90deg, #8B6914, #E8C97A)', borderRadius: 3, transition: 'width .7s ease', boxShadow: '0 0 8px rgba(201,168,76,0.35)' }} />
+
+              <div className="flex-1 min-w-0 w-full sm:w-auto text-center sm:text-start">
+                <h1 className="font-display tracking-wider truncate"
+                  style={{
+                    fontSize: 26, color: '#FFE9B0',
+                    letterSpacing: '0.06em', lineHeight: 1.05,
+                    textShadow: '0 0 16px rgba(232,201,122,0.55)',
+                  }}>
+                  {profile.displayName}
+                </h1>
+                <p className="font-arabic mt-1" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
+                  ⟡ {levelTitle} · {t('level')} {level}
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'rgba(245,230,200,0.30)', direction: 'ltr' }}>
+                  {profile.username || ''}
+                </p>
+
+                <div className="mt-3">
+                  <div className="flex justify-between font-arabic text-xs mb-1" style={{ color: 'rgba(245,230,200,0.50)' }}>
+                    <span>{xp % 200} / 200 XP</span>
+                    <span>{t('level')} {level + 1} {lang === 'ar' ? '←' : '→'}</span>
+                  </div>
+                  <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(232,201,122,0.20)' }}>
+                    <div style={{
+                      width: `${xpPct}%`, height: '100%',
+                      background: 'linear-gradient(90deg, #8B6914 0%, #FFE9B0 100%)',
+                      borderRadius: 999, transition: 'width .7s ease',
+                      boxShadow: '0 0 10px rgba(232,201,122,0.65)',
+                    }} />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+
+            {/* Big neon stat triad */}
+            <div className="grid grid-cols-3 gap-2 mt-5 pt-4"
+              style={{ borderTop: '1px solid rgba(232,201,122,0.20)' }}>
+              <NeonStat icon="🏆" value={stats.totalWins}     label={lang === 'ar' ? 'فوز'   : 'wins'}    accent="gold"/>
+              <NeonStat icon="🎮" value={stats.totalGames}    label={lang === 'ar' ? 'لعبة'  : 'games'}   accent="cyan"/>
+              <NeonStat icon="🔥" value={stats.currentStreak} label={lang === 'ar' ? 'سلسلة' : 'streak'}  accent="red"/>
+            </div>
+          </GlassCard>
         </motion.div>
 
         {/* Quick links */}

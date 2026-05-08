@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Button } from '../../components/shared/Button';
 import { useStoreStore } from '../../store/storeStore';
 import { useAuthStore } from '../../store/authStore';
@@ -194,23 +195,57 @@ export function StorePage() {
     >
       <div className="pb-16 sm:pb-0">
 
-        {/* Tabs */}
-        <div className="flex gap-1.5 mb-6 overflow-x-auto pb-1 scrollbar-hide">
-          {TABS.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => { setActiveTab(tab.id); soundService.playClick(); }}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-sm font-arabic whitespace-nowrap transition-all flex-shrink-0
-                ${activeTab === tab.id
-                  ? tab.id === 'recharge'
-                    ? 'border-emerald-500 bg-emerald-500/15 text-emerald-400'
-                    : 'border-gold bg-gold/10 text-gold'
-                  : 'border-gold/15 text-sand/50 hover:border-gold/35 hover:text-sand/80'}`}
-            >
-              <span>{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
+        {/* Glass segmented tabs — tighter, modern, with an animated
+            sliding pill underneath the active label. */}
+        <div
+          className="flex gap-1 mb-6 p-1 overflow-x-auto scrollbar-hide"
+          style={{
+            background: 'linear-gradient(180deg, rgba(40,28,12,0.55), rgba(14,9,5,0.55))',
+            border: '1px solid rgba(232,201,122,0.28)',
+            borderRadius: 999,
+            backdropFilter: 'blur(14px) saturate(120%)',
+            WebkitBackdropFilter: 'blur(14px) saturate(120%)',
+            boxShadow: '0 4px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
+          }}>
+          {TABS.map(tab => {
+            const sel = activeTab === tab.id;
+            const isRecharge = tab.id === 'recharge';
+            return (
+              <motion.button
+                key={tab.id}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => { setActiveTab(tab.id); soundService.playClick(); }}
+                className="relative font-arabic font-bold flex items-center gap-1.5 whitespace-nowrap"
+                style={{
+                  padding: '8px 14px',
+                  borderRadius: 999,
+                  background: sel
+                    ? `radial-gradient(circle at 50% 35%, ${isRecharge ? 'rgba(80,200,120,0.30)' : 'rgba(232,201,122,0.30)'}, transparent 75%)`
+                    : 'transparent',
+                  color: sel
+                    ? (isRecharge ? '#7AC74F' : '#FFE9B0')
+                    : 'rgba(245,230,200,0.55)',
+                  fontSize: 12,
+                  flexShrink: 0,
+                  cursor: 'pointer',
+                }}>
+                <span style={{ fontSize: 14 }}>{tab.icon}</span>
+                {tab.label}
+                {sel && (
+                  <motion.span
+                    layoutId="store-tab-pip"
+                    className="absolute"
+                    style={{
+                      bottom: 4, left: '50%', transform: 'translateX(-50%)',
+                      width: 22, height: 2, borderRadius: 999,
+                      background: isRecharge ? '#7AC74F' : '#E8C97A',
+                      boxShadow: `0 0 8px ${isRecharge ? 'rgba(80,200,120,0.85)' : 'rgba(232,201,122,0.85)'}`,
+                    }}
+                  />
+                )}
+              </motion.button>
+            );
+          })}
         </div>
 
         {/* Character tab */}

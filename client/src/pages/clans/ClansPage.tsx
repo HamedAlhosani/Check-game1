@@ -6,7 +6,7 @@ import { useUiStore } from '../../store/uiStore';
 import { apiClient } from '../../services/api.service';
 import { soundService } from '../../services/sound.service';
 import { useLang } from '../../i18n/useT';
-import { PageShell } from '../../components/shared/PageShell';
+import { PageShell, ThemedBanner } from '../../components/shared/PageShell';
 import { ConfirmModal } from '../../components/shared/ConfirmModal';
 import { CharacterArt } from '../../components/shared/CharacterArt';
 import type { Clan, ClanSummary, ClanMember, ClanRole, UserProfile, ClanVisibility } from '@check-game/shared';
@@ -66,25 +66,21 @@ export function ClansPage() {
       maxWidth={760}
     >
       <div className="pb-16 sm:pb-0">
+        <ThemedBanner
+          emblem="🏰"
+          title={lang === 'ar' ? 'القبائل والتحالفات' : 'CLANS & ALLIANCES'}
+          sub={lang === 'ar' ? 'انضم لقبيلة، اجمع نقاط، اربح كؤوس' : 'Join a clan, earn points, win cups'}
+          lang={lang}
+        />
         {/* Invites banner — appears whenever someone invited the player */}
         {invites.length > 0 && !myClan && (
           <InvitesBanner invites={invites} lang={lang} onChange={refresh}/>
         )}
 
-        {/* Glass segmented tabs */}
-        <div
-          className="flex gap-1 mb-5 p-1"
-          style={{
-            background: 'linear-gradient(180deg, rgba(40,28,12,0.55), rgba(14,9,5,0.55))',
-            border: '1px solid rgba(232,201,122,0.28)',
-            borderRadius: 999,
-            backdropFilter: 'blur(14px) saturate(120%)',
-            WebkitBackdropFilter: 'blur(14px) saturate(120%)',
-            boxShadow: '0 4px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
-          }}>
-          <Tab2 label={lang === 'ar' ? '🌐 تصفّح'  : '🌐 Browse'} active={tab === 'browse'} onClick={() => setTab('browse')}/>
-          <Tab2 label={lang === 'ar' ? '🏰 قبيلتي' : '🏰 Mine'}   active={tab === 'mine'}   onClick={() => setTab('mine')}   badge={myClan ? '●' : undefined}/>
-          <Tab2 label={lang === 'ar' ? '➕ أنشئ'   : '➕ Create'} active={tab === 'create'} onClick={() => setTab('create')} disabled={!!myClan}/>
+        <div className="flex gap-1.5 mb-5">
+          <Tab2 label={lang === 'ar' ? '🌐 تصفّح' : '🌐 Browse'} active={tab === 'browse'} onClick={() => setTab('browse')}/>
+          <Tab2 label={lang === 'ar' ? '🏰 قبيلتي' : '🏰 Mine'}    active={tab === 'mine'}   onClick={() => setTab('mine')}   badge={myClan ? '●' : undefined}/>
+          <Tab2 label={lang === 'ar' ? '➕ أنشئ' : '➕ Create'}   active={tab === 'create'} onClick={() => setTab('create')} disabled={!!myClan}/>
         </div>
 
         {loading ? (
@@ -116,34 +112,18 @@ export function ClansPage() {
 // ─── Tabs ─────────────────────────────────────────────────────────────────
 function Tab2({ label, active, onClick, badge, disabled }: { label: string; active: boolean; onClick: () => void; badge?: string; disabled?: boolean }) {
   return (
-    <motion.button onClick={() => !disabled && onClick()} disabled={disabled}
-      whileTap={!disabled ? { scale: 0.96 } : undefined}
-      className="relative flex-1 font-arabic font-bold disabled:opacity-40 transition-colors"
+    <button onClick={() => !disabled && onClick()} disabled={disabled}
+      className="relative flex-1 rounded-xl py-2.5 font-arabic font-bold disabled:opacity-40"
       style={{
-        padding: '8px 6px',
-        borderRadius: 999,
-        background: active
-          ? 'radial-gradient(circle at 50% 35%, rgba(232,201,122,0.30), transparent 75%)'
-          : 'transparent',
-        color: active ? '#FFE9B0' : 'rgba(245,230,200,0.55)',
-        fontSize: 12.5,
-        cursor: disabled ? 'not-allowed' : 'pointer',
+        background: active ? 'rgba(201,168,76,0.20)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${active ? 'rgba(201,168,76,0.55)' : 'rgba(255,255,255,0.06)'}`,
+        color: active ? '#E8C97A' : 'rgba(245,230,200,0.5)',
+        boxShadow: active ? '0 0 12px rgba(201,168,76,0.20)' : 'none',
+        fontSize: 13,
       }}>
       {label}
-      {badge && <span className="absolute -top-0.5 -right-0.5 rounded-full" style={{ width: 8, height: 8, background: '#E04030', boxShadow: '0 0 6px rgba(224,64,48,0.65)' }}/>}
-      {active && (
-        <motion.span
-          layoutId="clans-tab-pip"
-          className="absolute"
-          style={{
-            bottom: 4, left: '50%', transform: 'translateX(-50%)',
-            width: 22, height: 2, borderRadius: 999,
-            background: '#E8C97A',
-            boxShadow: '0 0 8px rgba(232,201,122,0.85)',
-          }}
-        />
-      )}
-    </motion.button>
+      {badge && <span className="absolute -top-1 -right-1 rounded-full" style={{ width: 8, height: 8, background: '#E04030' }}/>}
+    </button>
   );
 }
 

@@ -311,6 +311,90 @@ export function BentoTile({
 }
 
 /**
+ * ThemedBanner — a distinctive horizontal banner used on Rules /
+ * Clans / Tournaments to give each of those pages an outer
+ * silhouette that stands apart from the rest of the app. Same gold/
+ * dark palette as everything else; the differentiation comes from
+ * shape: a wide hexagonal emblem on one edge, a stitched arabesque
+ * line under the text, and a chevron tail on the trailing edge.
+ *
+ * Drop in once at the top of a page's content (right after the
+ * PageShell wrapping). It does not provide a back button or page
+ * title — those still live inside PageShell's hero header.
+ */
+export function ThemedBanner({
+  emblem, title, sub, lang,
+}: {
+  emblem: string;
+  title: string;
+  sub?: string;
+  lang: string;
+}) {
+  return (
+    <div
+      className="relative overflow-hidden mb-5"
+      style={{
+        background: 'linear-gradient(95deg, rgba(60,40,12,0.65) 0%, rgba(40,28,12,0.65) 50%, rgba(14,9,5,0.65) 100%)',
+        border: '1.5px solid rgba(232,201,122,0.40)',
+        backdropFilter: 'blur(14px) saturate(120%)',
+        WebkitBackdropFilter: 'blur(14px) saturate(120%)',
+        boxShadow: '0 10px 28px rgba(0,0,0,0.55), 0 0 24px rgba(232,201,122,0.18), inset 0 1px 0 rgba(255,255,255,0.06)',
+        // Wide flag with chevroned trailing edge — the silhouette only
+        // these themed pages get.
+        clipPath: lang === 'ar'
+          ? 'polygon(20px 0, 100% 0, 100% 100%, 20px 100%, 0 50%)'
+          : 'polygon(0 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 0 100%)',
+        padding: lang === 'ar' ? '14px 18px 16px 32px' : '14px 32px 16px 18px',
+      }}
+    >
+      {/* Top sheen */}
+      <span aria-hidden style={{
+        position: 'absolute', top: 6, left: 24, right: 24, height: 1,
+        background: 'linear-gradient(90deg, transparent, rgba(232,201,122,0.55), transparent)',
+      }} />
+
+      <div className="flex items-center gap-4">
+        {/* Hex emblem */}
+        <div
+          className="rounded-full flex items-center justify-center shrink-0"
+          style={{
+            width: 56, height: 56,
+            background: 'radial-gradient(circle at 30% 30%, rgba(232,201,122,0.55), rgba(40,28,12,0.55) 75%)',
+            border: '1.5px solid rgba(232,201,122,0.65)',
+            boxShadow: '0 0 18px rgba(232,201,122,0.45), inset 0 -3px 8px rgba(0,0,0,0.45)',
+            fontSize: 30,
+          }}>
+          {emblem}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="font-display tracking-wider truncate"
+            style={{
+              fontSize: 18, color: '#FFE9B0',
+              letterSpacing: '0.10em',
+              textShadow: '0 0 14px rgba(232,201,122,0.45)',
+            }}>
+            {title}
+          </h2>
+          {sub && (
+            <p className="font-arabic mt-1 truncate" style={{ fontSize: 11.5, color: 'rgba(245,230,200,0.55)' }}>
+              {sub}
+            </p>
+          )}
+          {/* Arabesque hairline */}
+          <svg viewBox="0 0 200 6" preserveAspectRatio="none"
+            style={{ marginTop: 6, width: '100%', maxWidth: 240, height: 6, display: 'block', opacity: 0.6 }}>
+            <path
+              d="M0 3 L8 0 L16 3 L24 0 L32 3 L40 0 L48 3 L56 0 L64 3 L72 0 L80 3 L88 0 L96 3 L104 0 L112 3 L120 0 L128 3 L136 0 L144 3 L152 0 L160 3 L168 0 L176 3 L184 0 L192 3 L200 0"
+              stroke="rgba(232,201,122,0.65)" strokeWidth="0.6" fill="none"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
  * NeonStat — big-numerals stat block. Used inside hero areas to
  * present the player's most important numbers in display font with
  * a glowing gold gradient.

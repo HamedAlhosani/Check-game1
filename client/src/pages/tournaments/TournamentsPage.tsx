@@ -7,7 +7,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useUiStore } from '../../store/uiStore';
 import { useTournamentStore } from '../../store/tournamentStore';
 import { useLang } from '../../i18n/useT';
-import { PageShell } from '../../components/shared/PageShell';
+import { PageShell, ThemedBanner } from '../../components/shared/PageShell';
 import { Confetti } from '../../components/shared/Confetti';
 import { ConfirmModal } from '../../components/shared/ConfirmModal';
 import { apiClient } from '../../services/api.service';
@@ -84,6 +84,12 @@ export function TournamentsPage() {
       maxWidth={760}
     >
       <div className="pb-16 sm:pb-0">
+        <ThemedBanner
+          emblem="🏆"
+          title={lang === 'ar' ? 'حلبة البطولات' : 'TOURNAMENT ARENA'}
+          sub={lang === 'ar' ? 'تنافس على كؤوس وجوائز حقيقية' : 'Compete for cups and real prizes'}
+          lang={lang}
+        />
         {/* Stats banner — own tournament wins, podiums, total prize money */}
         <div className="rounded-2xl p-4 mb-4"
           style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.08), rgba(120,80,20,0.04))', border: '1px solid rgba(201,168,76,0.20)' }}>
@@ -113,18 +119,9 @@ export function TournamentsPage() {
           </div>
         </div>
 
-        {/* Glass segmented tabs */}
-        <div
-          className="flex gap-1 mb-5 p-1"
-          style={{
-            background: 'linear-gradient(180deg, rgba(40,28,12,0.55), rgba(14,9,5,0.55))',
-            border: '1px solid rgba(232,201,122,0.28)',
-            borderRadius: 999,
-            backdropFilter: 'blur(14px) saturate(120%)',
-            WebkitBackdropFilter: 'blur(14px) saturate(120%)',
-            boxShadow: '0 4px 18px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
-          }}>
-          <TabButton label={lang === 'ar' ? '🤖 بوتات'   : '🤖 Bots'}   active={tab === 'bots'}   onClick={() => setTab('bots')}/>
+        {/* Tabs */}
+        <div className="flex gap-1.5 mb-5">
+          <TabButton label={lang === 'ar' ? '🤖 بوتات' : '🤖 Bots'}   active={tab === 'bots'}   onClick={() => setTab('bots')}/>
           <TabButton label={lang === 'ar' ? '🌐 أونلاين' : '🌐 Online'} active={tab === 'online'} onClick={() => setTab('online')}/>
           <TabButton label={lang === 'ar' ? '🏆 بطولتي' : '🏆 Mine'}    active={tab === 'mine'}   onClick={() => setTab('mine')} badge={myTournament ? '●' : undefined}/>
         </div>
@@ -159,37 +156,21 @@ function Stat({ label, value, accent, suffix }: { label: string; value: any; acc
 
 function TabButton({ label, active, onClick, badge }: { label: string; active: boolean; onClick: () => void; badge?: string }) {
   return (
-    <motion.button onClick={onClick}
-      whileTap={{ scale: 0.96 }}
-      className="relative flex-1 font-arabic font-bold transition-colors"
+    <button onClick={onClick}
+      className="relative flex-1 rounded-xl py-2.5 font-arabic font-bold transition-all"
       style={{
-        padding: '8px 6px',
-        borderRadius: 999,
-        background: active
-          ? 'radial-gradient(circle at 50% 35%, rgba(232,201,122,0.30), transparent 75%)'
-          : 'transparent',
-        color: active ? '#FFE9B0' : 'rgba(245,230,200,0.55)',
-        fontSize: 12.5,
-        cursor: 'pointer',
+        background: active ? 'rgba(201,168,76,0.20)' : 'rgba(255,255,255,0.03)',
+        border: `1px solid ${active ? 'rgba(201,168,76,0.55)' : 'rgba(255,255,255,0.06)'}`,
+        color: active ? '#E8C97A' : 'rgba(245,230,200,0.5)',
+        boxShadow: active ? '0 0 12px rgba(201,168,76,0.20)' : 'none',
+        fontSize: 13,
       }}>
       {label}
       {badge && (
-        <span className="absolute -top-0.5 -right-0.5 rounded-full"
-          style={{ width: 8, height: 8, background: '#E04030', boxShadow: '0 0 6px rgba(224,64,48,0.65)' }}/>
+        <span className="absolute -top-1 -right-1 rounded-full"
+          style={{ width: 8, height: 8, background: '#E04030', border: '1.5px solid #14100A' }}/>
       )}
-      {active && (
-        <motion.span
-          layoutId="tournaments-tab-pip"
-          className="absolute"
-          style={{
-            bottom: 4, left: '50%', transform: 'translateX(-50%)',
-            width: 22, height: 2, borderRadius: 999,
-            background: '#E8C97A',
-            boxShadow: '0 0 8px rgba(232,201,122,0.85)',
-          }}
-        />
-      )}
-    </motion.button>
+    </button>
   );
 }
 

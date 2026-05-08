@@ -23,7 +23,8 @@ import type { GameMode as MatchLength, TournamentState } from '@check-game/share
 import { ELIMINATION_SCORE } from '@check-game/shared';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { apiClient } from '../../services/api.service';
-import { FloatingDock, BentoTile } from '../../components/shared/PageShell';
+import { FloatingDock, BentoTile, GlassCard, NeonStat } from '../../components/shared/PageShell';
+import { Aurora } from '../../components/shared/Aurora';
 
 type GameMode = 'online' | 'private' | 'bots';
 
@@ -1780,16 +1781,15 @@ export function HomePage() {
   const games = profile?.stats?.totalGames ?? 0;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'radial-gradient(ellipse at top, #1A1408 0%, #0E0905 60%, #08050A 100%)', direction: dir, overflowX: 'hidden', paddingBottom: 96 }}>
+    <div className="min-h-screen relative" style={{ direction: dir, overflowX: 'hidden', paddingBottom: 96 }}>
 
-      {/* ── Curved hero band — replaces the old flat top nav ── */}
-      <div className="relative" style={{
-        background: 'linear-gradient(180deg, rgba(60,40,12,0.85) 0%, rgba(40,28,12,0.85) 60%, rgba(20,14,8,0.85) 100%)',
-        paddingTop: 14, paddingBottom: 36, marginBottom: -14,
-      }}>
-        <div aria-hidden style={{ position: 'absolute', top: 0, left: '8%', right: '8%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(232,201,122,0.55), transparent)' }} />
+      <Aurora />
 
-        <div className="flex items-center justify-between gap-3 px-4 pt-2 relative z-10">
+      <div style={{ position: 'relative', zIndex: 1 }}>
+
+      {/* ── Glass top bar — floating chrome above the aurora ── */}
+      <div className="px-3 pt-3 mb-3">
+        <GlassCard inner className="flex items-center justify-between gap-3" style={{ padding: '10px 12px' }}>
           {/* Left: language toggle */}
           <div className="flex items-center gap-2 shrink-0">
             <LangToggle />
@@ -1836,85 +1836,63 @@ export function HomePage() {
               />
             )}
           </div>
-        </div>
-
-        {/* Curved bottom edge */}
-        <svg aria-hidden viewBox="0 0 1440 60" preserveAspectRatio="none"
-          className="block w-full" style={{ height: 36, marginBottom: -1 }}>
-          <defs>
-            <linearGradient id="hp-curve" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"  stopColor="#3C2A0C" stopOpacity="0.85" />
-              <stop offset="100%" stopColor="#1A1408" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path d="M0,0 L1440,0 L1440,30 Q1080,60 720,42 Q360,24 0,46 Z" fill="url(#hp-curve)" />
-          <path d="M0,46 Q360,24 720,42 Q1080,60 1440,30" stroke="rgba(232,201,122,0.55)" strokeWidth="1" fill="none" />
-        </svg>
+        </GlassCard>
       </div>
 
       <div style={{ maxWidth: 680, margin: '0 auto', padding: '8px 16px 24px' }}>
 
-        {/* ── Profile banner ── New shape: a wide pill banner with the
-            avatar set in a circular medallion on the leading edge, name
-            + title beside it, then three stat chips (W / G / 🔥) on the
-            trailing edge, and the XP bar running flush along the
-            bottom. Different proportions from the old square card —
-            slimmer top-to-bottom, cleaner left-to-right rhythm. */}
+        {/* ── Hero — big avatar + huge gradient numerals for the player's
+            three signature stats. Glassmorphism panel with the level
+            badge floating off the avatar. */}
         {profile && (
-          <motion.div
-            initial={{ opacity: 0, y: -16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative mb-5 overflow-hidden"
-            style={{
-              borderRadius: '999px 24px 24px 999px',
-              background: 'linear-gradient(95deg, rgba(201,168,76,0.16) 0%, rgba(40,28,12,0.92) 45%, rgba(16,10,5,0.92) 100%)',
-              border: '1.5px solid rgba(201,168,76,0.32)',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.45), 0 0 32px rgba(201,168,76,0.12)',
-              padding: '10px 18px 14px 10px',
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <Link to="/profile" style={{ textDecoration: 'none' }} className="relative shrink-0">
-                <div
-                  className="rounded-full flex items-center justify-center"
-                  style={{
-                    width: 64, height: 64,
-                    background: 'radial-gradient(circle at 30% 30%, rgba(232,201,122,0.45), rgba(60,40,16,0.40) 70%)',
-                    border: '2px solid rgba(232,201,122,0.65)',
-                    boxShadow: '0 0 16px rgba(232,201,122,0.30), inset 0 -3px 8px rgba(0,0,0,0.35)',
-                    padding: 4,
-                  }}>
-                  <AvatarCircle id={profile.avatarId} name={profile.displayName} size={52} frameId={(profile.equippedItems as any)?.avatarFrame}/>
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-5">
+            <GlassCard glow style={{ padding: '18px 16px 14px' }}>
+              <div className="flex items-center gap-4 mb-4">
+                <Link to="/profile" style={{ textDecoration: 'none' }} className="relative shrink-0">
+                  <div className="rounded-full flex items-center justify-center"
+                    style={{
+                      width: 72, height: 72,
+                      background: 'radial-gradient(circle at 30% 30%, rgba(232,201,122,0.55), rgba(40,28,12,0.55) 70%)',
+                      border: '2px solid rgba(232,201,122,0.75)',
+                      boxShadow: '0 0 22px rgba(232,201,122,0.45), inset 0 -3px 10px rgba(0,0,0,0.45)',
+                      padding: 4,
+                    }}>
+                    <AvatarCircle id={profile.avatarId} name={profile.displayName} size={58} frameId={(profile.equippedItems as any)?.avatarFrame}/>
+                  </div>
+                  <div className="absolute rounded-full font-bold flex items-center justify-center"
+                    style={{
+                      bottom: -4, insetInlineEnd: -4, minWidth: 26, height: 26,
+                      background: 'linear-gradient(135deg, #FFE9B0, #C9A84C)',
+                      fontSize: 12, color: '#0E0905', fontWeight: 800,
+                      border: '2px solid #14100A',
+                      padding: '0 6px',
+                      boxShadow: '0 0 14px rgba(232,201,122,0.65)',
+                    }}>
+                    {level}
+                  </div>
+                </Link>
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-display tracking-wider truncate"
+                    style={{
+                      fontSize: 22, color: '#FFE9B0',
+                      letterSpacing: '0.06em', lineHeight: 1.05,
+                      textShadow: '0 0 14px rgba(232,201,122,0.45)',
+                    }}>{profile.displayName}</h2>
+                  <p className="font-arabic truncate mt-1" style={{ fontSize: 11, color: 'rgba(245,230,200,0.55)' }}>
+                    ⟡ {levelTitle(level, lang)}
+                  </p>
                 </div>
-                <div className="absolute rounded-full font-bold flex items-center justify-center"
-                  style={{
-                    bottom: -2, insetInlineEnd: -2, minWidth: 22, height: 22,
-                    background: 'linear-gradient(135deg, #E8C97A, #8B6914)',
-                    fontSize: 11, color: '#0E0905', fontWeight: 800,
-                    border: '2px solid #14100A',
-                    padding: '0 5px',
-                  }}>
-                  {level}
-                </div>
-              </Link>
-              <div className="flex-1 min-w-0">
-                <h2 className="font-arabic font-bold truncate" style={{ fontSize: 16, color: '#E8C97A', lineHeight: 1.15 }}>{profile.displayName}</h2>
-                <p className="font-arabic truncate" style={{ fontSize: 10.5, color: 'rgba(201,168,76,0.55)', marginTop: 1 }}>{levelTitle(level, lang)}</p>
               </div>
-              <div className="hidden xs:flex sm:flex flex-row items-stretch gap-1.5 shrink-0">
-                <StatChip icon="🏆" value={wins}  label={t('wins')}/>
-                <StatChip icon="🎮" value={games} label={t('games')}/>
-                <StatChip icon="🔥" value={profile.stats?.currentStreak ?? 0} label={lang === 'ar' ? 'سلسلة' : 'streak'}/>
+
+              {/* Big neon numerals — three stats laid out as a triad. */}
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                <NeonStat icon="🏆" value={wins}  label={lang === 'ar' ? 'فوز'   : 'wins'}    accent="gold"/>
+                <NeonStat icon="🎮" value={games} label={lang === 'ar' ? 'لعبة'  : 'games'}   accent="cyan"/>
+                <NeonStat icon="🔥" value={profile.stats?.currentStreak ?? 0} label={lang === 'ar' ? 'سلسلة' : 'streak'} accent="red"/>
               </div>
-            </div>
-            <div className="mt-2.5 flex sm:hidden gap-1.5">
-              <StatChip icon="🏆" value={wins}  label={t('wins')}/>
-              <StatChip icon="🎮" value={games} label={t('games')}/>
-              <StatChip icon="🔥" value={profile.stats?.currentStreak ?? 0} label={lang === 'ar' ? 'سلسلة' : 'streak'}/>
-            </div>
-            <div className="mt-2.5">
+
               <XpBar xp={xp} lang={lang} onClick={() => { setProgressInitialTab('levels'); setShowProgress(true); }}/>
-            </div>
+            </GlassCard>
           </motion.div>
         )}
 
@@ -1975,6 +1953,8 @@ export function HomePage() {
 
           </>
         )}
+      </div>
+
       </div>
 
       <JoinPrivateModal open={showJoin} onClose={() => setShowJoin(false)} onBeforeJoin={() => { pendingModeRef.current = 'private'; }}/>

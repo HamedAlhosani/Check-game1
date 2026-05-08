@@ -100,14 +100,15 @@ export class RoomManager {
 
   /**
    * Returns the live game a uid is seated in, suitable for presenting a
-   * "spectate" handle to a friend. Only public rooms are exposed — private
-   * rooms (invite code) keep their privacy and aren't surfaced to friends.
+   * "spectate" handle to a friend. Surfaces every in-progress game the uid
+   * is in — public matchmaking, private invite-code rooms, vs-bots games,
+   * and tournament matches — so a friend's friends list always shows the
+   * green Watch pill while they're in a game.
    */
   getCurrentGameForUid(uid: string): { gameId: string; gameType: GameType } | null {
     for (const room of this.rooms.values()) {
       if (
         room.status === 'in_progress' &&
-        room.type === 'public' &&
         room.gameId &&
         room.players.some(p => p.uid === uid && !p.isBot)
       ) {

@@ -469,10 +469,11 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
     if (idx !== -1) bots.splice(idx, 1);
   });
 
-  // Spectate a friend's public game. The socket joins the game's room so
-  // it receives the same state broadcasts seated players do — but we
+  // Spectate a friend's game. The socket joins the game's room so it
+  // receives the same state broadcasts seated players do — but we
   // intentionally do NOT call roomManager.trackSocket, so a spectator
-  // disconnect can't trip the player-abandonment logic.
+  // disconnect can't trip the player-abandonment logic. Public,
+  // private, vs-bots, and tournament games are all watchable.
   socket.on(SOCKET_EVENTS.GAME_SPECTATE, (payload: { gameId: string }) => {
     if (!socket.uid) return;
     const engine = roomManager.getGame(payload.gameId) as GameEngine | undefined;
@@ -480,11 +481,9 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
       socket.emit(SOCKET_EVENTS.LOBBY_ERROR, { message: 'Game not found' });
       return;
     }
-    // Only allow spectating PUBLIC matches. Private invite-code rooms stay
-    // closed even from a friend's friends list.
     const room = roomManager.getRoom(engine.roomId);
-    if (!room || room.type !== 'public') {
-      socket.emit(SOCKET_EVENTS.LOBBY_ERROR, { message: 'This game is private' });
+    if (!room) {
+      socket.emit(SOCKET_EVENTS.LOBBY_ERROR, { message: 'Game not found' });
       return;
     }
     // Refuse if the requester is actually one of the seated players —

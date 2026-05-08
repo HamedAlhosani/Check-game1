@@ -23,6 +23,7 @@ import type { GameMode as MatchLength, TournamentState } from '@check-game/share
 import { ELIMINATION_SCORE } from '@check-game/shared';
 import { FrameRing } from '../../components/shared/FrameRing';
 import { apiClient } from '../../services/api.service';
+import { EmiratiBackdrop } from '../../components/shared/EmiratiBackdrop';
 
 type GameMode = 'online' | 'private' | 'bots';
 
@@ -1243,15 +1244,17 @@ export function HomePage() {
   const games = profile?.stats?.totalGames ?? 0;
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #1A1408 0%, #14100A 50%, #0E0905 100%)', direction: dir, overflowX: 'hidden' }} className="pb-16 sm:pb-0">
+    <div style={{ minHeight: '100vh', direction: dir, overflowX: 'hidden', position: 'relative' }} className="pb-16 sm:pb-0">
+
+      <EmiratiBackdrop />
 
       {/* ── Top nav bar ── */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-4 py-2.5"
-        style={{ background: 'rgba(20,16,10,0.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(201,168,76,0.12)' }}>
+        style={{ background: 'rgba(255,253,247,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(232,223,200,0.85)' }}>
         <Link to="/" className="flex items-center gap-2 shrink-0">
           <img src="/assets/og-image.png" alt="Check"
             style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', boxShadow: '0 0 14px rgba(201,168,76,0.35)', border: '1px solid rgba(201,168,76,0.4)' }}/>
-          <span className="font-display tracking-widest hidden sm:inline" style={{ fontSize: 18, color: '#C9A84C', textShadow: '0 0 16px rgba(201,168,76,0.4)' }}>CHECK</span>
+          <span className="font-display tracking-widest hidden sm:inline" style={{ fontSize: 18, color: '#8B6914' }}>CHECK</span>
         </Link>
         <div className="flex items-center gap-2">
           <LangToggle />
@@ -1266,8 +1269,8 @@ export function HomePage() {
             title={lang === 'ar' ? 'صناديق الكنز' : 'Treasure Chests'}
             style={{
               width: 36, height: 34,
-              background: ((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.18)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.55)' : 'rgba(255,255,255,0.08)'}`,
+              background: ((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.18)' : 'rgba(255,253,247,0.7)',
+              border: `1px solid ${((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.55)' : 'rgba(232,223,200,0.85)'}`,
               boxShadow: ((profile as any)?.keys || 0) > 0 ? '0 0 14px rgba(196,149,255,0.30)' : 'none',
               cursor: 'pointer',
             }}>
@@ -1277,36 +1280,36 @@ export function HomePage() {
                 style={{
                   top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px',
                   background: '#C495FF', color: '#fff', fontSize: 9, lineHeight: '16px',
-                  border: '1.5px solid #14100A',
+                  border: '1.5px solid #FFFDF7',
                 }}>{(profile as any)?.keys || 0}</span>
             )}
           </motion.button>
           {/* Coins */}
           <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5"
-            style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)' }}>
+            style={{ background: 'rgba(248,235,194,0.85)', border: '1px solid rgba(201,168,76,0.45)' }}>
             <span style={{ fontSize: 15 }}>🪙</span>
-            <span className="font-bold" style={{ fontSize: 13, color: '#E8C97A' }}>{coins.toLocaleString()}</span>
+            <span className="font-bold" style={{ fontSize: 13, color: '#8B6914' }}>{coins.toLocaleString()}</span>
           </div>
           {/* Desktop nav links — hidden on mobile */}
           <div className="hidden sm:flex items-center gap-2">
             <Link to="/" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
+              style={{ background: 'rgba(255,253,247,0.7)', border: '1px solid rgba(232,223,200,0.85)', color: '#5C5240', fontSize: 12 }}>
               🏠 {lang === 'ar' ? 'الصفحة الرئيسية' : 'Home'}
             </Link>
             <Link to="/store" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
+              style={{ background: 'rgba(255,253,247,0.7)', border: '1px solid rgba(232,223,200,0.85)', color: '#5C5240', fontSize: 12 }}>
               🏪 {lang === 'ar' ? 'المتجر' : 'Store'}
             </Link>
             <Link to="/friends" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
+              style={{ background: 'rgba(255,253,247,0.7)', border: '1px solid rgba(232,223,200,0.85)', color: '#5C5240', fontSize: 12 }}>
               👥 {lang === 'ar' ? 'أصدقاء' : 'Friends'}
             </Link>
             <Link to="/history" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
+              style={{ background: 'rgba(255,253,247,0.7)', border: '1px solid rgba(232,223,200,0.85)', color: '#5C5240', fontSize: 12 }}>
               📋 {lang === 'ar' ? 'سجل' : 'History'}
             </Link>
             <Link to="/leaderboard" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(245,230,200,0.6)', fontSize: 12 }}>
+              style={{ background: 'rgba(255,253,247,0.7)', border: '1px solid rgba(232,223,200,0.85)', color: '#5C5240', fontSize: 12 }}>
               🏆 {lang === 'ar' ? 'التصنيف' : 'Ranks'}
             </Link>
             <Link to="/profile">
@@ -1324,32 +1327,32 @@ export function HomePage() {
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             className="rounded-2xl p-4 mb-5"
-            style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.10) 0%, rgba(16,10,30,0.95) 100%)', border: '1px solid rgba(201,168,76,0.2)', boxShadow: '0 0 24px rgba(201,168,76,0.08)' }}
+            style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(232,223,200,0.95)', boxShadow: '0 8px 24px rgba(85,60,20,0.10)' }}
           >
             <div className="flex items-center gap-4">
               <Link to="/profile" style={{ textDecoration: 'none' }}>
                 <div className="relative">
                   <AvatarCircle id={profile.avatarId} name={profile.displayName} size={52} frameId={(profile.equippedItems as any)?.avatarFrame}/>
                   <div className="absolute -bottom-0.5 -right-0.5 rounded-full px-1.5"
-                    style={{ background: '#C9A84C', fontSize: 9, color: '#0E0905', fontWeight: 800, lineHeight: '16px' }}>
+                    style={{ background: '#C9A84C', fontSize: 9, color: '#FFFDF7', fontWeight: 800, lineHeight: '16px' }}>
                     {level}
                   </div>
                 </div>
               </Link>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2">
-                  <h2 className="font-arabic font-bold truncate" style={{ fontSize: 17, color: '#E8C97A' }}>{profile.displayName}</h2>
-                  <span className="font-arabic" style={{ fontSize: 11, color: 'rgba(201,168,76,0.55)' }}>{levelTitle(level, lang)}</span>
+                  <h2 className="font-arabic font-bold truncate" style={{ fontSize: 17, color: '#1F1A12' }}>{profile.displayName}</h2>
+                  <span className="font-arabic" style={{ fontSize: 11, color: '#8E836D' }}>{levelTitle(level, lang)}</span>
                 </div>
                 <div className="flex gap-4 my-1.5">
-                  <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>
-                    <span style={{ color: '#C9A84C', fontWeight: 700 }}>{wins}</span> {t('wins')}
+                  <span className="font-arabic text-xs" style={{ color: '#5C5240' }}>
+                    <span style={{ color: '#8B6914', fontWeight: 700 }}>{wins}</span> {t('wins')}
                   </span>
-                  <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>
-                    <span style={{ color: '#C9A84C', fontWeight: 700 }}>{games}</span> {t('games')}
+                  <span className="font-arabic text-xs" style={{ color: '#5C5240' }}>
+                    <span style={{ color: '#8B6914', fontWeight: 700 }}>{games}</span> {t('games')}
                   </span>
-                  <span className="font-arabic text-xs" style={{ color: 'rgba(245,230,200,0.4)' }}>
-                    🔥 <span style={{ color: '#C9A84C', fontWeight: 700 }}>{profile.stats?.currentStreak ?? 0}</span>
+                  <span className="font-arabic text-xs" style={{ color: '#5C5240' }}>
+                    🔥 <span style={{ color: '#8B6914', fontWeight: 700 }}>{profile.stats?.currentStreak ?? 0}</span>
                   </span>
                 </div>
                 <XpBar xp={xp} lang={lang} onClick={() => { setProgressInitialTab('levels'); setShowProgress(true); }}/>

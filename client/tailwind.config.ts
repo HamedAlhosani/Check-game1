@@ -38,6 +38,36 @@ const config: Config = {
         },
         danger: '#C45C3A',
         oasis: '#1B6B6B',
+        // ── Light Emirati palette (new) ───────────────────────────────────
+        // White-pearl surfaces, palm-green accent, sky-blue cool accent.
+        // Used by the redesigned screens; legacy dark-gold tokens above
+        // stay so any unmigrated screen still renders correctly.
+        pearl: {
+          DEFAULT: '#FFFDF7',     // app background
+          surface: '#FFFFFF',     // cards / sheets
+          mute: '#F4EEDF',        // hover / pressed surface
+          line: '#E8DFC8',        // hairlines
+        },
+        ink: {
+          DEFAULT: '#1F1A12',     // primary text
+          mid: '#5C5240',         // secondary text
+          soft: '#8E836D',        // tertiary / placeholders
+        },
+        royal: {
+          DEFAULT: '#C9A84C',     // primary accent (kept gold)
+          deep:    '#8B6914',     // pressed / active gold
+          tint:    '#F8EBC2',     // soft gold backdrops
+        },
+        oasis2: {
+          DEFAULT: '#2F8F6F',     // palm-green accent
+          deep:    '#1F6F4F',
+          tint:    '#D6EEE0',
+        },
+        sky: {
+          DEFAULT: '#5BB7E0',     // gulf-blue accent
+          deep:    '#2E89B4',
+          tint:    '#D7ECF6',
+        },
       },
       fontFamily: {
         arabic: ['"Cairo"', '"Scheherazade New"', 'serif'],
@@ -104,6 +134,9 @@ const config: Config = {
         'desert-gradient': 'linear-gradient(180deg, #0E0905 0%, #14100A 30%, #1A1408 60%, #200E04 85%, #160A04 100%)',
         'gold-shimmer': 'linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent)',
         'card-texture': "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0 L60 15 L60 45 L30 60 L0 45 L0 15 Z' fill='none' stroke='%23C9A84C' stroke-width='0.5' opacity='0.08'/%3E%3C/svg%3E\")",
+        // Light theme: subtle dawn sky over a sand wash. Used as the
+        // main app background under the palm + skyline silhouettes.
+        'pearl-sky': 'linear-gradient(180deg, #F5F8FB 0%, #F8F1DF 55%, #F1E6C5 100%)',
       },
     },
   },

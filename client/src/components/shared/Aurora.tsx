@@ -14,56 +14,48 @@ export function Aurora() {
       className="fixed inset-0 pointer-events-none overflow-hidden"
       style={{ zIndex: 0 }}
     >
-      {/* Two-layer base wash — keeps the warm sand halo visible at the
-          top no matter the viewport aspect ratio. On portrait phones
-          the radial does the heavy lifting; on landscape desktops the
-          linear takes over so the top-of-screen warmth doesn't get
-          stretched too thin. */}
+      {/* Base wash — sized in vmin so the warm sand halo reads at the
+          same relative scale on both portrait phones and landscape
+          desktops. Phones get a smaller halo (vmin = width), desktops
+          a bigger one (vmin = height) — both fill their viewport
+          atmospherically. */}
       <div
         className="absolute inset-0"
         style={{
-          background: `
-            radial-gradient(ellipse 70vmin 50vmin at 50% 0%, rgba(105,80,50,0.85) 0%, rgba(24,18,12,0.95) 70%, rgba(8,6,4,1) 100%),
-            linear-gradient(180deg, rgba(60,42,26,0.55) 0%, rgba(8,6,4,1) 80%)
-          `,
+          background:
+            'radial-gradient(ellipse 110vmin 70vmin at 50% 0%, rgba(105,80,50,0.85) 0%, rgba(24,18,12,0.95) 65%, rgba(8,6,4,1) 100%)',
         }}
       />
-      {/* Sunset glow on the lower horizon — scaled to viewport height so
-          it reads as a meaningful band on tall desktop monitors instead
-          of a thin 280px strip. */}
+      {/* Sunset glow on the lower horizon. Min 280px floor + 35vh
+          ceiling so phones get the original ~280px band and desktops
+          stretch it up taller. */}
       <div
         className="absolute"
         style={{
-          left: 0, right: 0, bottom: 0, height: '40vh', minHeight: 240,
+          left: 0, right: 0, bottom: 0, height: 'max(280px, 35vh)',
           background:
-            'linear-gradient(0deg, rgba(224,140,58,0.20) 0%, rgba(229,188,124,0.10) 30%, rgba(0,0,0,0) 100%)',
+            'linear-gradient(0deg, rgba(224,140,58,0.18) 0%, rgba(229,188,124,0.08) 35%, rgba(0,0,0,0) 100%)',
         }}
       />
-      {/* Three slow-drifting orbs — sand, palm, date. Sized in vmax so
-          they always read as large atmospheric blobs on either portrait
-          or landscape, and spread across the screen so a wide desktop
-          doesn't leave the right half empty. */}
+      {/* Three slow-drifting orbs — sand, palm, date. vmin keeps every
+          orb proportional to the smaller viewport dimension, so a phone
+          and a desktop see the SAME relative-sized atmospheric blob in
+          the SAME spot — desktop just gets a larger one (vmin = height)
+          while the original phone look is preserved. */}
       <div className="aurora-orb" style={{
-        top: '-20%', left: '-10%', width: '85vmax', height: '85vmax',
-        background: 'radial-gradient(circle, rgba(229,188,124,0.28) 0%, rgba(229,188,124,0) 60%)',
+        top: '-15%', left: '-10%', width: '70vmin', height: '70vmin',
+        background: 'radial-gradient(circle, rgba(229,188,124,0.25) 0%, rgba(229,188,124,0) 65%)',
         animation: 'aurora-drift-1 22s ease-in-out infinite',
       }} />
       <div className="aurora-orb" style={{
-        top: '10%', right: '-25%', width: '75vmax', height: '75vmax',
-        background: 'radial-gradient(circle, rgba(122,168,71,0.22) 0%, rgba(122,168,71,0) 60%)',
+        top: '20%', right: '-15%', width: '65vmin', height: '65vmin',
+        background: 'radial-gradient(circle, rgba(122,168,71,0.20) 0%, rgba(122,168,71,0) 65%)',
         animation: 'aurora-drift-2 28s ease-in-out infinite',
       }} />
       <div className="aurora-orb" style={{
-        bottom: '-30%', left: '20%', width: '90vmax', height: '90vmax',
-        background: 'radial-gradient(circle, rgba(224,140,58,0.18) 0%, rgba(224,140,58,0) 60%)',
+        bottom: '-20%', left: '10%', width: '75vmin', height: '75vmin',
+        background: 'radial-gradient(circle, rgba(224,140,58,0.16) 0%, rgba(224,140,58,0) 65%)',
         animation: 'aurora-drift-3 32s ease-in-out infinite',
-      }} />
-      {/* Center warm glow — fills the middle of wide desktop viewports
-          so the orbs along the corners aren't carrying the whole load. */}
-      <div className="aurora-orb" style={{
-        top: '30%', left: '30%', width: '60vmax', height: '60vmax',
-        background: 'radial-gradient(circle, rgba(229,188,124,0.10) 0%, rgba(229,188,124,0) 65%)',
-        animation: 'aurora-drift-1 36s ease-in-out infinite reverse',
       }} />
 
       {/* Pinpoint star field — lavender twinkles. */}

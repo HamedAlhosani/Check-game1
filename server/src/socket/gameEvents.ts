@@ -63,9 +63,13 @@ export function startGameSession(io: Server, roomId: string): void {
       const result = [...state.players].sort((a, b) => a.cumulativeScore - b.cumulativeScore);
       const winnerId = result[0]?.uid ?? null;
       for (const p of state.players) {
-        if (!p.uid.startsWith('bot-')) {
-          recordGameResult(p.uid, p.uid === winnerId, 'check').catch(() => null);
-        }
+        if (p.uid.startsWith('bot-')) continue;
+        // If a human seat is currently bot-controlled because they
+        // disconnected and never came back, don't punish them with a
+        // recorded loss (or credit them with an undeserved win) — they
+        // weren't there to play. They simply forfeit the result.
+        if (engine.isReplacedByBot(p.uid)) continue;
+        recordGameResult(p.uid, p.uid === winnerId, 'check').catch(() => null);
       }
       const realPlayers = state.players.filter(p => !p.uid.startsWith('bot-'));
       if (realPlayers.length > 0) {
@@ -166,6 +170,9 @@ export function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEn
       tournamentManager.onGameOver(io, engine.gameId, winnerId).catch(() => null);
       const realPlayers = state.players.filter(p => !p.uid.startsWith('bot-') && !p.displayName.endsWith('🤖'));
       for (const p of realPlayers) {
+        // Same forfeit rule as above — disconnected-and-replaced players
+        // don't get a win or loss recorded. They didn't play it.
+        if (engine.isReplacedByBot(p.uid)) continue;
         recordGameResult(p.uid, p.uid === winnerId, 'check').catch(() => null);
       }
       if (realPlayers.length > 0) {

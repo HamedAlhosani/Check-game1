@@ -485,7 +485,7 @@ function cardGridCols(count: number) {
 }
 
 // ─── Shared cards row for any seat ───────────────────────────────────────────
-function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = false, swapPos, backId, hideCards = false }: any) {
+function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = false, swapPos, backId, hideCards = false, spectator = false }: any) {
   // Eliminated players: hide their cards entirely, show just an X panel.
   if (player.isEliminated) {
     return (
@@ -508,7 +508,7 @@ function SeatCards({ player, isSpecialJ, selectedPos, onSpecialSwap, mini = fals
               transition={{ duration: 0.15, ease: 'easeOut' }}
               className="relative"
             >
-              <PlayingCard card={c} faceDown={!c?.isRevealed} small={!mini} mini={mini}
+              <PlayingCard card={c} faceDown={spectator ? false : !c?.isRevealed} small={!mini} mini={mini}
                 backId={backId}
                 highlight={isSpecialJ ? 'burn' : 'none'}
                 onClick={isSpecialJ && selectedPos !== null ? () => onSpecialSwap(player.uid, i) : undefined} />
@@ -564,7 +564,7 @@ function samePlayerSeat(prev: any, next: any): boolean {
 }
 
 // ─── Unified opponent seat (top / left / right / mobile) ─────────────────────
-const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, cfg, swapPos, hideCards, onAvatarClick }: any) {
+const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ, selectedPos, onSpecialSwap, emoji, chatBubble, cfg, swapPos, hideCards, onAvatarClick, spectator }: any) {
   const mobileCompact = cfg.w <= 120;
   return (
     <div className="relative flex flex-col items-center shrink-0" style={{ width: cfg.w, zIndex: 20, gap: mobileCompact ? 2 : 4 }}>
@@ -578,14 +578,14 @@ const OpponentSeat = memo(function OpponentSeat({ player, gameState, isSpecialJ,
       {mobileCompact ? (
         <CardCountDots count={player.cards.filter(Boolean).length} eliminated={player.isEliminated} />
       ) : (
-        <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} mini={cfg.mini} swapPos={swapPos} backId={cfg.backId} hideCards={hideCards} />
+        <SeatCards player={player} isSpecialJ={isSpecialJ} selectedPos={selectedPos} onSpecialSwap={onSpecialSwap} mini={cfg.mini} swapPos={swapPos} backId={cfg.backId} hideCards={hideCards} spectator={spectator} />
       )}
     </div>
   );
 }, samePlayerSeat);
 
 // ─── Compact seat for mobile strip (shows all opponents in one row) ─────────
-const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSelectForJ, swapPos, hideCards, onAvatarClick, backId }: any) {
+const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpecialJ, selectedPos, onSelectForJ, swapPos, hideCards, onAvatarClick, backId, spectator }: any) {
   const isTurn = player.isTurn;
   const isElim = player.isEliminated;
   const cardCount = player.cards.filter(Boolean).length;
@@ -639,7 +639,10 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
       {/* 2×2 card indicators — render the actual chosen card back, just scaled
           down so opponents' face-down cards look identical to the user's. */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap: 2, position: 'relative', visibility: hideCards ? 'hidden' : 'visible' }}>
-        {Array.from({ length: Math.min(cardCount, 4) }).map((_, j) => {
+        {(spectator
+          ? player.cards.slice(0, 4).map((c: any) => c)
+          : Array.from({ length: Math.min(cardCount, 4) })
+        ).map((c: any, j: number) => {
           const isSwap = swapPos === j;
           // PlayingCard at xmini is 36×54 (2:3). We render that size and scale
           // it visually to fit the narrow strip cell so the back artwork is
@@ -647,6 +650,7 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
           const VIS_W = 16;
           const SCALE = VIS_W / 36;
           const VIS_H = 54 * SCALE;
+          if (spectator && !c) return <div key={j} style={{ width: VIS_W, height: VIS_H }} />;
           return (
             <div key={j} className="relative" style={{
               width: VIS_W, height: VIS_H,
@@ -659,10 +663,14 @@ const CompactSeat = memo(function CompactSeat({ player, emoji, chatBubble, isSpe
                 transform: `scale(${SCALE})`,
                 transformOrigin: 'top left',
               }}>
-                {/* Dummy card so PlayingCard takes the face-down branch
+                {/* Spectator: render the real card face-up. Otherwise:
+                    Dummy card so PlayingCard takes the face-down branch
                     (CardBack), not the empty '?' placeholder. */}
-                <PlayingCard card={{ rank: 'A', suit: 'spades', isRevealed: false } as any}
-                  xmini faceDown backId={backId}
+                <PlayingCard
+                  card={spectator && c ? c : ({ rank: 'A', suit: 'spades', isRevealed: false } as any)}
+                  xmini
+                  faceDown={!spectator}
+                  backId={backId}
                   highlight={isSwap ? 'burn' : 'none'} />
               </div>
               {isSwap && (
@@ -739,7 +747,7 @@ const MiniSeat = memo(function MiniSeat({ player, isSpecialJ, selectedPos, onSpe
       }}>
         {player.cards.map((c: any, i: number) => c !== null ? (
           <div key={i} className="relative">
-            <PlayingCard card={c} faceDown={!c?.isRevealed} xmini backId={backId}
+            <PlayingCard card={c} faceDown={spectator ? false : !c?.isRevealed} xmini backId={backId}
               highlight={isSpecialJ && selectedPos !== null ? 'burn' : 'none'} />
             {swapPos === i && <SwapArrowBadge />}
           </div>
@@ -1331,7 +1339,7 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
   // on tablet/desktop where transparency was visually noisy on the felt.
   const seatCfgWithBack = { ...seatCfg, backId: cardBackId, opaque: !isMobile };
   const onAvatarClick = useCallback((uid: string) => setProfileUid(uid), []);
-  const commonSeatProps = { gameState, isSpecialJ, selectedPos, onSpecialSwap, cfg: seatCfgWithBack, hideCards: !tableReady, onAvatarClick };
+  const commonSeatProps = { gameState, isSpecialJ, selectedPos, onSpecialSwap, cfg: seatCfgWithBack, hideCards: !tableReady, onAvatarClick, spectator };
 
   // ── Overlays ──────────────────────────────────────────────────────────────
   const IntroOverlay = () => (
@@ -1600,7 +1608,7 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
                 isSpecialJ={isSpecialJ} selectedPos={selectedPos}
                 onSelectForJ={(uid: string) => setJTargetUid(uid)}
                 swapPos={swapHighlights[p.uid]} hideCards={!tableReady}
-                onAvatarClick={onAvatarClick} backId={cardBackId} />
+                onAvatarClick={onAvatarClick} backId={cardBackId} spectator={spectator} />
             ))}
           </div>
         )}

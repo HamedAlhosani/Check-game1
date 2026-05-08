@@ -38,43 +38,6 @@ const config: Config = {
         },
         danger: '#C45C3A',
         oasis: '#1B6B6B',
-        // ── Night Dubai palette (new) ─────────────────────────────────────
-        // Midnight navy page, warm pearl card surfaces, rose-gold accents.
-        // Built around a "Dubai at night" feel — lit Burj Khalifa,
-        // glowing windows, stars overhead.
-        // Legacy gold/night/sand/desert/sunset/palm/oasis tokens above
-        // stay so any unmigrated screen still renders correctly.
-        midnight: {
-          DEFAULT: '#0E1B3E',     // deepest navy, page bg top
-          mid:     '#1F2D5C',     // city navy, page bg mid
-          rise:    '#2A3A6E',     // lit-from-below city horizon
-          deep:    '#070D24',     // overlay shadow
-        },
-        pearl: {
-          DEFAULT: '#F5EFE0',     // card surface
-          surface: '#FAF6EA',     // brightest card surface
-          mute:    '#E8DFC8',     // hover / pressed surface
-          line:    '#D7CBA8',     // hairlines
-        },
-        ink: {
-          DEFAULT: '#1A2240',     // primary text on pearl
-          mid:     '#4A557A',     // secondary text
-          soft:    '#7C86A7',     // tertiary / placeholders
-        },
-        royal: {
-          // Rose-gold accent family — replaces the cool yellow-gold for
-          // the night theme. Still legible on both navy and pearl.
-          DEFAULT: '#D4A574',     // primary accent
-          deep:    '#A87A4C',     // pressed / active
-          tint:    '#F5E5CD',     // soft accent backdrops
-          glow:    '#F0C68A',     // bright tip for highlights/shadows
-        },
-        gulf: {
-          // Cool secondary — for "live" status pills / blue indicators.
-          DEFAULT: '#5BB7E0',
-          deep:    '#2E89B4',
-          tint:    '#D7ECF6',
-        },
       },
       fontFamily: {
         arabic: ['"Cairo"', '"Scheherazade New"', 'serif'],
@@ -141,9 +104,6 @@ const config: Config = {
         'desert-gradient': 'linear-gradient(180deg, #0E0905 0%, #14100A 30%, #1A1408 60%, #200E04 85%, #160A04 100%)',
         'gold-shimmer': 'linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent)',
         'card-texture': "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0 L60 15 L60 45 L30 60 L0 45 L0 15 Z' fill='none' stroke='%23C9A84C' stroke-width='0.5' opacity='0.08'/%3E%3C/svg%3E\")",
-        // Night Dubai: deep navy at top fading to a warm-rust horizon
-        // glow where the city lights wash the lower atmosphere.
-        'pearl-sky': 'linear-gradient(180deg, #0A1330 0%, #14224A 35%, #1F2D5C 65%, #38304E 88%, #4A2E3E 100%)',
       },
     },
   },

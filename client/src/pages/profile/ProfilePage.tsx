@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '../../components/shared/Button';
@@ -8,6 +8,8 @@ import { apiClient } from '../../services/api.service';
 import { changePassword, logout } from '../../services/auth.service';
 import { useUiStore } from '../../store/uiStore';
 import { soundService } from '../../services/sound.service';
+import { hapticService } from '../../services/haptic.service';
+import { pushService } from '../../services/push.service';
 import { useT, useLang } from '../../i18n/useT';
 import { PageShell, GlassCard, NeonStat } from '../../components/shared/PageShell';
 import { FrameRing } from '../../components/shared/FrameRing';
@@ -400,6 +402,15 @@ export function ProfilePage() {
               </div>
             </div>
 
+            {/* Push notifications toggle */}
+            <p className="font-arabic font-bold text-base pt-2" style={{ color: '#FBF3DB' }}>
+              {lang === 'ar' ? '🔔 الإشعارات' : '🔔 Notifications'}
+            </p>
+            <PushToggle lang={lang} />
+
+            {/* Haptic (vibration) toggle */}
+            <HapticToggle lang={lang} />
+
             {/* Equipped items display */}
             <p className="font-arabic font-bold text-base pt-2" style={{ color: '#FBF3DB' }}>
               {lang === 'ar' ? '🎴 العناصر المجهّزة' : '🎴 Equipped Items'}
@@ -468,5 +479,135 @@ export function ProfilePage() {
       </nav>
       </div>
     </PageShell>
+  );
+}
+
+// ── Settings toggles ────────────────────────────────────────────────────────
+
+function PushToggle({ lang }: { lang: string }) {
+  const { addToast } = useUiStore();
+  const [perm, setPerm] = useState<NotificationPermission | 'unsupported'>(pushService.permission());
+  const [busy, setBusy] = useState(false);
+  const supported = pushService.isSupported();
+
+  // Re-check permission on mount in case user toggled it via browser settings.
+  useEffect(() => { setPerm(pushService.permission()); }, []);
+
+  if (!supported) {
+    return (
+      <div className="rounded-2xl px-4 py-3 font-arabic"
+        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', fontSize: 12, color: 'rgba(251,243,219,0.45)' }}>
+        {lang === 'ar' ? 'متصفحك ما يدعم الإشعارات' : 'Notifications not supported in this browser'}
+      </div>
+    );
+  }
+
+  const enabled = perm === 'granted' && pushService.isOptedIn();
+
+  async function toggle() {
+    if (busy) return;
+    setBusy(true);
+    soundService.playClick();
+    try {
+      if (enabled) {
+        await pushService.disable();
+        setPerm(pushService.permission());
+        addToast(lang === 'ar' ? 'تعطّلت الإشعارات' : 'Notifications off', 'info');
+      } else {
+        const ok = await pushService.enable();
+        setPerm(pushService.permission());
+        addToast(
+          ok
+            ? (lang === 'ar' ? '✓ الإشعارات مفعّلة' : '✓ Notifications enabled')
+            : (lang === 'ar' ? 'صلاحية الإشعارات مرفوضة' : 'Notification permission denied'),
+          ok ? 'success' : 'error',
+        );
+      }
+    } catch {
+      addToast(lang === 'ar' ? 'حدث خطأ' : 'Something went wrong', 'error');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl px-4 py-3.5"
+      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="flex items-center justify-between mb-1">
+        <span className="font-arabic text-sm" style={{ color: 'rgba(251,243,219,0.75)' }}>
+          {enabled
+            ? (lang === 'ar' ? '🔔 الإشعارات مفعّلة' : '🔔 Notifications on')
+            : (lang === 'ar' ? '🔕 الإشعارات معطّلة' : '🔕 Notifications off')}
+        </span>
+        <button
+          onClick={toggle}
+          disabled={busy}
+          style={{
+            width: 50, height: 28, borderRadius: 14, position: 'relative',
+            background: enabled ? '#E5BC7C' : 'rgba(255,255,255,0.15)',
+            border: 'none', cursor: busy ? 'wait' : 'pointer', transition: 'background 0.25s',
+            opacity: busy ? 0.5 : 1,
+          }}>
+          <div style={{
+            position: 'absolute', top: 4, width: 20, height: 20, borderRadius: '50%',
+            background: 'white', transition: 'left 0.25s',
+            left: enabled ? 26 : 4,
+          }} />
+        </button>
+      </div>
+      <p className="font-arabic" style={{ fontSize: 11, color: 'rgba(251,243,219,0.45)', lineHeight: 1.5 }}>
+        {lang === 'ar'
+          ? 'دعوات اللعب، طلبات الصداقة، تذكير الهدية اليومية، حرب القبائل'
+          : 'Game invites, friend requests, daily reward, clan war updates'}
+      </p>
+      {perm === 'denied' && (
+        <p className="font-arabic mt-2" style={{ fontSize: 10.5, color: '#E07040' }}>
+          {lang === 'ar'
+            ? 'الصلاحية مرفوضة من المتصفح — فعّلها من إعدادات الموقع وارجع'
+            : 'Permission blocked at the browser level — enable it in site settings'}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function HapticToggle({ lang }: { lang: string }) {
+  const [on, setOn] = useState(hapticService.isEnabled());
+  const supported = hapticService.isSupported();
+
+  if (!supported) return null; // desktop: hide entirely
+
+  function toggle() {
+    const n = !on;
+    hapticService.setEnabled(n);
+    setOn(n);
+    soundService.playClick();
+    if (n) hapticService.tap();
+  }
+
+  return (
+    <div className="rounded-2xl px-4 py-3.5"
+      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      <div className="flex items-center justify-between">
+        <span className="font-arabic text-sm" style={{ color: 'rgba(251,243,219,0.75)' }}>
+          {on
+            ? (lang === 'ar' ? '📳 الاهتزاز مفعّل' : '📳 Vibration on')
+            : (lang === 'ar' ? '⏸ الاهتزاز معطّل' : '⏸ Vibration off')}
+        </span>
+        <button
+          onClick={toggle}
+          style={{
+            width: 50, height: 28, borderRadius: 14, position: 'relative',
+            background: on ? '#E5BC7C' : 'rgba(255,255,255,0.15)',
+            border: 'none', cursor: 'pointer', transition: 'background 0.25s',
+          }}>
+          <div style={{
+            position: 'absolute', top: 4, width: 20, height: 20, borderRadius: '50%',
+            background: 'white', transition: 'left 0.25s',
+            left: on ? 26 : 4,
+          }} />
+        </button>
+      </div>
+    </div>
   );
 }

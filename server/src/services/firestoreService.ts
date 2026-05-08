@@ -1119,3 +1119,10 @@ export async function getUserHistory(uid: string, limit = 20): Promise<MatchReco
     .filter(r => r.players?.some((p: any) => p.uid === uid))
     .slice(0, limit);
 }
+
+/** Returns a single match record by gameId, or null if not found. Used by
+ *  the replay viewer to render a saved match round-by-round. */
+export async function getMatchById(gameId: string): Promise<MatchRecord | null> {
+  const found = history.find((r: any) => r.gameId === gameId);
+  return (found as MatchRecord) || null;
+}

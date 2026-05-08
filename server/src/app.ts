@@ -36,6 +36,7 @@ import {
   getFriendsList,
   getFriendRequests,
   getUserHistory,
+  getMatchById,
 } from './services/firestoreService';
 import { STORE_ITEMS, SOCKET_EVENTS } from '@check-game/shared';
 import {
@@ -46,6 +47,7 @@ import {
   kickMember, setRole, transferLeader,
 } from './services/clanService';
 import { notifyUser, isUidOnline } from './socket/notifications';
+import { getPublicKey as getPushPublicKey, addSubscription as addPushSubscription, removeSubscription as removePushSubscription, pushTo } from './services/pushService';
 import { roomManager } from './rooms/RoomManager';
 
 const app = express();
@@ -704,6 +706,14 @@ app.post('/api/friends/request', requireAuth, wrap(async (req, res) => {
   if (result.recipientUid) {
     notifyUser(result.recipientUid, SOCKET_EVENTS.FRIEND_REQUEST_RECEIVED, { fromUid: uid });
     notifyUser(result.recipientUid, SOCKET_EVENTS.FRIEND_LIST_CHANGED, {});
+    // Web Push — fires only if the recipient enabled notifications.
+    const me = await getUserProfile(uid);
+    pushTo(
+      result.recipientUid,
+      '👋 طلب صداقة جديد',
+      `${me?.displayName || 'لاعب'} يبا يضيفك صديق`,
+      { url: '/friends', tag: 'friend-request' },
+    ).catch(() => null);
   }
   res.json({ ok: true });
 }));
@@ -731,6 +741,40 @@ app.get('/api/history', requireAuth, wrap(async (req, res) => {
   const uid = (req as any).uid;
   const records = await getUserHistory(uid, 20);
   res.json(records);
+}));
+
+// ── Web Push subscription management ────────────────────────────────────────
+
+app.get('/api/push/public-key', wrap(async (_req, res) => {
+  res.json({ publicKey: getPushPublicKey() });
+}));
+
+app.post('/api/push/subscribe', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const sub = req.body?.subscription;
+  if (!sub?.endpoint) return res.status(400).json({ error: 'Missing subscription' });
+  addPushSubscription(uid, sub);
+  res.json({ ok: true });
+}));
+
+app.post('/api/push/unsubscribe', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const endpoint = req.body?.endpoint;
+  if (!endpoint) return res.status(400).json({ error: 'Missing endpoint' });
+  removePushSubscription(uid, endpoint);
+  res.json({ ok: true });
+}));
+
+// ── Replay: full per-round breakdown for a single match ─────────────────────
+app.get('/api/replay/:gameId', requireAuth, wrap(async (req, res) => {
+  const uid = (req as any).uid;
+  const match = await getMatchById(req.params.gameId);
+  if (!match) return res.status(404).json({ error: 'Match not found' });
+  // Only let participants pull a replay — keeps the endpoint from leaking
+  // private match data to anyone who guessed a gameId.
+  const wasIn = match.players?.some((p: any) => p.uid === uid);
+  if (!wasIn) return res.status(403).json({ error: 'Not a participant' });
+  res.json(match);
 }));
 
 // ── Static client (production) ─────────────────────────────────────────────────

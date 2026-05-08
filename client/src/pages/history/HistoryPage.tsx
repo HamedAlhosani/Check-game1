@@ -150,7 +150,7 @@ export function HistoryPage() {
 
                     {rec.gameType === 'check' && rec.rounds && rec.rounds.length > 0 && (
                       <button
-                        onClick={() => setReplayRecord(rec)}
+                        onClick={() => navigate(`/replay/${rec.gameId}`)}
                         className="w-full rounded-lg flex items-center justify-center gap-2 font-arabic font-bold transition-all"
                         style={{
                           padding: '6px 10px',

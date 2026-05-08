@@ -4,6 +4,7 @@ import app from './app';
 import { setupSocketHandlers } from './socket/socketHandler';
 import { setIO } from './socket/notifications';
 import { startClanWarTicker } from './services/clanWarService';
+import { initPushService } from './services/pushService';
 
 const PORT = process.env.PORT || 3001;
 
@@ -20,6 +21,7 @@ const io = new Server(httpServer, {
 setIO(io);
 setupSocketHandlers(io);
 startClanWarTicker();
+initPushService();
 
 httpServer.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

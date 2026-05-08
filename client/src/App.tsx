@@ -16,6 +16,7 @@ import { CheckSpectatePage } from './pages/game/CheckSpectatePage';
 import { ToastContainer } from './components/shared/ToastContainer';
 import { RulesModal } from './components/shared/RulesModal';
 import { hapticService } from './services/haptic.service';
+import { pushService } from './services/push.service';
 
 // Secondary pages — code-split. Loaded on first navigation.
 // We also keep references to the dynamic-import factories so we can prefetch
@@ -32,6 +33,7 @@ const loadTournaments   = () => import('./pages/tournaments/TournamentsPage');
 const loadClans         = () => import('./pages/clans/ClansPage');
 const loadTutorial      = () => import('./pages/tutorial/TutorialPage');
 const loadTeams         = () => import('./pages/teams/TeamsPage');
+const loadReplay        = () => import('./pages/replay/ReplayPage');
 
 const RegisterPage      = lazy(() => loadRegister().then(m => ({ default: m.RegisterPage })));
 const ProfilePage       = lazy(() => loadProfile().then(m => ({ default: m.ProfilePage })));
@@ -45,6 +47,7 @@ const TournamentsPage   = lazy(() => loadTournaments().then(m => ({ default: m.T
 const ClansPage         = lazy(() => loadClans().then(m => ({ default: m.ClansPage })));
 const TutorialPage      = lazy(() => loadTutorial().then(m => ({ default: m.TutorialPage })));
 const TeamsPage         = lazy(() => loadTeams().then(m => ({ default: m.TeamsPage })));
+const ReplayPage        = lazy(() => loadReplay().then(m => ({ default: m.ReplayPage })));
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { setUser, setProfile, setLoading } = useAuthStore();
@@ -191,7 +194,7 @@ function PrefetchOnIdle() {
       loadProfile(); loadStore(); loadLeaderboard();
       loadFriends(); loadHistory(); loadCardsPreview();
       loadUserProfile(); loadRegister(); loadTournaments(); loadClans();
-      loadTutorial(); loadTeams();
+      loadTutorial(); loadTeams(); loadReplay();
     });
   }, []);
   return null;
@@ -209,6 +212,25 @@ function PrefetchOnIdle() {
  * payload also tells us how many bonus coins were granted on top of the
  * normal payout.
  */
+/**
+ * Silently re-syncs the push subscription when the user already opted in
+ * on this device. Browsers occasionally rotate the endpoint (e.g. on a
+ * service-worker update) so re-POSTing on app start keeps the server
+ * pointing at the live subscription. No permission prompt fires here —
+ * we only re-subscribe if permission was already granted previously.
+ */
+function PushResubscribeGate() {
+  const { user } = useAuthStore();
+  useEffect(() => {
+    if (!user) return;
+    if (!pushService.isSupported()) return;
+    if (!pushService.isOptedIn()) return;
+    if (pushService.permission() !== 'granted') return;
+    pushService.enable().catch(() => null);
+  }, [user]);
+  return null;
+}
+
 function FirstWinBonusGate() {
   const { user, profile, setProfile } = useAuthStore();
   const { addToast } = useUiStore();
@@ -271,6 +293,7 @@ export function App() {
         <GlobalOverlays />
         <ResumeGameGate />
         <FirstWinBonusGate />
+        <PushResubscribeGate />
         <ReferralRedeemer />
         <PrefetchOnIdle />
         <Suspense fallback={<Loading />}>
@@ -291,6 +314,7 @@ export function App() {
             <Route path="/clans" element={<ProtectedRoute><ClansPage /></ProtectedRoute>} />
             <Route path="/tutorial" element={<ProtectedRoute><TutorialPage /></ProtectedRoute>} />
             <Route path="/teams" element={<ProtectedRoute><TeamsPage /></ProtectedRoute>} />
+            <Route path="/replay/:gameId" element={<ProtectedRoute><ReplayPage /></ProtectedRoute>} />
             <Route path="/cards-preview" element={<CardsPreviewPage />} />
             <Route path="*" element={<FallbackRoute />} />
           </Routes>

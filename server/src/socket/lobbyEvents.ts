@@ -181,6 +181,15 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
         roomName: room.name,
       });
     }
+    // Web Push — fires whether the friend has the tab open or not.
+    import('../services/pushService').then(({ pushTo }) => {
+      pushTo(
+        payload.targetUid,
+        '🎮 دعوة لعب',
+        `${inviter?.displayName || 'لاعب'} دعاك للعبة`,
+        { url: '/home', tag: 'game-invite' },
+      ).catch(() => null);
+    });
   });
 
   socket.on(SOCKET_EVENTS.LOBBY_KICK_PLAYER, (payload: { roomId: string; targetUid: string }) => {

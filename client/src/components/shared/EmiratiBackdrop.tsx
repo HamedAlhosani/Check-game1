@@ -1,27 +1,26 @@
 /**
- * Decorative SVG backdrop for the redesigned light theme.
+ * Night-Dubai backdrop for the redesigned theme.
  *
- *  <EmiratiBackdrop /> — drop in once at the top of a page; renders a
- *  fixed, full-bleed, non-interactive layer:
- *    1. soft sky → warm sand gradient wash
- *    2. a hazy sun
- *    3. layered Dubai-style skyline (Burj Khalifa, Burj Al Arab,
- *       low-rise cluster) with proper gradient lighting
- *    4. a pair of detailed date-palm trees flanking the corners,
- *       each with a banded trunk, ~24 feathered fronds and date
- *       clusters
- *
- *  The intent is "the page itself is white; the backdrop is the view
- *  out the window" — the imagery sits low and soft so white surfaces
- *  in the foreground always remain the focal point.
+ *  <EmiratiBackdrop /> renders a fixed full-bleed, non-interactive
+ *  layer:
+ *    1. Deep navy sky → city-glow horizon gradient
+ *    2. ~50 stars + a crescent moon
+ *    3. Warm rust glow along the horizon (the city's reflected light
+ *       on the lower atmosphere)
+ *    4. Layered Dubai skyline lit at night — Burj Khalifa with a
+ *       luminous window grid + spire light, Burj Al Arab sail with
+ *       color-shifted facade lighting, mid-rise cluster with
+ *       golden window dots, distant skyline twinkles
+ *    5. Pair of date palms standing as warm-lit silhouettes
+ *    6. Soft water reflection at the very bottom for that
+ *       Marina / Creek vibe
  *
  *  pointer-events: none keeps every click/tap falling through to the
  *  real UI above it.
  */
 
 interface BackdropProps {
-  /** Multiplier on the imagery layer's opacity. 1 is the design
-   *  default; pass <1 on dense screens, >1 on splash/lobby screens. */
+  /** Multiplier on imagery layer opacity. 1 is the design default. */
   intensity?: number;
 }
 
@@ -30,35 +29,34 @@ export function EmiratiBackdrop({ intensity = 1 }: BackdropProps) {
     <div
       aria-hidden
       className="fixed inset-0 pointer-events-none overflow-hidden"
-      style={{ zIndex: 0 }}
+      style={{ zIndex: 0, background: '#070D24' }}
     >
-      {/* Sky / sand wash — warm cream that turns to richer sand near the
-          horizon. Kept gentle so foreground cream surfaces stay legible
-          and nothing in the layout fights for the user's eye. */}
+      {/* Sky — deep navy at top, warming through navy → mauve → rust at
+          the horizon as the city light bleeds into the atmosphere. */}
       <div
         className="absolute inset-0"
         style={{
           background:
-            'linear-gradient(180deg, #F8F2E0 0%, #F4ECD3 55%, #E8D7A8 90%, #D8C188 100%)',
+            'linear-gradient(180deg, #070D24 0%, #0E1B3E 22%, #1F2D5C 55%, #38304E 75%, #4A2E3E 90%, #5C2E2E 100%)',
         }}
       />
 
-      {/* Soft hazy sun on the upper-third left. Keeps the warm tone the
-          gradient establishes without ever fighting foreground UI. */}
+      {/* Stars — a sparse field stays visible only above the city glow. */}
+      <Stars intensity={intensity} />
+
+      {/* Crescent moon, upper-right */}
+      <CrescentMoon intensity={intensity} />
+
+      {/* City-glow halo on the horizon (warm rust into navy). */}
       <div
         className="absolute"
         style={{
-          width: 360, height: 360, top: '8%', left: '38%',
-          transform: 'translateX(-50%)',
+          left: 0, right: 0, height: 320, bottom: 0,
           background:
-            'radial-gradient(circle, rgba(255,225,170,0.65) 0%, rgba(255,225,170,0.25) 35%, rgba(255,225,170,0) 70%)',
-          filter: 'blur(4px)',
-          opacity: 0.85 * intensity,
+            'linear-gradient(0deg, rgba(255,170,90,0.25) 0%, rgba(255,170,90,0.10) 35%, rgba(120,60,90,0) 100%)',
+          opacity: 0.95 * intensity,
         }}
       />
-
-      {/* A few thin streaky clouds drifting across the sky. */}
-      <Clouds intensity={intensity} />
 
       <svg
         viewBox="0 0 1440 900"
@@ -67,52 +65,61 @@ export function EmiratiBackdrop({ intensity = 1 }: BackdropProps) {
         style={{ opacity: intensity }}
       >
         <defs>
-          {/* Tower silhouettes are warm sand fading slightly cooler at
-              top so distance reads. Highlights are added separately. */}
+          {/* Tower silhouettes — much darker than day-time so window
+              dots read as glowing. */}
+          <linearGradient id="bk-tower" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stopColor="#1A1F38" />
+            <stop offset="100%" stopColor="#0A0E1F" />
+          </linearGradient>
           <linearGradient id="bk-tower-far" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"  stopColor="#C2A675" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#7C5E33" stopOpacity="0.85" />
+            <stop offset="0%"  stopColor="#2A2F4D" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#13182F" stopOpacity="0.95" />
           </linearGradient>
-          <linearGradient id="bk-tower-near" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"  stopColor="#A98655" stopOpacity="0.85" />
-            <stop offset="100%" stopColor="#5A3F1E" stopOpacity="0.95" />
+
+          {/* Burj Al Arab sail at night — washed in cyan/magenta light
+              the way it's actually lit on big nights. */}
+          <linearGradient id="bk-sail" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stopColor="#9CD8FF" stopOpacity="0.95" />
+            <stop offset="50%" stopColor="#D67FF0" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#E2B377" stopOpacity="0.9" />
           </linearGradient>
-          {/* The Burj sail catches the warm sun, so it's lighter. */}
-          <linearGradient id="bk-sail" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%"  stopColor="#FFFAF0" stopOpacity="0.95" />
-            <stop offset="100%" stopColor="#E8C97A" stopOpacity="0.85" />
+          <linearGradient id="bk-sail-back" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stopColor="#3A4A78" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#1F2A50" stopOpacity="0.95" />
           </linearGradient>
-          <linearGradient id="bk-sail-back" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%"  stopColor="#C29A5E" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#8E6A2E" stopOpacity="0.95" />
-          </linearGradient>
-          {/* Palm trunk — deep brown banded gradient. */}
+
+          {/* Palm trunk — pure shadow against the lit sky. */}
           <linearGradient id="bk-trunk" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"  stopColor="#5A3D20" />
-            <stop offset="100%" stopColor="#2E1D0E" />
+            <stop offset="0%"  stopColor="#1A1408" />
+            <stop offset="100%" stopColor="#080604" />
           </linearGradient>
-          {/* Frond — two-tone green so the leaflets read in light/shadow. */}
           <linearGradient id="bk-frond" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"  stopColor="#4F7A38" />
-            <stop offset="100%" stopColor="#1F3D18" />
+            <stop offset="0%"  stopColor="#1F2818" />
+            <stop offset="100%" stopColor="#080A04" />
           </linearGradient>
-          {/* Date clusters — warm rust. */}
-          <radialGradient id="bk-date" cx="0.4" cy="0.3" r="0.7">
-            <stop offset="0%" stopColor="#C75A2A" />
-            <stop offset="100%" stopColor="#5A2810" />
+
+          {/* Window light — warm streetlight color used everywhere. */}
+          <radialGradient id="bk-window-glow" cx="0.5" cy="0.5" r="0.6">
+            <stop offset="0%" stopColor="#FFD68C" stopOpacity="1" />
+            <stop offset="100%" stopColor="#FFA94A" stopOpacity="0" />
           </radialGradient>
-          {/* Sand foreground — slightly warmer than the gradient end. */}
-          <linearGradient id="bk-dune" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"  stopColor="#F0DAA5" stopOpacity="0.55" />
-            <stop offset="100%" stopColor="#C89E5A" stopOpacity="0.85" />
+
+          {/* Reflection — vertical mirror for the lower fifth. */}
+          <linearGradient id="bk-reflect" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stopColor="#5C2E2E" stopOpacity="0.55" />
+            <stop offset="100%" stopColor="#0A0E1F" stopOpacity="0" />
           </linearGradient>
         </defs>
 
-        {/* ── Distant dunes / horizon ── */}
-        <path
-          d="M0 720 Q 240 670 480 700 T 960 700 T 1440 695 L 1440 900 L 0 900 Z"
-          fill="url(#bk-dune)"
-        />
+        {/* ── Distant skyline twinkles (far horizon) ── */}
+        <g fill="#FFD68C" opacity="0.55">
+          {Array.from({ length: 50 }).map((_, i) => (
+            <rect key={i}
+              x={(i * 37) % 1440}
+              y={695 + ((i * 13) % 18)}
+              width={1.5} height={2.5} />
+          ))}
+        </g>
 
         {/* ── Far skyline cluster left of center ── */}
         <g fill="url(#bk-tower-far)">
@@ -120,24 +127,16 @@ export function EmiratiBackdrop({ intensity = 1 }: BackdropProps) {
           <rect x="368" y="640" width="36" height="80" />
           <rect x="410" y="660" width="46" height="60" />
           <rect x="462" y="630" width="40" height="90" />
+          <rect x="510" y="650" width="36" height="70" />
         </g>
-        {/* Far-cluster window dots */}
-        <g fill="#FFFDF7" opacity="0.25">
-          <rect x="378" y="660" width="2" height="3" />
-          <rect x="386" y="660" width="2" height="3" />
-          <rect x="378" y="675" width="2" height="3" />
-          <rect x="386" y="675" width="2" height="3" />
-          <rect x="472" y="660" width="2" height="3" />
-          <rect x="480" y="660" width="2" height="3" />
-          <rect x="472" y="680" width="2" height="3" />
-          <rect x="480" y="680" width="2" height="3" />
-        </g>
+        <Windows xs={[378, 386, 472, 480, 520, 528]} ys={[660, 675, 690]} />
 
-        {/* ── Burj Khalifa — center, layered with gradient + highlight ── */}
+        {/* ── Burj Khalifa — dark silhouette, glowing window grid, lit
+              spire ── */}
         <BurjKhalifa />
 
         {/* ── Mid-rises right of center ── */}
-        <g fill="url(#bk-tower-near)">
+        <g fill="url(#bk-tower)">
           <rect x="830" y="618" width="44" height="102" />
           <rect x="880" y="600" width="36" height="120" />
           <rect x="922" y="640" width="50" height="80"  />
@@ -146,86 +145,166 @@ export function EmiratiBackdrop({ intensity = 1 }: BackdropProps) {
           <rect x="1074" y="610" width="32" height="110" />
           <rect x="1112" y="640" width="40" height="80"  />
         </g>
-        {/* Mid-rise lit windows */}
-        <g fill="#FFE9B0" opacity="0.55">
-          <rect x="836"  y="640" width="3" height="3" />
-          <rect x="844"  y="640" width="3" height="3" />
-          <rect x="836"  y="660" width="3" height="3" />
-          <rect x="844"  y="668" width="3" height="3" />
-          <rect x="886"  y="630" width="3" height="3" />
-          <rect x="894"  y="630" width="3" height="3" />
-          <rect x="886"  y="660" width="3" height="3" />
-          <rect x="930"  y="660" width="3" height="3" />
-          <rect x="950"  y="668" width="3" height="3" />
-          <rect x="986"  y="635" width="3" height="3" />
-          <rect x="1000" y="650" width="3" height="3" />
-          <rect x="1080" y="640" width="3" height="3" />
-          <rect x="1086" y="660" width="3" height="3" />
-          <rect x="1118" y="660" width="3" height="3" />
+        {/* Mid-rise lit-window grid — denser at base, sparse at top. */}
+        <g fill="#FFD68C">
+          {[836, 844, 852].map(x =>
+            [625, 640, 655, 670, 685].map(y => (
+              <rect key={`${x}-${y}`} x={x} y={y} width={3} height={4} opacity={0.85} />
+            ))
+          )}
+          {[886, 894, 902].map(x =>
+            [610, 625, 640, 655, 670, 685].map(y => (
+              <rect key={`${x}-${y}`} x={x} y={y} width={3} height={4} opacity={0.85} />
+            ))
+          )}
+          {[930, 940, 950, 960].map(x =>
+            [650, 665, 680, 695].map(y => (
+              <rect key={`${x}-${y}`} x={x} y={y} width={3} height={4} opacity={0.85} />
+            ))
+          )}
+          {[986, 996, 1004, 1012].map(x =>
+            [625, 640, 655, 670, 685].map(y => (
+              <rect key={`${x}-${y}`} x={x} y={y} width={3} height={4} opacity={0.85} />
+            ))
+          )}
+          {[1030, 1040, 1050].map(x =>
+            [645, 660, 675, 690].map(y => (
+              <rect key={`${x}-${y}`} x={x} y={y} width={3} height={4} opacity={0.85} />
+            ))
+          )}
+          {[1080, 1088, 1096].map(x =>
+            [620, 635, 650, 665, 680, 695].map(y => (
+              <rect key={`${x}-${y}`} x={x} y={y} width={3} height={4} opacity={0.85} />
+            ))
+          )}
+          {[1118, 1128, 1138].map(x =>
+            [650, 665, 680, 695].map(y => (
+              <rect key={`${x}-${y}`} x={x} y={y} width={3} height={4} opacity={0.85} />
+            ))
+          )}
         </g>
 
-        {/* ── Burj Al Arab sail ── */}
+        {/* ── Burj Al Arab — lit sail ── */}
         <BurjAlArab />
 
-        {/* ── Date palms — flanking corners, varied scale for depth ── */}
+        {/* ── Date palms — silhouetted against the lit horizon ── */}
         <DatePalm x={120}  scale={1.05} />
         <DatePalm x={235}  scale={0.78} flipped />
         <DatePalm x={1310} scale={0.95} flipped />
         <DatePalm x={1385} scale={0.7}  />
+
+        {/* ── Water reflection band at the very bottom ── */}
+        <rect x="0" y="780" width="1440" height="120" fill="url(#bk-reflect)" />
+        {/* Streaks of reflected lights on the water. */}
+        <g fill="#FFD68C" opacity="0.45">
+          {Array.from({ length: 40 }).map((_, i) => {
+            const w = 4 + ((i * 11) % 16);
+            return (
+              <rect key={i}
+                x={(i * 37) % 1440}
+                y={790 + ((i * 7) % 80)}
+                width={w} height={1} />
+            );
+          })}
+        </g>
       </svg>
     </div>
   );
 }
 
-// ─── Clouds ────────────────────────────────────────────────────────────────
-function Clouds({ intensity }: { intensity: number }) {
+// ─── Stars ─────────────────────────────────────────────────────────────────
+function Stars({ intensity }: { intensity: number }) {
+  // Pseudo-random but deterministic positions. Density tapers near the
+  // horizon so they don't fight the city glow.
+  const stars = Array.from({ length: 60 }, (_, i) => {
+    const x = ((i * 137) % 1440);
+    const y = ((i * 71) % 480) + 20; // never below y=500
+    const r = (i % 7 === 0) ? 1.6 : (i % 3 === 0 ? 1.2 : 0.8);
+    const o = (i % 5 === 0) ? 0.95 : 0.55;
+    return { x, y, r, o };
+  });
   return (
-    <svg
-      viewBox="0 0 1440 900" preserveAspectRatio="xMidYMin slice"
+    <svg viewBox="0 0 1440 900" preserveAspectRatio="xMidYMin slice"
       className="absolute inset-0 w-full h-full"
-      style={{ opacity: 0.65 * intensity }}
-    >
-      <g fill="#FFFFFF">
-        <path d="M 60 130
-          q 18 -22 50 -18
-          q 8 -18 32 -18
-          q 26 0 36 20
-          q 38 0 38 18
-          q 0 16 -34 16
-          l -120 0
-          q -28 0 -28 -16 z"
-          opacity="0.85" />
-        <path d="M 540 90
-          q 22 -28 60 -22
-          q 12 -20 38 -20
-          q 30 0 42 22
-          q 44 0 44 22
-          q 0 18 -40 18
-          l -140 0
-          q -30 0 -30 -18 q 0 -10 26 -22 z"
-          opacity="0.7" />
-        <path d="M 1080 160
-          q 20 -22 52 -18
-          q 10 -16 30 -16
-          q 24 0 34 18
-          q 36 0 36 16
-          q 0 14 -32 14
-          l -116 0
-          q -26 0 -26 -14 z"
-          opacity="0.75" />
+      style={{ opacity: 0.85 * intensity }}>
+      <g fill="#FFFAF0">
+        {stars.map((s, i) => (
+          <circle key={i} cx={s.x} cy={s.y} r={s.r} opacity={s.o} />
+        ))}
+        {/* A few brighter stars with a tiny cross-glow. */}
+        {[
+          { x: 220, y: 110 }, { x: 540, y: 80 },
+          { x: 950, y: 130 }, { x: 1280, y: 60 },
+        ].map((s, i) => (
+          <g key={`bright-${i}`} fill="#FFFAF0">
+            <circle cx={s.x} cy={s.y} r={1.8} />
+            <line x1={s.x - 5} y1={s.y} x2={s.x + 5} y2={s.y} stroke="#FFFAF0" strokeWidth={0.4} opacity={0.7} />
+            <line x1={s.x} y1={s.y - 5} x2={s.x} y2={s.y + 5} stroke="#FFFAF0" strokeWidth={0.4} opacity={0.7} />
+          </g>
+        ))}
       </g>
     </svg>
   );
 }
 
-// ─── Burj Khalifa ──────────────────────────────────────────────────────────
+// ─── Crescent moon ─────────────────────────────────────────────────────────
+function CrescentMoon({ intensity }: { intensity: number }) {
+  return (
+    <div
+      className="absolute"
+      style={{
+        top: 60, right: 130, width: 90, height: 90,
+        opacity: 0.95 * intensity,
+      }}
+    >
+      <svg viewBox="0 0 100 100" width={90} height={90}>
+        <defs>
+          <radialGradient id="moon-glow" cx="0.5" cy="0.5" r="0.7">
+            <stop offset="0%" stopColor="#FFFAF0" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#FFFAF0" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        {/* Soft halo */}
+        <circle cx="50" cy="50" r="48" fill="url(#moon-glow)" />
+        {/* Crescent shape — full disc minus an offset disc. */}
+        <mask id="crescent-mask">
+          <rect width="100" height="100" fill="black" />
+          <circle cx="48" cy="48" r="28" fill="white" />
+          <circle cx="56" cy="44" r="26" fill="black" />
+        </mask>
+        <rect width="100" height="100" fill="#FFFAF0" mask="url(#crescent-mask)" opacity="0.95" />
+      </svg>
+    </div>
+  );
+}
+
+// ─── Burj Khalifa — night ──────────────────────────────────────────────────
 function BurjKhalifa() {
-  // Slim, stepped, with a sunlit east-face highlight and an antenna.
+  // Window grid: lots of small lit dots stepping up the body. Sparse
+  // near the spire, dense near the base.
+  const winRows: { y: number; cols: number[] }[] = [];
+  // Body section (y 360→720): every 14px, 4 cols
+  for (let y = 374; y < 720; y += 14) {
+    winRows.push({ y, cols: [704, 712, 720, 728, 740, 748, 756, 764, 772, 780].slice(0, 10) });
+  }
+  // Mid section (300→360): tighter cols
+  for (let y = 308; y < 360; y += 14) {
+    winRows.push({ y, cols: [716, 724, 740, 748, 756, 764, 772] });
+  }
+  // Upper section (220→300)
+  for (let y = 228; y < 300; y += 14) {
+    winRows.push({ y, cols: [724, 732, 740, 748, 756, 764] });
+  }
+  // Tip section (110→220)
+  for (let y = 116; y < 220; y += 16) {
+    winRows.push({ y, cols: [732, 740, 748, 756] });
+  }
+
   return (
     <g>
-      {/* Body */}
+      {/* Body silhouette */}
       <path
-        fill="url(#bk-tower-near)"
+        fill="url(#bk-tower)"
         d="
           M 700 720
           L 700 360
@@ -243,108 +322,89 @@ function BurjKhalifa() {
           Z
         "
       />
-      {/* Sunlit east-face highlight (right side of the tower body) */}
-      <path
-        fill="#FFE5B0" opacity="0.32"
-        d="
-          M 770 720
-          L 770 360
-          L 768 360 L 768 300
-          L 760 300 L 760 220
-          L 752 220 L 752 110
-          L 746 110 L 746 60
-          L 742 60  L 742 14
-          L 740 14
-          L 740 60
-          L 744 60  L 744 110
-          L 750 110 L 750 220
-          L 758 220 L 758 300
-          L 766 300 L 766 360
-          L 778 360 L 778 720
-          Z
-        "
-      />
-      {/* Setback shadow lines so the silhouette doesn't read flat */}
-      <g stroke="#3E2A12" strokeWidth="0.6" opacity="0.55">
+      {/* Setback shadow lines — keep silhouette dimensional. */}
+      <g stroke="#34406B" strokeWidth="0.6" opacity="0.5">
         <line x1="700" y1="360" x2="780" y2="360" />
         <line x1="712" y1="300" x2="768" y2="300" />
         <line x1="720" y1="220" x2="760" y2="220" />
         <line x1="728" y1="110" x2="752" y2="110" />
         <line x1="734" y1="60"  x2="746" y2="60" />
       </g>
-      {/* Antenna */}
-      <line x1="740" y1="14" x2="740" y2="-12" stroke="#3E2A12" strokeWidth="1" opacity="0.85" />
-      {/* Window grid — sparse warm dots so it reads as a real building */}
-      <g fill="#FFE9B0" opacity="0.6">
-        {Array.from({ length: 16 }).map((_, i) => (
-          <g key={i}>
-            <rect x="734" y={120 + i * 18} width="2" height="3" />
-            <rect x="744" y={120 + i * 18} width="2" height="3" />
-          </g>
-        ))}
-        {Array.from({ length: 6 }).map((_, i) => (
-          <g key={i}>
-            <rect x="724" y={400 + i * 28} width="2" height="3" />
-            <rect x="754" y={400 + i * 28} width="2" height="3" />
-          </g>
-        ))}
+      {/* Lit window grid */}
+      <g fill="#FFD68C">
+        {winRows.flatMap((row, ri) =>
+          row.cols.map((cx, ci) => (
+            <rect key={`${ri}-${ci}`}
+              x={cx} y={row.y} width={2.2} height={3}
+              opacity={0.65 + ((ri + ci) % 5) * 0.06} />
+          ))
+        )}
       </g>
+      {/* Spire light — glowing tip */}
+      <circle cx="740" cy="-2" r="3.5" fill="#FFD68C" />
+      <circle cx="740" cy="-2" r="6" fill="#FFD68C" opacity="0.4" />
+      <line x1="740" y1="14" x2="740" y2="-12" stroke="#0A0E1F" strokeWidth="1.4" opacity="0.9" />
     </g>
   );
 }
 
-// ─── Burj Al Arab ──────────────────────────────────────────────────────────
+// ─── Burj Al Arab — lit sail ───────────────────────────────────────────────
 function BurjAlArab() {
   return (
     <g>
-      {/* Back of sail (in shadow) */}
+      {/* Shadowed back of sail */}
       <path
         fill="url(#bk-sail-back)"
         d="M 1340 720
            C 1335 580 1310 470 1268 470
            C 1262 530 1264 600 1276 720 Z"
       />
-      {/* Front sail (sunlit) */}
+      {/* Front sail — lit cyan/magenta/gold for the night-show colors. */}
       <path
         fill="url(#bk-sail)"
         d="M 1268 470
            C 1290 470 1330 540 1340 720
            L 1276 720
            C 1264 600 1262 530 1268 470 Z"
+        opacity={0.9}
       />
-      {/* Curved front edge — emphasizes the sail */}
+      {/* Spine outline */}
       <path
         d="M 1268 470 C 1290 470 1330 540 1340 720"
-        stroke="#8E6A2E" strokeWidth="1.2" fill="none" opacity="0.8"
+        stroke="#FFD68C" strokeWidth="1.2" fill="none" opacity="0.75"
       />
-      {/* Helipad disc at the tip */}
-      <circle cx="1278" cy="466" r="6" fill="#FFFFFF" opacity="0.85" />
-      <circle cx="1278" cy="466" r="6" stroke="#8E6A2E" strokeWidth="0.6" fill="none" opacity="0.7" />
-      {/* Wing windows along the spine */}
-      <g fill="#FFE9B0" opacity="0.7">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <rect key={i} x={1280 - i * 0.7} y={490 + i * 24} width="2.5" height="3" />
+      {/* Helipad */}
+      <circle cx="1278" cy="466" r="6" fill="#FFFAF0" opacity="0.95" />
+      <circle cx="1278" cy="466" r="6" stroke="#A87A4C" strokeWidth="0.6" fill="none" opacity="0.9" />
+      {/* Wing-window glow band */}
+      <g fill="#FFD68C" opacity="0.95">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <rect key={i} x={1280 - i * 0.7} y={490 + i * 18} width="2.5" height="3.5" />
         ))}
       </g>
     </g>
   );
 }
 
-// ─── Date palm — detailed silhouette ───────────────────────────────────────
-/**
- * One date palm positioned at (x, baseline=900). 24 fronds laid out
- * radially from the crown, each frond a tapered "feather" shape that
- * reads as a real palm leaf at SVG-silhouette resolution. Banded trunk
- * + two date clusters under the crown.
- */
+// ─── Tiny generic window-dot helper ────────────────────────────────────────
+function Windows({ xs, ys }: { xs: number[]; ys: number[] }) {
+  return (
+    <g fill="#FFD68C" opacity="0.9">
+      {xs.flatMap(x => ys.map(y => (
+        <rect key={`${x}-${y}`} x={x} y={y} width={2} height={3} />
+      )))}
+    </g>
+  );
+}
+
+// ─── Date palm — night silhouette ──────────────────────────────────────────
 function DatePalm({
   x, scale, flipped = false,
 }: { x: number; scale: number; flipped?: boolean }) {
   const sx = flipped ? -1 : 1;
   return (
     <g transform={`translate(${x} 900) scale(${sx * scale} ${scale})`}>
-      {/* Trunk shadow on the ground */}
-      <ellipse cx="0" cy="-2" rx="32" ry="6" fill="#3E2A12" opacity="0.25" />
+      <ellipse cx="0" cy="-2" rx="32" ry="6" fill="#000" opacity="0.4" />
 
       {/* Trunk */}
       <path
@@ -359,93 +419,52 @@ function DatePalm({
           Z
         "
       />
-      {/* Trunk bands — short hashes climbing the trunk */}
-      <g stroke="#3E2A12" strokeWidth="1.5" opacity="0.6">
+      {/* Trunk bands */}
+      <g stroke="#0A0604" strokeWidth="1.5" opacity="0.85">
         {Array.from({ length: 14 }).map((_, i) => {
           const y = -20 - i * 24;
-          // Trunk tapers as it goes up; widen left/right based on y.
           const t = Math.min(1, (-y) / 360);
           const w = 8 - t * 4;
           return <line key={i} x1={-w} y1={y} x2={w} y2={y} />;
         })}
       </g>
-      {/* Trunk highlight on the right side */}
+      {/* Warm under-light edge — streetlight kissing the trunk. */}
       <path
-        fill="#825B30" opacity="0.5"
+        fill="#FFA94A" opacity="0.18"
         d="
-          M 5 0
-          C 7 -90 11 -180 12 -270
-          C 13 -340 14 -360 14 -360
+          M 7 0
+          C 9 -90 13 -180 13 -270
           L 12 -360
-          C 14 -360 17 -340 12 -270
-          C 4 -180 10 -90 7 0
-          Z
+          L 14 -360
+          C 14 -340 17 -270 9 -180
+          C 12 -90 10 -45 7 0 Z
         "
       />
 
-      {/* Date clusters — two reddish bunches under the crown */}
-      <DateCluster cx={-12} cy={-345} />
-      <DateCluster cx={14}  cy={-345} />
-
-      {/* Crown — 24 fronds radiating, all anchored at (0, -360) */}
+      {/* Crown — 24 fronds */}
       <g>
         {Array.from({ length: 24 }).map((_, i) => {
-          // Distribute across a ~340° arc, leaving a small gap at the
-          // bottom so fronds don't fan into the trunk.
           const angle = -180 + (i / 23) * 340;
-          // Slight length variation so the crown reads natural.
           const len = 110 + ((i * 7) % 14);
-          const back = i % 3 === 0; // every third frond drops behind for depth
-          return (
-            <Frond
-              key={i}
-              rotate={angle}
-              len={len}
-              behind={back}
-            />
-          );
+          const back = i % 3 === 0;
+          return <Frond key={i} rotate={angle} len={len} behind={back} />;
         })}
       </g>
-
-      {/* Crown core — small dark blob hides the frond bases */}
-      <circle cx="0" cy="-360" r="9" fill="#1A1208" opacity="0.85" />
-      <circle cx="0" cy="-360" r="9" stroke="#3E2A12" strokeWidth="0.5" fill="none" />
+      {/* Crown core */}
+      <circle cx="0" cy="-360" r="9" fill="#000" opacity="0.95" />
     </g>
   );
 }
 
-function DateCluster({ cx, cy }: { cx: number; cy: number }) {
-  // Two short rows of date "berries" hanging from the crown base.
-  const dots: { dx: number; dy: number }[] = [];
-  for (let i = 0; i < 8; i++) {
-    dots.push({ dx: (i % 4) * 2.6 - 4, dy: Math.floor(i / 4) * 2.6 });
-  }
-  return (
-    <g transform={`translate(${cx} ${cy})`}>
-      {dots.map((d, i) => (
-        <circle key={i} cx={d.dx} cy={d.dy} r={1.6} fill="url(#bk-date)" />
-      ))}
-    </g>
-  );
-}
-
-/**
- * One palm frond. Drawn as a tapered "feather" — central rib, ~14
- * leaflet pairs spread along it. Rotated around the crown anchor at
- * (0, -360) and translated so its base sits there.
- */
 function Frond({
   rotate, len, behind,
 }: { rotate: number; len: number; behind: boolean }) {
-  // 14 leaflets per side, sized larger near the base, tapering to the
-  // tip. Slight curve in the rib so it doesn't look stiff.
   const leaflets = 14;
   const leafElems: JSX.Element[] = [];
   for (let i = 0; i < leaflets; i++) {
     const t = i / (leaflets - 1);
     const along = t * len;
     const size = 14 * (1 - 0.6 * t);
-    // The rib droops slightly — quadratic curve approximated as offset.
     const droop = 6 * t * t;
     leafElems.push(
       <ellipse
@@ -470,12 +489,11 @@ function Frond({
     <g
       transform={`translate(0 -360) rotate(${rotate})`}
       fill="url(#bk-frond)"
-      opacity={behind ? 0.65 : 1}
+      opacity={behind ? 0.55 : 0.9}
     >
-      {/* Mid-rib */}
       <path
         d={`M 0 0 Q ${len * 0.5} ${-len * 0.06} ${len} ${-len * 0.04}`}
-        stroke="#1F3D18" strokeWidth={1.5} fill="none"
+        stroke="#080A04" strokeWidth={1.5} fill="none"
       />
       {leafElems}
     </g>

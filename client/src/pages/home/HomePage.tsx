@@ -1250,11 +1250,11 @@ export function HomePage() {
 
       {/* ── Top nav bar ── */}
       <nav className="sticky top-0 z-40 flex items-center justify-between px-4 py-2.5"
-        style={{ background: 'rgba(248,242,224,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(217,201,160,0.65)' }}>
+        style={{ background: 'rgba(245,239,224,0.94)', backdropFilter: 'blur(14px)', borderBottom: '1px solid rgba(212,165,116,0.50)', boxShadow: '0 2px 14px rgba(0,0,0,0.30)' }}>
         <Link to="/" className="flex items-center gap-2 shrink-0">
           <img src="/assets/og-image.png" alt="Check"
             style={{ width: 38, height: 38, borderRadius: '50%', objectFit: 'cover', boxShadow: '0 0 14px rgba(201,168,76,0.35)', border: '1px solid rgba(201,168,76,0.4)' }}/>
-          <span className="font-display tracking-widest hidden sm:inline" style={{ fontSize: 18, color: '#8B6914' }}>CHECK</span>
+          <span className="font-display tracking-widest hidden sm:inline" style={{ fontSize: 18, color: '#A87A4C', textShadow: '0 1px 0 rgba(245,239,224,0.6)' }}>CHECK</span>
         </Link>
         <div className="flex items-center gap-2">
           <LangToggle />
@@ -1269,8 +1269,8 @@ export function HomePage() {
             title={lang === 'ar' ? 'صناديق الكنز' : 'Treasure Chests'}
             style={{
               width: 36, height: 34,
-              background: ((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.18)' : 'rgba(251,245,229,0.85)',
-              border: `1px solid ${((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.55)' : 'rgba(217,201,160,0.75)'}`,
+              background: ((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.20)' : 'rgba(245,239,224,0.92)',
+              border: `1px solid ${((profile as any)?.keys || 0) > 0 ? 'rgba(196,149,255,0.55)' : 'rgba(212,165,116,0.45)'}`,
               boxShadow: ((profile as any)?.keys || 0) > 0 ? '0 0 14px rgba(196,149,255,0.30)' : 'none',
               cursor: 'pointer',
             }}>
@@ -1286,30 +1286,30 @@ export function HomePage() {
           </motion.button>
           {/* Coins */}
           <div className="flex items-center gap-1.5 rounded-xl px-3 py-1.5"
-            style={{ background: 'rgba(248,235,194,0.92)', border: '1px solid rgba(201,168,76,0.50)' }}>
+            style={{ background: 'linear-gradient(135deg, rgba(245,229,205,0.95), rgba(212,165,116,0.30))', border: '1px solid rgba(212,165,116,0.60)', boxShadow: '0 0 12px rgba(212,165,116,0.25)' }}>
             <span style={{ fontSize: 15 }}>🪙</span>
-            <span className="font-bold" style={{ fontSize: 13, color: '#8B6914' }}>{coins.toLocaleString()}</span>
+            <span className="font-bold" style={{ fontSize: 13, color: '#A87A4C' }}>{coins.toLocaleString()}</span>
           </div>
           {/* Desktop nav links — hidden on mobile */}
           <div className="hidden sm:flex items-center gap-2">
             <Link to="/" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(251,245,229,0.85)', border: '1px solid rgba(217,201,160,0.75)', color: '#5C5240', fontSize: 12 }}>
+              style={{ background: 'rgba(245,239,224,0.92)', border: '1px solid rgba(212,165,116,0.45)', color: '#1A2240', fontSize: 12 }}>
               🏠 {lang === 'ar' ? 'الصفحة الرئيسية' : 'Home'}
             </Link>
             <Link to="/store" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(251,245,229,0.85)', border: '1px solid rgba(217,201,160,0.75)', color: '#5C5240', fontSize: 12 }}>
+              style={{ background: 'rgba(245,239,224,0.92)', border: '1px solid rgba(212,165,116,0.45)', color: '#1A2240', fontSize: 12 }}>
               🏪 {lang === 'ar' ? 'المتجر' : 'Store'}
             </Link>
             <Link to="/friends" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(251,245,229,0.85)', border: '1px solid rgba(217,201,160,0.75)', color: '#5C5240', fontSize: 12 }}>
+              style={{ background: 'rgba(245,239,224,0.92)', border: '1px solid rgba(212,165,116,0.45)', color: '#1A2240', fontSize: 12 }}>
               👥 {lang === 'ar' ? 'أصدقاء' : 'Friends'}
             </Link>
             <Link to="/history" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(251,245,229,0.85)', border: '1px solid rgba(217,201,160,0.75)', color: '#5C5240', fontSize: 12 }}>
+              style={{ background: 'rgba(245,239,224,0.92)', border: '1px solid rgba(212,165,116,0.45)', color: '#1A2240', fontSize: 12 }}>
               📋 {lang === 'ar' ? 'سجل' : 'History'}
             </Link>
             <Link to="/leaderboard" className="rounded-xl px-2.5 py-1.5 transition-all"
-              style={{ background: 'rgba(251,245,229,0.85)', border: '1px solid rgba(217,201,160,0.75)', color: '#5C5240', fontSize: 12 }}>
+              style={{ background: 'rgba(245,239,224,0.92)', border: '1px solid rgba(212,165,116,0.45)', color: '#1A2240', fontSize: 12 }}>
               🏆 {lang === 'ar' ? 'التصنيف' : 'Ranks'}
             </Link>
             <Link to="/profile">
@@ -1327,32 +1327,32 @@ export function HomePage() {
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             className="rounded-2xl p-4 mb-5"
-            style={{ background: 'rgba(251,245,229,0.96)', border: '1px solid rgba(217,201,160,0.85)', boxShadow: '0 8px 24px rgba(85,60,20,0.12)' }}
+            style={{ background: 'rgba(250,246,234,0.96)', border: '1px solid rgba(212,165,116,0.55)', boxShadow: '0 12px 32px rgba(7,13,36,0.45), 0 0 24px rgba(212,165,116,0.18)' }}
           >
             <div className="flex items-center gap-4">
               <Link to="/profile" style={{ textDecoration: 'none' }}>
                 <div className="relative">
                   <AvatarCircle id={profile.avatarId} name={profile.displayName} size={52} frameId={(profile.equippedItems as any)?.avatarFrame}/>
                   <div className="absolute -bottom-0.5 -right-0.5 rounded-full px-1.5"
-                    style={{ background: '#C9A84C', fontSize: 9, color: '#FBF5E5', fontWeight: 800, lineHeight: '16px' }}>
+                    style={{ background: '#D4A574', fontSize: 9, color: '#1A2240', fontWeight: 800, lineHeight: '16px' }}>
                     {level}
                   </div>
                 </div>
               </Link>
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2">
-                  <h2 className="font-arabic font-bold truncate" style={{ fontSize: 17, color: '#1F1A12' }}>{profile.displayName}</h2>
-                  <span className="font-arabic" style={{ fontSize: 11, color: '#8E836D' }}>{levelTitle(level, lang)}</span>
+                  <h2 className="font-arabic font-bold truncate" style={{ fontSize: 17, color: '#1A2240' }}>{profile.displayName}</h2>
+                  <span className="font-arabic" style={{ fontSize: 11, color: '#7C86A7' }}>{levelTitle(level, lang)}</span>
                 </div>
                 <div className="flex gap-4 my-1.5">
-                  <span className="font-arabic text-xs" style={{ color: '#5C5240' }}>
-                    <span style={{ color: '#8B6914', fontWeight: 700 }}>{wins}</span> {t('wins')}
+                  <span className="font-arabic text-xs" style={{ color: '#4A557A' }}>
+                    <span style={{ color: '#A87A4C', fontWeight: 700 }}>{wins}</span> {t('wins')}
                   </span>
-                  <span className="font-arabic text-xs" style={{ color: '#5C5240' }}>
-                    <span style={{ color: '#8B6914', fontWeight: 700 }}>{games}</span> {t('games')}
+                  <span className="font-arabic text-xs" style={{ color: '#4A557A' }}>
+                    <span style={{ color: '#A87A4C', fontWeight: 700 }}>{games}</span> {t('games')}
                   </span>
-                  <span className="font-arabic text-xs" style={{ color: '#5C5240' }}>
-                    🔥 <span style={{ color: '#8B6914', fontWeight: 700 }}>{profile.stats?.currentStreak ?? 0}</span>
+                  <span className="font-arabic text-xs" style={{ color: '#4A557A' }}>
+                    🔥 <span style={{ color: '#A87A4C', fontWeight: 700 }}>{profile.stats?.currentStreak ?? 0}</span>
                   </span>
                 </div>
                 <XpBar xp={xp} lang={lang} onClick={() => { setProgressInitialTab('levels'); setShowProgress(true); }}/>

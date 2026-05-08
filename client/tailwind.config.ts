@@ -38,35 +38,40 @@ const config: Config = {
         },
         danger: '#C45C3A',
         oasis: '#1B6B6B',
-        // ── Light Emirati palette (new) ───────────────────────────────────
-        // White-pearl surfaces, palm-green accent, sky-blue cool accent.
-        // Used by the redesigned screens; legacy dark-gold tokens above
+        // ── Night Dubai palette (new) ─────────────────────────────────────
+        // Midnight navy page, warm pearl card surfaces, rose-gold accents.
+        // Built around a "Dubai at night" feel — lit Burj Khalifa,
+        // glowing windows, stars overhead.
+        // Legacy gold/night/sand/desert/sunset/palm/oasis tokens above
         // stay so any unmigrated screen still renders correctly.
+        midnight: {
+          DEFAULT: '#0E1B3E',     // deepest navy, page bg top
+          mid:     '#1F2D5C',     // city navy, page bg mid
+          rise:    '#2A3A6E',     // lit-from-below city horizon
+          deep:    '#070D24',     // overlay shadow
+        },
         pearl: {
-          // Warm cream / desert-pearl tones — softer than pure white,
-          // gentler on the eye, still reads "light theme".
-          DEFAULT: '#F4ECD8',     // app background
-          surface: '#FBF5E5',     // cards / sheets
-          mute: '#EFE3C9',        // hover / pressed surface
-          line: '#D9C9A0',        // hairlines
+          DEFAULT: '#F5EFE0',     // card surface
+          surface: '#FAF6EA',     // brightest card surface
+          mute:    '#E8DFC8',     // hover / pressed surface
+          line:    '#D7CBA8',     // hairlines
         },
         ink: {
-          DEFAULT: '#1F1A12',     // primary text
-          mid: '#5C5240',         // secondary text
-          soft: '#8E836D',        // tertiary / placeholders
+          DEFAULT: '#1A2240',     // primary text on pearl
+          mid:     '#4A557A',     // secondary text
+          soft:    '#7C86A7',     // tertiary / placeholders
         },
         royal: {
-          DEFAULT: '#C9A84C',     // primary accent (kept gold)
-          deep:    '#8B6914',     // pressed / active gold
-          tint:    '#F8EBC2',     // soft gold backdrops
+          // Rose-gold accent family — replaces the cool yellow-gold for
+          // the night theme. Still legible on both navy and pearl.
+          DEFAULT: '#D4A574',     // primary accent
+          deep:    '#A87A4C',     // pressed / active
+          tint:    '#F5E5CD',     // soft accent backdrops
+          glow:    '#F0C68A',     // bright tip for highlights/shadows
         },
-        oasis2: {
-          DEFAULT: '#2F8F6F',     // palm-green accent
-          deep:    '#1F6F4F',
-          tint:    '#D6EEE0',
-        },
-        sky: {
-          DEFAULT: '#5BB7E0',     // gulf-blue accent
+        gulf: {
+          // Cool secondary — for "live" status pills / blue indicators.
+          DEFAULT: '#5BB7E0',
           deep:    '#2E89B4',
           tint:    '#D7ECF6',
         },
@@ -136,9 +141,9 @@ const config: Config = {
         'desert-gradient': 'linear-gradient(180deg, #0E0905 0%, #14100A 30%, #1A1408 60%, #200E04 85%, #160A04 100%)',
         'gold-shimmer': 'linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent)',
         'card-texture': "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0 L60 15 L60 45 L30 60 L0 45 L0 15 Z' fill='none' stroke='%23C9A84C' stroke-width='0.5' opacity='0.08'/%3E%3C/svg%3E\")",
-        // Light theme: warm cream-to-sand wash. Used as the main app
-        // background under the palm + skyline silhouettes.
-        'pearl-sky': 'linear-gradient(180deg, #F8F2E0 0%, #F2E8D0 55%, #E8D9AE 100%)',
+        // Night Dubai: deep navy at top fading to a warm-rust horizon
+        // glow where the city lights wash the lower atmosphere.
+        'pearl-sky': 'linear-gradient(180deg, #0A1330 0%, #14224A 35%, #1F2D5C 65%, #38304E 88%, #4A2E3E 100%)',
       },
     },
   },

@@ -1948,7 +1948,7 @@ export function HomePage() {
 
         {/* Quick-actions hex tiles — true polygon shapes, full-width grid */}
         {profile && !currentRoom && (
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 mb-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3">
             <BentoTile
               icon="🏆"
               title={lang === 'ar' ? 'البطولات' : 'Cups'}
@@ -1962,13 +1962,6 @@ export function HomePage() {
               sub={profile?.clanTag ? (lang === 'ar' ? 'قبيلتك' : 'Your clan') : (lang === 'ar' ? 'انضم' : 'Join')}
               accent="purple"
               onClick={() => { soundService.playClick(); navigate('/clans'); }}
-            />
-            <BentoTile
-              icon="🤝"
-              title={lang === 'ar' ? 'فرق ٢ ضد ٢' : 'Teams 2v2'}
-              sub={lang === 'ar' ? 'مع شريك' : 'With a partner'}
-              accent="amber"
-              onClick={() => { soundService.playClick(); navigate('/teams'); }}
             />
             <BentoTile
               icon="📖"
@@ -1985,6 +1978,50 @@ export function HomePage() {
               onClick={() => { soundService.playClick(); navigate('/tutorial'); }}
             />
           </div>
+        )}
+
+        {/* Featured 2v2 Teams banner — prominent, full-width entry to the
+            new dedicated /teams page. Sits above the giant playing card so
+            it's discoverable but doesn't crowd the BentoTile quick-actions
+            row. */}
+        {profile && !currentRoom && (
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => { soundService.playClick(); navigate('/teams'); }}
+            className="w-full mb-5 rounded-2xl border relative overflow-hidden flex items-center gap-3 transition-all"
+            style={{
+              padding: '14px 16px',
+              background: 'linear-gradient(135deg, rgba(255,140,40,0.18) 0%, rgba(120,40,20,0.10) 100%)',
+              borderColor: 'rgba(255,140,40,0.50)',
+              boxShadow: '0 6px 20px rgba(0,0,0,0.45), 0 0 22px rgba(255,140,40,0.20)',
+              cursor: 'pointer',
+            }}
+          >
+            <div
+              className="rounded-2xl flex items-center justify-center shrink-0"
+              style={{
+                width: 52, height: 52,
+                background: 'radial-gradient(circle at 30% 30%, rgba(255,200,120,0.45), rgba(120,40,20,0.20) 70%)',
+                border: '1.5px solid rgba(255,140,40,0.65)',
+                fontSize: 28,
+                lineHeight: 1,
+              }}
+            >
+              🤝
+            </div>
+            <div className="flex-1 min-w-0 text-start">
+              <p className="font-arabic font-bold" style={{ fontSize: 16, color: '#FFB347', textShadow: '0 0 8px rgba(255,140,40,0.45)' }}>
+                {lang === 'ar' ? 'وضع الفرق ٢ ضد ٢' : 'Teams Mode • 2v2'}
+              </p>
+              <p className="font-arabic" style={{ fontSize: 11.5, color: 'rgba(251,243,219,0.65)', lineHeight: 1.5 }}>
+                {lang === 'ar'
+                  ? 'العب مع شريك ضد فريق منافس — أونلاين أو مع صديق أو ضد بوتات'
+                  : 'Partner up vs a rival team — online, with a friend, or vs bots'}
+              </p>
+            </div>
+            <span style={{ fontSize: 22, color: 'rgba(255,179,71,0.8)' }}>{lang === 'ar' ? '‹' : '›'}</span>
+          </motion.button>
         )}
 
         {currentRoom ? (

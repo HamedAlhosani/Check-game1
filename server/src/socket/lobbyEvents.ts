@@ -26,7 +26,8 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
       const gameType = payload.gameType || 'check';
       const maxPlayers = payload.maxPlayers || 10;
       const gameMode = payload.gameMode || 'standard';
-      const existing = roomManager.findMatchableRoom(gameType, maxPlayers, gameMode);
+      const teamMode = payload.teamMode === '2v2' ? '2v2' : null;
+      const existing = roomManager.findMatchableRoom(gameType, maxPlayers, gameMode, teamMode);
       if (existing) {
         const joined = roomManager.joinRoom(existing.roomId, socket.uid, displayName, avatarId, equippedFrame);
         if (joined) {

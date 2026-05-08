@@ -205,7 +205,12 @@ export class RoomManager {
   getDominoBots(roomId: string): DominoBotPlayer[] { return this.dominoBots.get(roomId) || []; }
   getJacaroBots(roomId: string): JacaroBotPlayer[] { return this.jacaroBots.get(roomId) || []; }
 
-  findMatchableRoom(gameType: GameType, maxPlayers: number, gameMode: GameMode = 'standard'): Room | undefined {
+  findMatchableRoom(
+    gameType: GameType,
+    maxPlayers: number,
+    gameMode: GameMode = 'standard',
+    teamMode: '2v2' | null = null
+  ): Room | undefined {
     for (const room of this.rooms.values()) {
       if (
         room.type === 'public' &&
@@ -213,6 +218,9 @@ export class RoomManager {
         room.gameType === gameType &&
         room.gameMode === gameMode &&
         room.maxPlayers === maxPlayers &&
+        // 2v2 rooms must only match other 2v2 rooms — otherwise an online
+        // 2v2 request would land in a regular 4-player solo room.
+        (room.teamMode || null) === (teamMode || null) &&
         room.players.length < room.maxPlayers
       ) {
         return room;

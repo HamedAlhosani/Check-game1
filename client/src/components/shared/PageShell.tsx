@@ -113,14 +113,12 @@ export function FloatingDock({ lang }: { lang: string }) {
         bottom: 14,
         transform: 'translateX(-50%)',
         background:
-          'linear-gradient(180deg, rgba(54,38,24,0.65) 0%, rgba(24,18,12,0.65) 100%)',
+          'linear-gradient(180deg, rgba(54,38,24,0.95) 0%, rgba(24,18,12,0.95) 100%)',
         border: '1px solid rgba(229,188,124,0.35)',
         borderRadius: 999,
         padding: '6px 8px',
         boxShadow:
-          '0 14px 36px rgba(0,0,0,0.65), 0 0 28px rgba(229,188,124,0.30), inset 0 1px 0 rgba(255,255,255,0.06)',
-        backdropFilter: 'blur(18px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+          '0 8px 22px rgba(0,0,0,0.65), 0 0 16px rgba(229,188,124,0.25)',
       }}
     >
       <div className="flex items-center gap-1">
@@ -167,7 +165,10 @@ export function FloatingDock({ lang }: { lang: string }) {
 }
 
 /**
- * Glass card primitive in the new palette.
+ * Glass card primitive in the new palette. Uses solid alpha
+ * backgrounds (no backdrop-filter) so paint cost stays cheap —
+ * GlassCard renders many times per screen and each blur pass
+ * was visibly slowing first paint on lower-end devices.
  */
 export function GlassCard({
   children, inner = false, glow = false, className = '', style,
@@ -184,15 +185,13 @@ export function GlassCard({
       style={{
         position: 'relative',
         background: inner
-          ? 'linear-gradient(160deg, rgba(82,62,40,0.55) 0%, rgba(24,18,12,0.55) 100%)'
-          : 'linear-gradient(160deg, rgba(54,38,24,0.45) 0%, rgba(24,18,12,0.45) 100%)',
+          ? 'linear-gradient(160deg, rgba(82,62,40,0.95) 0%, rgba(24,18,12,0.95) 100%)'
+          : 'linear-gradient(160deg, rgba(54,38,24,0.92) 0%, rgba(24,18,12,0.92) 100%)',
         border: '1px solid rgba(229,188,124,0.32)',
         borderRadius: 22,
-        backdropFilter: 'blur(14px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(14px) saturate(140%)',
         boxShadow: glow
-          ? '0 12px 32px rgba(0,0,0,0.55), 0 0 28px rgba(229,188,124,0.32), inset 0 1px 0 rgba(255,255,255,0.06)'
-          : '0 8px 24px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05)',
+          ? '0 8px 22px rgba(0,0,0,0.55), 0 0 18px rgba(229,188,124,0.25)'
+          : '0 4px 16px rgba(0,0,0,0.45)',
         ...style,
       }}>
       {children}
@@ -248,13 +247,11 @@ export function BentoTile({
       style={{
         minHeight: tall ? 220 : wide ? 96 : 116,
         padding: wide ? '14px 18px' : '16px 12px',
-        background: 'linear-gradient(160deg, rgba(54,38,24,0.55) 0%, rgba(24,18,12,0.55) 100%)',
+        background: 'linear-gradient(160deg, rgba(54,38,24,0.95) 0%, rgba(24,18,12,0.95) 100%)',
         border: `1.5px solid ${ACCENT.border}`,
-        backdropFilter: 'blur(14px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(14px) saturate(140%)',
         clipPath:
           'polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px)',
-        boxShadow: `0 8px 22px rgba(0,0,0,0.55), 0 0 24px ${ACCENT.glow}, inset 0 1px 0 rgba(255,255,255,0.06)`,
+        boxShadow: `0 6px 16px rgba(0,0,0,0.55), 0 0 14px ${ACCENT.glow}`,
         cursor: 'pointer',
       }}
     >
@@ -321,11 +318,9 @@ export function ThemedBanner({
     <div
       className="relative overflow-hidden mb-5"
       style={{
-        background: 'linear-gradient(95deg, rgba(82,62,40,0.65) 0%, rgba(54,38,24,0.65) 50%, rgba(24,18,12,0.65) 100%)',
+        background: 'linear-gradient(95deg, rgba(82,62,40,0.92) 0%, rgba(54,38,24,0.92) 50%, rgba(24,18,12,0.92) 100%)',
         border: '1.5px solid rgba(229,188,124,0.45)',
-        backdropFilter: 'blur(14px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(14px) saturate(140%)',
-        boxShadow: '0 10px 28px rgba(0,0,0,0.55), 0 0 24px rgba(229,188,124,0.30), inset 0 1px 0 rgba(255,255,255,0.06)',
+        boxShadow: '0 6px 18px rgba(0,0,0,0.55), 0 0 14px rgba(229,188,124,0.20)',
         clipPath: lang === 'ar'
           ? 'polygon(20px 0, 100% 0, 100% 100%, 20px 100%, 0 50%)'
           : 'polygon(0 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 0 100%)',

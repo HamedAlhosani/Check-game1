@@ -200,6 +200,32 @@ function PrefetchOnIdle() {
  * on the matching /game/check/:id URL, navigate there. This is what makes
  * "open the site URL again and you're back in the game" work.
  */
+/**
+ * Listens for `reward:first_win_of_day` so the player gets a celebratory
+ * toast the first time they win a Check match each calendar day. The
+ * payload also tells us how many bonus coins were granted on top of the
+ * normal payout.
+ */
+function FirstWinBonusGate() {
+  const { user, profile, setProfile } = useAuthStore();
+  const { addToast } = useUiStore();
+
+  useEffect(() => {
+    if (!user) return;
+    const sock = socketService.connect();
+    const onBonus = (data: { baseCoins: number; bonusCoins: number }) => {
+      addToast(`🌅 أول فوز اليوم! +${data.bonusCoins} كوينز إضافية`, 'success', 6000);
+      // Reflect the bonus on the local coin balance so the header counter
+      // updates without a profile refetch.
+      if (profile) setProfile({ ...profile, coins: (profile.coins || 0) + data.bonusCoins });
+    };
+    sock.on('reward:first_win_of_day', onBonus);
+    return () => { sock.off('reward:first_win_of_day', onBonus); };
+  }, [user, profile, setProfile, addToast]);
+
+  return null;
+}
+
 function ResumeGameGate() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
@@ -239,6 +265,7 @@ export function App() {
       <AuthGate>
         <GlobalOverlays />
         <ResumeGameGate />
+        <FirstWinBonusGate />
         <ReferralRedeemer />
         <PrefetchOnIdle />
         <Suspense fallback={<Loading />}>

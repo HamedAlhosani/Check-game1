@@ -81,6 +81,9 @@ export interface RoomPlayer {
   isReady: boolean;
   isHost: boolean;
   equippedFrame?: string;
+  /** Consecutive Check wins. Drives the lobby/waiting-room 🔥 streak badge
+   *  when ≥ 3. Resets to 0 on any loss. */
+  currentStreak?: number;
 }
 
 export type GameMode = 'quick' | 'standard' | 'long';

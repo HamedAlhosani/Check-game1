@@ -135,13 +135,30 @@ export async function updateProfileAvatar(uid: string, avatarId: string): Promis
   if (lb) { lb.avatarId = avatarId; saveLeaderboard(); }
 }
 
-export async function recordGameResult(uid: string, isWinner: boolean, gameType: GameType = 'check'): Promise<void> {
+/**
+ * Result of recordGameResult — surfaced to the caller so it can echo a
+ * "first win of the day +X bonus" toast back to the client.
+ */
+export interface GameResultEcho {
+  /** Coins paid out as the base reward for this match. */
+  baseCoins: number;
+  /** Extra coins paid because this was the player's first daily win (1.5x). */
+  bonusCoins: number;
+  /** True only when the bonus actually triggered. */
+  firstWinOfDay: boolean;
+}
+
+export async function recordGameResult(
+  uid: string,
+  isWinner: boolean,
+  gameType: GameType = 'check'
+): Promise<GameResultEcho> {
   const p = users.get(uid);
-  if (!p) return;
+  if (!p) return { baseCoins: 0, bonusCoins: 0, firstWinOfDay: false };
 
   const stats = { ...defaultStats, ...p.stats };
   const xpGain = isWinner ? XP_PER_WIN : XP_PER_GAME;
-  const coinsGain = isWinner ? COINS_PER_WIN : COINS_PER_GAME;
+  const baseCoins = isWinner ? COINS_PER_WIN : COINS_PER_GAME;
   const newXp = p.ranking.xp + xpGain;
   const { level } = deriveLevel(newXp);
   const title = titleForLevel(level);
@@ -152,9 +169,23 @@ export async function recordGameResult(uid: string, isWinner: boolean, gameType:
   stats.currentStreak = isWinner ? stats.currentStreak + 1 : 0;
   if (isWinner) (stats as any)[`${gameType}Wins`] = ((stats as any)[`${gameType}Wins`] || 0) + 1;
 
+  // ── First-win-of-the-day bonus: 1.5× coin payout the first time the
+  //    player wins a Check match each calendar (UTC) day. Resets at UTC
+  //    midnight via the same dayKey pattern the daily-reward uses.
+  let bonusCoins = 0;
+  let firstWinOfDay = false;
+  if (isWinner && gameType === 'check') {
+    const today = todayKey();
+    if ((p as any).lastFirstWinBonusDay !== today) {
+      bonusCoins = Math.floor(baseCoins * 0.5); // 1.5× total: base + 50%
+      (p as any).lastFirstWinBonusDay = today;
+      firstWinOfDay = true;
+    }
+  }
+
   p.stats = stats;
   p.ranking = { level, xp: newXp, title };
-  p.coins = (p.coins || 0) + coinsGain;
+  p.coins = (p.coins || 0) + baseCoins + bonusCoins;
   // Treasure key drop: 1 key per win, 1 every 3 losses (so engagement
   // stays positive even on a losing streak).
   if (isWinner) {
@@ -182,6 +213,7 @@ export async function recordGameResult(uid: string, isWinner: boolean, gameType:
 
   saveUsers();
   updateLeaderboard(uid, p as UserProfile);
+  return { baseCoins, bonusCoins, firstWinOfDay };
 }
 
 // ── Daily missions ───────────────────────────────────────────────────────────
@@ -999,6 +1031,7 @@ export async function getFriendsList(uid: string): Promise<any[]> {
       equippedFrame: f.equippedItems?.avatarFrame || 'frame_default',
       level: f.ranking?.level ?? 1,
       wins: f.stats?.totalWins ?? 0,
+      currentStreak: f.stats?.currentStreak ?? 0,
     };
   }).filter(Boolean);
 }

@@ -31,6 +31,8 @@ interface FriendInfo {
   inGame?: { gameId: string; gameType: string } | null;
   /** True if the friend currently has at least one live socket. */
   online?: boolean;
+  /** Consecutive Check wins — drives the 🔥 streak badge when ≥ 3. */
+  currentStreak?: number;
 }
 
 type Tab = 'friends' | 'requests' | 'add';
@@ -404,6 +406,18 @@ function FriendCard({ friend, busy, actionLabel, actionStyle, onAction, lang }: 
           </span>
           <span className="font-arabic text-xs" style={{ color: 'rgba(229,188,124,0.5)' }}>{lang === 'ar' ? 'لv' : 'Lv'}{friend.level}</span>
           {friend.wins !== undefined && <span className="font-arabic text-xs" style={{ color: 'rgba(251,243,219,0.3)' }}>🏆 {friend.wins}</span>}
+          {(friend.currentStreak ?? 0) >= 3 && (
+            <span
+              className="font-arabic text-xs font-bold"
+              style={{
+                color: '#FFB347',
+                textShadow: '0 0 6px rgba(255,140,40,0.55)',
+              }}
+              title={`${friend.currentStreak} ${lang === 'ar' ? 'فوز متتابع' : 'win streak'}`}
+            >
+              🔥 {friend.currentStreak}
+            </span>
+          )}
         </div>
       </div>
       {friend.inGame && (

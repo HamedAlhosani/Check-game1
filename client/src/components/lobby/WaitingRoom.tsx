@@ -68,6 +68,25 @@ function PlayerSlot({ player, isHost, hostUid, onRemoveBot, onKick }: {
         {player.uid === hostUid && <span className="mr-0.5">👑</span>}
       </p>
 
+      {/* Hot-streak badge — 3+ consecutive Check wins */}
+      {!player.isBot && (player.currentStreak ?? 0) >= 3 && (
+        <span
+          className="font-arabic font-bold leading-none"
+          style={{
+            fontSize: 9,
+            color: '#FFB347',
+            background: 'linear-gradient(135deg, rgba(255,140,40,0.18), rgba(255,90,20,0.10))',
+            border: '1px solid rgba(255,140,40,0.45)',
+            padding: '2px 6px',
+            borderRadius: 999,
+            textShadow: '0 0 6px rgba(255,140,40,0.6)',
+          }}
+          title={`${player.currentStreak} ${lang === 'ar' ? 'فوز متتابع' : 'win streak'}`}
+        >
+          🔥 {player.currentStreak}
+        </span>
+      )}
+
       {/* Status */}
       <span className="font-arabic text-center" style={{ fontSize: 10, color: player.isBot ? 'rgba(80,200,120,0.6)' : player.isReady ? '#2D6E4E' : 'rgba(245,230,200,0.3)' }}>
         {player.isBot

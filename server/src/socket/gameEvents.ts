@@ -70,7 +70,17 @@ export function startGameSession(io: Server, roomId: string): void {
         // recorded loss (or credit them with an undeserved win) — they
         // weren't there to play. They simply forfeit the result.
         if (engine.isReplacedByBot(p.uid)) continue;
-        recordGameResult(p.uid, p.uid === winnerId, 'check').catch(() => null);
+        recordGameResult(p.uid, p.uid === winnerId, 'check').then(echo => {
+          // Tell the player about their first-win-of-the-day bonus so the
+          // client can pop a "+X bonus 🌅" toast on top of the normal
+          // payout. Only fires the day's first Check victory.
+          if (echo.firstWinOfDay) {
+            io.to(`user:${p.uid}`).emit('reward:first_win_of_day', {
+              baseCoins: echo.baseCoins,
+              bonusCoins: echo.bonusCoins,
+            });
+          }
+        }).catch(() => null);
         // Game ended for them — drop the live "in game" pill for friends.
         notifyFriendsOfStatusChange(p.uid);
       }
@@ -185,7 +195,14 @@ export function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEn
         // Same forfeit rule as above — disconnected-and-replaced players
         // don't get a win or loss recorded. They didn't play it.
         if (engine.isReplacedByBot(p.uid)) continue;
-        recordGameResult(p.uid, p.uid === winnerId, 'check').catch(() => null);
+        recordGameResult(p.uid, p.uid === winnerId, 'check').then(echo => {
+          if (echo.firstWinOfDay) {
+            io.to(`user:${p.uid}`).emit('reward:first_win_of_day', {
+              baseCoins: echo.baseCoins,
+              bonusCoins: echo.bonusCoins,
+            });
+          }
+        }).catch(() => null);
         notifyFriendsOfStatusChange(p.uid);
       }
       if (realPlayers.length > 0) {

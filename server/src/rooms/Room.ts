@@ -1,4 +1,5 @@
 import { RoomPlayer, RoomState, GameType, GameMode } from '@check-game/shared';
+import { users } from '../data/store';
 
 const MAX_PLAYERS = 10;
 // Big pool of names so a 10-player table doesn't repeat. We pick uniquely
@@ -168,7 +169,14 @@ export class Room {
       code: this.code,
       hostUid: this.hostUid,
       status: this.status,
-      players: this.players,
+      // Enrich each non-bot seat with its current win-streak so the
+      // WaitingRoom can render the 🔥 badge without a second API call.
+      players: this.players.map(p => {
+        if (p.isBot) return p;
+        const u = users.get(p.uid);
+        const streak = u?.stats?.currentStreak ?? 0;
+        return { ...p, currentStreak: streak };
+      }),
       createdAt: this.createdAt,
       gameId: this.gameId,
       gameType: this.gameType,

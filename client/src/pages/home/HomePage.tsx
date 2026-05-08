@@ -1948,7 +1948,7 @@ export function HomePage() {
 
         {/* Quick-actions hex tiles — true polygon shapes, full-width grid */}
         {profile && !currentRoom && (
-          <div className="grid grid-cols-3 gap-2.5 mb-5">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-5">
             <BentoTile
               icon="🏆"
               title={lang === 'ar' ? 'البطولات' : 'Cups'}
@@ -1964,10 +1964,17 @@ export function HomePage() {
               onClick={() => { soundService.playClick(); navigate('/clans'); }}
             />
             <BentoTile
-              icon="🎓"
-              title={lang === 'ar' ? 'تعلم اللعبة' : 'Learn'}
-              sub={lang === 'ar' ? 'دليل شامل' : 'Full guide'}
+              icon="📖"
+              title={lang === 'ar' ? 'القوانين' : 'Rules'}
+              sub={lang === 'ar' ? 'كيف تلعب' : 'How to play'}
               accent="green"
+              onClick={() => setShowRules(true)}
+            />
+            <BentoTile
+              icon="🎓"
+              title={lang === 'ar' ? 'تعليم' : 'Tutorial'}
+              sub={lang === 'ar' ? 'دليل شامل' : 'Full guide'}
+              accent="cyan"
               onClick={() => { soundService.playClick(); navigate('/tutorial'); }}
             />
           </div>

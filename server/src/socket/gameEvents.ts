@@ -8,6 +8,7 @@ import { DominoEngine } from '../game/domino/DominoEngine';
 import { JacaroEngine } from '../game/jackaro/JacaroEngine';
 import { recordGameResult, saveMatchHistory } from '../services/firestoreService';
 import { tournamentManager } from '../rooms/TournamentManager';
+import { notifyFriendsOfStatusChange } from './notifications';
 import {
   SOCKET_EVENTS,
   SwapDrawnPayload,
@@ -70,6 +71,8 @@ export function startGameSession(io: Server, roomId: string): void {
         // weren't there to play. They simply forfeit the result.
         if (engine.isReplacedByBot(p.uid)) continue;
         recordGameResult(p.uid, p.uid === winnerId, 'check').catch(() => null);
+        // Game ended for them — drop the live "in game" pill for friends.
+        notifyFriendsOfStatusChange(p.uid);
       }
       const realPlayers = state.players.filter(p => !p.uid.startsWith('bot-'));
       if (realPlayers.length > 0) {
@@ -89,6 +92,15 @@ export function startGameSession(io: Server, roomId: string): void {
 
   const gameId = (engine as any).gameId;
   io.to(roomId).emit(SOCKET_EVENTS.LOBBY_GAME_STARTING, { gameId, countdown: 0, gameType });
+
+  // Push a status change to every seated player's friends so any
+  // FriendsPage that's open updates the "👁 شاهد" pill in real time.
+  const startedRoom = roomManager.getRoom(roomId);
+  if (startedRoom) {
+    for (const p of startedRoom.players) {
+      if (!p.isBot) notifyFriendsOfStatusChange(p.uid);
+    }
+  }
 
   setTimeout(() => {
     (engine as any).start();
@@ -174,6 +186,7 @@ export function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEn
         // don't get a win or loss recorded. They didn't play it.
         if (engine.isReplacedByBot(p.uid)) continue;
         recordGameResult(p.uid, p.uid === winnerId, 'check').catch(() => null);
+        notifyFriendsOfStatusChange(p.uid);
       }
       if (realPlayers.length > 0) {
         // Capture both human and bot players in the record so the replay
@@ -425,6 +438,8 @@ export function registerGameEvents(io: Server, socket: AuthenticatedSocket): voi
       const rp = room.players.find(p => p.uid === socket.uid);
       if (rp) rp.isBot = true;
     }
+    // No longer in a game — let friends see the live status change.
+    notifyFriendsOfStatusChange(socket.uid);
   });
 
   // Client-requested smart auto-play (used when AFK fast-play kicks in)

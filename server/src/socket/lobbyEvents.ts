@@ -54,7 +54,8 @@ export function registerLobbyEvents(io: Server, socket: AuthenticatedSocket): vo
       equippedFrame,
       payload.maxPlayers || 10,
       payload.gameMode || 'standard',
-      !!payload.tutorial
+      !!payload.tutorial,
+      payload.teamMode === '2v2' ? '2v2' : null
     );
 
     socket.join(room.roomId);

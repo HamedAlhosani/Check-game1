@@ -2347,6 +2347,19 @@ export function CheckBoard({ gameId, roomId, gameState, spectator = false }: Pro
                           {isCaller && <span className="text-gold font-arabic" style={{ fontSize: 9 }}>CHECK</span>}
                           {isLowest && !isCaller && <span className="text-green-400 font-arabic" style={{ fontSize: 9 }}>الأقل ✓</span>}
                           {wasDoubled && <span className="text-red-400 font-arabic" style={{ fontSize: 9 }}>×2</span>}
+                          {/* 2v2: small team chip so the player can read team groupings at a glance. */}
+                          {gameState.teamMode === '2v2' && p.teamId && (
+                            <span className="font-arabic font-bold" style={{
+                              fontSize: 9,
+                              padding: '1px 5px',
+                              borderRadius: 4,
+                              background: p.teamId === 'A' ? 'rgba(122,180,255,0.18)' : 'rgba(255,140,40,0.18)',
+                              color: p.teamId === 'A' ? '#7AB4FF' : '#FFB347',
+                              border: `1px solid ${p.teamId === 'A' ? 'rgba(122,180,255,0.45)' : 'rgba(255,140,40,0.45)'}`,
+                            }}>
+                              {p.teamId === 'A' ? 'فريق A' : 'فريق B'}
+                            </span>
+                          )}
                         </div>
                       </div>
                       {/* Raw hand sum (before doubling) */}

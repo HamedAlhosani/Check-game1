@@ -63,6 +63,18 @@ export function startGameSession(io: Server, roomId: string): void {
       if (bots.length > 0) return; // handled in bot poll
       const result = [...state.players].sort((a, b) => a.cumulativeScore - b.cumulativeScore);
       const winnerId = result[0]?.uid ?? null;
+      // 2v2: both teammates of the winning team get the win credit, not
+      // just the single canonical winnerId. Build a set of all winning
+      // uids upfront so the credit logic stays clean below.
+      const winningUids = new Set<string>();
+      if (state.teamMode === '2v2' && winnerId) {
+        const winnerTeam = state.players.find(p => p.uid === winnerId)?.teamId;
+        for (const p of state.players) {
+          if (p.teamId === winnerTeam) winningUids.add(p.uid);
+        }
+      } else if (winnerId) {
+        winningUids.add(winnerId);
+      }
       for (const p of state.players) {
         if (p.uid.startsWith('bot-')) continue;
         // If a human seat is currently bot-controlled because they
@@ -70,7 +82,7 @@ export function startGameSession(io: Server, roomId: string): void {
         // recorded loss (or credit them with an undeserved win) — they
         // weren't there to play. They simply forfeit the result.
         if (engine.isReplacedByBot(p.uid)) continue;
-        recordGameResult(p.uid, p.uid === winnerId, 'check').then(echo => {
+        recordGameResult(p.uid, winningUids.has(p.uid), 'check').then(echo => {
           // Tell the player about their first-win-of-the-day bonus so the
           // client can pop a "+X bonus 🌅" toast on top of the normal
           // payout. Only fires the day's first Check victory.
@@ -190,12 +202,22 @@ export function scheduleCheckBotTurns(io: Server, roomId: string, engine: GameEn
       const winnerId = result[0]?.uid ?? null;
       // Tournament hook — advance the bracket if this was a cup match.
       tournamentManager.onGameOver(io, engine.gameId, winnerId).catch(() => null);
+      // 2v2: credit BOTH teammates on the winning team.
+      const winningUids = new Set<string>();
+      if (state.teamMode === '2v2' && winnerId) {
+        const winnerTeam = state.players.find(p => p.uid === winnerId)?.teamId;
+        for (const p of state.players) {
+          if (p.teamId === winnerTeam) winningUids.add(p.uid);
+        }
+      } else if (winnerId) {
+        winningUids.add(winnerId);
+      }
       const realPlayers = state.players.filter(p => !p.uid.startsWith('bot-') && !p.displayName.endsWith('🤖'));
       for (const p of realPlayers) {
         // Same forfeit rule as above — disconnected-and-replaced players
         // don't get a win or loss recorded. They didn't play it.
         if (engine.isReplacedByBot(p.uid)) continue;
-        recordGameResult(p.uid, p.uid === winnerId, 'check').then(echo => {
+        recordGameResult(p.uid, winningUids.has(p.uid), 'check').then(echo => {
           if (echo.firstWinOfDay) {
             io.to(`user:${p.uid}`).emit('reward:first_win_of_day', {
               baseCoins: echo.baseCoins,

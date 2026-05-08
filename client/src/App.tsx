@@ -30,6 +30,7 @@ const loadCardsPreview  = () => import('./pages/cards-preview/CardsPreviewPage')
 const loadTournaments   = () => import('./pages/tournaments/TournamentsPage');
 const loadClans         = () => import('./pages/clans/ClansPage');
 const loadTutorial      = () => import('./pages/tutorial/TutorialPage');
+const loadTeams         = () => import('./pages/teams/TeamsPage');
 
 const RegisterPage      = lazy(() => loadRegister().then(m => ({ default: m.RegisterPage })));
 const ProfilePage       = lazy(() => loadProfile().then(m => ({ default: m.ProfilePage })));
@@ -42,6 +43,7 @@ const CardsPreviewPage  = lazy(() => loadCardsPreview().then(m => ({ default: m.
 const TournamentsPage   = lazy(() => loadTournaments().then(m => ({ default: m.TournamentsPage })));
 const ClansPage         = lazy(() => loadClans().then(m => ({ default: m.ClansPage })));
 const TutorialPage      = lazy(() => loadTutorial().then(m => ({ default: m.TutorialPage })));
+const TeamsPage         = lazy(() => loadTeams().then(m => ({ default: m.TeamsPage })));
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { setUser, setProfile, setLoading } = useAuthStore();
@@ -188,7 +190,7 @@ function PrefetchOnIdle() {
       loadProfile(); loadStore(); loadLeaderboard();
       loadFriends(); loadHistory(); loadCardsPreview();
       loadUserProfile(); loadRegister(); loadTournaments(); loadClans();
-      loadTutorial();
+      loadTutorial(); loadTeams();
     });
   }, []);
   return null;
@@ -285,6 +287,7 @@ export function App() {
             <Route path="/tournaments" element={<ProtectedRoute><TournamentsPage /></ProtectedRoute>} />
             <Route path="/clans" element={<ProtectedRoute><ClansPage /></ProtectedRoute>} />
             <Route path="/tutorial" element={<ProtectedRoute><TutorialPage /></ProtectedRoute>} />
+            <Route path="/teams" element={<ProtectedRoute><TeamsPage /></ProtectedRoute>} />
             <Route path="/cards-preview" element={<CardsPreviewPage />} />
             <Route path="*" element={<FallbackRoute />} />
           </Routes>

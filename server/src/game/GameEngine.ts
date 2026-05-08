@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Card, GamePhase, GameState, PlayerGameState, GameMode, MatchRound } from '@check-game/shared';
+import { Card, GamePhase, GameState, PlayerGameState, GameMode, MatchRound, TeamMode } from '@check-game/shared';
 import { Deck, decksNeededFor } from './Deck';
 import { getCardValue, isSpecialCard } from './Card';
 import { canBurnCard } from './BurnValidator';
-import { calculateRoundScores, ScoreResult } from './ScoreCalculator';
+import { calculateRoundScores, calculateTeamRoundScores, ScoreResult } from './ScoreCalculator';
 import { BotPlayer } from './BotPlayer';
 
 const PEEK_DURATION_MS = 10000;
@@ -29,6 +29,8 @@ interface InternalPlayer {
   isEliminated: boolean;
   seatIndex: number;
   peekedAtStart: boolean;
+  /** 'A' or 'B' in 2v2 mode; undefined otherwise. */
+  teamId?: 'A' | 'B';
 }
 
 export type GameEventEmitter = (event: string, data: unknown, roomId?: string, toUid?: string) => void;
@@ -66,6 +68,11 @@ export class GameEngine {
    *  coach bubbles without being rushed. Active turns still progress on
    *  player action; they just never time-out. */
   private tutorial: boolean;
+  /** Team mode for the room (currently only '2v2'). When set, scoring is
+   *  computed per team: teammates share their CHECK fate (both get 0 if the
+   *  caller's team had the alone-low total; both get 2× their team's hand
+   *  sum if a rival team beat them; etc.). */
+  private teamMode: TeamMode;
 
   // ── Replay data — per-round summary captured during scoring ────────────────
   private rounds: MatchRound[] = [];
@@ -77,7 +84,7 @@ export class GameEngine {
     roomId: string,
     players: { uid: string; displayName: string; avatarId: string; isBot: boolean; equippedFrame?: string }[],
     emit: GameEventEmitter,
-    config?: { eliminationScore?: number; gameMode?: GameMode; tutorial?: boolean }
+    config?: { eliminationScore?: number; gameMode?: GameMode; tutorial?: boolean; teamMode?: TeamMode }
   ) {
     this.gameId = uuidv4();
     this.roomId = roomId;
@@ -86,6 +93,7 @@ export class GameEngine {
     this.eliminationScore = config?.eliminationScore ?? 100;
     this.gameMode = config?.gameMode ?? 'standard';
     this.tutorial = !!config?.tutorial;
+    this.teamMode = config?.teamMode ?? null;
 
     this.players = players.map((p, i) => ({
       ...p,
@@ -95,6 +103,9 @@ export class GameEngine {
       isEliminated: false,
       seatIndex: i,
       peekedAtStart: false,
+      // In 2v2: alternating-seat assignment so partners sit across from each
+      // other on the table (seat 0 + seat 2 = team A, 1 + 3 = team B).
+      teamId: this.teamMode === '2v2' ? (i % 2 === 0 ? 'A' : 'B') : undefined,
     }));
   }
 
@@ -799,7 +810,18 @@ export class GameEngine {
       .filter(p => !p.isEliminated)
       .map(p => ({ uid: p.uid, cards: p.cards }));
 
-    const result: ScoreResult = calculateRoundScores(playerCards, this.checkCallerId!);
+    // 2v2: route through the team-aware scorer so partners share their
+    // CHECK fate (both pay 2× / both score 0). The team field is required
+    // for the team scorer; we filter and tag from this.players above.
+    let result: ScoreResult;
+    if (this.teamMode === '2v2') {
+      const teamed = this.players
+        .filter(p => !p.isEliminated)
+        .map(p => ({ uid: p.uid, cards: p.cards, teamId: (p.teamId || 'A') as 'A' | 'B' }));
+      result = calculateTeamRoundScores(teamed, this.checkCallerId!);
+    } else {
+      result = calculateRoundScores(playerCards, this.checkCallerId!);
+    }
 
     for (const p of this.players) {
       if (!p.isEliminated && result.roundScores[p.uid] !== undefined) {
@@ -864,7 +886,16 @@ export class GameEngine {
     });
 
     const remaining = this.activePlayers();
-    if (remaining.length <= 1) {
+    // 2v2 game-over: the moment one entire team is eliminated, the surviving
+    // team wins. Pick any survivor as the canonical "winner uid" — both
+    // teammates share the credit on the leaderboard / clan war.
+    if (this.teamMode === '2v2') {
+      const teamsLeft = new Set(remaining.map(p => p.teamId));
+      if (teamsLeft.size <= 1) {
+        this.endGame(remaining[0]?.uid || null);
+        return;
+      }
+    } else if (remaining.length <= 1) {
       this.endGame(remaining[0]?.uid || null);
       return;
     }
@@ -952,6 +983,7 @@ export class GameEngine {
         cumulativeScore: p.cumulativeScore,
         seatIndex: p.seatIndex,
         isBot: p.isBot,
+        teamId: p.teamId,
       })),
       deckCount: this.deck.drawCount,
       discardTop: this.deck.peekDiscard(),
@@ -968,6 +1000,7 @@ export class GameEngine {
       eliminationScore: this.eliminationScore,
       gameMode: this.gameMode,
       tutorial: this.tutorial,
+      teamMode: this.teamMode,
     };
   }
 

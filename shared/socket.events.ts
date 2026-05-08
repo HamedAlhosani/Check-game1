@@ -155,6 +155,8 @@ export interface CreateRoomPayload {
   /** Tutorial mode: server skips all auto-timers so the player can read coach
    *  bubbles at their own pace. Set only by the in-game tutorial launcher. */
   tutorial?: boolean;
+  /** Team mode for the room (e.g. '2v2'). Ignored when null. */
+  teamMode?: import('./game.types').TeamMode;
 }
 
 export interface SwapDrawnPayload {

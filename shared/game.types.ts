@@ -26,7 +26,13 @@ export interface PlayerGameState {
   level?: number;
   equippedFrame?: string;
   isBot?: boolean;
+  /** 'A' or 'B' in 2v2 team mode; undefined in solo. Drives the team-grouped
+   *  scoreboard rendering and team-based CHECK scoring in the engine. */
+  teamId?: 'A' | 'B';
 }
+
+/** Optional team mode. Currently only 2v2 (4 players, 2 teams of 2). */
+export type TeamMode = '2v2' | null;
 
 export type GamePhase =
   | 'WAITING'
@@ -66,6 +72,9 @@ export interface GameState {
   /** Tutorial flag — server-side timers are disabled when true so the
    *  player can read on-screen coach bubbles at their own pace. */
   tutorial?: boolean;
+  /** Team mode (e.g. '2v2'); null for normal solo play. When set the engine
+   *  uses team-aware CHECK scoring so partners share their fate. */
+  teamMode?: TeamMode;
 }
 
 export interface RoundScore {
@@ -108,6 +117,8 @@ export interface RoomState {
   gameType: GameType;
   maxPlayers: number;
   gameMode?: GameMode;
+  /** Team mode for this room. '2v2' makes ScoreCalculator team-aware. */
+  teamMode?: TeamMode;
 }
 
 export interface UserProfile {

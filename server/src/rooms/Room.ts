@@ -1,4 +1,4 @@
-import { RoomPlayer, RoomState, GameType, GameMode } from '@check-game/shared';
+import { RoomPlayer, RoomState, GameType, GameMode, TeamMode } from '@check-game/shared';
 import { users } from '../data/store';
 
 const MAX_PLAYERS = 10;
@@ -42,6 +42,9 @@ export class Room {
   /** When true the GameEngine skips its auto-timers (peek/turn/burn/special)
    *  so a tutorial player can read coach bubbles at their own pace. */
   tutorial: boolean = false;
+  /** Team mode for this room. '2v2' triggers team-aware scoring in the engine
+   *  and team grouping in the round-over UI. Null = standard solo play. */
+  teamMode: TeamMode = null;
 
   constructor(
     roomId: string,
@@ -182,6 +185,7 @@ export class Room {
       gameType: this.gameType,
       maxPlayers: this.maxPlayers,
       gameMode: this.gameMode,
+      teamMode: this.teamMode,
     };
   }
 }

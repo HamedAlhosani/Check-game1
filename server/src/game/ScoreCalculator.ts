@@ -83,3 +83,80 @@ export function calculateRoundScores(
   }
   return { roundScores, rawHandSums: handSums, lowestUid, checkPenalty, checkOutcome };
 }
+
+/**
+ * Team-aware variant for 2v2. Computes each team's HAND-SUM TOTAL (the sum
+ * of all cards in both teammates' hands), then runs the same CHECK win /
+ * tied / beaten rule between the two teams. Both teammates inherit the
+ * SAME round score, so partners share their fate — they cumulate together
+ * and either both stay in or both get eliminated.
+ *
+ * Caller's team is the team of `checkCallerId`. Lowest-uid still picks
+ * the single best individual hand for the round-over UI flair.
+ */
+export function calculateTeamRoundScores(
+  playerCards: { uid: string; cards: (Card | null)[]; teamId: 'A' | 'B' }[],
+  checkCallerId: string
+): ScoreResult {
+  const handSums: { [uid: string]: number } = {};
+  const teamSums: { A: number; B: number } = { A: 0, B: 0 };
+  const teamOf: { [uid: string]: 'A' | 'B' } = {};
+
+  for (const p of playerCards) {
+    const sum = p.cards.reduce((s, c) => (c ? s + getCardValue(c) : s), 0);
+    handSums[p.uid] = sum;
+    teamSums[p.teamId] += sum;
+    teamOf[p.uid] = p.teamId;
+  }
+
+  const callerTeam = teamOf[checkCallerId];
+  const rivalTeam: 'A' | 'B' = callerTeam === 'A' ? 'B' : 'A';
+  const callerTeamSum = teamSums[callerTeam];
+  const rivalTeamSum = teamSums[rivalTeam];
+
+  let checkOutcome: CheckOutcome = null;
+  let checkPenalty = false;
+  // Per-team round score — both teammates inherit the same number so
+  // they cumulate (and get eliminated) together.
+  const teamRoundScore: { A: number; B: number } = { A: 0, B: 0 };
+
+  if (checkCallerId) {
+    if (rivalTeamSum < callerTeamSum) {
+      // Rival team beat the caller → caller's team pays 2× its team sum.
+      checkOutcome = 'beaten';
+      checkPenalty = true;
+      teamRoundScore[callerTeam] = callerTeamSum * 2;
+      teamRoundScore[rivalTeam] = rivalTeamSum;
+    } else if (rivalTeamSum === callerTeamSum) {
+      // Tied → both teams pay their team sum.
+      checkOutcome = 'tied';
+      teamRoundScore.A = teamSums.A;
+      teamRoundScore.B = teamSums.B;
+    } else {
+      // Caller's team alone-lowest → 0 for them, rival pays their sum.
+      checkOutcome = 'win';
+      teamRoundScore[callerTeam] = 0;
+      teamRoundScore[rivalTeam] = rivalTeamSum;
+    }
+  } else {
+    // No CHECK call (shouldn't happen on a scored round but be safe).
+    teamRoundScore.A = teamSums.A;
+    teamRoundScore.B = teamSums.B;
+  }
+
+  const roundScores: { [uid: string]: number } = {};
+  let lowestUid: string | null = null;
+  let lowestScore = Infinity;
+  for (const p of playerCards) {
+    const score = teamRoundScore[p.teamId];
+    roundScores[p.uid] = score;
+    // For the round-over flair, pick the individual lowest hand; doesn't
+    // affect cumulative scoring.
+    if (handSums[p.uid] < lowestScore) {
+      lowestScore = handSums[p.uid];
+      lowestUid = p.uid;
+    }
+  }
+
+  return { roundScores, rawHandSums: handSums, lowestUid, checkPenalty, checkOutcome };
+}

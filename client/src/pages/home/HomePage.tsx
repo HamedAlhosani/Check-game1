@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SOCKET_EVENTS, RoomState, GameType } from '@check-game/shared';
@@ -533,7 +534,9 @@ function RewardsLauncher({
         )}
       </motion.button>
 
-      {/* Panel */}
+      {/* Panel — portalled to document.body so the parent GlassCard's
+          backdrop-filter doesn't trap it inside its containing block. */}
+      {createPortal(
       <AnimatePresence>
         {open && (
           <motion.div
@@ -630,7 +633,9 @@ function RewardsLauncher({
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+      )}
     </>
   );
 }
